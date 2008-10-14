@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from datetime import datetime
+from rooibos.util.util import unique_slug
 
 NAME_MAX_LENGTH = 50
 LABEL_MAX_LENGTH = 50
@@ -18,6 +19,10 @@ class Group(models.Model):
     agreement = models.TextField(null=True)
     password = models.CharField(max_length=32, null=True)
     
+    def save(self, **kwargs):
+        unique_slug(self, slug_source='title', slug_field='name')
+        super(Group, self).save(kwargs)
+        
     def __unicode__(self):
         return self.name
 
@@ -79,6 +84,10 @@ class Field(models.Model):
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
     name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True)
     owner = models.ForeignKey(User, null=True)
+
+    def save(self, **kwargs):
+        unique_slug(self, slug_source='label', slug_field='name')
+        super(Group, self).save(kwargs)
 
     def __unicode__(self):
         return self.name

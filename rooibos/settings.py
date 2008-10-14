@@ -77,5 +77,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'rooibos.data'
+    'rooibos.data',
+    'rooibos.migration',
+    'rooibos.util',
 )
