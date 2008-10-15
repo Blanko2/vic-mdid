@@ -87,7 +87,7 @@ class Field(models.Model):
 
     def save(self, **kwargs):
         unique_slug(self, slug_source='label', slug_field='name')
-        super(Group, self).save(kwargs)
+        super(Field, self).save(kwargs)
 
     def __unicode__(self):
         return self.name
