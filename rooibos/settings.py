@@ -83,3 +83,6 @@ INSTALLED_APPS = (
     'rooibos.access',
     'rooibos.solr',
 )
+
+SOLR_URL = 'http://127.0.0.1:8983/solr/'
+
