@@ -81,4 +81,5 @@ INSTALLED_APPS = (
     'rooibos.migration',
     'rooibos.util',
     'rooibos.access',
+    'rooibos.solr',
 )
