@@ -45,7 +45,7 @@ MEDIA_URL = ''
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'rxn7#8o10k#f^qs1bauc^u4o-f33-ch)hc-gwrz)luvq#15dzm'
@@ -62,6 +62,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.doc.XViewMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
@@ -70,6 +71,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    'd:/dev/rooibos/rooibos/templates',
 )
 
 INSTALLED_APPS = (
@@ -77,6 +79,8 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.flatpages',
+    'django.contrib.admin',
     'rooibos.data',
     'rooibos.migration',
     'rooibos.util',

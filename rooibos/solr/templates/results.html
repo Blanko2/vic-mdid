@@ -1,0 +1,31 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<div class="horizontal-block">
+Your query: '{{ query|escape }}' found {{ hits }} hit{{ hits|pluralize }}.
+{% if pages %}
+    Page {{ page }} of {{ pages }}.
+    {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
+    {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
+{% endif %}
+</div>
+
+{% if records %}
+<div class="resultlist">
+
+{% for record in records %}
+
+<div class="result">
+{{ record.id }}<br />
+{% for value in record.fieldvalue_set.all %}
+{{ value.resolve_label }}: {{ value.value }}<br />
+{% endfor %}
+</div>
+
+{% endfor %}
+
+</div>
+{% endif %}
+
+{% endblock %}

@@ -43,6 +43,24 @@ class Group(models.Model):
         return result
     all_subgroups = property(_resolve_subgroups)
     
+    def _resolve_parent_groups(self, include_self=False):
+        parents = list(self.group_set.all())
+        result = include_self and (self,) or ()
+        while True:
+            todo = ()
+            for group in parents:
+                if self != group:
+                    result += (group,)
+                for g in group.group_set.all():
+                    if g != self and not g in parents:
+                        todo += (g,)
+            if not todo:
+                break
+            sub = todo            
+        return result
+    all_parent_groups = property(_resolve_parent_groups)
+        
+    
     def _get_records(self):
         return Record.objects.filter(group__in=self._resolve_subgroups(include_self=True)).distinct()
     all_records = property(_get_records)

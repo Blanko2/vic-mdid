@@ -101,7 +101,7 @@ document 5
 
 # TODO: unicode support is pretty sloppy. define it better.
 
-from BeautifulSoup import BeautifulSoup
+from ..util.BeautifulSoup import BeautifulSoup
 from httplib import HTTPConnection
 from urllib import urlencode
 from urlparse import urlsplit
@@ -231,6 +231,12 @@ class Solr(object):
         Convert an 'int' field from solr's xml format to python and return it.
         """
         return int(value)
+
+    def long_to_python(self, value):
+        """
+        Convert a 'long' field from solr's xml format to python and return it.
+        """
+        return long(value)
 
     def date_to_python(self, value):
         """

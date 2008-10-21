@@ -1,0 +1,21 @@
+
+.horizontal-block {
+    border: thin grey solid;
+    background-color: lightgrey;
+    padding: 3px;
+}
+
+.resultlist {
+    
+}
+
+.result {
+    float: left;
+    border: thin lightgrey solid;
+    width: 150px;
+    height: 150px;
+    padding: 3px;
+    margin: 5px;
+    overflow: hidden;
+    font-size: smaller;
+}

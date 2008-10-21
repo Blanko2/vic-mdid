@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <title>{% block title %}Rooibos{% endblock %}</title>
+    
+{% block stylesheets %}
+    <link href="/static/jquery/jquery-ui-themeroller.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/static/css/master.css" rel="stylesheet" type="text/css" media="screen">
+{% endblock %}
+{% block extrastylesheets %}
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript" src="/jsi18n/"></script>
+{% endblock %}
+{% block jquery %}
+    <script type="text/javascript" src="/static/jquery/jquery-1.2.6.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery-ui-personalized-1.5.2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
+{% endblock %}
+{% block extrajavascript %}
+{% endblock %}
+</head>
+
+<body class="ui-reset">
+
+{% block content %}
+{% endblock %}
+
+</body>
+
+</html>

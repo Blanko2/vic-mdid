@@ -24,3 +24,10 @@ def unique_slug(item,slug_source,slug_field):
               slug = "%s-%i" % (slug[:max_length - 1 - len(str(counter))], counter)
               counter += 1
       setattr(item,slug_field,slug)
+
+
+def safe_int(value, default):
+    try:
+        return int(value)
+    except ValueError:
+        return default
