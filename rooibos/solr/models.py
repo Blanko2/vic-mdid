@@ -39,12 +39,12 @@ class SolrIndex():
     def __init__(self):
         self._clean_string_re = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
     
-    def search(self, q, sort=None, start=None, rows=None):
+    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0):
         conn = Solr(SOLR_URL)
-        result = conn.search(q, sort=sort, start=start, rows=rows)
+        result = conn.search(q, sort=sort, start=start, rows=rows, facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount)
         ids = [int(r['id']) for r in result]
         records = Record.objects.in_bulk(ids)
-        return (result.hits, map(lambda i: records[i], ids))
+        return (result.hits, map(lambda i: records[i], ids), result.facets)
         
     def clear(self):
         RecordInfo.objects.all().delete()

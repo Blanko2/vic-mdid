@@ -90,3 +90,4 @@ INSTALLED_APPS = (
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
+TEMPLATE_STRING_IF_INVALID = '[unknown]'

@@ -9,6 +9,22 @@ Your query: '{{ query|escape }}' found {{ hits }} hit{{ hits|pluralize }}.
     {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
+<a href="{% url solr-search %}">Reset</a>
+</div>
+
+<div class="facets">
+{% for facet,items in facets %}
+{% if items %}
+    <div class="facet">
+        <div class="facet-header">{{ facet }}</div>
+        <div class="facet-body">
+        {% for term,freq in items %}
+            <a href="{{ limit_url }}{{ facet }}:{{ term|urlencode }}">{{ term }} ({{ freq }})</a>
+        {% endfor %}
+        </div>
+    </div>
+{% endif %}    
+{% endfor %}
 </div>
 
 {% if records %}

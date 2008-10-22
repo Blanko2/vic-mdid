@@ -130,9 +130,10 @@ class SolrError(Exception):
     pass
 
 class Results(object):
-    def __init__(self, docs, hits):
+    def __init__(self, docs, hits, facets):
         self.docs = docs
         self.hits = hits
+        self.facets = facets
 
     def __len__(self):
         return len(self.docs)
@@ -155,7 +156,7 @@ class Solr(object):
     def _select(self, params):
         # encode the query as utf-8 so urlencode can handle it
         params['q'] = params['q'].encode('utf-8')
-        path = '%s/select/?%s' % (self.path, urlencode(params))
+        path = '%s/select/?%s' % (self.path, urlencode(params, True))
         conn = HTTPConnection(self.host, self.port)
         conn.request('GET', path)
         return conn.getresponse()
@@ -163,7 +164,7 @@ class Solr(object):
     def _mlt(self, params):
         """Issue a MoreLikeThis GET request."""
         params['q'] = params['q'].encode('utf-8')
-        path = '%s/mlt/?%s' % (self.path, urlencode(params))
+        path = '%s/mlt/?%s' % (self.path, urlencode(params, True))
         conn = HTTPConnection(self.host, self.port)
         conn.request('GET', path)
         return conn.getresponse()
@@ -267,7 +268,7 @@ class Solr(object):
 
     # API Methods ############################################################
 
-    def search(self, q, sort=None, start=None, rows=None):
+    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0):
         """Performs a search and returns the results."""
         params = {'q': q}
         if start:
@@ -276,6 +277,12 @@ class Solr(object):
             params['rows'] = rows
         if sort:
             params['sort'] = sort
+        if facets:
+            params['facet'] = 'true'
+            params['facet.limit'] = facet_limit
+            params['facet.mincount'] = facet_mincount            
+            params['facet.field'] = facets
+
         response = self._select(params)
         if response.status != 200:
             raise SolrError(self._extract_error(response))
@@ -301,8 +308,20 @@ class Solr(object):
                     converter = getattr(self, converter_name)
                     result_val = converter(element.text or "")
                 result[element.get('name')] = result_val
-            results.append(result)
-        return Results(results, hits)
+            results.append(result)            
+        
+        facets = {}
+        for lst in et.findall('lst'):
+            if lst.get('name') == 'facet_counts':
+                for lst2 in lst.findall('lst'):
+                    if lst2.get('name') == 'facet_fields':
+                        for field in lst2.findall('lst'):
+                            f = {}
+                            for i in field.findall('int'):
+                                f[i.get('name')] = int(i.text)
+                            facets[field.get('name')] = f                
+        
+        return Results(results, hits, facets)        
 
     def add(self, docs, commit=True):
         """Adds or updates documents. For now, docs is a list of dictionaies

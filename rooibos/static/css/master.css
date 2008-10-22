@@ -6,7 +6,7 @@
 }
 
 .resultlist {
-    
+    width: 80%;    
 }
 
 .result {
@@ -18,4 +18,31 @@
     margin: 5px;
     overflow: hidden;
     font-size: smaller;
+}
+
+
+.facets {
+    float: right;
+    width: 20%;
+}
+
+.facet {
+    border: thin lightgrey solid;
+    margin: 5px;
+}
+
+.facet-header {
+    font-weight: bold;
+    background-color: lightgrey;
+    padding: 2px;
+}
+
+.facet-body {
+    font-size: smaller;
+    padding: 2px;
+}
+
+.facet-body a {
+    text-decoration: none;
+    margin-right: 5px;
 }
