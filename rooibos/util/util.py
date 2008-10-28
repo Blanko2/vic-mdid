@@ -20,9 +20,11 @@ def unique_slug(item,slug_source,slug_field):
       allSlugs = [getattr(i, slug_field) for i in itemModel.objects.complex_filter({'%s__startswith' % slug_field: slug[:10]})]
       if slug in allSlugs:
           counter = 2
-          while slug in allSlugs:
-              slug = "%s-%i" % (slug[:max_length - 1 - len(str(counter))], counter)
+          uniqueslug = slug
+          while uniqueslug in allSlugs:
+              uniqueslug = "%s-%i" % (slug[:max_length  - 1 - len(str(counter))], counter)
               counter += 1
+          slug = uniqueslug
       setattr(item,slug_field,slug)
 
 
