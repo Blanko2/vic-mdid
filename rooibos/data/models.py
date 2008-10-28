@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from datetime import datetime
 from rooibos.util.util import unique_slug
+import random
 
 NAME_MAX_LENGTH = 50
 LABEL_MAX_LENGTH = 50
@@ -68,7 +69,7 @@ class Group(models.Model):
 class Record(models.Model):
     created = models.DateTimeField(default=datetime.now())
     modified = models.DateTimeField(auto_now=True)
-    name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True, null=True)
+    name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True)
     parent = models.ForeignKey('self', null=True)
     source = models.CharField(max_length=SOURCE_MAX_LENGTH, null=True)
     next_update = models.DateTimeField(null=True)
@@ -79,6 +80,14 @@ class Record(models.Model):
     def __unicode__(self):
         return self.name or 'unnamed'
     
+    def save(self, **kwargs):
+        unique_slug(self, slug_source='_random', slug_field='name')
+        super(Record, self).save(kwargs)
+        
+    def _random_method(self):
+        return "r-%s" % random.randint(1000000, 9999999)
+    _random = property(_random_method)
+
     def get_fieldvalues(self, owner=None, group=None, for_display=False):
         values = self.fieldvalue_set.filter(Q(group=group) | Q(group=None), Q(owner=owner) | Q(owner=None))
         if not for_display:

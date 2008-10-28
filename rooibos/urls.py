@@ -12,4 +12,5 @@ urlpatterns = patterns('',
     (r'^admin/(.*)', admin.site.root),
     
     (r'^explore/', include('rooibos.solr.urls')),
+    (r'^media/', include('rooibos.storage.urls')),
 )

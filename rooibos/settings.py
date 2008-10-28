@@ -74,6 +74,8 @@ TEMPLATE_DIRS = (
     'd:/dev/rooibos/rooibos/templates',
 )
 
+TEMPLATE_STRING_IF_INVALID = '[unknown]'
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,8 +88,12 @@ INSTALLED_APPS = (
     'rooibos.util',
     'rooibos.access',
     'rooibos.solr',
+    'rooibos.storage',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
-TEMPLATE_STRING_IF_INVALID = '[unknown]'
+STORAGE_SYSTEMS = {
+    'local': 'rooibos.storage.localfs.LocalFileSystemStorageSystem',
+    'legacy': 'rooibos.storage.legacyfs.LegacyStorageSystem',
+}
