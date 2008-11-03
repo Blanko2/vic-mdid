@@ -5,6 +5,12 @@ import os
 import pyodbc
 from datetime import datetime
 from rooibos.data.models import Group, Field, FieldValue, Record
+from rooibos.storage.models import Storage, Media
+from rooibos.solr.models import DisableSolrUpdates, SolrIndex
+from django.db import connection
+
+IMPORT_COLLECTIONS = (15,)
+IMPORT_RECORDS = 1000
 
 class Command(BaseCommand):
     help = 'Migrates database from older version'
@@ -22,10 +28,18 @@ class Command(BaseCommand):
         return (servertype, connection)
 
     def clearDatabase(self):
-        FieldValue.objects.all().delete()
-        Field.objects.all().delete()
-        Record.objects.all().delete()
-        Group.objects.all().delete()
+        SolrIndex().clear()
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM storage_media")        
+        cursor.execute("DELETE FROM storage_storage")
+        cursor.execute("DELETE FROM data_fieldvalue")
+        cursor.execute("DELETE FROM data_field")
+        cursor.execute("DELETE FROM data_group_records")
+        cursor.execute("DELETE FROM data_record")
+        cursor.execute("DELETE FROM access_accesscontrol")
+        cursor.execute("DELETE FROM data_group_subgroups")
+        cursor.execute("DELETE FROM data_group")
+        
 
     def handle(self, *config_files, **options):
         if len(config_files) != 1:
@@ -52,23 +66,27 @@ class Command(BaseCommand):
             return
         
         print "Migrating from version %s" % version
-        
-        print "Clearing database"
-        self.clearDatabase()
+
+        DisableSolrUpdates()        
+        self.clearDatabase()        
         
         # Migrate collections and collection groups
          
         print "Migrating collections"
         groups = {}
         collgroups = {}
+        storage = {}
 
         for row in cursor.execute("SELECT ID,Title FROM CollectionGroups"):
             collgroups[row.ID] = Group.objects.create(title=row.Title)
 
-        for row in cursor.execute("SELECT ID,Title,Description,UsageAgreement,GroupID FROM Collections"):
-            groups[row.ID] = Group.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
-            if collgroups.has_key(row.GroupID):
-                collgroups[row.GroupID].subgroups.add(groups[row.ID])
+        for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
+            if row.ID in IMPORT_COLLECTIONS:
+                groups[row.ID] = Group.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
+                if collgroups.has_key(row.GroupID):
+                    collgroups[row.GroupID].subgroups.add(groups[row.ID])
+                if row.Type == 'I':
+                    storage[row.ID] = Storage.objects.create(title=row.Title, system='local', base=row.ResourcePath.replace('\\', '/'))
 
         # Migrate fields
         
@@ -77,23 +95,34 @@ class Command(BaseCommand):
         
         for row in cursor.execute("SELECT ID,Name FROM FieldDefinitions"):
             fields[row.ID] = Field.objects.create(label=row.Name)
-        
-        # Migrate records
+     
+        # Migrate records and media
         
         print "Migrating records"
         images = {}
         count = 0
         
-        for row in cursor.execute("SELECT ID,CollectionID,Created,Modified,RemoteID," +
+        for row in cursor.execute("SELECT ID,CollectionID,Resource,Created,Modified,RemoteID," +
                                   "CachedUntil,Expires,UserID,Flags FROM Images"):
-            images[row.ID] = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
-                                                   modified=row.Modified or datetime.now(),
-                                                   source=row.RemoteID,
-                                                   next_update=row.CachedUntil or row.Expires)
-            groups[row.CollectionID].records.add(images[row.ID])
-            count += 1
-            if count % 100 == 0:
-                print "%s\r" % count,
+            if groups.has_key(row.CollectionID):
+                images[row.ID] = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
+                                                       modified=row.Modified or datetime.now(),
+                                                       source=row.RemoteID,
+                                                       next_update=row.CachedUntil or row.Expires)
+                groups[row.CollectionID].records.add(images[row.ID])
+                if storage.has_key(row.CollectionID):
+                    for type in ('full', 'medium', 'thumb'):
+                        Media.objects.create(
+                            record=images[row.ID],
+                            name=type,
+                            url='%s/%s' % (type, row.Resource),
+                            storage=storage[row.CollectionID],
+                            mimetype='image/jpeg')          
+                count += 1
+                if count % 100 == 0:
+                    print "%s\r" % count,
+                if count >= IMPORT_RECORDS:
+                    break
 
         # Migrate field values
         
@@ -101,13 +130,27 @@ class Command(BaseCommand):
         count = 0
         
         for row in cursor.execute("SELECT ImageID,FieldID,FieldValue,OriginalValue,Type,Label " +
-                                  "FROM FieldData INNER JOIN FieldDefinitions ON FieldID=FieldDefinitions.ID"):            
-            FieldValue.objects.create(record=images[row.ImageID],
-                                      field=fields[row.FieldID],
-                                      label=row.Label,
-                                      value=row.FieldValue,
-                                      type=row.Type == 2 and 'D' or 'T')
+                                  "FROM FieldData INNER JOIN FieldDefinitions ON FieldID=FieldDefinitions.ID"):
+            if images.has_key(row.ImageID):
+                FieldValue.objects.create(record=images[row.ImageID],
+                                          field=fields[row.FieldID],
+                                          label=row.Label,
+                                          value=row.FieldValue,
+                                          type=row.Type == 2 and 'D' or 'T')
             count += 1
             if count % 100 == 0:
                 print "%s\r" % count,
-                
+        
+        # Migrate slideshows
+        
+        print "Migrating slideshows and slides"
+        count = 0
+        slideshows = {}
+        for row in cursor.execute("SELECT ID,Title,Description FROM Slideshows"):
+            slideshows[row.ID] = Group.objects.create(title=row.Title,description=row.Description)
+        for row in cursor.execute("SELECT SlideshowID,ImageID FROM Slides"):
+            if images.has_key(row.ImageID):
+                slideshows[row.SlideshowID].records.add(images[row.ImageID])           
+            count += 1
+            if count % 100 == 0:
+                print "%s\r" % count,

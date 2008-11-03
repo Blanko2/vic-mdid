@@ -89,11 +89,13 @@ INSTALLED_APPS = (
     'rooibos.access',
     'rooibos.solr',
     'rooibos.storage',
+    'rooibos.legacy',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
 STORAGE_SYSTEMS = {
     'local': 'rooibos.storage.localfs.LocalFileSystemStorageSystem',
-    'legacy': 'rooibos.storage.legacyfs.LegacyStorageSystem',
 }
+
+LOCAL_FILE_SYSTEM_STORAGE_DEFAULT_BASE = 'c:/temp/'

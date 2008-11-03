@@ -13,4 +13,6 @@ urlpatterns = patterns('',
     
     (r'^explore/', include('rooibos.solr.urls')),
     (r'^media/', include('rooibos.storage.urls')),
+    (r'^data/', include('rooibos.data.urls')),
+    (r'^legacy/', include('rooibos.legacy.urls')),
 )

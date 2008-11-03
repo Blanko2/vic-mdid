@@ -1,8 +1,10 @@
 from django.db import models
+from django.core.files import File
 from rooibos.util.util import unique_slug
 from rooibos.data.models import Record
 from rooibos.settings import STORAGE_SYSTEMS
 import random
+import Image
 
 class Storage(models.Model):
     title = models.CharField(max_length=50)
@@ -24,7 +26,7 @@ class Storage(models.Model):
             for c in modulename.split('.')[1:]:
                 module = getattr(module, c)
             classobj = getattr(module, classname)
-            return classobj(self.base)
+            return classobj(base=self.base)
         else:
             return None
     
@@ -32,6 +34,18 @@ class Storage(models.Model):
         storage = self._get_storage_system()
         return storage and storage.get_absolute_media_url(self, media) or None
 
+    def get_absolute_file_path(self, media):
+        storage = self._get_storage_system()
+        return storage and storage.get_absolute_file_path(self, media) or None
+    
+    def save_file(self, name, content):
+        storage = self._get_storage_system()
+        return storage and storage.save(name, content) or None
+
+    def load_file(self, name):
+        storage = self._get_storage_system()
+        return storage and storage.open(name) or None
+        
 
 class Media(models.Model):
     record = models.ForeignKey(Record)
@@ -42,7 +56,6 @@ class Media(models.Model):
     width = models.IntegerField(null=True)
     height = models.IntegerField(null=True)
     bitrate = models.IntegerField(null=True)
-    stream = models.BooleanField(null=True)
 
     class Meta:
         unique_together = ("record", "name")
@@ -60,7 +73,42 @@ class Media(models.Model):
     _random = property(_random_method)
     
     def get_absolute_url(self):
-        if not self.storage:
-            return self.url
+        return self.storage and self.storage.get_absolute_media_url(self) or self.url
+
+    def get_absolute_file_path(self):
+        return self.storage and self.storage.get_absolute_file_path(self) or None
+
+    def save_file(self, name, content):
+        if not hasattr(content, 'name'):
+            content.name = name
+        if not hasattr(content, 'mode'):
+            content.mode = 'r'
+        if not content is File:
+            content = File(content)
+        name = self.storage and self.storage.save_file(name, content) or None
+        if name:
+            self.url = name
+            self.identify(save=False)
+            self.save()
         else:
-            return self.storage.get_absolute_media_url(self)
+            raise IOError("Media file could not be stored")
+
+    def load_file(self):
+        return self.storage and self.storage.load_file(self.url) or None
+
+    def identify(self, save=True):
+        type = self.mimetype.split('/')[0]
+        if type == 'image':
+            try:
+                im = Image.open(self.get_absolute_file_path())
+                (self.width, self.height) = im.size
+                if save:
+                    self.save()
+            except IOError:
+                self.width = None
+                self.height = None
+                self.save()
+        elif type == 'video':
+            pass
+        else:
+            pass

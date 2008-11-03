@@ -34,6 +34,7 @@ Your query: '{{ query|escape }}' found {{ hits }} hit{{ hits|pluralize }}.
 
 <div class="result">
 {{ record.id }}<br />
+<img src="{% url storage-thumbnail record.name %}" />
 {% for value in record.fieldvalue_set.all %}
 {{ value.resolve_label }}: {{ value.value }}<br />
 {% endfor %}
