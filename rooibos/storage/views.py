@@ -4,7 +4,7 @@ from models import Media
 
 def retrieve(request, record, media):
     mediaobj = get_object_or_404(Media, name=media, record__name=record)
-    response = HttpResponse(content='', mimetype=mediaobj.mimetype)
+    response = HttpResponse(content=mediaobj.load_file(), mimetype=str(mediaobj.mimetype))
     return response
 
 def thumbnail(request, record):

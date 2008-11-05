@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group as UserGroup, Permission
-from ..data.models import Group
+from rooibos.data.models import Group
 
 class AccessControl(models.Model):
     group = models.ForeignKey(Group)

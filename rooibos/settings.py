@@ -99,3 +99,7 @@ STORAGE_SYSTEMS = {
 }
 
 LOCAL_FILE_SYSTEM_STORAGE_DEFAULT_BASE = 'c:/temp/'
+
+WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
+
+SECURE_LOGIN = False

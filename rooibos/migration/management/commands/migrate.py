@@ -106,6 +106,7 @@ class Command(BaseCommand):
                                   "CachedUntil,Expires,UserID,Flags FROM Images"):
             if groups.has_key(row.CollectionID):
                 images[row.ID] = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
+                                                       name=row.Resource.rsplit('.', 1)[0],
                                                        modified=row.Modified or datetime.now(),
                                                        source=row.RemoteID,
                                                        next_update=row.CachedUntil or row.Expires)
