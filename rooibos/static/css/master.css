@@ -1,3 +1,31 @@
+#header {
+    height: 1.6em;
+    background-color: #2D678E;
+    color: white;
+    padding: 4px;
+    margin-bottom: 5px;
+}
+
+#header h1 {
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 1.2em;
+    display: inline;
+}
+
+#header a {
+    color: white;
+    text-decoration: none;
+}
+
+#footer {
+    margin-top: 10px;
+    padding: 4px;
+    border-top: solid thin lightgrey;
+    font-size: smaller;
+    font-family: sans-serif;
+    clear: both;
+}
 
 .horizontal-block {
     border: thin grey solid;
