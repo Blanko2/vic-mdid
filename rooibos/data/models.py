@@ -5,13 +5,9 @@ from datetime import datetime
 from rooibos.util.util import unique_slug
 import random
 
-NAME_MAX_LENGTH = 50
-LABEL_MAX_LENGTH = 50
-SOURCE_MAX_LENGTH = 1024
-
 class Group(models.Model):
-    title = models.CharField(max_length=LABEL_MAX_LENGTH)
-    name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True)
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50, unique=True)
     subgroups = models.ManyToManyField('self', symmetrical=False)
     records = models.ManyToManyField('Record')
     owner = models.ForeignKey(User, null=True)
@@ -69,9 +65,10 @@ class Group(models.Model):
 class Record(models.Model):
     created = models.DateTimeField(default=datetime.now())
     modified = models.DateTimeField(auto_now=True)
-    name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True)
+    name = models.SlugField(max_length=50, unique=True)
     parent = models.ForeignKey('self', null=True)
-    source = models.CharField(max_length=SOURCE_MAX_LENGTH, null=True)
+    source = models.CharField(max_length=1000, null=True)
+    manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
     hidden = models.BooleanField(default=False)
@@ -80,14 +77,18 @@ class Record(models.Model):
     def __unicode__(self):
         return self.name or 'unnamed'
     
+    def _generate_slug(self):        
+        return self._preferred_name or "r-%s" % random.randint(1000000, 9999999)
+    _generated_slug = property(_generate_slug)
+    _preferred_name = None
+
     def save(self, **kwargs):
-        unique_slug(self, slug_source='_random', slug_field='name')
+        if kwargs.get('force_insert'):
+            self._preferred_name = self.name
+            self.name = ''
+        unique_slug(self, slug_source='_generated_slug', slug_field='name')
         super(Record, self).save(kwargs)
         
-    def _random_method(self):
-        return "r-%s" % random.randint(1000000, 9999999)
-    _random = property(_random_method)
-
     def get_fieldvalues(self, owner=None, group=None, for_display=False):
         values = self.fieldvalue_set.filter(Q(group=group) | Q(group=None), Q(owner=owner) | Q(owner=None))
         if not for_display:
@@ -108,8 +109,8 @@ class Record(models.Model):
             v.dump(owner, group)
 
 class Field(models.Model):
-    label = models.CharField(max_length=LABEL_MAX_LENGTH)
-    name = models.SlugField(max_length=NAME_MAX_LENGTH, unique=True)
+    label = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50, unique=True)
     owner = models.ForeignKey(User, null=True)
 
     def save(self, **kwargs):
@@ -128,7 +129,7 @@ class FieldValue(models.Model):
     record = models.ForeignKey(Record)
     field = models.ForeignKey(Field)
     owner = models.ForeignKey(User, null=True)
-    label = models.CharField(max_length=LABEL_MAX_LENGTH, null=True)
+    label = models.CharField(max_length=100, null=True)
     override = models.ForeignKey('self', null=True)
     hidden = models.BooleanField(default=False)
     value = models.TextField()

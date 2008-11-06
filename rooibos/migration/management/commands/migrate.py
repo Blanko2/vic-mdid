@@ -82,10 +82,13 @@ class Command(BaseCommand):
 
         for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
             if row.ID in IMPORT_COLLECTIONS:
+                manager = None
+                if row.Type == 'N':
+                    manager = 'nasaimageexchange'
                 groups[row.ID] = Group.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
                 if collgroups.has_key(row.GroupID):
                     collgroups[row.GroupID].subgroups.add(groups[row.ID])
-                if row.Type == 'I':
+                if row.Type in ('I', 'N', 'R'):
                     storage[row.ID] = Storage.objects.create(title=row.Title, system='local', base=row.ResourcePath.replace('\\', '/'))
 
         # Migrate fields

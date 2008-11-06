@@ -90,12 +90,18 @@ INSTALLED_APPS = (
     'rooibos.solr',
     'rooibos.storage',
     'rooibos.legacy',
+    'rooibos.nasa',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
 STORAGE_SYSTEMS = {
     'local': 'rooibos.storage.localfs.LocalFileSystemStorageSystem',
+    'online': 'rooibos.storage.online.OnlineStorageSystem',
+}
+
+GROUP_MANAGERS = {
+    'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
 }
 
 LOCAL_FILE_SYSTEM_STORAGE_DEFAULT_BASE = 'c:/temp/'

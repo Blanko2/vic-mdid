@@ -15,4 +15,5 @@ urlpatterns = patterns('',
     (r'^media/', include('rooibos.storage.urls')),
     (r'^data/', include('rooibos.data.urls')),
     (r'^legacy/', include('rooibos.legacy.urls')),
+    (r'^nasa/', include('rooibos.nasa.urls')),
 )

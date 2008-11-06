@@ -10,7 +10,7 @@ class Storage(models.Model):
     title = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     system = models.CharField(max_length=50)
-    base = models.CharField(max_length=1024)
+    base = models.CharField(max_length=1024, null=True)
     
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name')
@@ -112,3 +112,42 @@ class Media(models.Model):
             pass
         else:
             pass
+
+    @staticmethod
+    def get_thumbnail_for_record(record):
+        media = Media.objects.filter(record=record)
+        if not media:
+            return None
+        result = None
+        
+        # Find best media item for thumbnail use
+        for m in media:
+            # If media is named 'thumb', use it
+            if m.name == 'thumb':
+                result = m
+                break
+            # Any media is better than nothing
+            if not result:
+                result = m
+                continue
+            # Images are better than non-images
+            if m.mimetype[:6] == 'image/':
+                if result.mimetype[:6] != 'image/':
+                    result = m
+                    continue
+                # JPEGs are better than other images
+                if m.mimetype == 'image/jpeg':
+                    if result.mimetype != 'image/jpeg':
+                        result = m
+                        continue                
+                    # Find something as close to 100x100 as possible
+                    try:  # In case height or width is not available
+                        if m.height <= 100 and m.width <= 100 and (result.height > 100 or result.width > 100 or (m.height * m.width > result.height * result.width)):
+                            result = m
+                            continue
+                    except TypeError:
+                        pass
+    
+        # conversion to 100x100 JPEG if necessary
+                
+        return result

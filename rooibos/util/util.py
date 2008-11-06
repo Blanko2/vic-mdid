@@ -16,13 +16,13 @@ def unique_slug(item,slug_source,slug_field):
       from django.template.defaultfilters import slugify
       itemModel = item.__class__
       max_length = itemModel._meta.get_field(slug_field).max_length
-      slug = slugify(getattr(item,slug_source))
+      slug = slugify(getattr(item,slug_source))[:max_length]
       allSlugs = [getattr(i, slug_field) for i in itemModel.objects.complex_filter({'%s__startswith' % slug_field: slug[:10]})]
       if slug in allSlugs:
           counter = 2
           uniqueslug = slug
           while uniqueslug in allSlugs:
-              uniqueslug = "%s-%i" % (slug[:max_length  - 1 - len(str(counter))], counter)
+              uniqueslug = "%s-%i" % (slug[:max_length - 1 - len(str(counter))], counter)
               counter += 1
           slug = uniqueslug
       setattr(item,slug_field,slug)
