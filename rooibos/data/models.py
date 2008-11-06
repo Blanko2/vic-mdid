@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from datetime import datetime
 from rooibos.util.util import unique_slug
 import random
@@ -9,7 +10,7 @@ class Group(models.Model):
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50, unique=True)
     subgroups = models.ManyToManyField('self', symmetrical=False)
-    records = models.ManyToManyField('Record')
+    records = models.ManyToManyField('Record', through='GroupMembership')
     owner = models.ForeignKey(User, null=True)
     hidden = models.BooleanField(default=False)
     description = models.TextField(null=True)
@@ -23,6 +24,9 @@ class Group(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('data-group', kwargs={'groupname': self.name})
+    
     def _resolve_subgroups(self, include_self=False):
         sub = list(self.subgroups.all())
         result = include_self and (self,) or ()
@@ -56,11 +60,18 @@ class Group(models.Model):
             sub = todo            
         return result
     all_parent_groups = property(_resolve_parent_groups)
-        
-    
+            
     def _get_records(self):
         return Record.objects.filter(group__in=self._resolve_subgroups(include_self=True)).distinct()
     all_records = property(_get_records)
+
+
+class GroupMembership(models.Model):
+    group = models.ForeignKey('Group')
+    record = models.ForeignKey('Record')
+    hidden = models.BooleanField(default=False)
+    order = models.IntegerField(null=True)
+
 
 class Record(models.Model):
     created = models.DateTimeField(default=datetime.now())
@@ -71,12 +82,13 @@ class Record(models.Model):
     manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
-    hidden = models.BooleanField(default=False)
-    order = models.IntegerField(null=True)
     
     def __unicode__(self):
-        return self.name or 'unnamed'
+        return self.name
     
+    def get_absolute_url(self):
+        return reverse('data-record', kwargs={'recordname': self.name})
+
     def _generate_slug(self):        
         return self._preferred_name or "r-%s" % random.randint(1000000, 9999999)
     _generated_slug = property(_generate_slug)

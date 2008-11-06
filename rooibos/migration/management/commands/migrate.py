@@ -4,7 +4,7 @@ from xml.dom import minidom
 import os
 import pyodbc
 from datetime import datetime
-from rooibos.data.models import Group, Field, FieldValue, Record
+from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
 from rooibos.storage.models import Storage, Media
 from rooibos.solr.models import DisableSolrUpdates, SolrIndex
 from django.db import connection
@@ -34,7 +34,7 @@ class Command(BaseCommand):
         cursor.execute("DELETE FROM storage_storage")
         cursor.execute("DELETE FROM data_fieldvalue")
         cursor.execute("DELETE FROM data_field")
-        cursor.execute("DELETE FROM data_group_records")
+        cursor.execute("DELETE FROM data_groupmembership")
         cursor.execute("DELETE FROM data_record")
         cursor.execute("DELETE FROM access_accesscontrol")
         cursor.execute("DELETE FROM data_group_subgroups")
@@ -113,7 +113,7 @@ class Command(BaseCommand):
                                                        modified=row.Modified or datetime.now(),
                                                        source=row.RemoteID,
                                                        next_update=row.CachedUntil or row.Expires)
-                groups[row.CollectionID].records.add(images[row.ID])
+                GroupMembership.objects.create(record=images[row.ID], group=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
                     for type in ('full', 'medium', 'thumb'):
                         Media.objects.create(
@@ -152,9 +152,12 @@ class Command(BaseCommand):
         slideshows = {}
         for row in cursor.execute("SELECT ID,Title,Description FROM Slideshows"):
             slideshows[row.ID] = Group.objects.create(title=row.Title,description=row.Description)
-        for row in cursor.execute("SELECT SlideshowID,ImageID FROM Slides"):
+        for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
             if images.has_key(row.ImageID):
-                slideshows[row.SlideshowID].records.add(images[row.ImageID])           
+                GroupMembership.objects.create(record=images[row.ImageID],
+                                               group=slideshows[row.SlideshowID],
+                                               order=row.DisplayOrder,
+                                               hidden=row.Scratch)
             count += 1
             if count % 100 == 0:
                 print "%s\r" % count,

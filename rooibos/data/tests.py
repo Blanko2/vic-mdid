@@ -1,5 +1,5 @@
 import unittest
-from .models import Group, Record, Field
+from .models import Group, GroupMembership, Record, Field
 from datetime import datetime
 from django.contrib.auth.models import User
 
@@ -21,7 +21,7 @@ class FieldValueTestCase(unittest.TestCase):
         
     def testFieldValueBasicContext(self):
         record = Record.objects.create()
-        record.group_set.add(self.group)
+        GroupMembership.objects.create(record=record, group=self.group)
         
         t1 = record.fieldvalue_set.create(field=self.titleField, label='Caption', value='Photograph of Mona Lisa', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, value='Photo Lisa', type='T')                
@@ -42,7 +42,7 @@ class FieldValueTestCase(unittest.TestCase):
         
     def testFieldValueOverride(self):
         record = Record.objects.create()
-        record.group_set.add(self.group)
+        GroupMembership.objects.create(record=record, group=self.group)
         
         t1 = record.fieldvalue_set.create(field=self.titleField, value='Original', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, value='OwnerOverride', type='T', override=t1, owner=self.user)
@@ -61,7 +61,7 @@ class FieldValueTestCase(unittest.TestCase):
         
     def testFieldValueHide(self):
         record = Record.objects.create()
-        record.group_set.add(self.group)
+        GroupMembership.objects.create(record=record, group=self.group)
         
         t1 = record.fieldvalue_set.create(field=self.titleField, value='Original', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, override=t1, hidden=True, owner=self.user)
@@ -120,18 +120,19 @@ class GroupTestCase(unittest.TestCase):
         self.assertEqual(0, len(group_f.all_records))
 
         record = Record.objects.create()
-        record.group_set.add(group_h)
+        GroupMembership.objects.create(record=record, group=group_h)
         self.assertEqual(0, len(group_f.all_records))
         
         record = Record.objects.create()
-        record.group_set.add(group_f)
+        GroupMembership.objects.create(record=record, group=group_f)
         self.assertEqual(1, len(group_f.all_records))
         
         record = Record.objects.create()
-        record.group_set.add(group_g)
+        GroupMembership.objects.create(record=record, group=group_g)
         self.assertEqual(2, len(group_f.all_records))
 
         record = Record.objects.create()
-        record.group_set.add(group_f, group_g)
+        GroupMembership.objects.create(record=record, group=group_f)
+        GroupMembership.objects.create(record=record, group=group_g)
         self.assertEqual(3, len(group_f.all_records))
         

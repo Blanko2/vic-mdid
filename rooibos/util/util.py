@@ -1,7 +1,8 @@
+from django.contrib.sites.models import Site
 
+def unique_slug(item,slug_source,slug_field):
 # Source: http://www.djangosnippets.org/snippets/512/
 # Modified by Andreas Knab, 10/14/2008
-def unique_slug(item,slug_source,slug_field):
   """Ensures a unique slug field by appending an integer counter to duplicate slugs.
   
   The item's slug field is first prepopulated by slugify-ing the source field. If that value already exists, a counter is appended to the slug, and the counter incremented upward until the value is unique.
@@ -33,3 +34,8 @@ def safe_int(value, default):
         return int(value)
     except ValueError:
         return default
+
+
+def get_full_url(absolute_url):
+    # todo: support SSL
+    return 'http://%s%s' % (Site.objects.get_current().domain, absolute_url)
