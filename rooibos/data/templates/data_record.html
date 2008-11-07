@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+{% load storage_extras %}
+{% load ui_extras %}
+
+{% block titledetail %}
+- {{ record.title }}
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ record.title }}</h1>
+
+<div>
+    <img src="{% thumbnail record %}" />
+</div>
+
+<div>
+    <h2>Available Metadata</h2>
+    {% for value in record.fieldvalue_set.all %}
+        <span>{{ value.resolved_label }}:</span> <span>{{ value.value }}</span><br />
+    {% endfor %}
+</div>
+
+<div>
+    <h2>Available Media</h2>
+    {% for media in record.media_set.all %}
+        {{ media.name }} {% inlineview media %}<br />
+        {% if not forloop.last %}
+        <hr />
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}

@@ -116,9 +116,9 @@ class Record(models.Model):
     @property            
     def title(self):
         try:
-            return self.fieldvalue_set.get(
+            return self.fieldvalue_set.filter(
                 Q(field__standard__prefix='dc', field__name='title') |
-                Q(field__equivalent__standard__prefix='dc', field__equivalent__name='title')).value
+                Q(field__equivalent__standard__prefix='dc', field__equivalent__name='title'))[0].value
         except:
             return None
 

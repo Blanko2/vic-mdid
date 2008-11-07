@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>{% block title %}Rooibos{% endblock %}</title>
+    <title>{% block title %}Rooibos {% block titledetail %}{% endblock %}{% endblock %}</title>
     
 {% block stylesheets %}
     <link href="/static/jquery/jquery-ui-themeroller.css" rel="stylesheet" type="text/css" media="screen">

@@ -7,3 +7,4 @@ register = template.Library()
 def thumbnail(record):
     media = Media.get_thumbnail_for_record(record)    
     return media and media.get_absolute_url() or ''
+

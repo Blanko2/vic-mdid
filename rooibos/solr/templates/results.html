@@ -10,7 +10,7 @@ Your query: '{{ query|escape }}' found {{ hits }} hit{{ hits|pluralize }}.
     {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
-<a href="{% url solr-search %}">Reset</a>
+<a href="{{ reset_url }}">Reset</a>
 </div>
 
 <div class="facets">

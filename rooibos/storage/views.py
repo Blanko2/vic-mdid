@@ -1,7 +1,9 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, get_list_or_404
+from django.views.decorators.cache import cache_control
 from models import Media
 
+@cache_control(max_age=3600)
 def retrieve(request, record, media):
     mediaobj = get_object_or_404(Media, name=media, record__name=record)
     content = mediaobj.load_file()

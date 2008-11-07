@@ -1,0 +1,15 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h1>{{ group.title }}</h1>
+
+<div>
+    {{ group.description }}
+</div>
+
+<div>
+    <a href="{% url solr-search-group group=group.name %}">Explore this group</a>
+</div>
+
+{% endblock %}
