@@ -136,3 +136,17 @@ class GroupTestCase(unittest.TestCase):
         GroupMembership.objects.create(record=record, group=group_g)
         self.assertEqual(3, len(group_f.all_records))
         
+    def testGetTitle(self):
+        record1 = Record.objects.create()
+        self.assertEqual(None, record1.title)
+        
+        dctitle = Field.objects.get(standard__prefix='dc', name='title')
+        record1.fieldvalue_set.create(field=dctitle, value='The title')
+        self.assertEqual('The title', record1.title)
+        
+        record2 = Record.objects.create()
+        field = Field.objects.create(label='test', name='test')
+        field.equivalent.add(dctitle)
+        record2.fieldvalue_set.create(field=field, value='Another title')
+        self.assertEqual('Another title', record2.title)
+        

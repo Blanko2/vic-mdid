@@ -34,11 +34,8 @@ Your query: '{{ query|escape }}' found {{ hits }} hit{{ hits|pluralize }}.
 {% for record in records %}
 
 <div class="result">
-{{ record.id }}<br />
-<img src="{% thumbnail record %}" />
-{% for value in record.fieldvalue_set.all %}
-{{ value.resolve_label }}: {{ value.value }}<br />
-{% endfor %}
+<a href="{{ record.get_absolute_url }}"><img src="{% thumbnail record %}" /></a><br />
+{{ record.title }}
 </div>
 
 {% endfor %}

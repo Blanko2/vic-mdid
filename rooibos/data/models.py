@@ -18,7 +18,7 @@ class Group(models.Model):
     password = models.CharField(max_length=32, null=True)
     
     def save(self, **kwargs):
-        unique_slug(self, slug_source='title', slug_field='name')
+        unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Group, self).save(kwargs)
         
     def __unicode__(self):
@@ -27,9 +27,10 @@ class Group(models.Model):
     def get_absolute_url(self):
         return reverse('data-group', kwargs={'groupname': self.name})
     
-    def _resolve_subgroups(self, include_self=False):
+    @property
+    def all_subgroups(self):
         sub = list(self.subgroups.all())
-        result = include_self and (self,) or ()
+        result = ()
         while True:
             todo = ()
             for group in sub:
@@ -42,11 +43,11 @@ class Group(models.Model):
                 break
             sub = todo            
         return result
-    all_subgroups = property(_resolve_subgroups)
     
-    def _resolve_parent_groups(self, include_self=False):
+    @property
+    def all_parent_groups(self):
         parents = list(self.group_set.all())
-        result = include_self and (self,) or ()
+        result = ()
         while True:
             todo = ()
             for group in parents:
@@ -59,11 +60,10 @@ class Group(models.Model):
                 break
             sub = todo            
         return result
-    all_parent_groups = property(_resolve_parent_groups)
             
-    def _get_records(self):
-        return Record.objects.filter(group__in=self._resolve_subgroups(include_self=True)).distinct()
-    all_records = property(_get_records)
+    @property
+    def all_records(self):
+        return Record.objects.filter(group__in=self.all_subgroups + (self,)).distinct()
 
 
 class GroupMembership(models.Model):
@@ -89,16 +89,9 @@ class Record(models.Model):
     def get_absolute_url(self):
         return reverse('data-record', kwargs={'recordname': self.name})
 
-    def _generate_slug(self):        
-        return self._preferred_name or "r-%s" % random.randint(1000000, 9999999)
-    _generated_slug = property(_generate_slug)
-    _preferred_name = None
-
     def save(self, **kwargs):
-        if kwargs.get('force_insert'):
-            self._preferred_name = self.name
-            self.name = ''
-        unique_slug(self, slug_source='_generated_slug', slug_field='name')
+        unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),
+                    slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Record, self).save(kwargs)
         
     def get_fieldvalues(self, owner=None, group=None, for_display=False):
@@ -120,17 +113,45 @@ class Record(models.Model):
         for v in self.fieldvalue_set.all():
             v.dump(owner, group)
 
+    @property            
+    def title(self):
+        try:
+            return self.fieldvalue_set.get(
+                Q(field__standard__prefix='dc', field__name='title') |
+                Q(field__equivalent__standard__prefix='dc', field__equivalent__name='title')).value
+        except:
+            return None
+
+
+class MetadataStandard(models.Model):
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50, unique=True)
+    prefix = models.CharField(max_length=16, unique=True)
+
+    def __unicode__(self):
+        return self.title
+
 class Field(models.Model):
     label = models.CharField(max_length=100)
-    name = models.SlugField(max_length=50, unique=True)
-    owner = models.ForeignKey(User, null=True)
+    name = models.SlugField(max_length=50)
+    standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
+    equivalent = models.ManyToManyField("self", null=True, blank=True)
 
     def save(self, **kwargs):
-        unique_slug(self, slug_source='label', slug_field='name')
+        unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Field, self).save(kwargs)
 
     def __unicode__(self):
-        return self.name
+        if self.standard:
+            return "%s:%s" % (self.standard.prefix, self.name)
+        else:
+            return self.name
+    
+    class Meta:
+        unique_together = ('name', 'standard')
+        ordering = ['name']
+        order_with_respect_to = 'standard'
+    
     
 class FieldValue(models.Model):
     TYPE_CHOICES = (
@@ -153,10 +174,12 @@ class FieldValue(models.Model):
     def __unicode__(self):
         return "%s=%s" % (self.label, self.value[:20])
     
-    def resolve_label(self):
+    @property
+    def resolved_label(self):
         return self.label or self.field.label
-    resolved_label = property(resolve_label)
     
     def dump(self, owner=None, group=None):
         print("%s: %s" % (self.resolved_label, self.value))
-        
+
+    class Meta:
+        order_with_respect_to = 'record'

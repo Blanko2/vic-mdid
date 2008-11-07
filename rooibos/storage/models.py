@@ -13,7 +13,7 @@ class Storage(models.Model):
     base = models.CharField(max_length=1024, null=True)
     
     def save(self, **kwargs):
-        unique_slug(self, slug_source='title', slug_field='name')
+        unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Storage, self).save(kwargs)
         
     def __unicode__(self):
@@ -65,13 +65,10 @@ class Media(models.Model):
         return self.url
 
     def save(self, **kwargs):
-        unique_slug(self, slug_source='_random', slug_field='name')
+        unique_slug(self, slug_literal="m-%s" % random.randint(1000000, 9999999),
+                    slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Media, self).save(kwargs)
         
-    def _random_method(self):
-        return "m-%s" % random.randint(1000000, 9999999)
-    _random = property(_random_method)
-    
     def get_absolute_url(self):
         return self.storage and self.storage.get_absolute_media_url(self) or self.url
 

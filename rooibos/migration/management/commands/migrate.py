@@ -68,7 +68,7 @@ class Command(BaseCommand):
         print "Migrating from version %s" % version
 
         DisableSolrUpdates()        
-        self.clearDatabase()        
+#        self.clearDatabase()        
         
         # Migrate collections and collection groups
          
@@ -95,9 +95,17 @@ class Command(BaseCommand):
         
         print "Migrating fields"
         fields = {}
+        standard_fields = dict((str(f), f) for f in Field.objects.all())
         
-        for row in cursor.execute("SELECT ID,Name FROM FieldDefinitions"):
-            fields[row.ID] = Field.objects.create(label=row.Name)
+        for row in cursor.execute("SELECT ID,Name,DCElement,DCRefinement FROM FieldDefinitions"):
+            dc = ('dc:%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
+            if standard_fields.has_key(dc):
+                fields[row.ID] = standard_fields[dc]
+                print "+",
+            else:
+                fields[row.ID] = Field.objects.create(label=row.Name)
+                print "-",
+        print
      
         # Migrate records and media
         

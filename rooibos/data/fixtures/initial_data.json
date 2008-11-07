@@ -1,0 +1,161 @@
+[
+  {
+    "pk": 1, 
+    "model": "data.metadatastandard", 
+    "fields": {
+      "prefix": "dc", 
+      "name": "dublin-core", 
+      "title": "Dublin Core"
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "contributor", 
+      "label": "Contributor"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "coverage", 
+      "label": "Coverage"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "creator", 
+      "label": "Creator"
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "date", 
+      "label": "Date"
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "description", 
+      "label": "Description"
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "format", 
+      "label": "Format"
+    }
+  }, 
+  {
+    "pk": 7, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "identifier", 
+      "label": "Identifier"
+    }
+  }, 
+  {
+    "pk": 8, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "language", 
+      "label": "Language"
+    }
+  }, 
+  {
+    "pk": 9, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "publisher", 
+      "label": "Publisher"
+    }
+  }, 
+  {
+    "pk": 10, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "relation", 
+      "label": "Relation"
+    }
+  }, 
+  {
+    "pk": 11, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "rights", 
+      "label": "Rights"
+    }
+  }, 
+  {
+    "pk": 12, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "source", 
+      "label": "Source"
+    }
+  }, 
+  {
+    "pk": 13, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "subject", 
+      "label": "Subject"
+    }
+  }, 
+  {
+    "pk": 14, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "title", 
+      "label": "Title"
+    }
+  }, 
+  {
+    "pk": 15, 
+    "model": "data.field", 
+    "fields": {
+      "equivalent": [], 
+      "standard": 1, 
+      "name": "type", 
+      "label": "Type"
+    }
+  }
+]
