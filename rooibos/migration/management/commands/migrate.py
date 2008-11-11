@@ -3,6 +3,7 @@ from django.template.defaultfilters import slugify
 from xml.dom import minidom
 import os
 import pyodbc
+from urlparse import urlparse
 from datetime import datetime
 from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
 from rooibos.storage.models import Storage, Media
@@ -10,7 +11,7 @@ from rooibos.solr.models import DisableSolrUpdates, SolrIndex
 from django.db import connection
 
 IMPORT_COLLECTIONS = (15,)
-IMPORT_RECORDS = 1000
+IMPORT_RECORDS = 200
 
 class Command(BaseCommand):
     help = 'Migrates database from older version'
@@ -123,13 +124,16 @@ class Command(BaseCommand):
                                                        next_update=row.CachedUntil or row.Expires)
                 GroupMembership.objects.create(record=images[row.ID], group=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
-                    for type in ('full', 'medium', 'thumb'):
-                        Media.objects.create(
-                            record=images[row.ID],
-                            name=type,
-                            url='%s/%s' % (type, row.Resource),
-                            storage=storage[row.CollectionID],
-                            mimetype='image/jpeg')          
+                    if row.Resource.endswith('.xml'):
+                        self.process_xml_resource(images[row.ID], storage[row.CollectionID], row.Resource)
+                    else:
+                        for type in ('full', 'medium', 'thumb'):
+                            Media.objects.create(
+                                record=images[row.ID],
+                                name=type,
+                                url='%s/%s' % (type, row.Resource),
+                                storage=storage[row.CollectionID],
+                                mimetype='image/jpeg')          
                 count += 1
                 if count % 100 == 0:
                     print "%s\r" % count,
@@ -154,7 +158,7 @@ class Command(BaseCommand):
                 print "%s\r" % count,
         
         # Migrate slideshows
-        
+            
         print "Migrating slideshows and slides"
         count = 0
         slideshows = {}
@@ -169,3 +173,83 @@ class Command(BaseCommand):
             count += 1
             if count % 100 == 0:
                 print "%s\r" % count,
+
+    def process_xml_resource(self, record, storage, file):
+        
+        def node_text(node):
+            return ''.join(n.nodeValue for n in node.childNodes).strip()
+        
+        def child_text(node, tagname):
+            for e in node.getElementsByTagName(tagname):
+                return node_text(e)
+            return None
+            
+        def get_media(node):
+            return dict(
+                display = e.attributes['display'].nodeValue,
+                type = e.attributes['type'].nodeValue,
+                label = child_text(e, 'label'),
+                link = child_text(e, 'link'),
+                data = child_text(e, 'data'), )
+        
+        def make_html(link, label):
+            if not link:
+                return label
+            else:
+                return '<a href="%s">%s</a>' % (link, label)
+        
+        def name_from_url(url):
+            return os.path.splitext(os.path.basename(urlparse(url)[2]))[0]
+        
+        try:
+            ovcstorage = Storage.objects.get(name='onlinevideo')
+        except Storage.DoesNotExist:
+            ovcstorage = Storage.objects.create(title='Online Video Collection', name='onlinevideo', system='online')
+        
+        try:
+            ovcstorage_full = Storage.objects.get(name='onlinevideo')
+        except Storage.DoesNotExist:
+            ovcstorage_full = Storage.objects.create(title='Online Video Collection (downloadable)', name='onlinevideo-full', system='online')
+        
+        description_field = Field.objects.get(standard__prefix='dc', name='description')
+        
+        file = os.path.join(storage.base, file)
+        resource = minidom.parse(file)
+        thumb = None
+        medium = []
+        full = []
+        for e in resource.getElementsByTagName('thumb'):
+            thumb = child_text(e, 'image')
+        for e in resource.getElementsByTagName('medium'):
+            medium.append(get_media(e))
+        for e in resource.getElementsByTagName('full'):
+            full.append(get_media(e))
+        
+        Media.objects.create(
+            record=record,
+            name='thumb',
+            url='thumb/%s' % thumb,
+            storage=storage,
+            mimetype='image/jpeg')
+        
+        for m in medium:
+            if m['display'] == 'default':
+                record.fieldvalue_set.create(field=description_field, value=make_html(m['link'], m['label']))
+            else:
+                Media.objects.create(
+                    record=record,
+                    name=name_from_url(m['link']),
+                    url=m['link'],
+                    storage=ovcstorage,
+                    mimetype=m['type'])
+
+        for m in full:
+            if m['display'] == 'default':
+                record.fieldvalue_set.create(value=make_html(m['link'], m['label']))
+            else:
+                Media.objects.create(
+                    record=record,
+                    name=name_from_url(m['link']),
+                    url=m['link'],
+                    storage=ovcstorage_full,
+                    mimetype=m['type'])

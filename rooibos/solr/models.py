@@ -57,7 +57,7 @@ class SolrIndex():
         result = conn.search(q, sort=sort, start=start, rows=rows, facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount)
         ids = [int(r['id']) for r in result]
         records = Record.objects.in_bulk(ids)
-        return (result.hits, map(lambda i: records[i], ids), result.facets)
+        return (result.hits, filter(None, map(lambda i: records.get(i), ids)), result.facets)
         
     def clear(self):
         RecordInfo.objects.all().delete()
@@ -81,8 +81,7 @@ class SolrIndex():
                 conn.add(docs)
                 docs = []
             RecordInfo.objects.create(record=record, last_index=datetime.now())
-            if verbose:
-                #and count % 100 == 0:
+            if verbose and count % 100 == 0:
                 print "\r%s" % count,
         if docs:
             conn.add(docs)

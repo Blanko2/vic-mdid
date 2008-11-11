@@ -9,7 +9,10 @@ import settings
 
 urlpatterns = patterns('',
     
-    (r'^$', main),    
+    (r'^$', main),
+    
+    url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
+    
     (r'^explore/', include('rooibos.solr.urls')),
     (r'^media/', include('rooibos.storage.urls')),
     (r'^data/', include('rooibos.data.urls')),

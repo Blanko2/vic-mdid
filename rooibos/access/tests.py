@@ -1,11 +1,12 @@
 import unittest
-from ..data.models import Group, Record, Field
-from models import AccessControl, get_effective_permissions
+from rooibos.data.models import Group, Record, Field
+from models import AccessControl
+from views import check_access, get_effective_permissions
 from django.contrib.auth.models import User, Group as UserGroup
 
 class AccessTestCase(unittest.TestCase):
 
-    def testUserAccess(self):
+    def testGetEffectivePermissions(self):
         user = User.objects.create(username='test')
         group = Group.objects.create()
         self.assertEqual((None, None, None), get_effective_permissions(user, group))
@@ -24,3 +25,15 @@ class AccessTestCase(unittest.TestCase):
 
         AccessControl.objects.create(group=group, user=user, read=True, manage=False)
         self.assertEqual((True, False, False), get_effective_permissions(user, group))        
+
+
+    def testCheckAccess(self):
+        user = User.objects.create(username='test2')
+        group = Group.objects.create()
+        self.assertEqual(False, check_access(user, group, read=True))
+
+        AccessControl.objects.create(user=user, group=group, read=True, write=True)
+        
+        self.assertEqual(True, check_access(user, group, read=True))
+        self.assertEqual(True, check_access(user, group, read=True, write=True))
+        self.assertEqual(False, check_access(user, group, read=True, manage=True))

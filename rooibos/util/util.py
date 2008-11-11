@@ -1,4 +1,5 @@
 from django.contrib.sites.models import Site
+from django.db.models import Q
 import sys
 
 def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', check_current_slug=False):
@@ -31,8 +32,20 @@ def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', ch
             slug = slugify(slug_source and getattr(item, slug_source, slug_literal) or slug_literal)
         slug = slug[:max_length]
         slug_check = slug[:min(len(slug), max_length-len(str(sys.maxint)))]
-        allSlugs = [getattr(i, slug_field)
-                    for i in itemModel.objects.complex_filter({'%s__startswith' % slug_field: slug_check})]
+        
+        query = itemModel.objects.complex_filter({'%s__startswith' % slug_field: slug_check})
+        
+        # check to see if slug needs to be unique together with another field only
+        unique_together = filter(lambda f: slug_field in f, itemModel._meta.unique_together)
+        # only handle simple case of one unique_together with one additional field
+        if len(unique_together) == 1 and len(unique_together[0]) == 2:
+            l = list(unique_together[0])
+            l.remove(slug_field)
+            unique_with = l[0]
+            query = query & itemModel.objects.complex_filter({unique_with: getattr(item, unique_with)})
+        
+        allSlugs = [getattr(i, slug_field) for i in query]
+        
         if slug in allSlugs:
             counter = 2
             uniqueslug = slug

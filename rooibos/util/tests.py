@@ -1,5 +1,6 @@
 import unittest
-from ..data.models import Group
+from rooibos.data.models import Group, Record
+from rooibos.storage.models import Media
 
 class UniqueSlugTestCase(unittest.TestCase):
     
@@ -20,3 +21,17 @@ class UniqueSlugTestCase(unittest.TestCase):
         g = Group.objects.create(title='TestUniqueSlugs')
         self.assertEqual('testuniqueslugs-3', g.name)
         
+        
+    def testUniqueWithSomethingSlugs(self):
+        r1 = Record.objects.create()
+        r2 = Record.objects.create()
+        
+        m1 = Media.objects.create(record=r1, name='thumb', url='m1')
+        m2 = Media.objects.create(record=r2, name='thumb', url='m2')
+        
+        self.assertEqual('thumb', m1.name)
+        self.assertEqual('thumb', m2.name)
+        
+        m2b = Media.objects.create(record=r2, name='thumb', url='m2b')
+        
+        self.assertEqual('thumb-2', m2b.name)

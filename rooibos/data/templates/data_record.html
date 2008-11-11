@@ -17,14 +17,14 @@
 <div>
     <h2>Available Metadata</h2>
     {% for value in record.fieldvalue_set.all %}
-        <span>{{ value.resolved_label }}:</span> <span>{{ value.value }}</span><br />
+        <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span><br />
     {% endfor %}
 </div>
 
 <div>
     <h2>Available Media</h2>
     {% for media in record.media_set.all %}
-        {{ media.name }} {% inlineview media %}<br />
+        {{ media.name }}<br />{% inlineview media %}<br />
         {% if not forloop.last %}
         <hr />
         {% endif %}
