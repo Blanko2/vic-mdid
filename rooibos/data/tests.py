@@ -1,6 +1,6 @@
 import unittest
 from .models import Group, GroupMembership, Record, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 
 class FieldValueTestCase(unittest.TestCase):
@@ -29,8 +29,8 @@ class FieldValueTestCase(unittest.TestCase):
         c2 = record.fieldvalue_set.create(field=self.creatorField, value='John X. Doe', type='T', group=self.group)
         l1 = record.fieldvalue_set.create(field=self.locationField, value='Harrisonburg', type='T', owner=self.user)
                 
-        self.assertEqual("0:00:0", str(datetime.now() - record.created)[:6])
-        self.assertEqual("0:00:0", str(datetime.now() - record.modified)[:6])
+        self.assertEqual(True, datetime.now() - record.created < timedelta(0, 60))
+        self.assertEqual(True, datetime.now() - record.modified < timedelta(0, 60))
         
         self.assertEqual("Caption", t1.resolved_label)
         self.assertEqual("Title", t2.resolved_label)
