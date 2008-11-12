@@ -3,7 +3,7 @@ from rooibos.data.models import Group, Record, Field
 from rooibos.storage.models import Storage
 from models import AccessControl
 from views import check_access, get_effective_permissions, filter_by_access
-from django.contrib.auth.models import User, Group as UserGroup
+from django.contrib.auth.models import User, Group as UserGroup, AnonymousUser
 
 class AccessTestCase(unittest.TestCase):
 
@@ -105,6 +105,17 @@ class AccessTestCase(unittest.TestCase):
         result = filter_by_access(user, Group.objects.all(), manage=True)
         self.assertEqual(0, len(result))
 
+
+    def testAnonymousUserAccessControl(self):
+        user = AnonymousUser()
+        group1 = Group.objects.create()
+        group2 = Group.objects.create()
+        AccessControl.objects.create(group=group1, read=True)
+        
+        result = filter_by_access(user, Group.objects.all(), read=True)
+        self.assertEqual(1, len(result))
+        self.assertEqual(True, group1 in result)
+        self.assertEqual(False, group2 in result)
         
     def testAccessControl(self):
         user = User.objects.create(username='test4')

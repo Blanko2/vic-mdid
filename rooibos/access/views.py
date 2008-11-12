@@ -54,10 +54,12 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
         (field, check) = kwargs.popitem()
         if not check:
             return Q()
-        group_allowed_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: True}).values(model_id).query)
-        group_denied_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: False}).values(model_id).query)
         user_allowed_q = Q(id__in=AccessControl.objects.filter(user_q, **{field: True}).values(model_id).query)
         user_denied_q = Q(id__in=AccessControl.objects.filter(user_q, **{field: False}).values(model_id).query)
+        if user.is_anonymous():
+            return user_allowed_q & ~user_denied_q
+        group_allowed_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: True}).values(model_id).query)
+        group_denied_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: False}).values(model_id).query)
         return ((group_allowed_q & ~group_denied_q) | user_allowed_q) & ~user_denied_q
         
     return queryset.filter(build_query(read=read), build_query(write=write), build_query(manage=manage)).distinct()
