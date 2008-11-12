@@ -1,7 +1,8 @@
 import unittest
 from rooibos.data.models import Group, Record, Field
+from rooibos.storage.models import Storage
 from models import AccessControl
-from views import check_access, get_effective_permissions
+from views import check_access, get_effective_permissions, filter_by_access
 from django.contrib.auth.models import User, Group as UserGroup
 
 class AccessTestCase(unittest.TestCase):
@@ -37,3 +38,94 @@ class AccessTestCase(unittest.TestCase):
         self.assertEqual(True, check_access(user, group, read=True))
         self.assertEqual(True, check_access(user, group, read=True, write=True))
         self.assertEqual(False, check_access(user, group, read=True, manage=True))
+
+    
+    def testFilterByAccessUserOnly(self):
+        user = User.objects.create(username='test3')
+        group1 = Group.objects.create()
+        group2 = Group.objects.create()
+        group3 = Group.objects.create()
+        AccessControl.objects.create(user=user, group=group1, read=True, write=True)
+        AccessControl.objects.create(user=user, group=group2, read=True)
+        AccessControl.objects.create(user=user, group=group3, read=False)
+        
+        result = filter_by_access(user, Group.objects.all())
+        self.assertEqual(2, len(result))
+        self.assertEqual(True, group1 in result)
+        self.assertEqual(True, group2 in result)
+        self.assertEqual(False, group3 in result)
+        
+        result = filter_by_access(user, Group.objects.all(), read=True, write=True)
+        self.assertEqual(1, len(result))
+        self.assertEqual(True, group1 in result)
+        self.assertEqual(False, group2 in result)
+        self.assertEqual(False, group3 in result)
+
+        result = filter_by_access(user, Group.objects.all(), manage=True)
+        self.assertEqual(0, len(result))
+
+    
+    def testFilterByAccessUserGroup(self):
+        
+        user = User.objects.create(username='test5')
+        group1 = Group.objects.create()
+        group2 = Group.objects.create()
+        group3 = Group.objects.create()
+        usergroup1 = UserGroup.objects.create(name='group5a')
+        usergroup2 = UserGroup.objects.create(name='group5b')
+        
+        user.groups.add(usergroup1)
+        user.groups.add(usergroup2)
+
+        # group 1 permissions
+        AccessControl.objects.create(user=user, group=group1, read=True, write=True)
+        
+        # group 2 permissions
+        AccessControl.objects.create(user=user, group=group2, read=True)        
+        AccessControl.objects.create(usergroup=usergroup1, group=group2, write=True)
+        
+        # group 3 permissions
+        AccessControl.objects.create(user=user, group=group3, read=True, manage=False)
+        AccessControl.objects.create(usergroup=usergroup1, group=group3, read=True, write=True, manage=True)
+        AccessControl.objects.create(usergroup=usergroup2, group=group3, write=False, manage=False)
+        
+        # checks
+        result = filter_by_access(user, Group.objects.all(), read=True)
+        self.assertEqual(3, len(result))
+        self.assertEqual(True, group1 in result)
+        self.assertEqual(True, group2 in result)
+        self.assertEqual(True, group3 in result)
+
+        result = filter_by_access(user, Group.objects.all(), read=True, write=True)
+        self.assertEqual(2, len(result))
+        self.assertEqual(True, group1 in result)
+        self.assertEqual(True, group2 in result)
+        self.assertEqual(False, group3 in result)
+
+        result = filter_by_access(user, Group.objects.all(), manage=True)
+        self.assertEqual(0, len(result))
+
+        
+    def testAccessControl(self):
+        user = User.objects.create(username='test4')
+        usergroup = UserGroup.objects.create(name='group4')
+        group = Group.objects.create()
+        storage = Storage.objects.create(name='test4')
+        
+        try:
+            AccessControl.objects.create(user=user, usergroup=usergroup, group=group)
+            self.assertEqual('result', 'this code should not run')
+        except ValueError:
+            pass
+        
+        try:
+            AccessControl.objects.create(user=user, group=group, storage=storage)
+            self.assertEqual('result', 'this code should not run')
+        except ValueError:
+            pass
+
+        try:
+            AccessControl.objects.create(user=user)
+            self.assertEqual('result', 'this code should not run')
+        except ValueError:
+            pass
