@@ -5,7 +5,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 from rooibos.ui.views import main
-import settings
+from django.conf import settings
 
 urlpatterns = patterns('',
     

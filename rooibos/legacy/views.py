@@ -2,14 +2,14 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseNotAllowed
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
-from rooibos.settings import SECURE_LOGIN, WEBSERVICE_NAMESPACE
+from django.conf import settings
 from rooibos.data.models import *
 import random
 from datetime import datetime
 
 def imageviewer_login(request):    
     
-    if SECURE_LOGIN and not request.is_secure():
+    if settings.SECURE_LOGIN and not request.is_secure():
         return HttpResponseForbidden()
     
     if request.method != 'POST':
@@ -34,7 +34,7 @@ def imageviewer_login(request):
             )}
                     
     return render_to_response('imageviewer_login.xml',
-                              {'namespace': WEBSERVICE_NAMESPACE,
+                              {'namespace': settings.WEBSERVICE_NAMESPACE,
                                'errormessage': errormessage,
                                'resultcode': resultcode,
                                'sessiontoken': sessiontoken,
@@ -69,7 +69,7 @@ def imageviewer_getslideshow(request):
                     } for r in group.all_records]
 
     return render_to_response('imageviewer_slideshow.xml',
-                              {'namespace': WEBSERVICE_NAMESPACE,
+                              {'namespace': settings.WEBSERVICE_NAMESPACE,
                                'resultcode': resultcode,
                                'errormessage': errormessage,
                                'slides': slides},

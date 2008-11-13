@@ -2,7 +2,7 @@ from django.db import models
 from django.core.files import File
 from rooibos.util.util import unique_slug
 from rooibos.data.models import Record
-from rooibos.settings import STORAGE_SYSTEMS
+from django.conf import settings
 import random
 import Image
 
@@ -20,8 +20,8 @@ class Storage(models.Model):
         return self.name
     
     def _get_storage_system(self):
-        if STORAGE_SYSTEMS.has_key(self.system):
-            (modulename, classname) = STORAGE_SYSTEMS[self.system].rsplit('.', 1)
+        if settings.STORAGE_SYSTEMS.has_key(self.system):
+            (modulename, classname) = settings.STORAGE_SYSTEMS[self.system].rsplit('.', 1)
             module = __import__(modulename)
             for c in modulename.split('.')[1:]:
                 module = getattr(module, c)

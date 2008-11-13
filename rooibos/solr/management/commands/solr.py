@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from ...models import SolrIndex
+from rooibos.solr.models import SolrIndex
 
 class Command(BaseCommand):
     help = 'Updates the Solr index\nAvailable commands: optimize|index|reindex|clear'

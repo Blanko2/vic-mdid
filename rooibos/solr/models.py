@@ -1,8 +1,8 @@
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
-from ..data.models import Record, Group
-from ..settings import SOLR_URL
+from rooibos.data.models import Record, Group
+from django.conf import settings
 from pysolr import Solr
 from datetime import datetime
 import re
@@ -28,7 +28,7 @@ def post_delete_callback(sender, **kwargs):
     try:
         id = kwargs['instance'].id
         RecordInfo.objects.filter(record__id=id).delete()
-        conn = Solr(SOLR_URL)
+        conn = Solr(settings.SOLR_URL)
         conn.delete(id=str(id))
     except:
         pass
@@ -53,7 +53,7 @@ class SolrIndex():
         self._clean_string_re = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
     
     def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0):
-        conn = Solr(SOLR_URL)
+        conn = Solr(settings.SOLR_URL)
         result = conn.search(q, sort=sort, start=start, rows=rows, facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount)
         ids = [int(r['id']) for r in result]
         records = Record.objects.in_bulk(ids)
@@ -61,16 +61,16 @@ class SolrIndex():
         
     def clear(self):
         RecordInfo.objects.all().delete()
-        conn = Solr(SOLR_URL)
+        conn = Solr(settings.SOLR_URL)
         conn.delete(q='*:*')    
         
     def optimize(self):
-        conn = Solr(SOLR_URL)
+        conn = Solr(settings.SOLR_URL)
         conn.optimize()
     
     def index(self, verbose=False):
         self._build_group_tree()
-        conn = Solr(SOLR_URL)
+        conn = Solr(settings.SOLR_URL)
         records = Record.objects.filter(recordinfo=None)
         count = 0
         docs = []

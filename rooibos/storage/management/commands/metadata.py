@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from ...models import Media
+from rooibos.storage.models import Media
 
 class Command(BaseCommand):
     help = 'Manages media metadata\nAvailable commands: refresh'
