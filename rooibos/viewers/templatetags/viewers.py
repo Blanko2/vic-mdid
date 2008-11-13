@@ -1,9 +1,9 @@
 from django import template
 from rooibos.storage.models import Media
-from rooibos.ui.viewers import generate_inlineviewer
+from rooibos.viewers.views import generate_view_inline
 
 register = template.Library()
 
 @register.simple_tag
-def inlineview(media):
-    return generate_inlineviewer(media)
+def view_inline(media):
+    return generate_view_inline(media)

@@ -1,11 +1,16 @@
 {% extends "master.html" %}
+{% load viewers %}
 
 {% block content %}
 
 <h1>{{ group.title }}</h1>
 
 <div>
-    {{ group.description }}
+    Description: {{ group.description }}
+</div>
+
+<div>
+    {% view_inline group %}
 </div>
 
 <div>

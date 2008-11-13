@@ -1,6 +1,6 @@
 {% extends "master.html" %}
 {% load storage_extras %}
-{% load ui_extras %}
+{% load viewers %}
 
 {% block titledetail %}
 - {{ record.title }}
@@ -24,7 +24,7 @@
 <div>
     <h2>Available Media</h2>
     {% for media in record.media_set.all %}
-        {{ media.name }}<br />{% inlineview media %}<br />
+        {{ media.name }}<br />{% view_inline media %}<br />
         {% if not forloop.last %}
         <hr />
         {% endif %}
