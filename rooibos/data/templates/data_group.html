@@ -13,6 +13,14 @@
     {% view_inline group %}
 </div>
 
+{% if viewers %}
+<div>
+    {% for viewer in viewers %}
+        {{ viewer|safe }}<br />
+    {% endfor %}
+</div>
+{% endif %}
+
 <div>
     <a href="{% url solr-search-group group=group.name %}">Explore this group</a>
 </div>

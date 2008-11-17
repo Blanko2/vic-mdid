@@ -1,9 +1,16 @@
+from __future__ import with_statement
 from zipfile import ZipFile, ZIP_DEFLATED
 from django.template.loader import render_to_string
-from rooibos.storage.models import Media
+from django.http import HttpResponse
+from django.template import RequestContext
+from django.shortcuts import get_object_or_404, render_to_response
+from django.core.urlresolvers import reverse
 import os
 import xml.dom.minidom
+from tempfile import mkstemp
+from rooibos.data.models import Group
 from rooibos.util.util import guess_extension
+from rooibos.storage.models import Media
 
 PROCESS_FILES = {
     'ppt/slides/_rels/slide2.xml.rels': 'record_slide_rels',
@@ -27,7 +34,8 @@ class PowerPointGenerator:
         self.remove_placeholder_image = True
         self.media = {}
         
-    def get_templates(self):
+    @staticmethod
+    def get_templates():
         return filter(lambda f: f.endswith('.pptx'), os.listdir(os.path.join(os.path.dirname(__file__), 'pptx_templates')))
     
     def generate(self, template, outfile):
@@ -142,7 +150,7 @@ class PowerPointGenerator:
             if t == 'title':
                 t = self.group.title
             elif t == 'description':
-                t = self.group.description
+                t = self.group.description or ''
             e.firstChild.nodeValue = t        
         outfile.writestr(name, x.toxml())        
         
@@ -177,3 +185,36 @@ class PowerPointGenerator:
     def _content_types(self, name, content, outfile):
         self.content_types = content
     
+    
+class PowerPointViewer:
+    title = "Save group as PowerPoint"    
+    types = ('group',)
+    targets = ('link',)
+    
+    def generate(self, object):
+        return '<a href="%s">%s</a>' % (reverse('powerpoint-options', kwargs={'groupname': object.name}), self.title)
+
+
+def powerpoint_options(request, groupname):
+    group = get_object_or_404(Group, name=groupname) 
+    template_urls = map(lambda t: reverse('powerpoint-generator', kwargs={'groupname': groupname, 'template': t}),
+                        PowerPointGenerator.get_templates())
+    return render_to_response('powerpoint_options.html',
+                              {'template_urls': template_urls,
+                               'group': group,},
+                              context_instance=RequestContext(request))
+
+
+def powerpoint_generator(request, groupname, template):
+    group = get_object_or_404(Group, name=groupname)        
+    g = PowerPointGenerator(group)
+    filename = os.tempnam()
+    try:
+        g.generate(g.get_templates()[0], filename)
+        with open(filename, mode="rb") as f:
+            response = HttpResponse(content=f.read(),
+                mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        response['Content-Disposition'] = 'attachment; filename=%s.pptx' % groupname
+        return response        
+    finally:
+        os.unlink(filename)

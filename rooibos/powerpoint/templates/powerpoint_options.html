@@ -1,0 +1,13 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h1>{{ group.title }}</h1>
+
+<div>
+{% for url in template_urls %}
+    <a href="{{ url }}">{{ url }}</a><br />
+{% endfor %}
+</div>
+
+{% endblock %}

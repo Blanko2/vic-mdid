@@ -18,6 +18,7 @@ urlpatterns = patterns('',
     (r'^data/', include('rooibos.data.urls')),
     (r'^legacy/', include('rooibos.legacy.urls')),
     (r'^nasa/', include('rooibos.nasa.urls')),
+    (r'^powerpoint/', include('rooibos.powerpoint.urls')),
 
     # Uncomment the next line to enable admin documentation:
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
