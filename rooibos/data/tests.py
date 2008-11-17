@@ -1,5 +1,5 @@
 import unittest
-from .models import Group, GroupMembership, Record, Field
+from models import Group, GroupMembership, Record, Field
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 

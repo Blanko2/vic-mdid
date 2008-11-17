@@ -1,4 +1,4 @@
-# Django settings
+import os.path
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -68,9 +68,6 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'rooibos.urls'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
     'd:/dev/rooibos/rooibos/templates',
 )
 
@@ -93,6 +90,7 @@ INSTALLED_APPS = (
     'rooibos.nasa',
     'rooibos.ui',
     'rooibos.viewers',
+    'rooibos.powerpoint',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
