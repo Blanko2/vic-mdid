@@ -1,6 +1,7 @@
 from django.contrib.sites.models import Site
 from django.db.models import Q
 import sys
+import mimetypes
 
 def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', check_current_slug=False):
     """Ensures a unique slug field by appending an integer counter to duplicate slugs.
@@ -66,3 +67,10 @@ def safe_int(value, default):
 def get_full_url(absolute_url):
     # todo: support SSL
     return 'http://%s%s' % (Site.objects.get_current().domain, absolute_url)
+
+
+def guess_extension(mimetype):
+    x = mimetypes.guess_extension(mimetype)
+    if x == '.jpe':
+        return '.jpeg'
+    return x

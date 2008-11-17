@@ -111,6 +111,22 @@ class Media(models.Model):
             pass
 
     @staticmethod
+    def get_image_for_record(record, pref_width, pref_height):
+        # to do
+        media = Media.objects.filter(record=record)
+        if not media:
+            return None
+        result = None
+
+        for m in media:
+            if m.mimetype[:6] == 'image/':
+                result = m
+                continue
+            
+        return result
+
+
+    @staticmethod
     def get_thumbnail_for_record(record):
         media = Media.objects.filter(record=record)
         if not media:
