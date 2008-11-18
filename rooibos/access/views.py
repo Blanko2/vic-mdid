@@ -1,18 +1,18 @@
 from django.db.models import Q
-from django.http import Http404
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import _get_queryset
 from models import AccessControl
 
 def get_effective_permissions(user, model_instance):
     if user.is_superuser:
         return (True, True, True)
-    
     field = model_instance._meta.object_name.lower()
-
     if user.is_anonymous():
         q = Q(user=None, usergroup=None)
     else:
         q = Q(user=user) | Q(usergroup__in=user.groups.all())
     aclist = AccessControl.objects.filter(q, **{field: model_instance})
+    
     def reduce_by_filter(f):
         def combine(a, b):
             if a == False or (a == True and b == None):
@@ -38,12 +38,13 @@ def check_access(user, model_instance, read=True, write=False, manage=False, fai
     (r, w, m) = get_effective_permissions(user, model_instance)
     if (read and not r) or (write and not w) or (manage and not m):
         if fail_if_denied:
-            raise Http404
+            raise PermissionDenied
         return False
     return True
 
 
 def filter_by_access(user, queryset, read=True, write=False, manage=False):
+    queryset = _get_queryset(queryset)
     if not (read or write or manage) or user.is_superuser:  # nothing to do
         return queryset
     model_id = queryset.model._meta.object_name.lower() + '_id'
@@ -63,3 +64,13 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
         return ((group_allowed_q & ~group_denied_q) | user_allowed_q) & ~user_denied_q
         
     return queryset.filter(build_query(read=read), build_query(write=write), build_query(manage=manage)).distinct()
+
+
+def accessible_ids(user, queryset, read=True, write=False, manage=False):
+    queryset = _get_queryset(queryset)
+    return filter_by_access(user, queryset, read, write, manage).values('id').query
+
+
+def accessible_ids_list(user, queryset, read=True, write=False, manage=False):
+    queryset = _get_queryset(queryset)
+    return filter_by_access(user, queryset, read, write, manage).values_list('id', flat=True)

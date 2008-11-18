@@ -3,13 +3,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from models import SolrIndex
+from rooibos.access.views import filter_by_access, accessible_ids
 from rooibos.util.util import safe_int
 from rooibos.data.models import Field, Group
 
 def search(request, group=None):
 
     if group:
-        group = get_object_or_404(Group, name=group)
+        group = get_object_or_404(filter_by_access(request.user, Group), name=group)
 
     pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
     page = safe_int(request.GET.get('p', '1'), 1)

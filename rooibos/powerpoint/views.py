@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 import os
 import xml.dom.minidom
 from tempfile import mkstemp
+from rooibos.access.views import filter_by_access
 from rooibos.data.models import Group
 from rooibos.util.util import guess_extension
 from rooibos.storage.models import Media
@@ -196,7 +197,7 @@ class PowerPointViewer:
 
 
 def powerpoint_options(request, groupname):
-    group = get_object_or_404(Group, name=groupname) 
+    group = get_object_or_404(filter_by_access(request.user, Group), name=groupname) 
     template_urls = map(lambda t: reverse('powerpoint-generator', kwargs={'groupname': groupname, 'template': t}),
                         PowerPointGenerator.get_templates())
     return render_to_response('powerpoint_options.html',
@@ -206,7 +207,7 @@ def powerpoint_options(request, groupname):
 
 
 def powerpoint_generator(request, groupname, template):
-    group = get_object_or_404(Group, name=groupname)        
+    group = get_object_or_404(filter_by_access(request.user, Group), name=groupname)        
     g = PowerPointGenerator(group)
     filename = os.tempnam()
     try:

@@ -4,6 +4,7 @@ from rooibos.storage.models import Storage
 from models import AccessControl
 from views import check_access, get_effective_permissions, filter_by_access
 from django.contrib.auth.models import User, Group as UserGroup, AnonymousUser
+from django.core.exceptions import PermissionDenied
 
 class AccessTestCase(unittest.TestCase):
 
@@ -38,6 +39,12 @@ class AccessTestCase(unittest.TestCase):
         self.assertEqual(True, check_access(user, group, read=True))
         self.assertEqual(True, check_access(user, group, read=True, write=True))
         self.assertEqual(False, check_access(user, group, read=True, manage=True))
+
+        try:
+            check_access(user, group, read=True, manage=True, fail_if_denied=True)
+            self.assertEqual('result', 'this code should not run')
+        except PermissionDenied:
+            pass
 
     
     def testFilterByAccessUserOnly(self):
