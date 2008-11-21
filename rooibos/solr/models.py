@@ -1,12 +1,13 @@
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
-from rooibos.data.models import Record, Group
+from rooibos.data.models import Record, Group, Field
 from django.conf import settings
 from pysolr import Solr
 from datetime import datetime
 import re
 
+SOLR_EMPTY_FIELD_VALUE = 'unspecified'
 
 class RecordInfo(models.Model):
     record = models.OneToOneField(Record)
@@ -72,10 +73,11 @@ class SolrIndex():
         self._build_group_tree()
         conn = Solr(settings.SOLR_URL)
         records = Record.objects.filter(recordinfo=None)
+        required_fields = Field.objects.filter(standard__prefix='dc').values_list('name', flat=True)
         count = 0
         docs = []
         for record in records:
-            docs += [self._record_to_solr(record)]
+            docs += [self._record_to_solr(record, required_fields)]
             count += 1
             if len(docs) % 1000 == 0:
                 conn.add(docs)
@@ -88,10 +90,14 @@ class SolrIndex():
     
         print "\r%s" % count
     
-    def _record_to_solr(self, record):
+    def _record_to_solr(self, record, required_fields):
+        required_fields = dict((f,None) for f in required_fields)
         doc = { 'id': str(record.id) }
         for v in record.fieldvalue_set.all():
+            required_fields.pop(v.field.name, None)
             doc[v.field.name + '_t'] = [self._clean_string(v.value)] + (doc.get(v.field.name + '_t') or [])
+        for f in required_fields:
+            doc[f + '_t'] = SOLR_EMPTY_FIELD_VALUE
         parents = record.group_set.values_list('id', flat=True)
         # Combine the direct parents with (great-)grandparents
         doc['groups'] = list(reduce(lambda x,y:set(x)|set(y),[self.parent_groups[p] for p in parents],parents))

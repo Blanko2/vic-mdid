@@ -7,52 +7,86 @@ from rooibos.access.views import filter_by_access, accessible_ids
 from rooibos.util.util import safe_int
 from rooibos.data.models import Field, Group
 
-def search(request, group=None):
+def generate_query(group, criteria, keywords, *exclude):
+    fields = {}
+    for c in criteria:
+        if c in exclude:
+            continue
+        (f, o) = c.split(':', 1)
+        if f.startswith('-'):
+            f = 'NOT ' + f[1:]        
+        fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
+    fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)), fields.iteritems())
+    
+    def build_keywords(q, k):
+        k = k.lower()
+        if k == 'and' or k == 'or':
+            return q + ' ' + k.upper()
+        elif q.endswith(' AND') or q.endswith(' OR'):
+            return q + ' ' + k
+        else:
+            return q + ' AND ' + k
+    
+    if keywords: keywords = reduce(build_keywords, keywords.split())
+    
+    query = ''
+    if fields:    
+        query = ' AND '.join(fields)
+    if keywords:    
+        query = query and '%s AND (%s)' % (query, keywords) or keywords
+    if not query:
+        query = '*:*'
+    if group:
+        query = 'groups:%s AND %s' % (group.id, query)
+    return query
 
+def search(request, group=None):
     if group:
         group = get_object_or_404(filter_by_access(request.user, Group), name=group)
-
     pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
     page = safe_int(request.GET.get('p', '1'), 1)
-    query = request.GET.get('q')
     sort = request.GET.get('s', 'score')
-    limit = request.GET.get('l')
+    criteria = request.GET.getlist('c')
+    orquery = request.GET.get('or', None)
+    remove = request.GET.get('rem', None)
+    if remove: criteria.remove(remove)
+    keywords = request.GET.get('kw', '')
     
-    if limit:
-        if query:
-            query = '%s AND (%s)' % (limit, query)
-        else:
-            query = limit
-
-    q = request.GET.copy()
-    if query:
-        q['q'] = query
-    else:
-        query = '*:*'        
+    query = generate_query(group, criteria, keywords, remove)
+    exclude_facets = ('date', 'identifier', 'relation', 'source')
     
-    if group:
-        query = 'groups:%s AND (%s)' % (group.id, query)
-    
-    fields = ['country_t','creator_t','material_t','style_t','period_t']
-    
+    fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
+    fields = dict(map(lambda field: (field.name + '_t', field.label), fields))  
+   
     s = SolrIndex()
-    (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize, facets=fields, facet_mincount=1, facet_limit=50)
-
-    if hits and not records:
-        page = (hits - 1) / pagesize + 1
-        (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize, facets=fields, facet_mincount=1, facet_limit=50)
-
-    if limit:
-        del(q['l'])
+    (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize, facets=fields.keys(), facet_mincount=1, facet_limit=50)
+    
+    if orquery:
+        f = orquery.split(':', 1)[0]
+        orfacets = s.search(generate_query(group, criteria, keywords, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+    else:
+        orfacets = None
     
     if group:
         url = reverse('solr-search-group', kwargs={'group': group.name})
     else:
         url = reverse('solr-search')
     
-    
-    qurl = q.urlencode()
-    limit_url = "%s?%s%sl=" % (url, qurl, qurl and '&' or '')
+    q = request.GET.copy()
+    q.pop('or', None)
+    q.pop('rem', None)
+    q.pop('p', None)
+    q.setlist('c', criteria)
+    qurl = q.urlencode()    
+    hiddenfields = []
+    for f in q:
+        if f != 'kw':
+            for l in q.getlist(f):
+                hiddenfields.append((f, l))
+    q.setlist('c', filter(lambda c: c != orquery, criteria))
+    qurl_orquery = q.urlencode()
+    limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
+    limit_url_orquery = "%s?%s%s" % (url, qurl_orquery, qurl_orquery and '&' or '')
     prev_page_url = None
     next_page_url = None
     
@@ -63,12 +97,28 @@ def search(request, group=None):
         q['p'] = page + 1
         next_page_url = "%s?%s" % (url, q.urlencode())
 
-    for f in facets:
-        facets[f] = sorted(facets[f].iteritems())
-    facets = sorted(facets.iteritems())
+    facets = sorted(
+                map(lambda (name, items): {'name': name, 'items': sorted(items.iteritems()), 'label': fields[name]},
+                    filter(lambda (name, items): len(items) > 1, facets.iteritems())),
+                key=lambda f: f['label'])
+
+    def readable_criteria(c):
+        (f, o) = c.split(':', 1)
+        o = o.replace('|', ' or ')
+        if f.startswith('-'):
+            return (c, '%s not in %s' % (o, fields[f[1:]]), False)
+        else:
+            return (c, '%s in %s' % (o, fields[f]), True)
+
+    if orfacets:
+        orfacets = map(lambda (name, items): {'name': name, 'items': sorted(items.iteritems()), 'label': readable_criteria(orquery)[1] + ' or ...'},
+                        filter(lambda (name, items): len(items) > 1, orfacets.iteritems()))
 
     return render_to_response('results.html',
-                              {'query': query,
+                              {'criteria': map(readable_criteria, criteria),
+                               'query': query,
+                               'keywords': keywords,
+                               'hiddenfields': hiddenfields,
                                'records': records,
                                'hits': hits,
                                'page': page,
@@ -77,5 +127,8 @@ def search(request, group=None):
                                'next_page': next_page_url,
                                'reset_url': url,
                                'limit_url': limit_url,
-                               'facets': facets},
+                               'limit_url_orquery': limit_url_orquery,
+                               'facets': facets,
+                               'orfacets': orfacets,
+                               'orquery': orquery,},
                               context_instance=RequestContext(request))
