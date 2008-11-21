@@ -79,14 +79,14 @@ class Command(BaseCommand):
         storage = {}
 
         for row in cursor.execute("SELECT ID,Title FROM CollectionGroups"):
-            collgroups[row.ID] = Group.objects.create(title=row.Title)
+            collgroups[row.ID] = Group.objects.create(title=row.Title, type='collection')
 
         for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
             if row.ID in IMPORT_COLLECTIONS:
                 manager = None
                 if row.Type == 'N':
                     manager = 'nasaimageexchange'
-                groups[row.ID] = Group.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
+                groups[row.ID] = Group.objects.create(title=row.Title, type='collection', description=row.Description, agreement=row.UsageAgreement)            
                 if collgroups.has_key(row.GroupID):
                     collgroups[row.GroupID].subgroups.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
@@ -163,7 +163,7 @@ class Command(BaseCommand):
         count = 0
         slideshows = {}
         for row in cursor.execute("SELECT ID,Title,Description FROM Slideshows"):
-            slideshows[row.ID] = Group.objects.create(title=row.Title,description=row.Description)
+            slideshows[row.ID] = Group.objects.create(title=row.Title, type='presentation', description=row.Description)
         for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
             if images.has_key(row.ImageID):
                 GroupMembership.objects.create(record=images[row.ImageID],

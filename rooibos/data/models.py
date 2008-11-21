@@ -7,8 +7,15 @@ from rooibos.util.util import unique_slug
 import random
 
 class Group(models.Model):
+    
+    TYPE_CHOICES = (
+        ('collection', 'Collection'),
+        ('presentation', 'Presentation'),
+    )
+    
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50, unique=True)
+    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     subgroups = models.ManyToManyField('self', symmetrical=False)
     records = models.ManyToManyField('Record', through='GroupMembership')
     owner = models.ForeignKey(User, null=True)

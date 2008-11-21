@@ -6,7 +6,7 @@ from rooibos.access.views import filter_by_access, accessible_ids
 from rooibos.viewers.views import get_viewers
 
 def groups(request):    
-    groups = filter_by_access(request.user, Group)    
+    groups = filter_by_access(request.user, Group.objects.filter(type='collection'))    
     return render_to_response('data_groups.html',
                               {'groups': groups, },
                               context_instance=RequestContext(request))
