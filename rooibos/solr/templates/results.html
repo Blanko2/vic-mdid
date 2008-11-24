@@ -1,5 +1,10 @@
 {% extends "master.html" %}
 {% load storage_extras %}
+{% load help %}
+
+{% block help %}
+    {% pagehelp 'facet_search' %}
+{% endblock %}
 
 {% block content %}
 
@@ -10,7 +15,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
     {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
-<a href="{{ reset_url }}">Reset</a>
+<a href="{{ reset_url }}">Reset</a> {% help 'facet_search_reset' %}
 (Raw query was "{{query}}")
 </div>
 
@@ -19,7 +24,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
 <input type="hidden" name="{{ f }}" value="{{ v }}" />
 {% endfor %}
 <div class="horizontal-block">
-    Keywords: <input type="text" name="kw" value="{{ keywords }}"/>
+    Keywords: <input type="text" name="kw" value="{{ keywords }}"/> {% help 'facet_search_keywords' %}
 {% for c in criteria %}
   | {{ c.1 }}
   {% if c.2 %} <a href="{{ limit_url }}or={{ c.0 }}">(or ...)</a> {% endif %}

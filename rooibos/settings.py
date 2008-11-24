@@ -57,6 +57,14 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.load_template_source',
 )
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+#    "django.core.context_processors.request",
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -91,6 +99,7 @@ INSTALLED_APPS = (
     'rooibos.ui',
     'rooibos.viewers',
     'rooibos.powerpoint',
+    'rooibos.help',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
@@ -111,3 +120,9 @@ WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 SECURE_LOGIN = False
 
 LOGIN_REDIRECT_URL = '/'
+
+CACHE_BACKEND = 'db://cache?max_entries=1000'
+
+INTERNAL_IPS = ('127.0.0.1',)
+
+HELP_URL = 'https://wiki.cit.jmu.edu/mdidhelp/index.php/Help_v1:'

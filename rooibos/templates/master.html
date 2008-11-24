@@ -1,6 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-
 <head>
     <title>{% block title %}Rooibos {% block titledetail %}{% endblock %}{% endblock %}</title>
     
@@ -24,6 +23,7 @@
 </head>
 
 <body class="ui-reset">
+{% load help %}
 
 {% block header %}
 <div id="header">
@@ -34,8 +34,11 @@
           Welcome, {{ user.username }}.
         {% else %}
           <a href="{% url login %}">Log in</a>
-        {% endif %}
+        {% endif %}        
     </span>
+    {% block help %}
+        {% pagehelp 'main' %}    
+    {% endblock %}
 </div>
 {% endblock %}
 
@@ -47,6 +50,8 @@
     Copyright 1997-2009
 </div>
 {% endblock %}
+
+{% if debug %}<!-- {{ sql_queries }} -->{% endif %}
 
 </body>
 
