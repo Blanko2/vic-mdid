@@ -11,6 +11,7 @@ class Group(models.Model):
     TYPE_CHOICES = (
         ('collection', 'Collection'),
         ('presentation', 'Presentation'),
+        ('folder', 'Folder'),
     )
     
     title = models.CharField(max_length=100)

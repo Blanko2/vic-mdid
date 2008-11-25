@@ -79,7 +79,7 @@ TEMPLATE_DIRS = (
     'd:/dev/rooibos/rooibos/templates',
 )
 
-TEMPLATE_STRING_IF_INVALID = '[unknown]'
+#TEMPLATE_STRING_IF_INVALID = '[unknown]'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
