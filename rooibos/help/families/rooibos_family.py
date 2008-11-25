@@ -1,4 +1,5 @@
-# -*- coding: utf-8  -*-
+from django.conf import settings
+import urlparse
 
 __version__ = '$Id: mediawiki_family.py 5751 2008-07-24 16:47:58Z nicdumz $'
 
@@ -7,13 +8,30 @@ import family
 # Based on the MediaWiki family
 # user-config.py: usernames['rooibos']['rooibos'] = 'User name'
 
+def parse_help_url(url):
+    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
+    if path.endswith(':'):
+        (path, namespace) = path[:-1].rsplit('/', 1)
+    else:
+        namespace = ''
+    if path.endswith('/index.php'):
+        path = path[:-10]
+    return (scheme, netloc, path, namespace)
+
+
 class Family(family.Family):
     def __init__(self):
+        
+        (scheme, netloc, path, namespace) = parse_help_url(settings.HELP_URL)
+        self.help_scheme = scheme
+        self.help_path = path
+        self.help_namespace = namespace
+        
         family.Family.__init__(self)
         self.name = 'rooibos'
 
         self.langs = {
-            'rooibos': 'wiki.cit.jmu.edu',
+            'rooibos': netloc,
         }
 
         self.namespaces[100] = {
@@ -30,7 +48,7 @@ class Family(family.Family):
         """
         Can be overridden to return 'https'. Other protocols are not supported.
         """
-        return 'https'
+        return self.help_scheme
 
     def scriptpath(self, code):
         """The prefix used to locate scripts on this wiki.
@@ -44,4 +62,4 @@ class Family(family.Family):
         uses a different value.
 
         """
-        return '/mdidhelp'
+        return self.help_path
