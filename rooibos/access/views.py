@@ -6,6 +6,9 @@ from models import AccessControl
 def get_effective_permissions(user, model_instance):
     if user.is_superuser:
         return (True, True, True)
+    owner = getattr(model_instance, 'owner', None)
+    if owner and owner == user:
+        return (True, True, True)
     field = model_instance._meta.object_name.lower()
     if user.is_anonymous():
         q = Q(user=None, usergroup=None)
@@ -50,6 +53,7 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
     model_id = queryset.model._meta.object_name.lower() + '_id'
     usergroups_q = Q(usergroup__in=user.groups.all().values('id').query)
     user_q = user.is_anonymous() and Q(user__isnull=True, usergroup__isnull=True) or Q(user=user)
+    owner_q =  'owner' in (f.name for f in queryset.model._meta.fields) and Q(owner=user)
 
     def build_query(**kwargs):
         (field, check) = kwargs.popitem()
@@ -61,8 +65,11 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
             return user_allowed_q & ~user_denied_q
         group_allowed_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: True}).values(model_id).query)
         group_denied_q = Q(id__in=AccessControl.objects.filter(usergroups_q, **{field: False}).values(model_id).query)
-        return ((group_allowed_q & ~group_denied_q) | user_allowed_q) & ~user_denied_q
-        
+        result = ((group_allowed_q & ~group_denied_q) | user_allowed_q) & ~user_denied_q
+        if owner_q:
+            result = owner_q | result
+        return result
+    
     return queryset.filter(build_query(read=read), build_query(write=write), build_query(manage=manage)).distinct()
 
 
