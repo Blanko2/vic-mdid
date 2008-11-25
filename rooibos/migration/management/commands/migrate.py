@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
+from django.db import connection
+from django.contrib.auth.models import User, Group as UserGroup
 from xml.dom import minidom
 import os
 import pyodbc
@@ -8,10 +10,43 @@ from datetime import datetime
 from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
 from rooibos.storage.models import Storage, Media
 from rooibos.solr.models import DisableSolrUpdates, SolrIndex
-from django.db import connection
+from rooibos.access.models import AccessControl
 
 IMPORT_COLLECTIONS = (15,)
 IMPORT_RECORDS = 200
+
+# old permissions
+
+P = dict(
+    _None = 0,
+    ModifyACL = 1 << 0,
+    CreateCollection = 1 << 1,
+    ManageCollection = 1 << 2,
+    DeleteCollection = 1 << 3,
+    ModifyImages = 1 << 5,
+    ReadCollection = 1 << 7,
+    CreateSlideshow = 1 << 8,
+    ModifySlideshow = 1 << 9,
+    DeleteSlideshow = 1 << 10,
+    ViewSlideshow = 1 << 11,
+    CopySlideshow = 1 << 12,
+    FullSizedImages = 1 << 13,
+    AnnotateImages = 1 << 14,
+    ManageUsers = 1 << 15,
+    ImageViewerAccess = 1 << 16,
+    PublishSlideshow = 1 << 17,
+    ResetPassword = 1 << 18,
+    ManageAnnouncements = 1 << 21,
+    ManageControlledLists = 1 << 23,
+    ManageCollectionGroups = 1 << 25,
+    UserOptions = 1 << 26,
+    PersonalImages = 1 << 27,
+    ShareImages = 1 << 28,
+    SuggestImages = 1 << 29,
+    Unknown = 1 << 31,
+)
+
+
 
 class Command(BaseCommand):
     help = 'Migrates database from older version'
@@ -70,6 +105,41 @@ class Command(BaseCommand):
 
         DisableSolrUpdates()        
 #        self.clearDatabase()        
+
+
+        # Migrate users
+        print "Migrating users"
+        users = {}
+        duplicate_login_check = {}
+        for row in cursor.execute("SELECT ID,Login,Password,Name,FirstName,Email,Administrator,LastAuthenticated " +
+                                  "FROM Users"):
+            if duplicate_login_check.has_key(row.Login.lower()):
+                print "Warning: duplicate login detected: %s" % row.Login
+                continue
+            users[row.ID] = user = User()
+            user.username = row.Login[:30]
+            duplicate_login_check[user.username] = None
+            if row.Password:
+                user.password = row.Password.lower()
+            else:
+                user.set_unusable_password()
+            user.last_name = row.Name[:30]
+            user.first_name = row.FirstName[:30]
+            user.email = row.Email[:75]
+            user.is_superuser = row.Administrator
+            user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
+            user.save()
+
+        # Migrate user groups
+        print "Migrating user groups"
+        usergroups = {}
+        for row in cursor.execute("SELECT ID,Title,Type FROM UserGroups"):
+            usergroups[row.ID] = UserGroup.objects.create(name=row.Title)
+            # todo: handle non-membership groups
+        
+        for row in cursor.execute("SELECT UserID,GroupID FROM UserGroupMembers"):
+            if users.has_key(row.UserID):
+                users[row.UserID].groups.add(usergroups[row.GroupID])
         
         # Migrate collections and collection groups
          
@@ -91,6 +161,43 @@ class Command(BaseCommand):
                     collgroups[row.GroupID].subgroups.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
                     storage[row.ID] = Storage.objects.create(title=row.Title, system='local', base=row.ResourcePath.replace('\\', '/'))
+
+        # Migrate collection permissions
+        
+        #Privilege.ModifyACL  -> manage
+        #Privilege.ManageCollection  -> manage
+        #Privilege.DeleteCollection  -> manage
+        #Privilege.ModifyImages  -> write
+        #Privilege.ReadCollection  -> read
+        #Privilege.FullSizedImages  -> n/a
+        #Privilege.AnnotateImages  -> n/a
+        #Privilege.ManageControlledLists  -> manage
+        #Privilege.PersonalImages  -> n/a
+        #Privilege.ShareImages  -> n/a
+        #Privilege.SuggestImages  -> n/a
+       
+        def populate_access_control(ac, row, readmask, writemask, managemask):
+            def tristate(mask):
+                if row.DenyPriv & mask: return False
+                if row.GrantPriv & mask: return True                
+                return None
+            ac.read = tristate(readmask)
+            ac.write = tristate(writemask)
+            ac.manage = tristate(managemask)
+            if row.UserID:
+                ac.user = users[row.UserID]
+            else:
+                ac.usergroup = usergroups[row.GroupID]            
+       
+        for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
+                                  "FROM AccessControl WHERE ObjectType='C' AND ObjectID>0"):
+            if not groups.has_key(row.ObjectID):
+                continue
+            ac = AccessControl()
+            ac.group = groups[row.ObjectID]            
+            populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection'])                
+            ac.save()
+            
 
         # Migrate fields
         
@@ -157,13 +264,19 @@ class Command(BaseCommand):
             if count % 100 == 0:
                 print "%s\r" % count,
         
+        
+        # Migrate folders
+        
+        # todo
+        
         # Migrate slideshows
             
         print "Migrating slideshows and slides"
         count = 0
         slideshows = {}
-        for row in cursor.execute("SELECT ID,Title,Description FROM Slideshows"):
-            slideshows[row.ID] = Group.objects.create(title=row.Title, type='presentation', description=row.Description)
+        for row in cursor.execute("SELECT ID,UserID,Title,Description FROM Slideshows"):
+            slideshows[row.ID] = Group.objects.create(title=row.Title, owner=users[row.UserID],
+                                                      type='presentation', description=row.Description)
         for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
             if images.has_key(row.ImageID):
                 GroupMembership.objects.create(record=images[row.ImageID],
@@ -173,6 +286,15 @@ class Command(BaseCommand):
             count += 1
             if count % 100 == 0:
                 print "%s\r" % count,
+
+        # Migrate slideshow permissions
+        
+        # todo
+
+
+        # Migrate system permissions
+        
+        # todo
 
     def process_xml_resource(self, record, storage, file):
         
