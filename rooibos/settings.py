@@ -121,7 +121,7 @@ SECURE_LOGIN = False
 
 LOGIN_REDIRECT_URL = '/'
 
-CACHE_BACKEND = 'db://cache?max_entries=1000'
+CACHE_BACKEND = 'db://cache'
 
 INTERNAL_IPS = ('127.0.0.1',)
 
