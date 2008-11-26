@@ -163,7 +163,23 @@ class Command(BaseCommand):
                     storage[row.ID] = Storage.objects.create(title=row.Title, system='local', base=row.ResourcePath.replace('\\', '/'))
 
         # Migrate collection permissions
-        
+       
+        def populate_access_control(ac, row, readmask, writemask, managemask):
+            def tristate(mask):
+                if row.DenyPriv and row.DenyPriv & mask: return False
+                if row.GrantPriv and row.GrantPriv & mask: return True                
+                return None
+            ac.read = tristate(readmask)
+            ac.write = tristate(writemask)
+            ac.manage = tristate(managemask)
+            if row.UserID and users.has_key(row.UserID):
+                ac.user = users[row.UserID]
+            elif usergroups.has_key(row.GroupID):
+                ac.usergroup = usergroups[row.GroupID]
+            else:
+                return False
+            return True
+       
         #Privilege.ModifyACL  -> manage
         #Privilege.ManageCollection  -> manage
         #Privilege.DeleteCollection  -> manage
@@ -174,29 +190,16 @@ class Command(BaseCommand):
         #Privilege.ManageControlledLists  -> manage
         #Privilege.PersonalImages  -> n/a
         #Privilege.ShareImages  -> n/a
-        #Privilege.SuggestImages  -> n/a
-       
-        def populate_access_control(ac, row, readmask, writemask, managemask):
-            def tristate(mask):
-                if row.DenyPriv & mask: return False
-                if row.GrantPriv & mask: return True                
-                return None
-            ac.read = tristate(readmask)
-            ac.write = tristate(writemask)
-            ac.manage = tristate(managemask)
-            if row.UserID:
-                ac.user = users[row.UserID]
-            else:
-                ac.usergroup = usergroups[row.GroupID]            
-       
+        #Privilege.SuggestImages  -> n/a       
+        
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
                                   "FROM AccessControl WHERE ObjectType='C' AND ObjectID>0"):
             if not groups.has_key(row.ObjectID):
                 continue
             ac = AccessControl()
             ac.group = groups[row.ObjectID]            
-            populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection'])                
-            ac.save()
+            if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                ac.save()
             
 
         # Migrate fields
@@ -289,7 +292,20 @@ class Command(BaseCommand):
 
         # Migrate slideshow permissions
         
-        # todo
+        #Privilege.ModifyACL -> n/a
+        #Privilege.ModifySlideshow -> write
+        #Privilege.DeleteSlideshow -> manage
+        #Privilege.ViewSlideshow -> read
+        #Privilege.CopySlideshow -> n/a
+        
+        for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
+                                  "FROM AccessControl WHERE ObjectType='S' AND ObjectID>0"):
+            if not slideshows.has_key(row.ObjectID):
+                continue
+            ac = AccessControl()
+            ac.group = slideshows[row.ObjectID]            
+            if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
+                ac.save()
 
 
         # Migrate system permissions
