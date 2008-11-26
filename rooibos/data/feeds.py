@@ -1,7 +1,7 @@
 from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
 from rooibos.data.models import Group, Record
 from rooibos.storage.models import Media
-from rooibos.util.util import get_full_url
+from rooibos.util import get_full_url
 
 class GroupFeed(Feed):
 

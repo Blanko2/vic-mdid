@@ -2,7 +2,7 @@ from __future__ import with_statement
 import unittest
 from rooibos.data.models import Group, GroupMembership, Record, Field, FieldValue
 from rooibos.storage.models import Media, Storage
-from views import *
+from . import PowerPointGenerator
 import os
 import tempfile
 
@@ -22,7 +22,6 @@ class PowerpointTestCase(unittest.TestCase):
     
     def testSimplePowerpointFile(self):
         file = os.path.join(self.tempdir, 'test.pptx')
-        #file = os.path.join('c:/temp', 'test.pptx')
         group = Group.objects.create(title='Simple Group', description='This is a PowerPoint presentation created from a template and populated with actual group data.')
         field = Field.objects.get(name='title', standard__prefix='dc')
         for n in range(1, 11):

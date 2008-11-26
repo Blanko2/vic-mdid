@@ -2,7 +2,7 @@ from django import template
 from django.core.cache import cache
 from django.conf import settings
 from django.core.urlresolvers import resolve
-from rooibos.help.views import get_tooltip    
+from rooibos.help import get_tooltip    
     
 register = template.Library()
 

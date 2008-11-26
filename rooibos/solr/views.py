@@ -2,12 +2,12 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
-from models import SolrIndex
+from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids
-from rooibos.util.util import safe_int
+from rooibos.util import safe_int
 from rooibos.data.models import Field, Group
 
-def generate_query(group, criteria, keywords, *exclude):
+def _generate_query(group, criteria, keywords, *exclude):
     fields = {}
     for c in criteria:
         if c in exclude:
@@ -52,7 +52,7 @@ def search(request, group=None):
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
     
-    query = generate_query(group, criteria, keywords, remove)
+    query = _generate_query(group, criteria, keywords, remove)
     exclude_facets = ('date', 'identifier', 'relation', 'source')
     
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
@@ -63,7 +63,7 @@ def search(request, group=None):
     
     if orquery:
         f = orquery.split(':', 1)[0]
-        orfacets = s.search(generate_query(group, criteria, keywords, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+        orfacets = s.search(_generate_query(group, criteria, keywords, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
     else:
         orfacets = None
     

@@ -1,9 +1,10 @@
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
+from django.db.models import Q
 from models import Group, Record
 from rooibos.access import filter_by_access, accessible_ids
-from rooibos.viewers.views import get_viewers
+from rooibos.viewers import get_viewers
 
 def groups(request):    
     groups = filter_by_access(request.user, Group.objects.filter(type='collection'))    
@@ -20,7 +21,9 @@ def group_raw(request, groupname):
                               context_instance=RequestContext(request))
 
 def record_raw(request, recordname):
-    record = get_object_or_404(Record, name=recordname, group__id__in=accessible_ids(request.user, Group))    
+    record = Record.objects.filter(name=recordname, group__id__in=accessible_ids(request.user, Group)).distinct()
+    if len(record) == 0:
+        raise Http404
     return render_to_response('data_record.html',
-                              {'record': record, },
+                              {'record': record[0], },
                               context_instance=RequestContext(request))

@@ -1,6 +1,6 @@
 from django import template
 from rooibos.storage.models import Media
-from rooibos.viewers.views import generate_view_inline
+from rooibos.viewers import generate_view_inline
 
 register = template.Library()
 

@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from datetime import datetime
-from rooibos.util.util import unique_slug
+from rooibos.util import unique_slug
 import random
 
 class Group(models.Model):

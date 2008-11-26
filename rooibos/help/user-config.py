@@ -13,5 +13,5 @@ mylang = 'rooibos'
 # The dictionary usernames should contain a username for each site where you
 # have a bot account.
 usernames['rooibos'] = {}
-usernames['rooibos']['rooibos'] = u'mdidhelp'
+usernames['rooibos']['rooibos'] = u'rooibos'
 

@@ -9,7 +9,8 @@ from urlparse import urlparse
 from datetime import datetime
 from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
 from rooibos.storage.models import Storage, Media
-from rooibos.solr.models import DisableSolrUpdates, SolrIndex
+from rooibos.solr.models import DisableSolrUpdates
+from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 
 IMPORT_COLLECTIONS = (15,)

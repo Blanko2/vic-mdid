@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.files import File
-from rooibos.util.util import unique_slug
+from rooibos.util import unique_slug
 from rooibos.data.models import Record
 from django.conf import settings
 import random
