@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 import os
 import xml.dom.minidom
 from tempfile import mkstemp
-from rooibos.access.views import filter_by_access
+from rooibos.access import filter_by_access
 from rooibos.data.models import Group
 from rooibos.util.util import guess_extension
 from rooibos.storage.models import Media

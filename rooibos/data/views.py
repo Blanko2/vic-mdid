@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
 from models import Group, Record
-from rooibos.access.views import filter_by_access, accessible_ids
+from rooibos.access import filter_by_access, accessible_ids
 from rooibos.viewers.views import get_viewers
 
 def groups(request):    

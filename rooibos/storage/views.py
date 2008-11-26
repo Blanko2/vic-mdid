@@ -1,7 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.cache import cache_control
-from rooibos.access.views import check_access
+from rooibos.access import check_access
 from models import Media
 
 @cache_control(max_age=3600)

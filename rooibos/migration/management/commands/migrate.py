@@ -63,19 +63,6 @@ class Command(BaseCommand):
                 servertype = e.firstChild.nodeValue
         return (servertype, connection)
 
-    def clearDatabase(self):
-        SolrIndex().clear()
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM storage_media")        
-        cursor.execute("DELETE FROM storage_storage")
-        cursor.execute("DELETE FROM data_fieldvalue")
-        cursor.execute("DELETE FROM data_field")
-        cursor.execute("DELETE FROM data_groupmembership")
-        cursor.execute("DELETE FROM data_record")
-        cursor.execute("DELETE FROM access_accesscontrol")
-        cursor.execute("DELETE FROM data_group_subgroups")
-        cursor.execute("DELETE FROM data_group")
-        
 
     def handle(self, *config_files, **options):
         if len(config_files) != 1:
@@ -104,9 +91,7 @@ class Command(BaseCommand):
         print "Migrating from version %s" % version
 
         DisableSolrUpdates()        
-#        self.clearDatabase()        
-
-
+   
         # Migrate users
         print "Migrating users"
         users = {}
@@ -197,7 +182,7 @@ class Command(BaseCommand):
             if not groups.has_key(row.ObjectID):
                 continue
             ac = AccessControl()
-            ac.group = groups[row.ObjectID]            
+            ac.content_object = groups[row.ObjectID]            
             if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                 ac.save()
             
@@ -303,7 +288,7 @@ class Command(BaseCommand):
             if not slideshows.has_key(row.ObjectID):
                 continue
             ac = AccessControl()
-            ac.group = slideshows[row.ObjectID]            
+            ac.content_object = slideshows[row.ObjectID]            
             if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
                 ac.save()
 

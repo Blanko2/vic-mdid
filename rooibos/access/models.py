@@ -1,11 +1,12 @@
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group as UserGroup
-from rooibos.data.models import Group
-from rooibos.storage.models import Storage
 
-class AccessControl(models.Model):
-    group = models.ForeignKey(Group, null=True)
-    storage = models.ForeignKey(Storage, null=True)
+class AccessControl(models.Model):    
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
     user = models.ForeignKey(User, null=True)
     usergroup = models.ForeignKey(UserGroup, null=True)
     read = models.BooleanField(null=True)
@@ -13,11 +14,18 @@ class AccessControl(models.Model):
     manage = models.BooleanField(null=True)
 
     class Meta:
-        unique_together = ('group', 'storage', 'user', 'usergroup')
+        unique_together = ('content_type', 'object_id', 'user', 'usergroup')
         
     def save(self, **kwargs):
-        if (self.group and self.storage) or (self.user and self.usergroup):
+        if (self.user and self.usergroup):
             raise ValueError("Mutually exclusive fields set")
-        if (not self.group and not self.storage):
-            raise ValueError("Must specify a group or storage")
         super(AccessControl, self).save(kwargs)
+
+    def __unicode__(self):
+        def f(flag, char):
+            if flag == True: return char
+            elif flag == False: return char.upper()
+            else: return ' '
+        return '%s %s%s%s %s' % (self.user or self.usergroup,
+                                 f(self.read, 'r'), f(self.read, 'w'), f(self.manage, 'm'),
+                                 self.content_object)

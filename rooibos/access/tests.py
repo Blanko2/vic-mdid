@@ -2,7 +2,7 @@ import unittest
 from rooibos.data.models import Group, Record, Field
 from rooibos.storage.models import Storage
 from models import AccessControl
-from views import check_access, get_effective_permissions, filter_by_access
+from . import check_access, get_effective_permissions, filter_by_access
 from django.contrib.auth.models import User, Group as UserGroup, AnonymousUser
 from django.core.exceptions import PermissionDenied
 
@@ -15,8 +15,8 @@ class AccessTestCase(unittest.TestCase):
         
         usergroup1 = UserGroup.objects.create(name='group1')
         usergroup2 = UserGroup.objects.create(name='group2')        
-        AccessControl.objects.create(group=group, usergroup=usergroup1, read=True, write=False)
-        AccessControl.objects.create(group=group, usergroup=usergroup2, read=False, manage=True)
+        AccessControl.objects.create(content_object=group, usergroup=usergroup1, read=True, write=False)
+        AccessControl.objects.create(content_object=group, usergroup=usergroup2, read=False, manage=True)
         self.assertEqual((None, None, None), get_effective_permissions(user, group))
 
         user.groups.add(usergroup1)
@@ -25,7 +25,7 @@ class AccessTestCase(unittest.TestCase):
         user.groups.add(usergroup2)
         self.assertEqual((False, False, True), get_effective_permissions(user, group))        
 
-        AccessControl.objects.create(group=group, user=user, read=True, manage=False)
+        AccessControl.objects.create(content_object=group, user=user, read=True, manage=False)
         self.assertEqual((True, False, False), get_effective_permissions(user, group))        
 
 
@@ -34,7 +34,7 @@ class AccessTestCase(unittest.TestCase):
         group = Group.objects.create()
         self.assertEqual(False, check_access(user, group, read=True))
 
-        AccessControl.objects.create(user=user, group=group, read=True, write=True)
+        AccessControl.objects.create(user=user, content_object=group, read=True, write=True)
         
         self.assertEqual(True, check_access(user, group, read=True))
         self.assertEqual(True, check_access(user, group, read=True, write=True))
@@ -52,9 +52,9 @@ class AccessTestCase(unittest.TestCase):
         group1 = Group.objects.create()
         group2 = Group.objects.create()
         group3 = Group.objects.create()
-        AccessControl.objects.create(user=user, group=group1, read=True, write=True)
-        AccessControl.objects.create(user=user, group=group2, read=True)
-        AccessControl.objects.create(user=user, group=group3, read=False)
+        AccessControl.objects.create(user=user, content_object=group1, read=True, write=True)
+        AccessControl.objects.create(user=user, content_object=group2, read=True)
+        AccessControl.objects.create(user=user, content_object=group3, read=False)
         
         result = filter_by_access(user, Group.objects.all())
         self.assertEqual(2, len(result))
@@ -85,16 +85,16 @@ class AccessTestCase(unittest.TestCase):
         user.groups.add(usergroup2)
 
         # group 1 permissions
-        AccessControl.objects.create(user=user, group=group1, read=True, write=True)
+        AccessControl.objects.create(user=user, content_object=group1, read=True, write=True)
         
         # group 2 permissions
-        AccessControl.objects.create(user=user, group=group2, read=True)        
-        AccessControl.objects.create(usergroup=usergroup1, group=group2, write=True)
+        AccessControl.objects.create(user=user, content_object=group2, read=True)        
+        AccessControl.objects.create(usergroup=usergroup1, content_object=group2, write=True)
         
         # group 3 permissions
-        AccessControl.objects.create(user=user, group=group3, read=True, manage=False)
-        AccessControl.objects.create(usergroup=usergroup1, group=group3, read=True, write=True, manage=True)
-        AccessControl.objects.create(usergroup=usergroup2, group=group3, write=False, manage=False)
+        AccessControl.objects.create(user=user, content_object=group3, read=True, manage=False)
+        AccessControl.objects.create(usergroup=usergroup1, content_object=group3, read=True, write=True, manage=True)
+        AccessControl.objects.create(usergroup=usergroup2, content_object=group3, write=False, manage=False)
         
         # checks
         result = filter_by_access(user, Group.objects.all(), read=True)
@@ -117,7 +117,7 @@ class AccessTestCase(unittest.TestCase):
         user = AnonymousUser()
         group1 = Group.objects.create()
         group2 = Group.objects.create()
-        AccessControl.objects.create(group=group1, read=True)
+        AccessControl.objects.create(content_object=group1, read=True)
         
         result = filter_by_access(user, Group.objects.all(), read=True)
         self.assertEqual(1, len(result))
@@ -131,19 +131,8 @@ class AccessTestCase(unittest.TestCase):
         storage = Storage.objects.create(name='test4')
         
         try:
-            AccessControl.objects.create(user=user, usergroup=usergroup, group=group)
+            AccessControl.objects.create(user=user, usergroup=usergroup, content_object=group)
             self.assertEqual('result', 'this code should not run')
         except ValueError:
             pass
         
-        try:
-            AccessControl.objects.create(user=user, group=group, storage=storage)
-            self.assertEqual('result', 'this code should not run')
-        except ValueError:
-            pass
-
-        try:
-            AccessControl.objects.create(user=user)
-            self.assertEqual('result', 'this code should not run')
-        except ValueError:
-            pass

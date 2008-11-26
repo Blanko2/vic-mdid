@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from models import SolrIndex
-from rooibos.access.views import filter_by_access, accessible_ids
+from rooibos.access import filter_by_access, accessible_ids
 from rooibos.util.util import safe_int
 from rooibos.data.models import Field, Group
 
