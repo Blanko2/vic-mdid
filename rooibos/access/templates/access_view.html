@@ -1,0 +1,18 @@
+{% extends "master.html" %}
+{% load help %}
+
+{% block help %}
+    {% pagehelp 'access_view' %}
+{% endblock %}
+
+{% block content %}
+
+{{ object }}
+
+<ul>
+{% for rule in rules %}
+<li>{{ rule }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
