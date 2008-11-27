@@ -76,7 +76,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'rooibos.urls'
 
 TEMPLATE_DIRS = (
-    'd:/dev/rooibos/rooibos/templates',
+    '/home/andreas/dev/rooibos/rooibos/templates',
 )
 
 #TEMPLATE_STRING_IF_INVALID = '[unknown]'
