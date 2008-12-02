@@ -9,10 +9,25 @@
 
 {{ object }}
 
+{% if foruser %}
+
+<h2>Effective permissions for {{ foruser }}</h2>
+
+<ul>
+    <li>Read: {{ foruser_acl.0 }}</li>
+    <li>Write: {{ foruser_acl.1 }}</li>
+    <li>Manage: {{ foruser_acl.2 }}</li>
+</ul>
+
+{% endif %}
+
+<h2>Rules</h2>
+
 <ul>
 {% for rule in rules %}
 <li>{{ rule }}</li>
 {% endfor %}
 </ul>
+
 
 {% endblock %}
