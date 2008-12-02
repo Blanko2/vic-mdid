@@ -4,4 +4,5 @@ from views import *
 urlpatterns = patterns('',
     url(r'^search/$', search, name='solr-search'),
     url(r'^search/(?P<group>.*)/$', search, name='solr-search-group'),
+    url(r'^selected/$', selected, name='solr-selected'),
 )

@@ -60,8 +60,9 @@ class NasaImageExchange():
         # find records that already exist
         for record in records:
             del(d[record.source])
-            # todo: update record title, date, urls
+            # TODO: update record title, date, urls
         # create missing records
+        # TODO: add record to a NIX group
         for r in d.values():
             record = Record.objects.create(name=r['title'],
                                            manager='nasaimageexchange',

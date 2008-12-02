@@ -6,8 +6,9 @@ from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids
 from rooibos.util import safe_int
 from rooibos.data.models import Field, Group
+from rooibos.ui import update_record_selection, clean_record_selection_vars
 
-def _generate_query(group, criteria, keywords, *exclude):
+def _generate_query(group, criteria, keywords, selected, *exclude):
     fields = {}
     for c in criteria:
         if c in exclude:
@@ -38,11 +39,19 @@ def _generate_query(group, criteria, keywords, *exclude):
         query = '*:*'
     if group:
         query = 'groups:%s AND %s' % (group.id, query)
+    if selected:
+        query = 'id:(%s) AND %s' % (' '.join(map(str, selected)), query)
     return query
 
-def search(request, group=None):
+def selected(request):
+    return search(request, selected=True)
+
+def search(request, group=None, selected=False):
     if group:
         group = get_object_or_404(filter_by_access(request.user, Group), name=group)
+
+    update_record_selection(request)
+    
     pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'score')
@@ -52,7 +61,13 @@ def search(request, group=None):
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
     
-    query = _generate_query(group, criteria, keywords, remove)
+    if request.GET.has_key('action'):
+        page = safe_int(request.GET.get('op', '1'), 1)
+    
+    if selected:
+        selected = request.session.get('selected_records', ())
+    
+    query = _generate_query(group, criteria, keywords, selected, remove)
     exclude_facets = ('date', 'identifier', 'relation', 'source')
     
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
@@ -63,26 +78,31 @@ def search(request, group=None):
     
     if orquery:
         f = orquery.split(':', 1)[0]
-        orfacets = s.search(_generate_query(group, criteria, keywords, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+        orfacets = s.search(_generate_query(group, criteria, keywords, selected, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
     else:
         orfacets = None
     
     if group:
         url = reverse('solr-search-group', kwargs={'group': group.name})
+    elif selected:
+        url = reverse('solr-selected')
     else:
         url = reverse('solr-search')
     
     q = request.GET.copy()
+    q = clean_record_selection_vars(q)
     q.pop('or', None)
     q.pop('rem', None)
+    q.pop('action', None)
     q.pop('p', None)
+    q.pop('op', None)
     q.setlist('c', criteria)
-    qurl = q.urlencode()    
-    hiddenfields = []
+    hiddenfields = [('op', page)]
     for f in q:
         if f != 'kw':
             for l in q.getlist(f):
                 hiddenfields.append((f, l))
+    qurl = q.urlencode()
     q.setlist('c', filter(lambda c: c != orquery, criteria))
     qurl_orquery = q.urlencode()
     limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')

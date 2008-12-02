@@ -1,0 +1,5 @@
+<div id="sessionstatus">
+    {% if selected %}<a href="{% url solr-selected %}">{% endif %}
+    {{ selected }} record{{ selected|pluralize }} selected.
+    {% if selected %}</a>{% endif %}
+</div>

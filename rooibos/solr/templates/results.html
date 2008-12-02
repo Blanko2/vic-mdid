@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load storage_extras %}
+{% load ui %}
 {% load help %}
 
 {% block help %}
@@ -7,6 +7,8 @@
 {% endblock %}
 
 {% block content %}
+
+<form method="GET" action="{{ limit_url }}">
 
 <div class="horizontal-block">
 Your query found {{ hits }} hit{{ hits|pluralize }}.
@@ -19,19 +21,18 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
 (Raw query was "{{query}}")
 </div>
 
-<form method="GET" action="{{ limit_url }}">
 {% for f,v in hiddenfields %}
 <input type="hidden" name="{{ f }}" value="{{ v }}" />
 {% endfor %}
 <div class="horizontal-block">
     Keywords: <input type="text" name="kw" value="{{ keywords }}"/>
+    <input type="submit" value="Go" />
 {% for c in criteria %}
   | {{ c.1 }}
   {% if c.2 %} <a href="{{ limit_url }}or={{ c.0 }}">(or ...)</a> {% endif %}
   <a href="{{ limit_url }}rem={{ c.0 }}">(remove)</a>
 {% endfor %}
 </div>
-</form>
 
 <div class="facets">
 {% for facet in orfacets %}
@@ -64,17 +65,12 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
 
 {% if records %}
 <div class="resultlist">
-
-{% for record in records %}
-
-<div class="result">
-<a href="{{ record.get_absolute_url }}"><!--<img src="{% thumbnail record %}" />--></a><br />
-{{ record.title }}
-</div>
-
+<input type="submit" name="action" value="Select" />
+{% for r in records %}
+    {% record r 'selectable' session.selected_records %}
 {% endfor %}
-
 </div>
 {% endif %}
 
+</form>
 {% endblock %}

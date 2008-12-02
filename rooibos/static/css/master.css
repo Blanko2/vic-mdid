@@ -37,7 +37,7 @@
     width: 80%;    
 }
 
-.result {
+.record {
     float: left;
     border: thin lightgrey solid;
     width: 150px;
@@ -72,4 +72,11 @@
 
 .facet-body a {
     text-decoration: none;
+}
+
+
+#sessionstatus {
+    float: right;
+    border: thin #BBBB00 solid;
+    background-color: #CCCC00;
 }
