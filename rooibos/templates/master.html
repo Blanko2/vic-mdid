@@ -31,7 +31,7 @@
     <a href="{% url solr-search %}">Explore</a>
     <span>
         {% if user.is_authenticated %}
-          Welcome, {{ user.username }}.
+          Welcome, {{ user.username }}. <a href="{% url logout %}">Log out</a>
         {% else %}
           <a href="{% url login %}">Log in</a>
         {% endif %}        

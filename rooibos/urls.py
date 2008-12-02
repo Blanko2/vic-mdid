@@ -12,6 +12,7 @@ urlpatterns = patterns('',
     (r'^$', main),
     
     url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', name='logout'),
 
     (r'^acl/', include('rooibos.access.urls')),    
     (r'^explore/', include('rooibos.solr.urls')),
