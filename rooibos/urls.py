@@ -7,13 +7,13 @@ admin.autodiscover()
 from rooibos.ui.views import main
 from django.conf import settings
 
-urlpatterns = patterns('',
-    
+urlpatterns = patterns('',    
     (r'^$', main),
     
     url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', name='logout'),
-
+    url(r'^admin/(.*)', admin.site.root, name='admin'),
+    
     (r'^acl/', include('rooibos.access.urls')),    
     (r'^explore/', include('rooibos.solr.urls')),
     (r'^media/', include('rooibos.storage.urls')),
@@ -21,12 +21,6 @@ urlpatterns = patterns('',
     (r'^legacy/', include('rooibos.legacy.urls')),
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^powerpoint/', include('rooibos.powerpoint.urls')),
-
-    # Uncomment the next line to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line for to enable the admin:
-    (r'^admin/(.*)', admin.site.root),
 )
 
 if settings.DEBUG:

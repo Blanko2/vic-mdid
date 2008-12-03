@@ -33,6 +33,7 @@
     <span>
         {% if user.is_authenticated %}
           Welcome, {{ user.username }}. <a href="{% url logout %}">Log out</a>
+          {% if user.is_staff %}<a href="{% url admin "" %}">Admin</a>{% endif %}
         {% else %}
           <a href="{% url login %}">Log in</a>
         {% endif %}        
