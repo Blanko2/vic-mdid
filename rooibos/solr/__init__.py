@@ -61,6 +61,8 @@ class SolrIndex():
         parents = record.group_set.values_list('id', flat=True)
         # Combine the direct parents with (great-)grandparents
         doc['groups'] = list(reduce(lambda x,y:set(x)|set(y),[self.parent_groups[p] for p in parents],parents))
+        if record.owner_id:
+            doc['owner'] = record.owner_id
         return doc    
     
     def _clean_string(self, s):

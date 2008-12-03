@@ -208,6 +208,7 @@
 
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
    <field name="groups" type="long" indexed="true" stored="true" multiValued="true" />
+   <field name="owner" type="long" indexed="true" stored="true" multiValued="false" />
 
    <field name="popularity" type="sint" indexed="true" stored="true" default="0"/>
 

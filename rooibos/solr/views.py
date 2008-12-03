@@ -3,12 +3,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from . import SolrIndex
-from rooibos.access import filter_by_access, accessible_ids
+from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int
 from rooibos.data.models import Field, Group
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 
-def _generate_query(group, criteria, keywords, selected, *exclude):
+def _generate_query(user, group, criteria, keywords, selected, *exclude):
     fields = {}
     for c in criteria:
         if c in exclude:
@@ -41,6 +41,17 @@ def _generate_query(group, criteria, keywords, selected, *exclude):
         query = 'groups:%s AND %s' % (group.id, query)
     if selected:
         query = 'id:(%s) AND %s' % (' '.join(map(str, selected)), query)
+        
+    if not user.is_superuser:
+        groups = ' '.join(map(str, accessible_ids_list(user, Group.objects.filter(type='collection'))))
+        c = []
+        if groups: c.append('groups:(%s)' % groups)
+        if user.id: c.append('owner:%s' % user.id)
+        if c:
+            query = '(%s) AND %s' % (' OR '.join(c), query)
+        else:
+            query = 'id:"-1"'
+    
     return query
 
 def selected(request):
@@ -67,7 +78,7 @@ def search(request, group=None, selected=False):
     if selected:
         selected = request.session.get('selected_records', ())
     
-    query = _generate_query(group, criteria, keywords, selected, remove)
+    query = _generate_query(request.user, group, criteria, keywords, selected, remove)
     exclude_facets = ('date', 'identifier', 'relation', 'source')
     
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
@@ -78,7 +89,8 @@ def search(request, group=None, selected=False):
     
     if orquery:
         f = orquery.split(':', 1)[0]
-        orfacets = s.search(_generate_query(group, criteria, keywords, selected, remove, orquery), rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+        orfacets = s.search(_generate_query(request.user, group, criteria, keywords, selected, remove, orquery),
+                            rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
     else:
         orfacets = None
     
