@@ -147,9 +147,9 @@ class Command(BaseCommand):
                     collgroups[row.GroupID].subgroups.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
                     storage[row.ID] = {}
-                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + '(full)', system='local', base=row.ResourcePath.replace('\\', '/'))
-                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + '(medium)', system='local', base=row.ResourcePath.replace('\\', '/'))
-                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + '(thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))                    
+                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))                    
 
         # Migrate collection permissions
        

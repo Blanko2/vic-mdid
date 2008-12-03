@@ -54,7 +54,12 @@
 </div>
 {% endblock %}
 
-{% if debug %}<!-- {{ sql_queries }} -->{% endif %}
+{% if debug %}<!--
+{{ sql_queries|length }} queries:
+{% for q in sql_queries %}
+{{ q.sql }} ({{ q.time }})
+{% endfor %}
+-->{% endif %}
 
 </body>
 
