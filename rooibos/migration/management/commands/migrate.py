@@ -112,7 +112,7 @@ class Command(BaseCommand):
             user.last_name = row.Name[:30]
             user.first_name = row.FirstName[:30]
             user.email = row.Email[:75]
-            user.is_superuser = row.Administrator
+            user.is_superuser = user.is_staff = row.Administrator
             user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
             user.save()
 
@@ -146,7 +146,10 @@ class Command(BaseCommand):
                 if collgroups.has_key(row.GroupID):
                     collgroups[row.GroupID].subgroups.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
-                    storage[row.ID] = Storage.objects.create(title=row.Title, system='local', base=row.ResourcePath.replace('\\', '/'))
+                    storage[row.ID] = {}
+                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + '(full)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + '(medium)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + '(thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))                    
 
         # Migrate collection permissions
        
@@ -171,7 +174,7 @@ class Command(BaseCommand):
         #Privilege.DeleteCollection  -> manage
         #Privilege.ModifyImages  -> write
         #Privilege.ReadCollection  -> read
-        #Privilege.FullSizedImages  -> n/a
+        #Privilege.FullSizedImages  -> read (applied to storage)
         #Privilege.AnnotateImages  -> n/a
         #Privilege.ManageControlledLists  -> manage
         #Privilege.PersonalImages  -> n/a
@@ -182,11 +185,26 @@ class Command(BaseCommand):
                                   "FROM AccessControl WHERE ObjectType='C' AND ObjectID>0"):
             if not groups.has_key(row.ObjectID):
                 continue
+            # Group
             ac = AccessControl()
             ac.content_object = groups[row.ObjectID]            
             if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                 ac.save()
-            
+            # full storage
+            ac = AccessControl()
+            ac.content_object = storage[row.ObjectID]['full']
+            if populate_access_control(ac, row, P['FullSizedImages'], P['ModifyImages'], P['ManageCollection']):
+                ac.save()
+            # medium storage
+            ac = AccessControl()
+            ac.content_object = storage[row.ObjectID]['medium']
+            if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                ac.save()
+            # thumb storage
+            ac = AccessControl()
+            ac.content_object = storage[row.ObjectID]['thumb']
+            if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                ac.save()
 
         # Migrate fields
         
@@ -228,7 +246,7 @@ class Command(BaseCommand):
                                 record=images[row.ID],
                                 name=type,
                                 url='%s/%s' % (type, row.Resource),
-                                storage=storage[row.CollectionID],
+                                storage=storage[row.CollectionID][type],
                                 mimetype='image/jpeg')          
                 count += 1
                 if count % 100 == 0:
