@@ -86,7 +86,7 @@ class Record(models.Model):
     modified = models.DateTimeField(auto_now=True)
     name = models.SlugField(max_length=50, unique=True)
     parent = models.ForeignKey('self', null=True)
-    source = models.CharField(max_length=1000, null=True)
+    source = models.CharField(max_length=1024, null=True)
     manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)

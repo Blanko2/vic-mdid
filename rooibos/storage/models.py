@@ -7,8 +7,8 @@ import random
 import Image
 
 class Storage(models.Model):
-    title = models.CharField(max_length=50)
-    name = models.CharField(max_length=50)
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50)
     system = models.CharField(max_length=50)
     base = models.CharField(max_length=1024, null=True)
     
