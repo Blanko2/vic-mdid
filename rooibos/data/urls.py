@@ -12,5 +12,7 @@ urlpatterns = patterns('',
     url(r'^groups/$', groups, name='data-groups'),
     url(r'^group/(?P<groupname>[-\w]+)/$', group_raw, name='data-group'),
     url(r'^record/(?P<recordname>[-\w]+)/$', record_raw, name='data-record'),
+    url(r'^record/(?P<owner>[^/]+)/(?P<group>[-\w]+)/(?P<language>[-\w]+)/(?P<recordname>[-\w]+)/$',
+        record_raw, name='data-record'),
     (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
 )

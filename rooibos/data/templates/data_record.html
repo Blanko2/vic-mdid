@@ -16,19 +16,56 @@
 
 <div>
     <h2>Available Metadata</h2>
+    
+    <div>
+        Current context:
+        <ul>
+            <li>Owner: {{ owner }}</li>
+            <li>Group: {{ group }}</li>
+            <li>Language: {{ language }}</li>
+        </ul>
+        
+        Available contexts: <ul>
+        {% for c in contexts %}
+        <li><a href="{% url data-record recordname=record.name,owner=c.owner,group=c.group,language=c.language %}">{{ c.name }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+    <hr />
+    <div>
     {% for value in record.fieldvalue_set.all %}
         <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span><br />
     {% endfor %}
+    </div>
 </div>
 
 <div>
     <h2>Available Media</h2>
-    {% for media in record.media_set.all %}
-        {{ media.name }}<br />{% view_inline media %}<br />
-        {% if not forloop.last %}
-        <hr />
-        {% endif %}
+    {% if media %}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Storage</th>
+            <th>Mimetype</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Bitrate</th>
+        </tr>
+    {% for m in media %}
+        <tr>
+            <td><a href="{{ m.get_absolute_url }}">{{ m.name }}</a></td>
+            <td>{{ m.storage.title }}</td>
+            <td>{{ m.mimetype }}</td>
+            <td>{{ m.width }}</td>
+            <td>{{ m.height }}</td>
+            <td>{{ m.bitrate }}</td>
+        </tr>
     {% endfor %}
+    </table>
+    
+    {% else %}
+    No media is available for this record.
+    {% endif %}
 </div>
 
 {% endblock %}

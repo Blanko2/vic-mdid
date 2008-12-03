@@ -108,8 +108,8 @@ class Record(models.Model):
             return values
         remove = ()
         for v in values:
-            if v.override:
-                remove += (v.override.id,)
+            if v.override_id:
+                remove += (v.override_id,)
             if v.hidden:
                 remove += (v.id,)
         return values.exclude(id__in=remove)
