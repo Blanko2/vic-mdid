@@ -14,5 +14,8 @@ urlpatterns = patterns('',
     url(r'^record/(?P<recordname>[-\w]+)/$', record_raw, name='data-record'),
     url(r'^record/(?P<owner>[^/]+)/(?P<group>[-\w]+)/(?P<language>[-\w]+)/(?P<recordname>[-\w]+)/$',
         record_raw, name='data-record'),
+    url(r'^record/edit/(?P<recordname>[-\w]+)/$', record_edit, name='data-record-edit'),
+    url(r'^record/edit/(?P<owner>[^/]+)/(?P<group>[-\w]+)/(?P<language>[-\w]+)/(?P<recordname>[-\w]+)/$',
+        record_edit, name='data-record-edit'),
     (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
 )

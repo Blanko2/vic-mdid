@@ -1,0 +1,64 @@
+{% extends "data_record_master.html" %}
+{% load ui %}
+{% load viewers %}
+
+{% block record_content %}
+
+<div>
+    <h2>Edit Metadata</h2>
+    <form method="POST" action="">
+        {{ fv_formset.management_form }}
+        {% for form in fv_formset.forms %}
+            <div class="fieldvalue-edit">
+                {{ form.errors }}
+                <div class="column">
+                    {{ form.id }}
+                    <label for="{{ form.ORDER.html_name }}">Order:</label> {{ form.ORDER }}
+                </div>
+                <div class="column">
+                    <label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}<br />
+                    <label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}
+                </div>
+                <div class="column">
+                    {{ form.value }}
+                </div>
+                <div class="column">
+                    <label for="{{ form.type.html_name }}">Type:</label> {{ form.type }}<br />
+                    <label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}
+                </div>                
+            </div>
+        {% endfor %}
+        <input type="submit" />
+    </form>
+</div>
+
+<div>
+    <h2>Edit Media</h2>
+    {% if media %}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Storage</th>
+            <th>Mimetype</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Bitrate</th>
+        </tr>
+    {% for m in media %}
+        <tr>
+            <td><a href="{{ m.get_absolute_url }}">{{ m.name }}</a></td>
+            <td>{{ m.storage.title }}</td>
+            <td>{{ m.mimetype }}</td>
+            <td>{{ m.width }}</td>
+            <td>{{ m.height }}</td>
+            <td>{{ m.bitrate }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    
+    {% else %}
+    No media is available for this record.
+    {% endif %}
+</div>
+
+{% endblock %}

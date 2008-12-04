@@ -80,3 +80,36 @@
     border: thin #BBBB00 solid;
     background-color: #CCCC00;
 }
+
+div.fieldvalue-edit {
+    border-top: solid 1px #EEEEEE;
+    padding: 2px;
+    margin: 2px;
+    clear: both;
+}
+
+div.fieldvalue-edit textarea {
+    vertical-align: top;
+    width: 400px;
+    height: 60px;
+}
+
+div.fieldvalue-edit div.column {
+    float: left;
+    margin-right: 5px;
+}
+div.fieldvalue-edit div.column label {
+    width: 70px;
+    text-align: right;
+    display: block;
+    float: left;
+    clear: left;
+    margin-right: 5px;
+}
+
+optgroup {
+    font-style: normal;
+    font-weight: bold;
+    margin-top: 5px;
+    border-top: 1px solid black;
+}

@@ -102,8 +102,10 @@ class Record(models.Model):
                     slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Record, self).save(kwargs)
         
-    def get_fieldvalues(self, owner=None, group=None, for_display=False):
-        values = self.fieldvalue_set.filter(Q(group=group) | Q(group=None), Q(owner=owner) | Q(owner=None))
+    def get_fieldvalues(self, owner=None, group=None, language=None, for_display=False):
+        values = self.fieldvalue_set.filter(Q(group=group) | Q(group=None),
+                                            Q(owner=owner) | Q(owner=None),
+                                            Q(language=language) | Q(language=None))
         if not for_display:
             return values
         remove = ()
@@ -167,24 +169,27 @@ class FieldValue(models.Model):
         ('D', 'Date'),
         ('N', 'Numeric'),
     )
-    record = models.ForeignKey(Record)
+    record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
-    owner = models.ForeignKey(User, null=True)
-    label = models.CharField(max_length=100, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
+    label = models.CharField(max_length=100, blank=True)
     override = models.ForeignKey('self', null=True)
     hidden = models.BooleanField(default=False)
     value = models.TextField()
     type = models.CharField(max_length=1, choices=TYPE_CHOICES)
-    language = models.CharField(max_length=5, null=True)
+    language = models.CharField(max_length=5, blank=True)
     group = models.ForeignKey(Group, null=True)
-    order = models.IntegerField(null=True)
     
     def __unicode__(self):
         return "%s=%s" % (self.label, self.value[:20])
     
     @property
     def resolved_label(self):
-        return self.label or self.field.label
+        if self.label:
+            return self.label
+        if self.override:
+            return self.override.resolved_label
+        return self.field.label
     
     def dump(self, owner=None, group=None):
         print("%s: %s" % (self.resolved_label, self.value))

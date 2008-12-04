@@ -1,18 +1,8 @@
-{% extends "master.html" %}
+{% extends "data_record_master.html" %}
 {% load ui %}
 {% load viewers %}
 
-{% block titledetail %}
-- {{ record.title }}
-{% endblock %}
-
-{% block content %}
-
-<h1>{{ record.title }}</h1>
-
-<div>
-    <img src="{% thumbnail record %}" />
-</div>
+{% block record_content %}
 
 <div>
     <h2>Available Metadata</h2>
