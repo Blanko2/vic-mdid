@@ -45,13 +45,13 @@ def _get_fields():
 def _field_choices():        
     grouped = {}
     for f in _get_fields():
-        grouped.setdefault(f.standard and f.standard.name or 'Other', []).append(f)
-    return [(g, list((f.id, f.label) for f in grouped[g])) for g in grouped]
+        grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
+    return [('', '-' * 10)] + [(g, list((f.id, f.label) for f in grouped[g])) for g in grouped]
 
 class FieldValueForm(forms.ModelForm):
 
     def clean_field(self):
-        if not self._fields:
+        if not hasattr(self, '_fields'):
             self._fields = _get_fields()
         data = self.cleaned_data['field']
         return self._fields.get(id=data)
@@ -73,7 +73,7 @@ def record_edit(request, recordname, owner=None, group=None, language=''):
     fieldvalues = record.get_fieldvalues(owner=owner, group=group, language=language)
     print fieldvalues
     FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
-                                             exclude=FieldValueForm.Meta.exclude, can_order=True, extra=0)    
+                                             exclude=FieldValueForm.Meta.exclude, can_order=True, can_delete=True, extra=3)    
     if request.method == 'POST':
         formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
         if formset.is_valid():
@@ -97,5 +97,8 @@ def _clean_context(owner__username, group__name, language):
     c['owner'] = owner__username or '-'
     c['group'] = group__name or '-'
     c['language'] = language or '-'
-    c['name'] = 'Owner: %s Group: %s Language: %s' % (c['owner'], c['group'], c['language'])
+    if c['owner'] == '-' and c['group'] == '-' and c['language'] == '-':
+        c['label'] = 'Default'
+    else:
+        c['label'] = 'Owner: %s Group: %s Language: %s' % (c['owner'], c['group'], c['language'])
     return c

@@ -81,16 +81,22 @@
     background-color: #CCCC00;
 }
 
+.alternate-row {
+    background-color: #F7F7F7;    
+}
+
+
 div.fieldvalue-edit {
-    border-top: solid 1px #EEEEEE;
-    padding: 2px;
+    border-top: thin solid grey;
+    padding: 3px;
     margin: 2px;
     clear: both;
+    overflow: auto;
 }
 
 div.fieldvalue-edit textarea {
     vertical-align: top;
-    width: 400px;
+    width: 300px;
     height: 60px;
 }
 
@@ -107,9 +113,13 @@ div.fieldvalue-edit div.column label {
     margin-right: 5px;
 }
 
-optgroup {
+div.fieldvalue-edit optgroup {
     font-style: normal;
     font-weight: bold;
     margin-top: 5px;
     border-top: 1px solid black;
+}
+
+div.fieldvalue-edit span.fs-order input {
+    width: 30px;
 }
