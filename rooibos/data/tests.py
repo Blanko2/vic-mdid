@@ -49,15 +49,15 @@ class FieldValueTestCase(unittest.TestCase):
         t3 = record.fieldvalue_set.create(field=self.titleField, value='GroupOverride', type='T', override=t1, group=self.group)
         t4 = record.fieldvalue_set.create(field=self.titleField, value='OwnerAndGroupOverride', type='T', override=t1, owner=self.user, group=self.group)
         
-        self.assertEqual(1, len(record.get_fieldvalues(for_display=False)))
-        self.assertEqual(1, len(record.get_fieldvalues(for_display=True)))
-        self.assertEqual(1, len(record.get_fieldvalues(for_display=True, group=self.group)))
-        self.assertEqual(1, len(record.get_fieldvalues(for_display=True, owner=self.user)))
-        self.assertEqual(3, len(record.get_fieldvalues(for_display=True, owner=self.user, group=self.group)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=False, filter_hidden=False)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, group=self.group)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)))
+        self.assertEqual(3, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user, group=self.group)))
 
-        self.assertEqual('Original', record.get_fieldvalues(for_display=True)[0].value)
-        self.assertEqual('OwnerOverride', record.get_fieldvalues(for_display=True, owner=self.user)[0].value)
-        self.assertEqual('GroupOverride', record.get_fieldvalues(for_display=True, group=self.group)[0].value)
+        self.assertEqual('Original', record.get_fieldvalues(filter_overridden=True, filter_hidden=True)[0].value)
+        self.assertEqual('OwnerOverride', record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)[0].value)
+        self.assertEqual('GroupOverride', record.get_fieldvalues(filter_overridden=True, filter_hidden=True, group=self.group)[0].value)
         
     def testFieldValueHide(self):
         record = Record.objects.create()
@@ -66,8 +66,8 @@ class FieldValueTestCase(unittest.TestCase):
         t1 = record.fieldvalue_set.create(field=self.titleField, value='Original', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, override=t1, hidden=True, owner=self.user)
        
-        self.assertEqual(1, len(record.get_fieldvalues(for_display=True)))
-        self.assertEqual(0, len(record.get_fieldvalues(for_display=True, owner=self.user)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True)))
+        self.assertEqual(0, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)))
 
 
 class GroupTestCase(unittest.TestCase):

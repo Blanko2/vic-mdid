@@ -128,3 +128,5 @@ CACHE_BACKEND = 'db://cache'
 INTERNAL_IPS = ('127.0.0.1',)
 
 HELP_URL = 'https://wiki.cit.jmu.edu/mdidhelp/index.php/Help_v1:'
+
+DEFAULT_LANGUAGE = 'en-us'

@@ -107,10 +107,15 @@ div.fieldvalue-edit div.column {
 div.fieldvalue-edit div.column label {
     width: 70px;
     text-align: right;
+    margin-right: 5px;
+    display: block;
+    float: left;
+}
+
+div.fieldvalue-edit div.column span.row {
     display: block;
     float: left;
     clear: left;
-    margin-right: 5px;
 }
 
 div.fieldvalue-edit optgroup {

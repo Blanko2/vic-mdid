@@ -65,7 +65,7 @@ def imageviewer_getslideshow(request):
                    'collectionid': group.id,
                    'filename': '%s.jpg' % r.name,
                    'fields': [{'label': f.label, 'value': f.value}
-                              for f in r.get_fieldvalues(group=group, for_display=True)]
+                              for f in r.get_fieldvalues(group=group, filter_overridden=True, filter_hidden=True)]
                     } for r in group.all_records]
 
     return render_to_response('imageviewer_slideshow.xml',

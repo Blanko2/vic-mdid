@@ -102,18 +102,23 @@ class Record(models.Model):
                     slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Record, self).save(kwargs)
         
-    def get_fieldvalues(self, owner=None, group=None, language=None, for_display=False):
-        values = self.fieldvalue_set.filter(Q(group=group) | Q(group=None),
-                                            Q(owner=owner) | Q(owner=None),
-                                            Q(language=language) | Q(language=None))
-        if not for_display:
-            return values
-        remove = ()
+    def get_fieldvalues(self, owner=None, group=None,
+                        filter_overridden=False, filter_hidden=False, filter_context=False):
+        q_group = Q(group=group)
+        if not filter_context:
+            q_group = q_group | Q(group=None)
+        
+        q_owner = Q(owner=owner)
+        if not filter_context:
+            q_owner = q_owner | Q(owner=None)
+        
+        values = self.fieldvalue_set.filter(q_group, q_owner)
+        remove = []
         for v in values:
-            if v.override_id:
-                remove += (v.override_id,)
-            if v.hidden:
-                remove += (v.id,)
+            if filter_overridden and v.override_id:
+                remove.append(v.override_id)
+            if filter_hidden and v.hidden:
+                remove.append(v.id)
         return values.exclude(id__in=remove)
     
     def dump(self, owner=None, group=None):
@@ -169,6 +174,10 @@ class FieldValue(models.Model):
         ('D', 'Date'),
         ('N', 'Numeric'),
     )
+    LANGUAGE_CHOICES = (
+        ('en-us', 'English (United States)'),
+    )
+    
     record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
     owner = models.ForeignKey(User, null=True, blank=True)
@@ -177,8 +186,8 @@ class FieldValue(models.Model):
     hidden = models.BooleanField(default=False)
     value = models.TextField()
     type = models.CharField(max_length=1, choices=TYPE_CHOICES)
-    language = models.CharField(max_length=5, blank=True)
-    group = models.ForeignKey(Group, null=True)
+    language = models.CharField(max_length=5, blank=True, choices=LANGUAGE_CHOICES)
+    group = models.ForeignKey(Group, null=True, blank=True)
     
     def __unicode__(self):
         return "%s=%s" % (self.label, self.value[:20])

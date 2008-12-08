@@ -6,28 +6,34 @@
 
 <div>
     <h2>Edit Metadata</h2>
+    
+    <div>
+    {% for value in fieldvalues %}
+        <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span><br />
+    {% endfor %}
+    </div>
+    
     <form method="POST" action="">
         {{ fv_formset.management_form }}
         {% for form in fv_formset.forms %}
             <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
                 {{ form.errors }}{{ form.id }}
                 <div class="column">
-                    <label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}<br />
-                    <label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}<br />
-                    <label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}
+                    <span class="row"><label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}</span>
+                    <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
                 </div>
                 <div class="column">
-                    {{ form.value }}
+                    <span class="row">{{ form.value }}</span>
                 </div>
                 <div class="column">
-                    <label for="{{ form.type.html_name }}">Type:</label> {{ form.type }}<br />
-                    <label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}<br />
-                    <label for="{{ form.ORDER.html_name }}">Order:</label> <span class="fs-order">{{ form.ORDER }}</span> 
+                    <span class="row"><label for="{{ form.type.html_name }}">Type:</label> {{ form.type }}</span>
+                    <span class="row"><label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}</span>
+                    <span class="row"><label for="{{ form.ORDER.html_name }}">Order:</label> <span class="fs-order">{{ form.ORDER }}</span></span>
                 </div>
                 <div class="column">
-                    <label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}<br />
-                    <label for="{{ form.personal.html_name }}">Personal:</label> {{ form.personal }}<br />
-                    <label for="{{ form.group_context.html_name }}">For group:</label> {{ form.group_context }}<br />
+                    <span class="row"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>                    
+                    <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
+                    <span class="row">{% if form.is_overriding %}This value overrides another value.{% endif %}</span>
                 </div>
             </div>
         {% endfor %}
