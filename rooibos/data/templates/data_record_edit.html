@@ -5,17 +5,30 @@
 {% block record_content %}
 
 <div>
-    <h2>Edit Metadata</h2>
+{% if fieldvalues %}
+    <h2>Main Metadata</h2>
     
+    <form method="POST" action="">
     <div>
     {% for value in fieldvalues %}
-        <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span><br />
+        <div>
+            <input type="checkbox" name="override" value="{{ value.id }}" />
+            <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span>
+        </div>
     {% endfor %}
+        <input type="submit" name="override_values" value="Override selected values" />
     </div>
+    </form>
+    
+    <h2>Custom Metadata</h2>
+{% else %}
+    <h2>Edit Metadata</h2>
+{% endif %}
     
     <form method="POST" action="">
         {{ fv_formset.management_form }}
-        {% for form in fv_formset.forms %}
+        <div>
+        {% for form in fv_formset.forms %}        
             <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
                 {{ form.errors }}{{ form.id }}
                 <div class="column">
@@ -33,41 +46,13 @@
                 <div class="column">
                     <span class="row"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>                    
                     <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
-                    <span class="row">{% if form.is_overriding %}This value overrides another value.{% endif %}</span>
+                    {% if form.is_overriding %}<span class="row">This value overrides another value.</span>{% endif %}
                 </div>
             </div>
-        {% endfor %}
-        <input type="submit" />
+        {% endfor %}        
+            <input type="submit" value="Submit Changes" />
+        </div>
     </form>
-</div>
-
-<div>
-    <h2>Edit Media</h2>
-    {% if media %}
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Storage</th>
-            <th>Mimetype</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Bitrate</th>
-        </tr>
-    {% for m in media %}
-        <tr>
-            <td><a href="{{ m.get_absolute_url }}">{{ m.name }}</a></td>
-            <td>{{ m.storage.title }}</td>
-            <td>{{ m.mimetype }}</td>
-            <td>{{ m.width }}</td>
-            <td>{{ m.height }}</td>
-            <td>{{ m.bitrate }}</td>
-        </tr>
-    {% endfor %}
-    </table>
-    
-    {% else %}
-    No media is available for this record.
-    {% endif %}
 </div>
 
 {% endblock %}

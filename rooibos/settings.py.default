@@ -121,6 +121,7 @@ WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 
 SECURE_LOGIN = False
 
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
 CACHE_BACKEND = 'db://cache'

@@ -85,11 +85,14 @@
     background-color: #F7F7F7;    
 }
 
+div.fieldvalue-edit:first-child {
+    border-top: thin solid grey;
+}
 
 div.fieldvalue-edit {
-    border-top: thin solid grey;
-    padding: 3px;
-    margin: 2px;
+    border-bottom: thin solid grey;
+    padding: 4px;
+    margin: 0px;
     clear: both;
     overflow: auto;
 }

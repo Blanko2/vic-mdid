@@ -44,6 +44,8 @@ def record_raw(request, recordname, owner=None, group=None):
 @login_required
 def record_edit(request, recordname, owner=None, group=None):
 
+    context = _clean_context(owner, group)
+
     if owner and owner != '-':
         owner = get_object_or_404(User, username=owner)
         # cannot edit other user's metadata
@@ -106,31 +108,34 @@ def record_edit(request, recordname, owner=None, group=None):
         fieldvalues_readonly = record.get_fieldvalues(filter_overridden=True, filter_hidden=True)    
         fieldvalues = record.get_fieldvalues(owner=owner, group=group, filter_overridden=True, filter_context=True)
     else:
-        fieldvalues_readonly = None
+        fieldvalues_readonly = []
         fieldvalues = record.get_fieldvalues()
     
     FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
                                              exclude=FieldValueForm.Meta.exclude, can_order=True, can_delete=True, extra=3)    
     if request.method == 'POST':
-        formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
-        if formset.is_valid():
-            instances = formset.save(commit=False)
-            for instance in instances:
-                instance.record = record
-                instance.save()
+        if request.POST.has_key('override_values'):
+            override = map(int, request.POST.getlist('override'))
+            for v in fieldvalues_readonly.filter(id__in=override):
+                FieldValue.objects.create(record=record, field=v.field, label=v.label, value=v.value, type=v.type,
+                                          override=v, owner=owner, group=group)
             return HttpResponseRedirect(request.META['PATH_INFO'])
+        else:
+            formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
+            if formset.is_valid():
+                instances = formset.save(commit=False)
+                for instance in instances:
+                    instance.record = record
+                    instance.save()
+                record.set_fieldvalue_order([instance.id for instance in fieldvalues_readonly] +
+                                            [form.instance.id for form in formset.ordered_forms])
+                return HttpResponseRedirect(request.META['PATH_INFO'])
     else:
         formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv')
-
-
-    media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
-    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'group__name')        
-    contexts = [_clean_context(**c) for c in contexts]
     
     return render_to_response('data_record_edit.html',
                               {'record': record,
-                               'media': media,
-                               'contexts': contexts,
+                               'context': context,
                                'owner': owner,
                                'group': group,
                                'fv_formset': formset,
