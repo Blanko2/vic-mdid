@@ -13,8 +13,8 @@ from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 
-IMPORT_COLLECTIONS = (15,)
-IMPORT_RECORDS = 200
+IMPORT_COLLECTIONS = (15,)#range(0, 1000)
+IMPORT_RECORDS = 200000
 
 # old permissions
 
@@ -192,19 +192,20 @@ class Command(BaseCommand):
                 ac.save()
             # full storage
             ac = AccessControl()
-            ac.content_object = storage[row.ObjectID]['full']
-            if populate_access_control(ac, row, P['FullSizedImages'], P['ModifyImages'], P['ManageCollection']):
-                ac.save()
-            # medium storage
-            ac = AccessControl()
-            ac.content_object = storage[row.ObjectID]['medium']
-            if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
-                ac.save()
-            # thumb storage
-            ac = AccessControl()
-            ac.content_object = storage[row.ObjectID]['thumb']
-            if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
-                ac.save()
+            if storage.has_key(row.ObjectID):
+                ac.content_object = storage[row.ObjectID]['full']
+                if populate_access_control(ac, row, P['FullSizedImages'], P['ModifyImages'], P['ManageCollection']):
+                    ac.save()
+                # medium storage
+                ac = AccessControl()
+                ac.content_object = storage[row.ObjectID]['medium']
+                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                    ac.save()
+                # thumb storage
+                ac = AccessControl()
+                ac.content_object = storage[row.ObjectID]['thumb']
+                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                    ac.save()
 
         # Migrate fields
         
@@ -239,7 +240,7 @@ class Command(BaseCommand):
                 GroupMembership.objects.create(record=images[row.ID], group=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
                     if row.Resource.endswith('.xml'):
-                        self.process_xml_resource(images[row.ID], storage[row.CollectionID], row.Resource)
+                        self.process_xml_resource(images[row.ID], storage[row.CollectionID]["full"], row.Resource)
                     else:
                         for type in ('full', 'medium', 'thumb'):
                             Media.objects.create(
@@ -356,7 +357,10 @@ class Command(BaseCommand):
         description_field = Field.objects.get(standard__prefix='dc', name='description')
         
         file = os.path.join(storage.base, file)
-        resource = minidom.parse(file)
+        try:
+            resource = minidom.parse(file)
+        except:
+            return
         thumb = None
         medium = []
         full = []
