@@ -59,7 +59,9 @@
 {% for q in sql_queries %}
 {{ q.sql }} ({{ q.time }})
 {% endfor %}
--->{% endif %}
+-->
+<div id="stats"><!-- STATS: Total: %(totTime).2fs <br/>Python: %(pyTime).2fs <br/>DB: %(dbTime).2fs <br/>Queries: %(queries)d --></div>
+{% endif %}
 
 </body>
 

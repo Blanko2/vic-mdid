@@ -1,5 +1,6 @@
 from django.contrib.sites.models import Site
 from django.db.models import Q
+from django.core.cache import cache
 import sys
 import mimetypes
 
@@ -74,3 +75,23 @@ def guess_extension(mimetype):
     if x == '.jpe':
         return '.jpeg'
     return x
+
+
+def cached_property(instance, key, query):
+    value = None
+    if instance.id:
+        key = '-'.join((instance._meta.db_table, str(instance.id), key))
+        value = cache.get(key)
+    if not value:
+        try:
+            value = query()
+        except:
+            pass
+        if instance.id and value:
+            cache.set(key, value)
+    return value
+
+def clear_cached_properties(instance, *keys):
+    if instance.id:
+        for key in keys:
+            cache.delete('-'.join((instance._meta.db_table, str(instance.id), key)))

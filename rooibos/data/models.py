@@ -2,8 +2,9 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.core.cache import cache
 from datetime import datetime
-from rooibos.util import unique_slug
+from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import random
 
 class Group(models.Model):
@@ -100,6 +101,7 @@ class Record(models.Model):
     def save(self, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),
                     slug_field='name', check_current_slug=kwargs.get('force_insert'))
+        self._clear_cached_items()
         super(Record, self).save(kwargs)
         
     def get_fieldvalues(self, owner=None, group=None,
@@ -130,12 +132,15 @@ class Record(models.Model):
 
     @property            
     def title(self):
-        try:
+        def query():
             return self.fieldvalue_set.filter(
                 Q(field__standard__prefix='dc', field__name='title') |
                 Q(field__equivalent__standard__prefix='dc', field__equivalent__name='title'))[0].value
-        except:
-            return None
+        return cached_property(self, 'title', query)
+
+    def _clear_cached_items(self):
+        clear_cached_properties(self, 'title', 'thumbnail')
+        
 
 
 class MetadataStandard(models.Model):

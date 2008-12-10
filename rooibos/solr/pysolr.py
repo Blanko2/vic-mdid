@@ -268,7 +268,7 @@ class Solr(object):
 
     # API Methods ############################################################
 
-    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0):
+    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0, fields=None):
         """Performs a search and returns the results."""
         params = {'q': q}
         if start:
@@ -282,6 +282,8 @@ class Solr(object):
             params['facet.limit'] = facet_limit
             params['facet.mincount'] = facet_mincount            
             params['facet.field'] = facets
+        if fields:
+            params['fl'] = ','.join(fields)
 
         response = self._select(params)
         if response.status != 200:

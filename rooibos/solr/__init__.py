@@ -13,9 +13,14 @@ class SolrIndex():
     def __init__(self):
         self._clean_string_re = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
     
-    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0):
+    def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0, fields=None):
+        if not fields:
+            fields = ['id']
+        elif not 'id' in fields:
+            fields.append('id')
         conn = Solr(settings.SOLR_URL)
-        result = conn.search(q, sort=sort, start=start, rows=rows, facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount)
+        result = conn.search(q, sort=sort, start=start, rows=rows,
+                             facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount, fields=fields)
         ids = [int(r['id']) for r in result]
         records = Record.objects.in_bulk(ids)
         return (result.hits, filter(None, map(lambda i: records.get(i), ids)), result.facets)

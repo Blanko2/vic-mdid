@@ -131,3 +131,9 @@ div.fieldvalue-edit optgroup {
 div.fieldvalue-edit span.fs-order input {
     width: 30px;
 }
+
+
+#stats { background-color: #ddd; font-size: 65%; padding: 5px;
+        z-index: 1000; position: absolute; right: 5px; top: 5px;
+        -moz-opacity: .7; opacity: .7;}
+        
