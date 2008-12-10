@@ -1,6 +1,6 @@
 import unittest
 from rooibos.data.models import Group, Record
-from rooibos.storage.models import Media
+from rooibos.storage.models import Media, Storage
 
 class UniqueSlugTestCase(unittest.TestCase):
     
@@ -26,12 +26,14 @@ class UniqueSlugTestCase(unittest.TestCase):
         r1 = Record.objects.create()
         r2 = Record.objects.create()
         
-        m1 = Media.objects.create(record=r1, name='thumb', url='m1')
-        m2 = Media.objects.create(record=r2, name='thumb', url='m2')
+        s = Storage.objects.create(title='Test', system='online')
+        
+        m1 = Media.objects.create(record=r1, name='thumb', url='m1', storage=s)
+        m2 = Media.objects.create(record=r2, name='thumb', url='m2', storage=s)
         
         self.assertEqual('thumb', m1.name)
         self.assertEqual('thumb', m2.name)
         
-        m2b = Media.objects.create(record=r2, name='thumb', url='m2b')
+        m2b = Media.objects.create(record=r2, name='thumb', url='m2b', storage=s)
         
         self.assertEqual('thumb-2', m2b.name)

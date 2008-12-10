@@ -50,7 +50,7 @@ def _generate_query(user, group, criteria, keywords, selected, available_storage
     if fields:    
         query = ' AND '.join(fields)
     if keywords:    
-        query = query and '%s AND (%s)' % (query, keywords) or keywords
+        query = query and '%s AND (%s)' % (query, keywords) or '(%s)' % keywords
     if not query:
         query = '*:*'
     if group:
