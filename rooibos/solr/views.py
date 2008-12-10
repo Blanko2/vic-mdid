@@ -6,18 +6,34 @@ from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int
 from rooibos.data.models import Field, Group
+from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
+import re
 
-def _generate_query(user, group, criteria, keywords, selected, *exclude):
+_metadata_facets = {'resolution': 'Image size',
+                    'mimetype': 'Media type',}
+
+def _generate_query(user, group, criteria, keywords, selected, available_storage, *exclude):
+    
+    def build_metadata_criteria(criteria, available_storage, user):
+        criteria = '|'.join('s*-%s' %s for s in criteria.split('|'))
+        if user.is_superuser:
+            return criteria
+        else:
+            return '(%s) AND (%s)' % (' '.join('s%s-*' % s for s in available_storage), criteria)
+        
     fields = {}
     for c in criteria:
         if c in exclude:
             continue
         (f, o) = c.split(':', 1)
         if f.startswith('-'):
-            f = 'NOT ' + f[1:]        
+            f = 'NOT ' + f[1:]
+        if f.rsplit(' ',1)[-1] in _metadata_facets.keys():
+            o = build_metadata_criteria(o, available_storage, user)
         fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
-    fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)), fields.iteritems())
+    fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
+                 fields.iteritems())
     
     def build_keywords(q, k):
         k = k.lower()
@@ -38,14 +54,14 @@ def _generate_query(user, group, criteria, keywords, selected, *exclude):
     if not query:
         query = '*:*'
     if group:
-        query = 'groups:%s AND %s' % (group.id, query)
+        query = 'collections:%s AND %s' % (group.id, query)
     if selected:
         query = 'id:(%s) AND %s' % (' '.join(map(str, selected)), query)
         
     if not user.is_superuser:
         groups = ' '.join(map(str, accessible_ids_list(user, Group.objects.filter(type='collection'))))
         c = []
-        if groups: c.append('groups:(%s)' % groups)
+        if groups: c.append('collections:(%s)' % groups)
         if user.id: c.append('owner:%s' % user.id)
         if c:
             query = '(%s) AND %s' % (' OR '.join(c), query)
@@ -54,12 +70,22 @@ def _generate_query(user, group, criteria, keywords, selected, *exclude):
     
     return query
 
+_storage_facet_re = re.compile(r'^s(\d+)-(.+)$')
+
+def _collapse_metadata_facets(facets, storage):
+    result = {}
+    for f in facets.keys():
+        m = _storage_facet_re.match(f)
+        if m and int(m.group(1)) in storage:
+            result[m.group(2)] = None            
+    return result
+
 def selected(request):
     return search(request, selected=True)
 
 def search(request, group=None, selected=False):
     if group:
-        group = get_object_or_404(filter_by_access(request.user, Group), name=group)
+        group = get_object_or_404(filter_by_access(request.user, Group), name=group, type='collection')
 
     update_record_selection(request)
     
@@ -78,19 +104,29 @@ def search(request, group=None, selected=False):
     if selected:
         selected = request.session.get('selected_records', ())
     
-    query = _generate_query(request.user, group, criteria, keywords, selected, remove)
-    exclude_facets = ('date', 'identifier', 'relation', 'source')
+    available_storage = accessible_ids_list(request.user, Storage)
     
+    query = _generate_query(request.user, group, criteria, keywords, selected, available_storage, remove)
+    exclude_facets = ['date', 'identifier', 'relation', 'source']
+
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
     fields = dict(map(lambda field: (field.name + '_t', field.label), fields))  
+    fields.update(_metadata_facets)
    
     s = SolrIndex()
-    (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize, facets=fields.keys(), facet_mincount=1, facet_limit=50)
-    
+    (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize,
+                                       facets=fields.keys(), facet_mincount=1, facet_limit=50)
+
+    for f in _metadata_facets.keys():
+        facets[f] = _collapse_metadata_facets(facets[f], available_storage)
+
     if orquery:
         f = orquery.split(':', 1)[0]
-        orfacets = s.search(_generate_query(request.user, group, criteria, keywords, selected, remove, orquery),
+        orfacets = s.search(_generate_query(request.user, group, criteria, keywords, selected,
+                                            available_storage, remove, orquery),
                             rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+        if f in _metadata_facets.keys():
+            orfacets[f] = _collapse_metadata_facets(orfacets[f], available_storage)
     else:
         orfacets = None
     

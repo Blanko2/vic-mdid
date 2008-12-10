@@ -18,7 +18,6 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
 <a href="{{ reset_url }}">Reset</a>
-(Raw query was "{{query}}")
 </div>
 
 {% for f,v in hiddenfields %}
@@ -32,6 +31,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
   {% if c.2 %} <a href="{{ limit_url }}or={{ c.0 }}">(or ...)</a> {% endif %}
   <a href="{{ limit_url }}rem={{ c.0 }}">(remove)</a>
 {% endfor %}
+{% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 </div>
 
 <div class="facets">
@@ -41,7 +41,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq in facet.items %}
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ term }}</a>&nbsp;({{ freq }})
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq }}{% endif %}
         {% endfor %}
         </div>
     </div>
@@ -54,7 +54,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq in facet.items %}
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ term }}</a>&nbsp;{{ freq }}&nbsp;(<a
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq }}{% endif %}&nbsp;(<a
                href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}">&times;</a>)
         {% endfor %}
         </div>

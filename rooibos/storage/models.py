@@ -51,7 +51,7 @@ class Media(models.Model):
     record = models.ForeignKey(Record)
     name = models.SlugField(max_length=50)
     url = models.CharField(max_length=1024)
-    storage = models.ForeignKey(Storage, null=True)
+    storage = models.ForeignKey(Storage)
     mimetype = models.CharField(max_length=128, default='application/binary')
     width = models.IntegerField(null=True)
     height = models.IntegerField(null=True)
