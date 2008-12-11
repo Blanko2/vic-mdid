@@ -166,9 +166,11 @@ def search(request, group=None, selected=False):
         next_page_url = "%s?%s" % (url, q.urlencode())
 
     facets = sorted(
-                map(lambda (name, items): {'name': name, 'items': sorted(items.iteritems()), 'label': fields[name]},
-                    filter(lambda (name, items): len(items) > 1, facets.iteritems())),
-                key=lambda f: f['label'])
+        ({'name': name,
+          'items': sorted(filter(lambda (t,f): f < hits, items.iteritems())),
+          'label': fields[name]}
+            for (name, items) in filter(lambda (name, items): len(items) > 1, facets.iteritems())),
+        key=lambda f: f['label'])
 
     def readable_criteria(c):
         (f, o) = c.split(':', 1)

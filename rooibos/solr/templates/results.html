@@ -1,6 +1,7 @@
 {% extends "master.html" %}
 {% load ui %}
 {% load help %}
+{% load humanize %}
 
 {% block help %}
     {% pagehelp 'facet_search' %}
@@ -11,9 +12,9 @@
 <form method="GET" action="{{ limit_url }}">
 
 <div class="horizontal-block">
-Your query found {{ hits }} hit{{ hits|pluralize }}.
+Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 {% if pages %}
-    Page {{ page }} of {{ pages }}.
+    Page {{ page|intcomma  }} of {{ pages|intcomma  }}.
     {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
@@ -41,7 +42,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq in facet.items %}
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq }}{% endif %}
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
         {% endfor %}
         </div>
     </div>
@@ -54,7 +55,7 @@ Your query found {{ hits }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq in facet.items %}
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq }}{% endif %}&nbsp;(<a
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}&nbsp;(<a
                href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}">&times;</a>)
         {% endfor %}
         </div>

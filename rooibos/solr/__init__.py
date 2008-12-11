@@ -1,5 +1,6 @@
 from datetime import datetime
 import re
+from threading import Thread
 from django.conf import settings
 from django.db.models import Q
 from rooibos.data.models import Record, Group, Field, FieldValue, GroupMembership
@@ -42,22 +43,32 @@ class SolrIndex():
         required_fields = Field.objects.filter(standard__prefix='dc').values_list('name', flat=True)
         count = 0
         batch_size = 1000
+        process_thread = None
         while True:
+            print "\r%s" % count,
             records = Record.objects.filter(recordinfo=None)[count:count + batch_size]
             if not records:
                 break
             media_dict = self._preload_related(Media, records)
             fieldvalue_dict = self._preload_related(FieldValue, records, related=1)
             groups_dict = self._preload_related(GroupMembership, records, filter=Q(group__type='collection'))
-            docs = []
-            for record in records:
-                docs += [self._record_to_solr(record, required_fields, groups_dict.get(record.id, []),
-                                              fieldvalue_dict.get(record.id, []), media_dict.get(record.id, []))]
-                count += 1
-                if verbose and count % 100 == 0:
-                    print "\r%s" % count,
-    #            RecordInfo.objects.create(record=record, last_index=datetime.now())
-            conn.add(docs)    
+            count += len(records)
+            
+            def process_data():
+                docs = []
+                for record in records:
+                    docs += [self._record_to_solr(record, required_fields, groups_dict.get(record.id, []),
+                                                  fieldvalue_dict.get(record.id, []), media_dict.get(record.id, []))]
+                    #RecordInfo.objects.create(record=record, last_index=datetime.now())
+                conn.add(docs)
+                
+            if process_thread:
+                process_thread.join()
+            process_thread = Thread(target=process_data)
+            process_thread.start()
+
+        if process_thread:
+            process_thread.join()    
         print "\r%s" % count
     
     def _preload_related(self, model, records, filter=Q(), related=0):
