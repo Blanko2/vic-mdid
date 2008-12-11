@@ -9,6 +9,15 @@
     }
   }, 
   {
+    "pk": 2, 
+    "model": "data.metadatastandard", 
+    "fields": {
+      "prefix": "tag", 
+      "name": "tagging", 
+      "title": "Tagging"
+    }
+  }, 
+  {
     "pk": 1, 
     "model": "data.field", 
     "fields": {
@@ -156,6 +165,18 @@
       "standard": 1, 
       "name": "type", 
       "label": "Type"
+    }
+  },
+  {
+    "pk": 16,
+    "model": "data.field",
+    "fields": {
+      "equivalent": [
+        13
+      ],
+      "standard": 2,
+      "name": "tags",
+      "label": "Tags"
     }
   }
 ]

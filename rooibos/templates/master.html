@@ -1,12 +1,16 @@
 {% load ui %}
+{% load help %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
     <title>{% block title %}Rooibos {% block titledetail %}{% endblock %}{% endblock %}</title>
-    
 {% block stylesheets %}
     <link href="/static/jquery/jquery-ui-themeroller.css" rel="stylesheet" type="text/css" media="screen">
     <link href="/static/css/master.css" rel="stylesheet" type="text/css" media="screen">
+<!--[if IE]>
+    <link href="/static/css/master-ie.css" rel="stylesheet" type="text/css" media="screen">
+<![endif]-->
+
 {% endblock %}
 {% block extrastylesheets %}
 {% endblock %}
@@ -24,24 +28,44 @@
 </head>
 
 <body class="ui-reset">
-{% load help %}
-
 {% block header %}
 <div id="header">
-    <h1><a href="/">Rooibos</a></h1>    
-    <a href="{% url solr-search %}">Explore</a>
-    <span>
+    <h1><a href="/">Rooibos</a></h1>
+    <ul id="menu">
         {% if user.is_authenticated %}
-          Welcome, {{ user.username }}. <a href="{% url logout %}">Log out</a>
-          {% if user.is_staff %}<a href="{% url admin "" %}">Admin</a>{% endif %}
+            <li>Welcome, {{ user.first_name }}</li>
+            <li><a href="">My Content</a>
+                <div class="dropdown">
+                    <div>
+                        <a href="">My Presentations</a>
+                        <a href="">My Favorites</a>
+                        <a href="">My Content</a>
+                        <a href="">Options</a>
+                    </div>
+                </div>
+            </li>
+            {% if user.is_staff %}
+                <li><a href="{% url admin "" %}">Administration</a></li>
+            {% endif %}
         {% else %}
-          <a href="{% url login %}">Log in</a>
+            <li><a href="{% url login %}">Log in</a></li>
         {% endif %}        
-    </span>
-    {% session_status %}
-    {% block help %}
-        {% pagehelp 'main' %}    
-    {% endblock %}
+        <li><a href="{% url solr-search %}">Explore</a></li>
+        <li><a href="">Resources</a>
+            <div class="dropdown">                
+                <div>
+                    <a href="">Presentations</a>
+                    <a href="">Collections</a>
+                    <a href="">About</a>
+                </div>
+            </div>
+        </li>
+        <li>{% session_status %}</li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url logout %}">Log out</a></li>
+        {% endif %}
+        <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
+    </ul>    
 </div>
 {% endblock %}
 

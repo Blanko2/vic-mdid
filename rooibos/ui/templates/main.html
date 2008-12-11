@@ -1,9 +1,19 @@
 {% extends "master.html" %}
 {% load help %}
+{% load comments %}
+{% load humanize %}
 
 {% block content %}
 
 <h1>Welcome</h1>
+
+<div id="comments">
+    {% get_comment_list for flatpages.flatpage 1 as comments %}
+    {% for comment in comments %}
+        {{ comment.comment|linebreaks }}
+        <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
+    {% endfor %}
+</div>
 
 <div>
     <a href="{% url solr-search %}">Explore local content</a>

@@ -14,6 +14,7 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'django.contrib.auth.views.logout', name='logout'),
     url(r'^admin/(.*)', admin.site.root, name='admin'),
     
+    (r'^ui/', include('rooibos.ui.urls')),    
     (r'^acl/', include('rooibos.access.urls')),    
     (r'^explore/', include('rooibos.solr.urls')),
     (r'^media/', include('rooibos.storage.urls')),

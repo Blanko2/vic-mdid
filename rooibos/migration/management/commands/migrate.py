@@ -13,7 +13,7 @@ from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 
-IMPORT_COLLECTIONS = (15,)#range(0, 1000)
+IMPORT_COLLECTIONS = range(0, 1000)
 IMPORT_RECORDS = 200000
 
 # old permissions

@@ -4,19 +4,77 @@
     color: white;
     padding: 4px;
     margin-bottom: 5px;
+    border-bottom: 2px solid black;
 }
 
 #header h1 {
     font-family: sans-serif;
     font-weight: bold;
     font-size: 1.2em;
-    display: inline;
+    display: block;
+    float: left;
+    margin: 0.05em;
 }
 
 #header a {
     color: white;
     text-decoration: none;
 }
+
+#menu {
+    display: block;
+    float: right;
+    margin: 0.1em;
+}
+
+#menu li {
+    display: block;
+    float: left;
+    position: relative;
+    padding: 0 0.4em 0 0.4em;
+}
+
+#menu li + li {
+    border-left: 2px solid white;
+}
+
+#menu .dropdown {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding-top: 1.8em;
+    height: 0px;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+#menu .dropdown a {
+    display: block;
+    white-space: nowrap;
+}
+
+#menu a {
+    padding: 0.3em;
+    border: 1px solid #2D678E;
+}
+
+#menu a:hover {
+    border: 1px dotted white;
+}
+
+#menu .dropdown:hover {
+    overflow: visible;
+}
+
+#menu .dropdown div {
+    background-color: #2D678E;
+    padding: 0.4em;
+    -moz-border-radius-bottomright: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+}
+
 
 #footer {
     margin-top: 10px;
@@ -132,8 +190,33 @@ div.fieldvalue-edit span.fs-order input {
     width: 30px;
 }
 
+#comments {
+    float: right;
+    width: 300px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    border: 1px solid black;
+    padding: 5px;
+    margin: 5px;
+    background-color: #f9f9f9;
+}
+
+#comments p {
+    margin: 0.2em 0 0.2em 0;
+}
+
+#comments p:first-line {
+    font-size: larger;
+    font-weight: bold;
+}
+
+#comments .byline {
+    font-size: small;
+    font-style: italic;
+}
 
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
-        z-index: 1000; position: absolute; right: 5px; top: 5px;
+        z-index: 1000; position: absolute; right: 5px; top: 50px;
         -moz-opacity: .7; opacity: .7;}
-        
