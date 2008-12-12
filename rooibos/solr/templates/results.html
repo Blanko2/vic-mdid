@@ -19,6 +19,7 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
     {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
 {% endif %}
 <a href="{{ reset_url }}">Reset</a>
+{% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 </div>
 
 {% for f,v in hiddenfields %}
@@ -29,10 +30,9 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
     <input type="submit" value="Go" />
 {% for c in criteria %}
   | {{ c.1 }}
-  {% if c.2 %} <a href="{{ limit_url }}or={{ c.0 }}">(or ...)</a> {% endif %}
-  <a href="{{ limit_url }}rem={{ c.0 }}">(remove)</a>
+  {% if c.2 %}<a href="{{ limit_url }}or={{ c.0 }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
+  <a href="{{ limit_url }}rem={{ c.0 }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>  
 {% endfor %}
-{% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 </div>
 
 <div class="facets">
