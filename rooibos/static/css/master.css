@@ -217,6 +217,32 @@ div.fieldvalue-edit span.fs-order input {
     font-style: italic;
 }
 
+.icon {
+    display: -moz-inline-box; /* Firefox 2 */
+    display: inline-block;
+    vertical-align: bottom;
+    background-image: url('/static/images/icons.png');
+    width: 20px;
+    height: 20px;
+    text-decoration: none;
+}
+
+.icon * {
+    visibility: hidden;
+}
+
+.help-icon {
+    background-position: -40px 0px;
+}
+
+.or-icon {
+    background-position: 0px 0px;
+}
+
+.remove-icon {
+    background-position: -20px 0px;
+}
+
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
         z-index: 1000; position: absolute; right: 5px; top: 50px;
         -moz-opacity: .7; opacity: .7;}

@@ -5,8 +5,6 @@
 
 {% block content %}
 
-<h1>Welcome</h1>
-
 <div id="comments">
     {% get_comment_list for flatpages.flatpage 1 as comments %}
     {% for comment in comments %}
@@ -15,8 +13,11 @@
     {% endfor %}
 </div>
 
+<h1>Welcome</h1>
+
 <div>
-    <a href="{% url solr-search %}">Explore local content</a>
+    <a href="{% url solr-search %}">Explore local content</a> {% help 'explore' %}
+    
 </div>
 
 {% endblock %}
