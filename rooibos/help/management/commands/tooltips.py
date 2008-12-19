@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 import os
 import sys
 import re
+from rooibos.help.models import Tooltip
 
 _tooltip_re = re.compile(r'<!-- Tooltip: (?P<tooltip>.+)-->', re.DOTALL)
 
@@ -23,23 +24,17 @@ class Command(BaseCommand):
                    site.family.namespaces.keys())[0] 
             allpages = AllpagesPageGenerator(namespace=ns, site=site)  
             
+            Tooltip.objects.all().delete()
+            
             for page in allpages:
-                print "\n%s" % page.titleWithoutNamespace(),
+                ref = page.titleWithoutNamespace()
+                print "\n%s" % ref,
                 text = page.get()        
                 match = _tooltip_re.search(text)
                 if match:
                     tooltip = ' '.join(match.group('tooltip').split())
                     print "= '%s'" % tooltip
+                    Tooltip.objects.create(reference=ref, tooltip=tooltip)
             
-#            page = wikipedia.Page(site, '%s:%s' % (site.family.help_namespace, reference))
-#            text = page.get()        
-#            match = _tooltip_re.search(text)
-#            if match:
-#                tooltip = ' '.join(match.group('tooltip').split())
-#                cache.set(key, tooltip, 24 * 60 * 60)
-#                return tooltip
-#        except Exception, e:
-#            print e
-#            pass
         finally:
             os.chdir(cwd)
