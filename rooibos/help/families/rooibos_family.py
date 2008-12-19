@@ -25,7 +25,7 @@ class Family(family.Family):
         (scheme, netloc, path, namespace) = parse_help_url(settings.HELP_URL)
         self.help_scheme = scheme
         self.help_path = path
-        self.help_namespace = namespace
+        self.help_namespace = namespace.replace('_', ' ')
         
         family.Family.__init__(self)
         self.name = 'rooibos'
