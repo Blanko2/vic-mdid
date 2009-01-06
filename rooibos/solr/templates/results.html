@@ -36,26 +36,24 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
 
 <div class="facets">
-{% for facet in orfacets %}
-{% if facet.items %}
+{% if orfacet.facets %}
     <div class="facet">
-        <div class="facet-header">{{ facet.label }}</div>
+        <div class="facet-header">{{ orfacet.label }}</div>
         <div class="facet-body">
-        {% for term,freq in facet.items %}
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
+        {% for term,freq,label in orfacet.facets %}
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
         {% endfor %}
         </div>
     </div>
 {% endif %}
-{% endfor %}
-    
+
 {% for facet in facets %}
-{% if facet.items %}
+{% if facet.facets %}
     <div class="facet">
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
-        {% for term,freq in facet.items %}
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}&nbsp;(<a
+        {% for term,freq,label in facet.facets %}
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}&nbsp;(<a
                href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}">&times;</a>)
         {% endfor %}
         </div>

@@ -9,19 +9,65 @@ from rooibos.data.models import Field, Group
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
+import copy
 
-_metadata_facets = {'resolution': 'Image size',
-                    'mimetype': 'Media type',}
 
-def _generate_query(user, group, criteria, keywords, selected, available_storage, *exclude):
+class SearchFacet(object):
     
-    def build_metadata_criteria(criteria, available_storage, user):
-        criteria = '|'.join('s*-%s' %s for s in criteria.split('|'))
-        if user.is_superuser:
-            return criteria
-        else:
-            return '(%s) AND (%s)' % (' '.join('s%s-*' % s for s in available_storage), criteria)
+    def __init__(self, name, label):
+        self.name = name
+        self.label = label
         
+    def process_criteria(self, criteria, *args, **kwargs):
+        return criteria
+        
+    def set_result(self, facets):
+        # break down dicts into tupels
+        if hasattr(facets, 'items'):
+            self.facets = facets.items()
+        else:
+            self.facets = facets
+            
+    def clean_result(self, hits):
+        # sort facet items and remove the ones that match all hits
+        self.facets = filter(lambda f: f[1] < hits, self.facets)
+        self.facets = sorted(self.facets, key=lambda f: len(f) > 2 and f[2] or f[0])
+
+
+class StorageSearchFacet(SearchFacet):
+
+    _storage_facet_re = re.compile(r'^s(\d+)-(.+)$')
+   
+    def __init__(self, name, label, available_storage):
+        super(StorageSearchFacet, self).__init__(name, label)
+        self.available_storage = available_storage
+ 
+    def process_criteria(self, criteria, user, *args, **kwargs):
+        criteria = '|'.join('s*-%s' %s for s in criteria.split('|'))
+        return user.is_superuser and criteria \
+            or '(%s) AND (%s)' % (' '.join('s%s-*' % s for s in self.available_storage), criteria)
+
+    def set_result(self, facets):
+        result = {}
+        if facets:
+            for f in facets.keys():
+                m = StorageSearchFacet._storage_facet_re.match(f)
+                if m and int(m.group(1)) in self.available_storage:
+                    result[m.group(2)] = None  # make facet available, but without frequency count            
+        super(StorageSearchFacet, self).set_result(result)
+
+
+class CollectionSearchFacet(SearchFacet):
+    
+    def set_result(self, facets):
+        result = []
+        for id, title in Group.objects.filter(type='collection', id__in=map(int, facets.keys())).values_list('id', 'title'):
+            result.append((id, facets[str(id)], title))
+        super(CollectionSearchFacet, self).set_result(result)
+
+
+def _generate_query(search_facets, user, group, criteria, keywords, selected, *exclude):
+
     fields = {}
     for c in criteria:
         if c in exclude:
@@ -29,8 +75,8 @@ def _generate_query(user, group, criteria, keywords, selected, available_storage
         (f, o) = c.split(':', 1)
         if f.startswith('-'):
             f = 'NOT ' + f[1:]
-        if f.rsplit(' ',1)[-1] in _metadata_facets.keys():
-            o = build_metadata_criteria(o, available_storage, user)
+        fname = f.rsplit(' ',1)[-1]
+        o = search_facets[fname].process_criteria(o, user)
         fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
                  fields.iteritems())
@@ -70,15 +116,6 @@ def _generate_query(user, group, criteria, keywords, selected, available_storage
     
     return query
 
-_storage_facet_re = re.compile(r'^s(\d+)-(.+)$')
-
-def _collapse_metadata_facets(facets, storage):
-    result = {}
-    for f in facets.keys():
-        m = _storage_facet_re.match(f)
-        if m and int(m.group(1)) in storage:
-            result[m.group(2)] = None            
-    return result
 
 def selected(request):
     return search(request, selected=True)
@@ -106,29 +143,36 @@ def search(request, group=None, selected=False):
     
     available_storage = accessible_ids_list(request.user, Storage)
     
-    query = _generate_query(request.user, group, criteria, keywords, selected, available_storage, remove)
+# TODO: let user configure
     exclude_facets = ['date', 'identifier', 'relation', 'source']
 
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
-    fields = dict(map(lambda field: (field.name + '_t', field.label), fields))  
-    fields.update(_metadata_facets)
-   
+ 
+    search_facets = [SearchFacet(field.name + '_t', field.label) for field in fields]
+    search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
+    search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
+    search_facets.append(CollectionSearchFacet('collections', 'Collection'))
+    # convert to dictionary
+    search_facets = dict((f.name, f) for f in search_facets)
+
+    query = _generate_query(search_facets, request.user, group, criteria, keywords, selected, remove)
+       
     s = SolrIndex()
     (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=fields.keys(), facet_mincount=1, facet_limit=50)
+                                       facets=search_facets.keys(), facet_mincount=1, facet_limit=50)
 
-    for f in _metadata_facets.keys():
-        facets[f] = _collapse_metadata_facets(facets[f], available_storage)
-
+    for f in search_facets:
+        search_facets[f].set_result(facets.get(f))
+    
+    orfacet = None
     if orquery:
-        f = orquery.split(':', 1)[0]
-        orfacets = s.search(_generate_query(request.user, group, criteria, keywords, selected,
-                                            available_storage, remove, orquery),
+        (f, v) = orquery.split(':', 1)
+        orfacets = s.search(_generate_query(search_facets, request.user, group, criteria, keywords, selected,
+                                            remove, orquery),
                             rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
-        if f in _metadata_facets.keys():
-            orfacets[f] = _collapse_metadata_facets(orfacets[f], available_storage)
-    else:
-        orfacets = None
+        orfacet = copy.copy(search_facets[f])
+        orfacet.label = '%s in %s or...' % (v.replace("|", " or "), orfacet.label)
+        orfacet.set_result(orfacets[f])
     
     if group:
         url = reverse('solr-search-group', kwargs={'group': group.name})
@@ -165,24 +209,25 @@ def search(request, group=None, selected=False):
         q['p'] = page + 1
         next_page_url = "%s?%s" % (url, q.urlencode())
 
-    facets = sorted(
-        ({'name': name,
-          'items': sorted(filter(lambda (t,f): f < hits, items.iteritems())),
-          'label': fields[name]}
-            for (name, items) in filter(lambda (name, items): len(items) > 1, facets.iteritems())),
-        key=lambda f: f['label'])
 
     def readable_criteria(c):
         (f, o) = c.split(':', 1)
         o = o.replace('|', ' or ')
         if f.startswith('-'):
-            return (c, '%s not in %s' % (o, fields[f[1:]]), False)
+            return (c, '%s not in %s' % (o, search_facets[f[1:]].label), False)
         else:
-            return (c, '%s in %s' % (o, fields[f]), True)
+            return (c, '%s in %s' % (o, search_facets[f].label), True)
 
-    if orfacets:
-        orfacets = map(lambda (name, items): {'name': name, 'items': sorted(items.iteritems()), 'label': readable_criteria(orquery)[1] + ' or ...'},
-                        filter(lambda (name, items): len(items) > 1, orfacets.iteritems()))
+    
+    # sort facets by label
+    facets = sorted(search_facets.values(), key=lambda f: f.label)
+    
+    # clean facet items
+    for f in facets:
+        f.clean_result(hits)
+    
+    # remove facets with only no filter options
+    facets = filter(lambda f: len(f.facets) > 0, facets)
 
     return render_to_response('results.html',
                               {'criteria': map(readable_criteria, criteria),
@@ -199,6 +244,6 @@ def search(request, group=None, selected=False):
                                'limit_url': limit_url,
                                'limit_url_orquery': limit_url_orquery,
                                'facets': facets,
-                               'orfacets': orfacets,
+                               'orfacet': orfacet,
                                'orquery': orquery,},
                               context_instance=RequestContext(request))
