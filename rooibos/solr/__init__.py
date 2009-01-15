@@ -3,9 +3,11 @@ import re
 from threading import Thread
 from django.conf import settings
 from django.db.models import Q
+from django.db import reset_queries
 from rooibos.data.models import Record, Group, Field, FieldValue, GroupMembership
 from rooibos.storage.models import Media
 from pysolr import Solr
+from rooibos.util.progressbar import ProgressBar
 
 SOLR_EMPTY_FIELD_VALUE = 'unspecified'
 
@@ -44,8 +46,9 @@ class SolrIndex():
         count = 0
         batch_size = 1000
         process_thread = None
+        if verbose: pb = ProgressBar(Record.objects.count())
         while True:
-            print "\r%s" % count,
+            if verbose: pb.update(count)
             records = Record.objects.filter(recordinfo=None)[count:count + batch_size]
             if not records:
                 break
@@ -66,10 +69,11 @@ class SolrIndex():
                 process_thread.join()
             process_thread = Thread(target=process_data)
             process_thread.start()
+            reset_queries()
 
         if process_thread:
             process_thread.join()    
-        print "\r%s" % count
+        if verbose: pb.done()
     
     def _preload_related(self, model, records, filter=Q(), related=0):
         dict = {}

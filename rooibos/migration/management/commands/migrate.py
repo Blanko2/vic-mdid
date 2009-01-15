@@ -1,10 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
-from django.db import connection
+from django.db import connection, reset_queries
 from django.contrib.auth.models import User, Group as UserGroup
 from xml.dom import minidom
 import os
 import pyodbc
+import gc
 from urlparse import urlparse
 from datetime import datetime
 from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
@@ -12,6 +13,7 @@ from rooibos.storage.models import Storage, Media
 from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
+from rooibos.util.progressbar import ProgressBar
 
 IMPORT_COLLECTIONS = range(0, 1000)
 IMPORT_RECORDS = 200000
@@ -85,7 +87,7 @@ class Command(BaseCommand):
         row = cursor.execute("SELECT Version FROM DatabaseVersion").fetchone()
         version = row.Version
         
-        if version != "00008":
+        if not version in ("00006", "00007", "00008"):
             print "Database version is not supported"
             return
         
@@ -96,15 +98,10 @@ class Command(BaseCommand):
         # Migrate users
         print "Migrating users"
         users = {}
-        duplicate_login_check = {}
         for row in cursor.execute("SELECT ID,Login,Password,Name,FirstName,Email,Administrator,LastAuthenticated " +
                                   "FROM Users"):
-            if duplicate_login_check.has_key(row.Login.lower()):
-                print "Warning: duplicate login detected: %s" % row.Login
-                continue
-            users[row.ID] = user = User()
+            user = User()
             user.username = row.Login[:30]
-            duplicate_login_check[user.username] = None
             if row.Password:
                 user.password = row.Password.lower()
             else:
@@ -114,7 +111,12 @@ class Command(BaseCommand):
             user.email = row.Email[:75]
             user.is_superuser = user.is_staff = row.Administrator
             user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
-            user.save()
+            try:
+                user.save()
+                users[row.ID] = user 
+            except:
+                print "Warning: possible duplicate login detected: %s" % row.Login
+
 
         # Migrate user groups
         print "Migrating user groups"
@@ -217,61 +219,62 @@ class Command(BaseCommand):
             dc = ('dc:%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
             if standard_fields.has_key(dc):
                 fields[row.ID] = standard_fields[dc]
-                print "+",
             else:
                 fields[row.ID] = Field.objects.create(label=row.Name)
-                print "-",
-        print
      
         # Migrate records and media
         
         print "Migrating records"
         images = {}
         count = 0
-        
+        pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Images"))[0].C)
         for row in cursor.execute("SELECT ID,CollectionID,Resource,Created,Modified,RemoteID," +
                                   "CachedUntil,Expires,UserID,Flags FROM Images"):
             if groups.has_key(row.CollectionID):
-                images[row.ID] = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
+                image = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
                                                        name=row.Resource.rsplit('.', 1)[0],
                                                        modified=row.Modified or datetime.now(),
                                                        source=row.RemoteID,
                                                        next_update=row.CachedUntil or row.Expires)
-                GroupMembership.objects.create(record=images[row.ID], group=groups[row.CollectionID])
+                images[row.ID] = image.id
+                GroupMembership.objects.create(record_id=image.id, group=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
                     if row.Resource.endswith('.xml'):
-                        self.process_xml_resource(images[row.ID], storage[row.CollectionID]["full"], row.Resource)
+                        self.process_xml_resource(image, storage[row.CollectionID]["full"], row.Resource)
                     else:
                         for type in ('full', 'medium', 'thumb'):
                             Media.objects.create(
-                                record=images[row.ID],
+                                record_id=image.id,
                                 name=type,
                                 url='%s/%s' % (type, row.Resource),
                                 storage=storage[row.CollectionID][type],
                                 mimetype='image/jpeg')          
-                count += 1
-                if count % 100 == 0:
-                    print "%s\r" % count,
-                if count >= IMPORT_RECORDS:
-                    break
+            count += 1
+            if count % 100 == 0:
+                pb.update(count)
+                reset_queries()
+            if count >= IMPORT_RECORDS:
+                break
+        pb.done()
 
         # Migrate field values
         
         print "Migrating field values"
         count = 0
-        
+        pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM FieldData"))[0].C)
         for row in cursor.execute("SELECT ImageID,FieldID,FieldValue,OriginalValue,Type,Label " +
                                   "FROM FieldData INNER JOIN FieldDefinitions ON FieldID=FieldDefinitions.ID"):
             if images.has_key(row.ImageID):
-                FieldValue.objects.create(record=images[row.ImageID],
+                FieldValue.objects.create(record_id=images[row.ImageID],
                                           field=fields[row.FieldID],
                                           label=row.Label,
                                           value=row.FieldValue,
                                           type=row.Type == 2 and 'D' or 'T')
             count += 1
             if count % 100 == 0:
-                print "%s\r" % count,
-        
+                pb.update(count)
+                reset_queries()
+        pb.done()
         
         # Migrate folders
         
@@ -279,22 +282,27 @@ class Command(BaseCommand):
         
         # Migrate slideshows
             
-        print "Migrating slideshows and slides"
-        count = 0
+        print "Migrating slideshows"
         slideshows = {}
         for row in cursor.execute("SELECT ID,UserID,Title,Description FROM Slideshows"):
-            slideshows[row.ID] = Group.objects.create(title=row.Title, owner=users[row.UserID],
-                                                      type='presentation', description=row.Description)
+            if users.has_key(row.UserID):
+                slideshows[row.ID] = Group.objects.create(title=row.Title, owner=users[row.UserID],
+                                                          type='presentation', description=row.Description)
+        print "Migrating slides"
+        count = 0
+        pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Slides"))[0].C)
         for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
-            if images.has_key(row.ImageID):
-                GroupMembership.objects.create(record=images[row.ImageID],
+            if images.has_key(row.ImageID) and slideshows.has_key(row.SlideshowID):
+                GroupMembership.objects.create(record_id=images[row.ImageID],
                                                group=slideshows[row.SlideshowID],
                                                order=row.DisplayOrder,
                                                hidden=row.Scratch)
             count += 1
             if count % 100 == 0:
-                print "%s\r" % count,
-
+                pb.update(count)
+        pb.done()
+        
+        
         # Migrate slideshow permissions
         
         #Privilege.ModifyACL -> n/a
@@ -305,12 +313,11 @@ class Command(BaseCommand):
         
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
                                   "FROM AccessControl WHERE ObjectType='S' AND ObjectID>0"):
-            if not slideshows.has_key(row.ObjectID):
-                continue
-            ac = AccessControl()
-            ac.content_object = slideshows[row.ObjectID]            
-            if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
-                ac.save()
+            if slideshows.has_key(row.ObjectID):
+                ac = AccessControl()
+                ac.content_object = slideshows[row.ObjectID]            
+                if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
+                    ac.save()
 
 
         # Migrate system permissions
