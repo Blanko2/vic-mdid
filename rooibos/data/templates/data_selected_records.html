@@ -1,0 +1,23 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+
+{% block content %}
+
+<a href="{% url solr-selected %}">View {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
+
+<form method="POST" action=".">
+
+{{ form }}    
+    
+</form>
+
+<ul>
+    <li></li>
+    <li>Add to new group</li>
+    <li>Add to existing group</li>
+    <li>Add to favorites</li>
+    <li>Delete</li>
+</ul>
+
+{% endblock %}

@@ -41,6 +41,25 @@ def record_raw(request, recordname, owner=None, group=None):
                               context_instance=RequestContext(request))
 
 
+def selected_records(request):
+    
+    groups = filter_by_access(request.user, Group.objects.exclude(type='folder'), write=True).values_list('id', 'title')
+    
+    class AddToGroupForm(forms.Form):
+        group = forms.ChoiceField(label='Add to group', choices=[('', 'New Group'),] + list(groups))
+        title = forms.CharField(label='Group title', max_length=Group._meta.get_field('title').max_length)
+    
+    form = AddToGroupForm()
+    
+    
+    selected = request.session.get('selected_records', ())
+    return render_to_response('data_selected_records.html',
+                              {'selected': selected,
+                               'form': form,
+                              },
+                              context_instance=RequestContext(request))
+
+
 @login_required
 def record_edit(request, recordname, owner=None, group=None):
 
@@ -76,7 +95,7 @@ def record_edit(request, recordname, owner=None, group=None):
         grouped = {}
         for f in _get_fields():
             grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
-        return [('', '-' * 10)] + [(g, list((f.id, f.label) for f in grouped[g])) for g in grouped]
+        return [('', '-' * 10)] + [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
 
     class FieldValueForm(forms.ModelForm):
         

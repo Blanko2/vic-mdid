@@ -1,4 +1,4 @@
 {% load humanize %}
-{% if selected %}<a href="{% url solr-selected %}">{% endif %}
-{{ selected }} record{{ selected|pluralize }} selected
+{% if selected %}<a href="{% url data-selected %}">{% endif %}
+{{ selected|intcomma }} record{{ selected|pluralize }} selected
 {% if selected %}</a>{% endif %}

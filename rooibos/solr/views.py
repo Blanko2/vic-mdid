@@ -125,8 +125,12 @@ def search(request, group=None, selected=False):
         group = get_object_or_404(filter_by_access(request.user, Group), name=group, type='collection')
 
     update_record_selection(request)
-    
-    pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
+
+    viewmode = request.GET.get('v', 'i')
+    if viewmode == 'l':
+        pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 10)
+    else:
+        pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'score')
     criteria = request.GET.getlist('c')
@@ -229,7 +233,9 @@ def search(request, group=None, selected=False):
     # remove facets with only no filter options
     facets = filter(lambda f: len(f.facets) > 0, facets)
 
-    return render_to_response('results.html',
+    templates = dict(l='list')
+
+    return render_to_response('results_' + templates.get(viewmode, 'icons') + '.html',
                               {'criteria': map(readable_criteria, criteria),
                                'query': query,
                                'keywords': keywords,

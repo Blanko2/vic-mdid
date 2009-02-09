@@ -17,5 +17,6 @@ urlpatterns = patterns('',
     url(r'^record/edit/(?P<recordname>[-\w]+)/$', record_edit, name='data-record-edit'),
     url(r'^record/edit/(?P<owner>[^/]+)/(?P<group>[-\w]+)/(?P<recordname>[-\w]+)/$',
         record_edit, name='data-record-edit'),
+    url(r'^selected/$', selected_records, name='data-selected'),
     (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
 )

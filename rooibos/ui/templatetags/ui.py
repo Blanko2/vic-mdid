@@ -16,6 +16,13 @@ def record(record, selectable=False, selected_records=()):
             'selected': record.id in selected_records,
             'thumbnail': media and media.get_absolute_url() or '/static/images/nothumbnail.png'}
 
+@register.inclusion_tag('ui_record_list.html')
+def record_list(record, selectable=False, selected_records=()):
+    return {'record': record,
+            'selectable': selectable,
+            'selected': record.id in selected_records,
+            'icon': None or '/static/images/filetypes/none.png'}
+
 @register.inclusion_tag('ui_session_status.html', takes_context=True)
 def session_status(context):
     return {'selected': len(context['session'].get('selected_records', ())),

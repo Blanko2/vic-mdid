@@ -20,6 +20,7 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 {% endif %}
 <a href="{{ reset_url }}">Reset</a>
 {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
+<input type="submit" name="action" value="Select" />
 </div>
 
 {% for f,v in hiddenfields %}
@@ -63,12 +64,8 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
 
 {% if records %}
-<div class="resultlist">
-<input type="submit" name="action" value="Select" />
-{% for r in records %}
-    {% record r 'selectable' session.selected_records %}
-{% endfor %}
-</div>
+{% block records %}
+{% endblock %}
 {% endif %}
 
 </form>

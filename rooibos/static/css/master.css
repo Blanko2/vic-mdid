@@ -98,6 +98,7 @@
 .record {
     float: left;
     border: thin lightgrey solid;
+    -moz-border-radius: 5px;
     width: 150px;
     height: 150px;
     padding: 3px;
@@ -106,6 +107,22 @@
     font-size: smaller;
 }
 
+.record img {
+    -moz-border-radius-topleft: 3px;
+    border: thin solid black;
+}
+
+.record_list {
+    border-bottom: thin lightgrey solid;
+    padding: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.record_list img {
+    border: hidden;
+    vertical-align: baseline;
+}
 
 .facets {
     float: right;
@@ -115,6 +132,7 @@
 .facet {
     border: thin lightgrey solid;
     margin: 5px;
+    -moz-border-radius: 5px;
 }
 
 .facet-header {
@@ -193,10 +211,7 @@ div.fieldvalue-edit span.fs-order input {
 #comments {
     float: right;
     width: 300px;
-    -moz-border-radius-topright: 5px;
-    -moz-border-radius-topleft: 5px;
-    -moz-border-radius-bottomright: 5px;
-    -moz-border-radius-bottomleft: 5px;
+    -moz-border-radius: 5px;
     border: 1px solid black;
     padding: 5px;
     margin: 5px;

@@ -1,0 +1,10 @@
+{% extends "results.html" %}
+{% load ui %}
+
+{% block records %}
+<div class="resultlist">
+{% for r in records %}
+    {% record r 'selectable' session.selected_records %}
+{% endfor %}
+</div>
+{% endblock %}
