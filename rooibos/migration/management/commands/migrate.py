@@ -16,6 +16,7 @@ from rooibos.access.models import AccessControl
 from rooibos.util.progressbar import ProgressBar
 from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
 from rooibos.contrib.tagging.models import Tag
+from rooibos.util.models import OwnedWrapper
 
 IMPORT_COLLECTIONS = range(0, 1000)
 IMPORT_RECORDS = 1000 # 200000
@@ -278,34 +279,46 @@ class Command(BaseCommand):
                 reset_queries()
         pb.done()
         
-        # Migrate folders
-        
-        print "Migrating folders"        
-        for row in cursor.execute("SELECT UserID,Title FROM Folders"):
-            if users.has_key(row.UserID):
-                Tag.objects.update_tags(users[row.UserID], '"%s"' % row.Title)
+        # Migrate folders        
+        # Nothing to do - folders replaced by tags
         
         # Migrate slideshows
             
         print "Migrating slideshows"
         slideshows = {}
         for row in cursor.execute("SELECT Slideshows.ID,Slideshows.UserID,Slideshows.Title,Description, \
+                                  AccessPassword,CreationDate,ModificationDate,ArchiveFlag, \
                                   Folders.Title AS Folder FROM Slideshows LEFT JOIN Folders ON FolderID=Folders.ID"):
             if users.has_key(row.UserID):
-                slideshows[row.ID] = Presentation.objects.create(title=row.Title, owner=users[row.UserID],
-                                                                 description=row.Description)
+                slideshows[row.ID] = Presentation.objects.create(title=row.Title,
+                                                                 owner=users[row.UserID],
+                                                                 description=row.Description,
+                                                                 hidden=row.ArchiveFlag,
+                                                                 password=row.AccessPassword,
+                                                                 created=row.CreationDate,
+                                                                 modified=row.ModificationDate)
                 if row.Folder:
-                    Tag.objects.update_tags(slideshows[row.ID], '"%s"' % row.Folder)
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(
+                        user=users[row.UserID], object=slideshows[row.ID]),
+                        '"%s"' % row.Folder.replace('"',"'"))
                 
         print "Migrating slides"
         count = 0
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Slides"))[0].C)
-        for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
+        for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch,Annotation FROM Slides"):
             if images.has_key(row.ImageID) and slideshows.has_key(row.SlideshowID):
-                PresentationItem.objects.create(record_id=images[row.ImageID],
+                item = PresentationItem.objects.create(record_id=images[row.ImageID],
                                                presentation=slideshows[row.SlideshowID],
                                                order=row.DisplayOrder,
                                                hidden=row.Scratch)
+                if row.Annotation:
+                    FieldValue.objects.create(record_id=images[row.ImageID],
+                                              field=standard_fields["dc:description"],
+                                              owner=slideshows[row.SlideshowID].owner,
+                                              label="Annotation",
+                                              value=row.Annotation,
+                                              type='T',
+                                              context=item)
             count += 1
             if count % 100 == 0:
                 pb.update(count)

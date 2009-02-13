@@ -26,7 +26,7 @@ class FieldValueTestCase(unittest.TestCase):
         t1 = record.fieldvalue_set.create(field=self.titleField, label='Caption', value='Photograph of Mona Lisa', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, value='Photo Lisa', type='T')                
         c1 = record.fieldvalue_set.create(field=self.creatorField, label='Photographer', value='John Doe', type='T')
-        c2 = record.fieldvalue_set.create(field=self.creatorField, value='John X. Doe', type='T', collection=self.collection)
+        c2 = record.fieldvalue_set.create(field=self.creatorField, value='John X. Doe', type='T', context=self.collection)
         l1 = record.fieldvalue_set.create(field=self.locationField, value='Harrisonburg', type='T', owner=self.user)
                 
         self.assertEqual(True, datetime.now() - record.created < timedelta(0, 60))
@@ -36,9 +36,9 @@ class FieldValueTestCase(unittest.TestCase):
         self.assertEqual("Title", t2.resolved_label)
         
         self.assertEqual(3, len(record.get_fieldvalues()))
-        self.assertEqual(4, len(record.get_fieldvalues(collection=self.collection)))
+        self.assertEqual(4, len(record.get_fieldvalues(context=self.collection)))
         self.assertEqual(4, len(record.get_fieldvalues(owner=self.user)))
-        self.assertEqual(5, len(record.get_fieldvalues(owner=self.user, collection=self.collection)))
+        self.assertEqual(5, len(record.get_fieldvalues(owner=self.user, context=self.collection)))
         
     def testFieldValueOverride(self):
         record = Record.objects.create()
@@ -46,18 +46,18 @@ class FieldValueTestCase(unittest.TestCase):
         
         t1 = record.fieldvalue_set.create(field=self.titleField, value='Original', type='T')
         t2 = record.fieldvalue_set.create(field=self.titleField, value='OwnerOverride', type='T', override=t1, owner=self.user)
-        t3 = record.fieldvalue_set.create(field=self.titleField, value='GroupOverride', type='T', override=t1, collection=self.collection)
-        t4 = record.fieldvalue_set.create(field=self.titleField, value='OwnerAndGroupOverride', type='T', override=t1, owner=self.user, collection=self.collection)
+        t3 = record.fieldvalue_set.create(field=self.titleField, value='GroupOverride', type='T', override=t1, context=self.collection)
+        t4 = record.fieldvalue_set.create(field=self.titleField, value='OwnerAndGroupOverride', type='T', override=t1, owner=self.user, context=self.collection)
         
         self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=False, filter_hidden=False)))
         self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True)))
-        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, collection=self.collection)))
+        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, context=self.collection)))
         self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)))
-        self.assertEqual(3, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user, collection=self.collection)))
+        self.assertEqual(3, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user, context=self.collection)))
 
         self.assertEqual('Original', record.get_fieldvalues(filter_overridden=True, filter_hidden=True)[0].value)
         self.assertEqual('OwnerOverride', record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)[0].value)
-        self.assertEqual('GroupOverride', record.get_fieldvalues(filter_overridden=True, filter_hidden=True, collection=self.collection)[0].value)
+        self.assertEqual('GroupOverride', record.get_fieldvalues(filter_overridden=True, filter_hidden=True, context=self.collection)[0].value)
         
     def testFieldValueHide(self):
         record = Record.objects.create()

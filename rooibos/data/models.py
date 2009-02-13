@@ -3,6 +3,8 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 from datetime import datetime
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import random
@@ -96,17 +98,19 @@ class Record(models.Model):
         self._clear_cached_items()
         super(Record, self).save(kwargs)
         
-    def get_fieldvalues(self, owner=None, collection=None,
+    def get_fieldvalues(self, owner=None, context=None,
                         filter_overridden=False, filter_hidden=False, filter_context=False):
-        q_group = Q(collection=collection)
+        q_context = context and Q(context_type=ContentType.objects.get_for_model(context.__class__),
+                                  context_id=context.id) \
+                            or Q()
         if not filter_context:
-            q_group = q_group | Q(collection=None)
+            q_context = q_context | Q(context_type=None, context_id=None)
         
         q_owner = Q(owner=owner)
         if not filter_context:
             q_owner = q_owner | Q(owner=None)
         
-        values = self.fieldvalue_set.filter(q_group, q_owner)
+        values = self.fieldvalue_set.filter(q_context, q_owner)
         remove = []
         for v in values:
             if filter_overridden and v.override_id:
@@ -184,8 +188,10 @@ class FieldValue(models.Model):
     value = models.TextField()
     type = models.CharField(max_length=1, choices=TYPE_CHOICES)
     language = models.CharField(max_length=5, blank=True, choices=LANGUAGE_CHOICES)
-    collection = models.ForeignKey(Collection, null=True, blank=True)
-    
+    context_type = models.ForeignKey(ContentType, null=True)
+    context_id = models.PositiveIntegerField(null=True)
+    context = generic.GenericForeignKey('context_type', 'context_id')
+        
     def __unicode__(self):
         return "%s=%s" % (self.label, self.value[:20])
     
