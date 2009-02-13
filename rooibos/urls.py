@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     (r'^legacy/', include('rooibos.legacy.urls')),
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^powerpoint/', include('rooibos.powerpoint.urls')),
+    (r'^presentation/', include('rooibos.presentation.urls')),
 )
 
 if settings.DEBUG:

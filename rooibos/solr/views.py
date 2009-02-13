@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int
-from rooibos.data.models import Field, Group
+from rooibos.data.models import Field, Collection
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
@@ -61,12 +61,12 @@ class CollectionSearchFacet(SearchFacet):
     
     def set_result(self, facets):
         result = []
-        for id, title in Group.objects.filter(type='collection', id__in=map(int, facets.keys())).values_list('id', 'title'):
+        for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
             result.append((id, facets[str(id)], title))
         super(CollectionSearchFacet, self).set_result(result)
 
 
-def _generate_query(search_facets, user, group, criteria, keywords, selected, *exclude):
+def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
 
     fields = {}
     for c in criteria:
@@ -99,13 +99,13 @@ def _generate_query(search_facets, user, group, criteria, keywords, selected, *e
         query = query and '%s AND (%s)' % (query, keywords) or '(%s)' % keywords
     if not query:
         query = '*:*'
-    if group:
-        query = 'collections:%s AND %s' % (group.id, query)
+    if collection:
+        query = 'collections:%s AND %s' % (collection.id, query)
     if selected:
         query = 'id:(%s) AND %s' % (' '.join(map(str, selected)), query)
         
     if not user.is_superuser:
-        groups = ' '.join(map(str, accessible_ids_list(user, Group.objects.filter(type='collection'))))
+        groups = ' '.join(map(str, accessible_ids_list(user, Collection)))
         c = []
         if groups: c.append('collections:(%s)' % groups)
         if user.id: c.append('owner:%s' % user.id)
@@ -120,9 +120,9 @@ def _generate_query(search_facets, user, group, criteria, keywords, selected, *e
 def selected(request):
     return search(request, selected=True)
 
-def search(request, group=None, selected=False):
-    if group:
-        group = get_object_or_404(filter_by_access(request.user, Group), name=group, type='collection')
+def search(request, collection=None, selected=False):
+    if collection:
+        collection = get_object_or_404(filter_by_access(request.user, Collection), name=collection)
 
     update_record_selection(request)
 
@@ -159,7 +159,7 @@ def search(request, group=None, selected=False):
     # convert to dictionary
     search_facets = dict((f.name, f) for f in search_facets)
 
-    query = _generate_query(search_facets, request.user, group, criteria, keywords, selected, remove)
+    query = _generate_query(search_facets, request.user, collection, criteria, keywords, selected, remove)
        
     s = SolrIndex()
     (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize,
@@ -171,15 +171,15 @@ def search(request, group=None, selected=False):
     orfacet = None
     if orquery:
         (f, v) = orquery.split(':', 1)
-        orfacets = s.search(_generate_query(search_facets, request.user, group, criteria, keywords, selected,
+        orfacets = s.search(_generate_query(search_facets, request.user, collection, criteria, keywords, selected,
                                             remove, orquery),
                             rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
         orfacet = copy.copy(search_facets[f])
         orfacet.label = '%s in %s or...' % (v.replace("|", " or "), orfacet.label)
         orfacet.set_result(orfacets[f])
     
-    if group:
-        url = reverse('solr-search-group', kwargs={'group': group.name})
+    if collection:
+        url = reverse('solr-search-collection', kwargs={'collection': collection.name})
     elif selected:
         url = reverse('solr-selected')
     else:

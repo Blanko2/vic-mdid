@@ -62,7 +62,7 @@ class NasaImageExchange():
             del(d[record.source])
             # TODO: update record title, date, urls
         # create missing records
-        # TODO: add record to a NIX group
+        # TODO: add record to a NIX collection
         for r in d.values():
             record = Record.objects.create(name=r['title'],
                                            manager='nasaimageexchange',

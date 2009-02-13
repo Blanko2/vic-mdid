@@ -73,6 +73,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.doc.XViewMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'rooibos.contrib.pagination.middleware.PaginationMiddleware',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
@@ -104,6 +105,9 @@ INSTALLED_APPS = (
     'rooibos.viewers',
     'rooibos.powerpoint',
     'rooibos.help',
+    'rooibos.presentation',
+    'rooibos.contrib.tagging',
+    'rooibos.contrib.pagination',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'

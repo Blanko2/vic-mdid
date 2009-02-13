@@ -51,7 +51,7 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
     if not (read or write or manage) or user.is_superuser:  # nothing to do
         return queryset
     model_type = ContentType.objects.get_for_model(queryset.model)
-    usergroups_q = Q(usergroup__in=user.groups.all().values('id').query)
+    usergroups_q = Q(usergroup__in=user.groups.all())
     user_q = user.is_anonymous() and Q(user__isnull=True, usergroup__isnull=True) or Q(user=user)
     owner_q =  'owner' in (f.name for f in queryset.model._meta.fields) and Q(owner=user)
 
@@ -60,15 +60,15 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
         if not check:
             return Q()
         user_allowed_q = Q(id__in=AccessControl.objects.filter(user_q, content_type__id=model_type.id,
-                                                               **{field: True}).values('object_id').query)
+                                                               **{field: True}).values('object_id'))
         user_denied_q = Q(id__in=AccessControl.objects.filter(user_q, content_type__id=model_type.id,
-                                                              **{field: False}).values('object_id').query)
+                                                              **{field: False}).values('object_id'))
         if user.is_anonymous():
             return user_allowed_q & ~user_denied_q
         group_allowed_q = Q(id__in=AccessControl.objects.filter(usergroups_q, content_type__id=model_type.id,
-                                                                **{field: True}).values('object_id').query)
+                                                                **{field: True}).values('object_id'))
         group_denied_q = Q(id__in=AccessControl.objects.filter(usergroups_q, content_type__id=model_type.id,
-                                                               **{field: False}).values('object_id').query)
+                                                               **{field: False}).values('object_id'))
         result = ((group_allowed_q & ~group_denied_q) | user_allowed_q) & ~user_denied_q
         if owner_q:
             result = owner_q | result
@@ -79,7 +79,7 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
 
 def accessible_ids(user, queryset, read=True, write=False, manage=False):
     queryset = _get_queryset(queryset)
-    return filter_by_access(user, queryset, read, write, manage).values('id').query
+    return filter_by_access(user, queryset, read, write, manage).values('id')
 
 
 def accessible_ids_list(user, queryset, read=True, write=False, manage=False):

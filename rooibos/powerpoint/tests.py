@@ -1,6 +1,6 @@
 from __future__ import with_statement
 import unittest
-from rooibos.data.models import Group, GroupMembership, Record, Field, FieldValue
+from rooibos.data.models import Collection, CollectionItem, Record, Field, FieldValue
 from rooibos.storage.models import Media, Storage
 from . import PowerPointGenerator
 import os
@@ -22,17 +22,17 @@ class PowerpointTestCase(unittest.TestCase):
     
     def testSimplePowerpointFile(self):
         file = os.path.join(self.tempdir, 'test.pptx')
-        group = Group.objects.create(title='Simple Group', description='This is a PowerPoint presentation created from a template and populated with actual group data.')
+        collection = Collection.objects.create(title='Simple Collection', description='This is a PowerPoint presentation created from a template and populated with actual collection data.')
         field = Field.objects.get(name='title', standard__prefix='dc')
         for n in range(1, 11):
             record = Record.objects.create()
             FieldValue.objects.create(record=record, field=field, value='Record %s' % n)
-            GroupMembership.objects.create(group=group, record=record)
+            CollectionItem.objects.create(collection=collection, record=record)
             media = Media.objects.create(record=record, storage=self.storage, mimetype='image/jpeg')
             with open(os.path.join(os.path.dirname(__file__), 'test_data', '%02d.jpg' % n), 'rb') as f:
                 media.save_file('%02d.jpg' % n, f)            
         
-        g = PowerPointGenerator(group)
+        g = PowerPointGenerator(collection)
         
         self.assertTrue(g.generate(g.get_templates()[0], file))
         

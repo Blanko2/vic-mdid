@@ -1,0 +1,41 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h1>Create new presentation</h1>
+
+<form action="{% url presentation-create %}?next={{ next }}" method="POST" class="vertical">
+    
+{{ form.title.label_tag }}
+{{ form.title }}
+{{ form.title.errors }}
+
+{% if form.tags.field.choices %}
+    {{ form.tags.label_tag }}
+    {{ form.tags }}
+    {{ form.tags.errors }}
+{% endif %}
+
+{{ form.new_tags.label_tag }}
+{{ form.new_tags }}
+{{ form.new_tags.errors }}
+
+{% if selected %}
+    {{ form.add_selected.label_tag }}
+    {{ form.add_selected }}
+    {{ form.add_selected.errors }}
+{% endif %}
+
+<div class="row">
+    <input type="submit" value="Create" />
+    {% if next %}
+    <a href="{{ next }}">Cancel</a>
+    {% endif %}
+</div>
+
+</form>
+
+
+
+
+{% endblock %}

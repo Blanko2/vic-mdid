@@ -27,3 +27,16 @@ def record_list(record, selectable=False, selected_records=()):
 def session_status(context):
     return {'selected': len(context['session'].get('selected_records', ())),
             }
+
+
+@register.simple_tag
+def dir2(var):
+    return dir(var)
+
+@register.filter
+def scale(value, params):
+    try:
+        omin, omax, nmin, nmax = map(float, params.split())
+        return (value - omin) / (omax - omin) * (nmax - nmin) + nmin
+    except:
+        return ''

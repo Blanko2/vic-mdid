@@ -3,14 +3,14 @@
 
 {% block content %}
 
-<h1>{{ group.title }}</h1>
+<h1>{{ collection.title }}</h1>
 
 <div>
-    Description: {{ group.description }}
+    Description: {{ collection.description }}
 </div>
 
 <div>
-    {% view_inline group %}
+    {% view_inline collection %}
 </div>
 
 {% if viewers %}
@@ -22,7 +22,7 @@
 {% endif %}
 
 <div>
-    <a href="{% url solr-search-group group=group.name %}">Explore this group</a>
+    <a href="{% url solr-search-collection collection=collection.name %}">Explore this collection</a>
 </div>
 
 {% endblock %}

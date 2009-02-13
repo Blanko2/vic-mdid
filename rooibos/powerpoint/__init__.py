@@ -2,7 +2,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import os
 import xml.dom.minidom
 from tempfile import mkstemp
-from rooibos.data.models import Group
+from rooibos.data.models import Collection
 from rooibos.util import guess_extension
 from rooibos.storage.models import Media
 from rooibos.viewers import register_viewer
@@ -19,9 +19,9 @@ PROCESS_FILES = {
 
 class PowerPointGenerator:
     
-    def __init__(self, group):        
-        self.group = group
-        self.records = group.records.all()
+    def __init__(self, collection):        
+        self.collection = collection
+        self.records = collection.records.all()
         self.slide_template = None
         self.slide_rel_template = None
         self.content_types = None
@@ -144,9 +144,9 @@ class PowerPointGenerator:
         for e in x.getElementsByTagName('a:t'):
             t = e.firstChild.nodeValue
             if t == 'title':
-                t = self.group.title
+                t = self.collection.title
             elif t == 'description':
-                t = self.group.description or ''
+                t = self.collection.description or ''
             e.firstChild.nodeValue = t        
         outfile.writestr(name, x.toxml())        
         
@@ -183,8 +183,8 @@ class PowerPointGenerator:
     
     
 class PowerPointViewer:
-    title = "Save group as PowerPoint"    
-    types = ('group',)
+    title = "Save collection as PowerPoint"    
+    types = ('collection',)
     targets = ('link',)
     
     def generate(self, object):

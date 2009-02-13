@@ -57,16 +57,16 @@ def imageviewer_getslideshow(request):
     else:
         resultcode = 'SUCCESS'
         errormessage = None
-        group = get_object_or_404(Group, name='admins-test')
+        collection = get_object_or_404(Collection, name='admins-test')
         # todo: medium size is hardcoded
         slides = [{'url': reverse('legacy-image', kwargs={'record': r.name, 'media': 'medium'}).split('/', 2)[2] + "?dummy",
                    'id': r.id,
                    'imageid': r.id,
-                   'collectionid': group.id,
+                   'collectionid': collection.id,
                    'filename': '%s.jpg' % r.name,
                    'fields': [{'label': f.label, 'value': f.value}
-                              for f in r.get_fieldvalues(group=group, filter_overridden=True, filter_hidden=True)]
-                    } for r in group.all_records]
+                              for f in r.get_fieldvalues(collection=collection, filter_overridden=True, filter_hidden=True)]
+                    } for r in collection.all_records]
 
     return render_to_response('imageviewer_slideshow.xml',
                               {'namespace': settings.WEBSERVICE_NAMESPACE,

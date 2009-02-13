@@ -6,8 +6,8 @@
 
 {% if groups %}
 <ul>
-  {% for group in groups %}
-  <li><a href="{{ group.get_absolute_url }}">{{ group.title }}</a> <a href="{% url solr-search-group group=group.name %}">Explore</a></li>
+  {% for collection in groups %}
+  <li><a href="{{ collection.get_absolute_url }}">{{ collection.title }}</a> <a href="{% url solr-search-collection collection=collection.name %}">Explore</a></li>
   {% endfor %}
 </ul>
 {% else %}

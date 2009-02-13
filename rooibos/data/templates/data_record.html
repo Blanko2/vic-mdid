@@ -11,12 +11,12 @@
         Current context:
         <ul>
             <li>Owner: {{ owner }}</li>
-            <li>Group: {{ group }}</li>
+            <li>Collection: {{ collection }}</li>
         </ul>
         
         Available contexts: <ul>
         {% for c in contexts %}
-        <li><a href="{% url data-record recordname=record.name,owner=c.owner,group=c.group %}">{{ c.label }}</a></li>
+        <li><a href="{% url data-record recordname=record.name,owner=c.owner,collection=c.collection %}">{{ c.label }}</a></li>
         {% endfor %}
         </ul>
     </div>

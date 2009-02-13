@@ -1,1 +1,2 @@
-SET PYTHONPATH=D:\dev\rooibos
+SET ROOIBOSDIR=D:\dev\rooibos
+SET PYTHONPATH=%ROOIBOSDIR%;%ROOIBOSDIR%\rooibos\contrib

@@ -6,22 +6,22 @@ from django.template import RequestContext
 from django.shortcuts import get_object_or_404, render_to_response
 from django.core.urlresolvers import reverse
 from rooibos.access import filter_by_access
-from rooibos.data.models import Group
+from rooibos.data.models import Collection
 from . import PowerPointGenerator
 
 def powerpoint_options(request, groupname):
-    group = get_object_or_404(filter_by_access(request.user, Group), name=groupname) 
+    collection = get_object_or_404(filter_by_access(request.user, Collection), name=groupname) 
     template_urls = map(lambda t: reverse('powerpoint-generator', kwargs={'groupname': groupname, 'template': t}),
                         PowerPointGenerator.get_templates())
     return render_to_response('powerpoint_options.html',
                               {'template_urls': template_urls,
-                               'group': group,},
+                               'collection': collection,},
                               context_instance=RequestContext(request))
 
 
 def powerpoint_generator(request, groupname, template):
-    group = get_object_or_404(filter_by_access(request.user, Group), name=groupname)        
-    g = PowerPointGenerator(group)
+    collection = get_object_or_404(filter_by_access(request.user, Collection), name=groupname)        
+    g = PowerPointGenerator(collection)
     filename = os.tempnam()
     try:
         g.generate(g.get_templates()[0], filename)

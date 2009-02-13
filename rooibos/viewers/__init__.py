@@ -29,8 +29,8 @@ class DefaultMediaViewInline:
 
 
 class DefaultGroupViewInline:
-    title = "Default inline group viewer"
-    types = ('group',)
+    title = "Default inline collection viewer"
+    types = ('collection',)
     targets = ('inline',)
     
     def generate(self, object):

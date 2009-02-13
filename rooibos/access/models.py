@@ -1,14 +1,14 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.contrib.auth.models import User, Group as UserGroup
+from django.contrib.auth.models import User, Group
 
 class AccessControl(models.Model):    
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     user = models.ForeignKey(User, null=True)
-    usergroup = models.ForeignKey(UserGroup, null=True)
+    usergroup = models.ForeignKey(Group, null=True)
     read = models.BooleanField(null=True)
     write = models.BooleanField(null=True)
     manage = models.BooleanField(null=True)

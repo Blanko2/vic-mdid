@@ -4,7 +4,7 @@ from threading import Thread
 from django.conf import settings
 from django.db.models import Q
 from django.db import reset_queries
-from rooibos.data.models import Record, Group, Field, FieldValue, GroupMembership
+from rooibos.data.models import Record, Collection, Field, FieldValue, CollectionItem
 from rooibos.storage.models import Media
 from pysolr import Solr
 from rooibos.util.progressbar import ProgressBar
@@ -54,7 +54,7 @@ class SolrIndex():
                 break
             media_dict = self._preload_related(Media, records)
             fieldvalue_dict = self._preload_related(FieldValue, records, related=1)
-            groups_dict = self._preload_related(GroupMembership, records, filter=Q(group__type='collection'))
+            groups_dict = self._preload_related(CollectionItem, records)
             count += len(records)
             
             def process_data():
@@ -77,6 +77,7 @@ class SolrIndex():
     
     def _preload_related(self, model, records, filter=Q(), related=0):
         dict = {}
+        q = model.objects.select_related(depth=related).filter(filter, record__in=records)
         for x in model.objects.select_related(depth=related).filter(filter, record__in=records):
             dict.setdefault(x.record_id, []).append(x)
         return dict
@@ -89,7 +90,7 @@ class SolrIndex():
             doc.setdefault(v.field.name + '_t', []).append(self._clean_string(v.value))
         for f in required_fields:
             doc[f + '_t'] = SOLR_EMPTY_FIELD_VALUE
-        parents = map(lambda gm: gm.group_id, groups)
+        parents = map(lambda gm: gm.collection_id, groups)
         # Combine the direct parents with (great-)grandparents
         doc['collections'] = list(reduce(lambda x,y:set(x)|set(y),[self.parent_groups[p] for p in parents],parents))
         if record.owner_id:
@@ -110,10 +111,10 @@ class SolrIndex():
             if r >= s: return t
         return 'tiny'
     
-    # A record in a group also belongs to all parent groups
+    # A record in a collection also belongs to all parent groups
     # This method builds a simple lookup table to quickly find all parent groups
     def _build_group_tree(self):
         self.parent_groups = {}
-        for group in Group.objects.all():
-            self.parent_groups[group.id] = [g.id for g in group.all_parent_groups]
+        for collection in Collection.objects.all():
+            self.parent_groups[collection.id] = [g.id for g in collection.all_parent_collections]
 

@@ -7,47 +7,47 @@ from django import forms
 from django.forms.models import modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from models import Group, Record, Field, FieldValue
+from models import Collection, Record, Field, FieldValue
 from rooibos.access import filter_by_access, accessible_ids
 from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
 
 def groups(request):    
-    groups = filter_by_access(request.user, Group.objects.filter(type='collection'))    
+    groups = filter_by_access(request.user, Collection)    
     return render_to_response('data_groups.html',
                               {'groups': groups, },
                               context_instance=RequestContext(request))
 
 def group_raw(request, groupname):
-    group = get_object_or_404(filter_by_access(request.user, Group), name=groupname)
-    viewers = map(lambda v: v().generate(group), get_viewers('group', 'link'))
+    collection = get_object_or_404(filter_by_access(request.user, Collection), name=groupname)
+    viewers = map(lambda v: v().generate(collection), get_viewers('collection', 'link'))
     return render_to_response('data_group.html',
-                              {'group': group,
+                              {'collection': collection,
                                'viewers': viewers,},
                               context_instance=RequestContext(request))
 
-def record_raw(request, recordname, owner=None, group=None):
+def record_raw(request, recordname, owner=None, collection=None):
     record = get_object_or_404(Record.objects.filter(name=recordname,
-                                                     group__id__in=accessible_ids(request.user, Group)).distinct())
+                                                     collection__id__in=accessible_ids(request.user, Collection)).distinct())
     media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
-    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'group__name')        
+    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'collection__name')        
     contexts = [_clean_context(**c) for c in contexts]
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
                                'contexts': contexts,
                                'owner': owner,
-                               'group': group,},
+                               'collection': collection,},
                               context_instance=RequestContext(request))
 
 
 def selected_records(request):
     
-    groups = filter_by_access(request.user, Group.objects.exclude(type='folder'), write=True).values_list('id', 'title')
+    groups = filter_by_access(request.user, Collection, write=True).values_list('id', 'title')
     
     class AddToGroupForm(forms.Form):
-        group = forms.ChoiceField(label='Add to group', choices=[('', 'New Group'),] + list(groups))
-        title = forms.CharField(label='Group title', max_length=Group._meta.get_field('title').max_length)
+        collection = forms.ChoiceField(label='Add to collection', choices=[('', 'New Collection'),] + list(groups))
+        title = forms.CharField(label='Collection title', max_length=Collection._meta.get_field('title').max_length)
     
     form = AddToGroupForm()
     
@@ -61,9 +61,9 @@ def selected_records(request):
 
 
 @login_required
-def record_edit(request, recordname, owner=None, group=None):
+def record_edit(request, recordname, owner=None, collection=None):
 
-    context = _clean_context(owner, group)
+    context = _clean_context(owner, collection)
 
     if owner and owner != '-':
         owner = get_object_or_404(User, username=owner)
@@ -72,20 +72,20 @@ def record_edit(request, recordname, owner=None, group=None):
             raise Http404
     else:
         owner = None
-    if group and group != '-':
-        # if group given, must specify user context or have write access to group
-        group = get_object_or_404(filter_by_access(request.user, Group, write=(owner != None)))
+    if collection and collection != '-':
+        # if collection given, must specify user context or have write access to collection
+        collection = get_object_or_404(filter_by_access(request.user, Collection, write=(owner != None)))
     else:
-        group = None
+        collection = None
         
-    if not owner and not group:
+    if not owner and not collection:
         # no context given, must have write access to a containing collection or be owner (handled below)
-        valid_ids = accessible_ids(request.user, Group.objects.filter(type='collection'), write=True)
+        valid_ids = accessible_ids(request.user, Collection, write=True)
     else:
-        # context given, must have access to any group containing the record
-        valid_ids = accessible_ids(request.user, Group)
+        # context given, must have access to any collection containing the record
+        valid_ids = accessible_ids(request.user, Collection)
 
-    record = get_object_or_404(Record.objects.filter(name=recordname, group__id__in=valid_ids).distinct())
+    record = get_object_or_404(Record.objects.filter(name=recordname, collection__id__in=valid_ids).distinct())
     
 
     def _get_fields():
@@ -112,7 +112,7 @@ def record_edit(request, recordname, owner=None, group=None):
         def clean(self):
             cleaned_data = super(forms.ModelForm, self).clean()
             cleaned_data['owner'] = owner
-            cleaned_data['group'] = group
+            cleaned_data['collection'] = collection
             cleaned_data['override'] = self.instance.override
             return cleaned_data
                     
@@ -123,9 +123,9 @@ def record_edit(request, recordname, owner=None, group=None):
             exclude = ('override',)
 
     
-    if owner or group:    
+    if owner or collection:    
         fieldvalues_readonly = record.get_fieldvalues(filter_overridden=True, filter_hidden=True)    
-        fieldvalues = record.get_fieldvalues(owner=owner, group=group, filter_overridden=True, filter_context=True)
+        fieldvalues = record.get_fieldvalues(owner=owner, collection=collection, filter_overridden=True, filter_context=True)
     else:
         fieldvalues_readonly = []
         fieldvalues = record.get_fieldvalues()
@@ -137,7 +137,7 @@ def record_edit(request, recordname, owner=None, group=None):
             override = map(int, request.POST.getlist('override'))
             for v in fieldvalues_readonly.filter(id__in=override):
                 FieldValue.objects.create(record=record, field=v.field, label=v.label, value=v.value, type=v.type,
-                                          override=v, owner=owner, group=group)
+                                          override=v, owner=owner, collection=collection)
             return HttpResponseRedirect(request.META['PATH_INFO'])
         else:
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
@@ -156,18 +156,18 @@ def record_edit(request, recordname, owner=None, group=None):
                               {'record': record,
                                'context': context,
                                'owner': owner,
-                               'group': group,
+                               'collection': collection,
                                'fv_formset': formset,
                                'fieldvalues': fieldvalues_readonly,},
                               context_instance=RequestContext(request))
     
     
-def _clean_context(owner__username, group__name):
+def _clean_context(owner__username, collection__name):
     c = {}
     c['owner'] = owner__username or '-'
-    c['group'] = group__name or '-'
-    if c['owner'] == '-' and c['group'] == '-':
+    c['collection'] = collection__name or '-'
+    if c['owner'] == '-' and c['collection'] == '-':
         c['label'] = 'Default'
     else:
-        c['label'] = 'Owner: %s Group: %s' % (c['owner'], c['group'])
+        c['label'] = 'Owner: %s Collection: %s' % (c['owner'], c['collection'])
     return c

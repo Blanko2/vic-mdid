@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models.signals import post_delete, post_save
-from rooibos.data.models import Record, Group, Field
+from rooibos.data.models import Record, Collection, Field
 from django.conf import settings
 from pysolr import Solr
 

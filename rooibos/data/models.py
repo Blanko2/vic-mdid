@@ -7,19 +7,12 @@ from datetime import datetime
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import random
 
-class Group(models.Model):
-    
-    TYPE_CHOICES = (
-        ('collection', 'Collection'),
-        ('presentation', 'Presentation'),
-        ('folder', 'Folder'),
-    )
+class Collection(models.Model):
     
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50, unique=True)
-    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
-    subgroups = models.ManyToManyField('self', symmetrical=False)
-    records = models.ManyToManyField('Record', through='GroupMembership')
+    children = models.ManyToManyField('self', symmetrical=False)
+    records = models.ManyToManyField('Record', through='CollectionItem')
     owner = models.ForeignKey(User, null=True)
     hidden = models.BooleanField(default=False)
     description = models.TextField(null=True)
@@ -28,24 +21,24 @@ class Group(models.Model):
     
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
-        super(Group, self).save(kwargs)
+        super(Collection, self).save(kwargs)
         
     def __unicode__(self):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('data-group', kwargs={'groupname': self.name})
+        return reverse('data-collection', kwargs={'groupname': self.name})
     
     @property
-    def all_subgroups(self):
-        sub = list(self.subgroups.all())
+    def all_child_collections(self):
+        sub = list(self.children.all())
         result = ()
         while True:
             todo = ()
-            for group in sub:
-                if self != group:
-                    result += (group,)
-                for g in group.subgroups.all():
+            for collection in sub:
+                if self != collection:
+                    result += (collection,)
+                for g in collection.children.all():
                     if g != self and not g in sub:
                         todo += (g,)
             if not todo:
@@ -54,15 +47,15 @@ class Group(models.Model):
         return result
     
     @property
-    def all_parent_groups(self):
-        parents = list(self.group_set.all())
+    def all_parent_collections(self):
+        parents = list(self.collection_set.all())
         result = ()
         while True:
             todo = ()
-            for group in parents:
-                if self != group:
-                    result += (group,)
-                for g in group.group_set.all():
+            for collection in parents:
+                if self != collection:
+                    result += (collection,)
+                for g in collection.collection_set.all():
                     if g != self and not g in parents:
                         todo += (g,)
             if not todo:
@@ -72,14 +65,13 @@ class Group(models.Model):
             
     @property
     def all_records(self):
-        return Record.objects.filter(group__in=self.all_subgroups + (self,)).distinct()
+        return Record.objects.filter(collection__in=self.all_child_collections + (self,)).distinct()
 
 
-class GroupMembership(models.Model):
-    group = models.ForeignKey('Group')
+class CollectionItem(models.Model):
+    collection = models.ForeignKey('Collection')
     record = models.ForeignKey('Record')
     hidden = models.BooleanField(default=False)
-    order = models.IntegerField(null=True)
 
 
 class Record(models.Model):
@@ -104,11 +96,11 @@ class Record(models.Model):
         self._clear_cached_items()
         super(Record, self).save(kwargs)
         
-    def get_fieldvalues(self, owner=None, group=None,
+    def get_fieldvalues(self, owner=None, collection=None,
                         filter_overridden=False, filter_hidden=False, filter_context=False):
-        q_group = Q(group=group)
+        q_group = Q(collection=collection)
         if not filter_context:
-            q_group = q_group | Q(group=None)
+            q_group = q_group | Q(collection=None)
         
         q_owner = Q(owner=owner)
         if not filter_context:
@@ -123,12 +115,12 @@ class Record(models.Model):
                 remove.append(v.id)
         return values.exclude(id__in=remove)
     
-    def dump(self, owner=None, group=None):
+    def dump(self, owner=None, collection=None):
         print("Created: %s" % self.created)
         print("Modified: %s" % self.modified)
         print("Name: %s" % self.name)
         for v in self.fieldvalue_set.all():
-            v.dump(owner, group)
+            v.dump(owner, collection)
 
     @property            
     def title(self):
@@ -192,7 +184,7 @@ class FieldValue(models.Model):
     value = models.TextField()
     type = models.CharField(max_length=1, choices=TYPE_CHOICES)
     language = models.CharField(max_length=5, blank=True, choices=LANGUAGE_CHOICES)
-    group = models.ForeignKey(Group, null=True, blank=True)
+    collection = models.ForeignKey(Collection, null=True, blank=True)
     
     def __unicode__(self):
         return "%s=%s" % (self.label, self.value[:20])
@@ -205,7 +197,7 @@ class FieldValue(models.Model):
             return self.override.resolved_label
         return self.field.label
     
-    def dump(self, owner=None, group=None):
+    def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
 
     class Meta:

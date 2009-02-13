@@ -1,5 +1,5 @@
 from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
-from rooibos.data.models import Group, Record
+from rooibos.data.models import Collection, Record
 from rooibos.storage.models import Media
 from rooibos.util import get_full_url
 
@@ -8,21 +8,21 @@ class GroupFeed(Feed):
     def get_object(self, bits):
         if len(bits) != 1:
             raise ObjectDoesNotExist
-        return Group.objects.get(name=bits[0])
+        return Collection.objects.get(name=bits[0])
     
-    def title(self, group):
-        return group.title
+    def title(self, collection):
+        return collection.title
     
-    def link(self, group):
-        if not group:
+    def link(self, collection):
+        if not collection:
             raise FeedDoesNotExist
-        return group.get_absolute_url()
+        return collection.get_absolute_url()
     
-    def description(self, group):
-        return group.description
+    def description(self, collection):
+        return collection.description
     
-    def items(self, group):
-        return Record.objects.filter(group=group).order_by('groupmembership__order')
+    def items(self, collection):
+        return Record.objects.filter(collection=collection).order_by('groupmembership__order')
 
     thumbnails = {}
 

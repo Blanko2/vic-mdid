@@ -1,22 +1,24 @@
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 from django.db import connection, reset_queries
-from django.contrib.auth.models import User, Group as UserGroup
+from django.contrib.auth.models import User, Group
 from xml.dom import minidom
 import os
 import pyodbc
 import gc
 from urlparse import urlparse
 from datetime import datetime
-from rooibos.data.models import Group, GroupMembership, Field, FieldValue, Record
+from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record
 from rooibos.storage.models import Storage, Media
 from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 from rooibos.util.progressbar import ProgressBar
+from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
+from rooibos.contrib.tagging.models import Tag
 
 IMPORT_COLLECTIONS = range(0, 1000)
-IMPORT_RECORDS = 200000
+IMPORT_RECORDS = 1000 # 200000
 
 # old permissions
 
@@ -122,7 +124,7 @@ class Command(BaseCommand):
         print "Migrating user groups"
         usergroups = {}
         for row in cursor.execute("SELECT ID,Title,Type FROM UserGroups"):
-            usergroups[row.ID] = UserGroup.objects.create(name=row.Title)
+            usergroups[row.ID] = Group.objects.create(name=row.Title)
             # todo: handle non-membership groups
         
         for row in cursor.execute("SELECT UserID,GroupID FROM UserGroupMembers"):
@@ -137,16 +139,16 @@ class Command(BaseCommand):
         storage = {}
 
         for row in cursor.execute("SELECT ID,Title FROM CollectionGroups"):
-            collgroups[row.ID] = Group.objects.create(title=row.Title, type='collection')
+            collgroups[row.ID] = Collection.objects.create(title=row.Title)
 
         for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
             if row.ID in IMPORT_COLLECTIONS:
                 manager = None
                 if row.Type == 'N':
                     manager = 'nasaimageexchange'
-                groups[row.ID] = Group.objects.create(title=row.Title, type='collection', description=row.Description, agreement=row.UsageAgreement)            
+                groups[row.ID] = Collection.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
                 if collgroups.has_key(row.GroupID):
-                    collgroups[row.GroupID].subgroups.add(groups[row.ID])
+                    collgroups[row.GroupID].children.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
                     storage[row.ID] = {}
                     storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)', system='local', base=row.ResourcePath.replace('\\', '/'))
@@ -187,7 +189,7 @@ class Command(BaseCommand):
                                   "FROM AccessControl WHERE ObjectType='C' AND ObjectID>0"):
             if not groups.has_key(row.ObjectID):
                 continue
-            # Group
+            # Collection
             ac = AccessControl()
             ac.content_object = groups[row.ObjectID]            
             if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
@@ -237,7 +239,7 @@ class Command(BaseCommand):
                                                        source=row.RemoteID,
                                                        next_update=row.CachedUntil or row.Expires)
                 images[row.ID] = image.id
-                GroupMembership.objects.create(record_id=image.id, group=groups[row.CollectionID])
+                CollectionItem.objects.create(record_id=image.id, collection=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
                     if row.Resource.endswith('.xml'):
                         self.process_xml_resource(image, storage[row.CollectionID]["full"], row.Resource)
@@ -278,23 +280,30 @@ class Command(BaseCommand):
         
         # Migrate folders
         
-        # todo
+        print "Migrating folders"        
+        for row in cursor.execute("SELECT UserID,Title FROM Folders"):
+            if users.has_key(row.UserID):
+                Tag.objects.update_tags(users[row.UserID], '"%s"' % row.Title)
         
         # Migrate slideshows
             
         print "Migrating slideshows"
         slideshows = {}
-        for row in cursor.execute("SELECT ID,UserID,Title,Description FROM Slideshows"):
+        for row in cursor.execute("SELECT Slideshows.ID,Slideshows.UserID,Slideshows.Title,Description, \
+                                  Folders.Title AS Folder FROM Slideshows LEFT JOIN Folders ON FolderID=Folders.ID"):
             if users.has_key(row.UserID):
-                slideshows[row.ID] = Group.objects.create(title=row.Title, owner=users[row.UserID],
-                                                          type='presentation', description=row.Description)
+                slideshows[row.ID] = Presentation.objects.create(title=row.Title, owner=users[row.UserID],
+                                                                 description=row.Description)
+                if row.Folder:
+                    Tag.objects.update_tags(slideshows[row.ID], '"%s"' % row.Folder)
+                
         print "Migrating slides"
         count = 0
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Slides"))[0].C)
         for row in cursor.execute("SELECT SlideshowID,ImageID,DisplayOrder,Scratch FROM Slides"):
             if images.has_key(row.ImageID) and slideshows.has_key(row.SlideshowID):
-                GroupMembership.objects.create(record_id=images[row.ImageID],
-                                               group=slideshows[row.SlideshowID],
+                PresentationItem.objects.create(record_id=images[row.ImageID],
+                                               presentation=slideshows[row.SlideshowID],
                                                order=row.DisplayOrder,
                                                hidden=row.Scratch)
             count += 1
