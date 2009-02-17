@@ -25,7 +25,7 @@ def record_list(record, selectable=False, selected_records=()):
 
 @register.inclusion_tag('ui_session_status.html', takes_context=True)
 def session_status(context):
-    return {'selected': len(context['session'].get('selected_records', ())),
+    return {'selected': len(context['request'].session.get('selected_records', ())),
             }
 
 
