@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, connection
 from rooibos.data.models import Record
 from rooibos.storage.models import Media
 from django.contrib.auth.models import User
@@ -20,6 +20,13 @@ class Presentation(models.Model):
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Presentation, self).save(kwargs)
+
+    def override_dates(self, created=None, modified=None):
+        cursor = connection.cursor()
+        if created and self.id:
+            cursor.execute("UPDATE %s SET created=%%s WHERE id=%%s" % self._meta.db_table, [created, self.id])
+        if modified and self.id:
+            cursor.execute("UPDATE %s SET modified=%%s WHERE id=%%s" % self._meta.db_table, [modified, self.id])
 
 
 class PresentationItem(models.Model):

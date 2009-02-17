@@ -294,9 +294,9 @@ class Command(BaseCommand):
                                                                  owner=users[row.UserID],
                                                                  description=row.Description,
                                                                  hidden=row.ArchiveFlag,
-                                                                 password=row.AccessPassword,
-                                                                 created=row.CreationDate,
-                                                                 modified=row.ModificationDate)
+                                                                 password=row.AccessPassword)
+                slideshows[row.ID].override_dates(created=row.CreationDate,
+                                                  modified=row.ModificationDate)                
                 if row.Folder:
                     Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(
                         user=users[row.UserID], object=slideshows[row.ID]),
