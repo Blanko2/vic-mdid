@@ -1,3 +1,44 @@
+from inspect import getmembers, isclass
+from django.conf.urls.defaults import url
+
+viewer_classes = []
+
+
+def get_viewer_urls():
+    return [v.url() for v in filter(lambda v: hasattr(v, 'url'), viewer_classes)]
+
+
+def viewer(viewer_class):
+    """
+    Add an instance of the viewer class to the list of available viewer classes
+    """
+    
+    # discard name
+    viewer_class = viewer_class[1]
+
+    v = viewer_class()
+    if hasattr(v, 'analyze') and hasattr(v, 'execute'):
+        global viewer_classes
+        viewer_classes.append(v)
+
+
+def get_viewers_for_object(obj):
+    return filter(lambda v: v.analyze(obj), viewer_classes)
+
+
+import presentations
+map(viewer, getmembers(presentations, isclass))
+
+import collections
+map(viewer, getmembers(collections, isclass))
+
+import media
+map(viewer, getmembers(media, isclass))
+
+
+# --------- old stuff below
+
+
 viewers = {}
 
 

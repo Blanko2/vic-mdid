@@ -2,6 +2,7 @@
 {% load ui %}
 {% load humanize %}
 {% load pagination_tags %}
+{% load viewers %}
 
 {% block content %}
 
@@ -32,6 +33,7 @@
         <th>Hidden</th>
         <th>Created</th>
         <th>Modified</th>
+        <th></th>
     </tr>
 {% for presentation in presentations %}
     <tr>
@@ -40,10 +42,11 @@
         <td>{{ presentation.hidden|yesno:"hidden," }}</td>
         <td>{{ presentation.created|naturalday:"M j, Y" }}</td>
         <td>{{ presentation.modified|naturalday:"M j, Y" }}</td>
+        <td>{% list_viewers presentation %}</td>
     </tr>
 {% empty %}
     <tr>
-        <td colspan="5">
+        <td colspan="6">
             No presentations available.
             <a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a>
         </td>
