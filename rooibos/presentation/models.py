@@ -28,10 +28,15 @@ class Presentation(models.Model):
         if modified and self.id:
             cursor.execute("UPDATE %s SET modified=%%s WHERE id=%%s" % self._meta.db_table, [modified, self.id])
 
+    def cached_items(self):
+        if not hasattr(self, '_cached_items'):
+            self._cached_items = tuple(self.items.all())
+        return self._cached_items
+
 
 class PresentationItem(models.Model):
     
-    presentation = models.ForeignKey('Presentation')
+    presentation = models.ForeignKey('Presentation', related_name='items')
     record = models.ForeignKey(Record)
     hidden = models.BooleanField(default=False)
     type = models.CharField(max_length=16, null=True)
@@ -40,6 +45,6 @@ class PresentationItem(models.Model):
 
 class PresentationItemInfo(models.Model):
     
-    item = models.ForeignKey('PresentationItem')
+    item = models.ForeignKey('PresentationItem', related_name='media')
     media = models.ForeignKey(Media)
     info = models.TextField(null=True)

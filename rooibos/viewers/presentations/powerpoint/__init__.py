@@ -1,12 +1,20 @@
+from __future__ import with_statement
 from zipfile import ZipFile, ZIP_DEFLATED
 import os
 import xml.dom.minidom
 from tempfile import mkstemp
+from django.core.urlresolvers import reverse
+from django.conf.urls.defaults import url
+from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext
+from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
+from rooibos.access import filter_by_access
 from rooibos.data.models import Collection
 from rooibos.util import guess_extension
 from rooibos.storage.models import Media
-from rooibos.viewers import register_viewer
-from django.core.urlresolvers import reverse
+from rooibos.presentation.models import Presentation
+
 
 PROCESS_FILES = {
     'ppt/slides/_rels/slide2.xml.rels': 'record_slide_rels',
@@ -17,11 +25,12 @@ PROCESS_FILES = {
     '[Content_Types].xml': 'content_types',   
 }
 
+
 class PowerPointGenerator:
     
-    def __init__(self, collection):        
-        self.collection = collection
-        self.records = collection.records.all()
+    def __init__(self, presentation):        
+        self.presentation = presentation
+        self.items = presentation.items.all()
         self.slide_template = None
         self.slide_rel_template = None
         self.content_types = None
@@ -35,7 +44,7 @@ class PowerPointGenerator:
         return filter(lambda f: f.endswith('.pptx'), os.listdir(os.path.join(os.path.dirname(__file__), 'pptx_templates')))
     
     def generate(self, template, outfile):
-        if len(self.records) == 0:
+        if len(self.items) == 0:
             return False
         template = ZipFile(os.path.join(os.path.dirname(__file__), 'pptx_templates', template), mode='r')
         outfile = ZipFile(outfile, mode='w', compression=ZIP_DEFLATED)
@@ -59,10 +68,10 @@ class PowerPointGenerator:
         return True
                 
     def _process_slides(self, outfile):
-        for n in range(2, len(self.records) + 2):
+        for n in range(2, len(self.items) + 2):
             x = xml.dom.minidom.parseString(self.slide_template)
             xr = xml.dom.minidom.parseString(self.slide_rel_template)
-            record = self.records[n - 2]
+            record = self.items[n - 2].record
             # insert title
             for e in x.getElementsByTagName('a:t'):
                 t = e.firstChild.nodeValue
@@ -124,7 +133,7 @@ class PowerPointGenerator:
     
     def _process_content_types(self, outfile):
         x = xml.dom.minidom.parseString(self.content_types)
-        for n in range(3, len(self.records) + 2):
+        for n in range(3, len(self.items) + 2):
             e = x.createElement('Override')
             e.setAttribute('PartName', '/ppt/slides/slide%s.xml' % n)
             e.setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml')
@@ -144,9 +153,9 @@ class PowerPointGenerator:
         for e in x.getElementsByTagName('a:t'):
             t = e.firstChild.nodeValue
             if t == 'title':
-                t = self.collection.title
+                t = self.presentation.title
             elif t == 'description':
-                t = self.collection.description or ''
+                t = self.presentation.description or ''
             e.firstChild.nodeValue = t        
         outfile.writestr(name, x.toxml())        
         
@@ -160,7 +169,7 @@ class PowerPointGenerator:
         x = xml.dom.minidom.parseString(content)
         p = x.getElementsByTagName('p:sldIdLst')[0]
         maxid = max(map(lambda e: int(e.getAttribute('id')), p.getElementsByTagName('p:sldId')))
-        for n in range(3, len(self.records) + 2):
+        for n in range(3, len(self.items) + 2):
             e = x.createElement('p:sldId')
             e.setAttribute('id', str(maxid + n))
             e.setAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'r:id', 'rooibosId%s' % n)
@@ -170,7 +179,7 @@ class PowerPointGenerator:
     def _presentation_rels(self, name, content, outfile):
         x = xml.dom.minidom.parseString(content)
         p = x.getElementsByTagName('Relationships')[0]
-        for n in range(3, len(self.records) + 2):
+        for n in range(3, len(self.items) + 2):
             e = x.createElement('Relationship')
             e.setAttribute('Id', 'rooibosId%s' % n)
             e.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide')
@@ -181,14 +190,55 @@ class PowerPointGenerator:
     def _content_types(self, name, content, outfile):
         self.content_types = content
     
-    
-class PowerPointViewer:
-    title = "Save collection as PowerPoint"    
-    types = ('collection',)
-    targets = ('link',)
-    
-    def generate(self, object):
-        return '<a href="%s">%s</a>' % (reverse('powerpoint-options', kwargs={'groupname': object.name}), self.title)
 
+class PowerPointPresentation(object):
 
-register_viewer(PowerPointViewer)
+    title = "PowerPoint"
+    
+    def __init__(self):
+        pass
+    
+    def analyze(self, obj):
+        if not isinstance(obj, Presentation):
+            return NO_SUPPORT
+        items = obj.cached_items()
+        valid = filter(lambda i: not i.type or i.hidden, items)
+        if len(valid) == 0:
+            return NO_SUPPORT
+        elif len(valid) < len(items):
+            return PARTIAL_SUPPORT
+        else:
+            return FULL_SUPPORT
+    
+    def url(self):
+        return [url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.options, name='viewers-powerpoint'),
+                url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/(?P<template>[^/]+)/$', self.generate, name='viewers-powerpoint-download')]
+    
+    def url_for_obj(self, obj):
+        return reverse('viewers-powerpoint', kwargs={'id': obj.id, 'name': obj.name})
+    
+    def options(self, request, id, name):
+        presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)
+        template_urls = [reverse('viewers-powerpoint-download', kwargs={'id': presentation.id,
+                                                                        'name': presentation.name,
+                                                                        'template': t})
+                         for t in PowerPointGenerator.get_templates()]
+        return render_to_response('presentations/powerpoint/options.html',
+                                  {'template_urls': template_urls,
+                                   'presentation': presentation,},
+                                  context_instance=RequestContext(request))
+    
+    def generate(self, request, id, name, template):
+        presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)        
+        g = PowerPointGenerator(presentation)
+        filename = os.tempnam()
+        try:
+            g.generate(template, filename)
+            with open(filename, mode="rb") as f:
+                response = HttpResponse(content=f.read(),
+                    mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+            response['Content-Disposition'] = 'attachment; filename=%s.pptx' % name
+            return response        
+        finally:
+            os.unlink(filename)
+            

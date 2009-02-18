@@ -21,7 +21,6 @@ urlpatterns = patterns('',
     (r'^data/', include('rooibos.data.urls')),
     (r'^legacy/', include('rooibos.legacy.urls')),
     (r'^nasa/', include('rooibos.nasa.urls')),
-    (r'^powerpoint/', include('rooibos.powerpoint.urls')),
     (r'^presentation/', include('rooibos.presentation.urls')),
     (r'^viewers/', include('rooibos.viewers.urls')),
 )

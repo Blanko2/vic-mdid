@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from models import Collection, Record, Field, FieldValue
 from rooibos.access import filter_by_access, accessible_ids
-from rooibos.viewers import get_viewers
+#from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
 
 def groups(request):    
@@ -20,18 +20,19 @@ def groups(request):
 
 def group_raw(request, groupname):
     collection = get_object_or_404(filter_by_access(request.user, Collection), name=groupname)
-    viewers = map(lambda v: v().generate(collection), get_viewers('collection', 'link'))
+#    viewers = map(lambda v: v().generate(collection), get_viewers('collection', 'link'))
     return render_to_response('data_group.html',
                               {'collection': collection,
-                               'viewers': viewers,},
+#                               'viewers': viewers,
+                               },
                               context_instance=RequestContext(request))
 
 def record_raw(request, recordname, owner=None, collection=None):
     record = get_object_or_404(Record.objects.filter(name=recordname,
                                                      collection__id__in=accessible_ids(request.user, Collection)).distinct())
     media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
-    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'collection__name')        
-    contexts = [_clean_context(**c) for c in contexts]
+    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'context_type', 'context_id')        
+#    contexts = [_clean_context(**c) for c in contexts]
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,

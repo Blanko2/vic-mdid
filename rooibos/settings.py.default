@@ -102,7 +102,6 @@ INSTALLED_APPS = (
     'rooibos.nasa',
     'rooibos.ui',
     'rooibos.viewers',
-    'rooibos.powerpoint',
     'rooibos.help',
     'rooibos.presentation',
     'rooibos.contrib.tagging',

@@ -4,7 +4,7 @@
 {% block records %}
 <div class="resultlist">
 {% for r in records %}
-    {% record r 'selectable' session.selected_records %}
+    {% record r 'selectable' request.session.selected_records %}
 {% endfor %}
 </div>
 {% endblock %}

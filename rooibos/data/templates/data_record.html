@@ -16,7 +16,7 @@
         
         Available contexts: <ul>
         {% for c in contexts %}
-        <li><a href="{% url data-record recordname=record.name,owner=c.owner,collection=c.collection %}">{{ c.label }}</a></li>
+        <li>{{ c }}</li>
         {% endfor %}
         </ul>
     </div>
