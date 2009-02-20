@@ -12,6 +12,7 @@ from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
 from rooibos.access import filter_by_access
 from rooibos.data.models import Collection
 from rooibos.util import guess_extension
+from rooibos.storage import get_image_for_record
 from rooibos.storage.models import Media
 from rooibos.presentation.models import Presentation
 
@@ -79,7 +80,7 @@ class PowerPointGenerator:
                     t = record.title
                 e.firstChild.nodeValue = t
             # insert image if available
-            image = Media.get_image_for_record(record, 800, 600)
+            image = get_image_for_record(record, 800, 600, prefer_larger=True)
             if image:                
                 # add image to outfile
                 f = image.load_file()
@@ -128,7 +129,7 @@ class PowerPointGenerator:
             else:
                 self.remove_placeholder_image = False
             
-            outfile.writestr('ppt/slides/slide%s.xml' % n, x.toxml())     
+            outfile.writestr('ppt/slides/slide%s.xml' % n, x.toxml(encoding="UTF-8"))     
             outfile.writestr('ppt/slides/_rels/slide%s.xml.rels' % n, xr.toxml())     
     
     def _process_content_types(self, outfile):
@@ -240,5 +241,8 @@ class PowerPointPresentation(object):
             response['Content-Disposition'] = 'attachment; filename=%s.pptx' % name
             return response        
         finally:
-            os.unlink(filename)
+            try:
+                os.unlink(filename)
+            except:
+                pass
             

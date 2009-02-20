@@ -1,16 +1,16 @@
 from django import template
-from rooibos.storage.models import Media
+from rooibos.storage import get_thumbnail_for_record
 
 register = template.Library()
 
 @register.simple_tag
 def thumbnail(record):
-    media = Media.get_thumbnail_for_record(record)    
+    media = get_thumbnail_for_record(record)    
     return media and media.get_absolute_url() or ''
 
 @register.inclusion_tag('ui_record.html')
 def record(record, selectable=False, selected_records=()):
-    media = Media.get_thumbnail_for_record(record)
+    media = get_thumbnail_for_record(record)
     return {'record': record,
             'selectable': selectable,
             'selected': record.id in selected_records,

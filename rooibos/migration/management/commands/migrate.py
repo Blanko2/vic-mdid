@@ -19,7 +19,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.util.models import OwnedWrapper
 
 IMPORT_COLLECTIONS = range(0, 1000)
-IMPORT_RECORDS = 1000 # 200000
+IMPORT_RECORDS = 100000 # 200000
 
 # old permissions
 

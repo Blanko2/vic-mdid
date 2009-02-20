@@ -38,14 +38,8 @@ def get_viewer_urls():
     return result
 
 
-import presentations
-map(viewer, getmembers(presentations, isclass))
-
-import collections
-map(viewer, getmembers(collections, isclass))
-
-import media
-map(viewer, getmembers(media, isclass))
+import viewers
+map(viewer, getmembers(viewers, isclass))
 
 
 # --------- old stuff below

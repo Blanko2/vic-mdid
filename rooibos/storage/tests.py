@@ -26,7 +26,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
     
     def test_retrieve_url(self):                        
         thumb = Media.objects.create(record=self.record, name='thumb', storage=self.storage)        
-        self.assertEqual('/media/retrieve/monalisa/thumb/', thumb.get_absolute_url())
+        self.assertEqual('/media/get/monalisa/thumb/', thumb.get_absolute_url())
     
     def test_save_and_retrieve_file(self):
         media = Media.objects.create(record=self.record, name='image', storage=self.storage)
@@ -38,5 +38,33 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
 
         content = media.load_file()
         self.assertEqual('hello world', content.read())
+        
+
+class ImageCompareTest(unittest.TestCase):
+    
+    def test_compare(self):
+        from rooibos.storage import _imgsizecmp
+        
+        class image:
+            def __init__(self, w, h):
+                self.width = w
+                self.height = h
+        
+        data = [image(w, h) for w in (10, None, 20) for h in (15, 5, None)]
+        
+        data = sorted(data, _imgsizecmp)[::-1]
+        
+        
+        self.assertEqual(data[0].width, 20)
+        self.assertEqual(data[0].height, 15)
+
+        self.assertEqual(data[1].width, 10)
+        self.assertEqual(data[1].height, 15)
+
+        self.assertEqual(data[2].width, 20)
+        self.assertEqual(data[2].height, 5)
+
+        self.assertEqual(data[3].width, 10)
+        self.assertEqual(data[3].height, 5)
         
         

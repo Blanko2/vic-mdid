@@ -1,6 +1,6 @@
 from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
 from rooibos.data.models import Collection, Record
-from rooibos.storage.models import Media
+from rooibos.storage import get_thumbnail_for_record
 from rooibos.util import get_full_url
 
 class GroupFeed(Feed):
@@ -27,11 +27,11 @@ class GroupFeed(Feed):
     thumbnails = {}
 
     def item_enclosure_url(self, record):
-        media = self.thumbnails.setdefault(record, Media.get_thumbnail_for_record(record))
+        media = self.thumbnails.setdefault(record, get_thumbnail_for_record(record))
         return media and get_full_url(media.get_absolute_url()) or None
     
     def item_enclosure_mime_type(self, record):
-        media = self.thumbnails.setdefault(record, Media.get_thumbnail_for_record(record))
+        media = self.thumbnails.setdefault(record, get_thumbnail_for_record(record))
         return media and media.mimetype or None
 
     def item_enclosure_length(self, record):
