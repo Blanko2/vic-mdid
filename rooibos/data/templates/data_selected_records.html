@@ -7,13 +7,12 @@
 <a href="{% url solr-selected %}">View {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
 
 <form method="POST" action=".">
-
+<table summary="">
 {{ form }}    
-    
+</table>
 </form>
 
 <ul>
-    <li></li>
     <li>Add to new collection</li>
     <li>Add to existing collection</li>
     <li>Add to favorites</li>

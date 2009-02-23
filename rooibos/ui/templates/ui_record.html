@@ -1,7 +1,7 @@
 <div class="record">
-<a href="{{ record.get_absolute_url }}"><img src="{{ thumbnail }}" /></a>
+<a href="{{ record.get_absolute_url }}"><img src="{{ thumbnail }}" alt="{{ record.title }}" /></a>
 {% if selectable %}
-<input type="checkbox" name="r" value="{{ record.id }}"{% if selected %} checked="checked"{% endif %} />
+<input type="checkbox" class="record-select" name="r" value="{{ record.id }}"{% if selected %} checked="checked"{% endif %} />
 {% if selected %}<input type="hidden" name="sr" value="{{ record.id }}" />{% endif %}
 {% endif %}
 <br />

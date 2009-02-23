@@ -1,5 +1,9 @@
 from django import template
+from django.utils.html import escape
+from django.template.loader import get_template
+from django.template import Context
 from rooibos.storage import get_thumbnail_for_record
+from rooibos.data.models import Record
 
 register = template.Library()
 
@@ -28,6 +32,9 @@ def session_status(context):
     return {'selected': len(context['request'].session.get('selected_records', ())),
             }
 
+def session_status_rendered(context):
+    return get_template('ui_session_status.html').render(Context(session_status(context)))
+
 
 @register.simple_tag
 def dir2(var):
@@ -40,3 +47,14 @@ def scale(value, params):
         return (value - omin) / (omax - omin) * (nmax - nmin) + nmin
     except:
         return ''
+    
+@register.tag
+def add_selected_records_to_menu(parser, token):
+    class Script(template.Node):
+        def render(self, context):
+            ids = context['request'].session.get('selected_records', ())
+            records = Record.objects.filter(id__in=ids)
+            return '\n'.join('addSelectedRecord(%s,"%s","%s","%s");' % (r.id, thumbnail(r), r.get_absolute_url(),
+                                                                        escape(r.title))
+                             for r in records)
+    return Script()

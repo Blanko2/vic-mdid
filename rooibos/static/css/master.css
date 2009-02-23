@@ -67,13 +67,24 @@
     overflow: visible;
 }
 
-#menu .dropdown div {
+#menu .dropdown div.menu {
     background-color: #2D678E;
     padding: 0.4em;
     -moz-border-radius-bottomright: 5px;
     -moz-border-radius-bottomleft: 5px;
     border-right: 2px solid black;
     border-bottom: 2px solid black;
+}
+
+#selected-records {
+    width: 200px;
+    height: 400px;
+    overflow: auto;
+}
+
+#selected-records a {
+    display: inline !important;
+    border: none !important;
 }
 
 #footer {

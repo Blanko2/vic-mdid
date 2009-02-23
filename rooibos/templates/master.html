@@ -18,28 +18,27 @@
     <script type="text/javascript" src="/static/jquery/jquery-ui-personalized-1.5.2.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.hoverIntent.minified.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery.ajaxQueue.js"></script>
 {% endblock %}
 {% block javascript %}
+    <script type="text/javascript" src="/static/scripts/selected-records.js"></script>
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->        
     <script type="text/javascript">
         $(document).ready(function() {
             $("#menu .dropdown").css({
-                overflow: 'visible',
-                display: 'none'
+                'overflow': 'visible',
+                'display': 'none',
+                'top': '1.8em',
+                'padding-top': '0px'
             });
-            function show() {
-                $(this).children(".dropdown").slideDown();
-            }
-            function hide() {
-                $(this).children(".dropdown").slideUp();
-            }
             $(".hover-menu").hoverIntent({
                 sensitivity: 1,
                 interval: 50,
-                over: show,
+                over: function() { $(this).children(".dropdown").slideDown(); },
                 timeout: 500,
-                out: hide
+                out: function() { $(this).children(".dropdown").slideUp(); },
             });
+            {% add_selected_records_to_menu %}
         });
     </script>
 {% endblock %}
@@ -56,7 +55,7 @@
             <li>Welcome, {{ user.first_name }}</li>
             <li class="hover-menu"><a href=".">My Content</a>
                 <div class="dropdown">
-                    <div>
+                    <div class="menu">
                         <a href="{% url presentation-manage %}">My Presentations</a>
                         <a href=".">My Favorites</a>
                         <a href=".">My Content</a>
@@ -73,14 +72,14 @@
         <li><a href="{% url solr-search %}">Explore</a></li>
         <li class="hover-menu"><a href=".">Resources</a>
             <div class="dropdown">                
-                <div>
+                <div class="menu">
                     <a href=".">Presentations</a>
                     <a href=".">Collections</a>
                     <a href=".">About</a>
                 </div>
             </div>
         </li>
-        <li>{% session_status %}</li>
+        <li class="hover-menu" id="selected-records-menu"><span id="session-status">{% session_status %}</span></li>
         {% if user.is_authenticated %}
         <li><a href="{% url logout %}">Log out</a></li>
         {% endif %}

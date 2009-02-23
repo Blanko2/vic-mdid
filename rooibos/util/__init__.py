@@ -1,8 +1,54 @@
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from django.core.cache import cache
+from django.http import HttpResponse
+from django.utils import simplejson
+from django.core.mail import mail_admins
+from django.utils.translation import ugettext as _
 import sys
 import mimetypes
+
+
+def json_view(func):
+    # http://www.djangosnippets.org/snippets/622/
+    def wrap(request, *a, **kw):
+        response = None
+        try:
+            func_val = func(request, *a, **kw)
+            assert isinstance(func_val, dict)
+            response = dict(func_val)
+            if 'result' not in response:
+                response['result'] = 'ok'
+        except KeyboardInterrupt:
+            # Allow keyboard interrupts through for debugging.
+            raise
+        except Exception, e:
+            # Mail the admins with the error
+            exc_info = sys.exc_info()
+            subject = 'JSON view error: %s' % request.path
+            try:
+                request_repr = repr(request)
+            except:
+                request_repr = 'Request repr() unavailable'
+            import traceback
+            message = 'Traceback:\n%s\n\nRequest:\n%s' % (
+                '\n'.join(traceback.format_exception(*exc_info)),
+                request_repr,
+                )
+            mail_admins(subject, message, fail_silently=True)
+
+            # Come what may, we're returning JSON.
+            if hasattr(e, 'message'):
+                msg = e.message
+            else:
+                msg = _('Internal error')+': '+str(e)
+            response = {'result': 'error',
+                        'text': msg}
+
+        json = simplejson.dumps(response)
+        return HttpResponse(json, mimetype='application/json')
+    return wrap
+
 
 def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', check_current_slug=False):
     """Ensures a unique slug field by appending an integer counter to duplicate slugs.
