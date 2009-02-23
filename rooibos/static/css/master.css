@@ -38,16 +38,6 @@
     border-left: 2px solid white;
 }
 
-#menu .dropdown {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    padding-top: 1.8em;
-    height: 0px;
-    overflow: hidden;
-    min-width: 120px;
-}
-
 #menu .dropdown a {
     display: block;
     white-space: nowrap;
@@ -62,6 +52,17 @@
     border: 1px dotted white;
 }
 
+#menu .dropdown {
+    overflow: hidden;
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding-top: 1.8em;
+    height: 0px;
+    min-width: 120px;
+}
+
 #menu .dropdown:hover {
     overflow: visible;
 }
@@ -74,7 +75,6 @@
     border-right: 2px solid black;
     border-bottom: 2px solid black;
 }
-
 
 #footer {
     margin-top: 10px;

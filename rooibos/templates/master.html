@@ -10,18 +10,38 @@
 <!--[if IE]>
     <link href="/static/css/master-ie.css" rel="stylesheet" type="text/css" media="screen">
 <![endif]-->
-
 {% endblock %}
 {% block extrastylesheets %}
-{% endblock %}
-
-{% block javascript %}
-    <!--<script type="text/javascript" src="/jsi18n/"></script>-->
 {% endblock %}
 {% block jquery %}
     <script type="text/javascript" src="/static/jquery/jquery-1.2.6.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery-ui-personalized-1.5.2.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery.hoverIntent.minified.js"></script>
+{% endblock %}
+{% block javascript %}
+    <!--<script type="text/javascript" src="/jsi18n/"></script>-->        
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#menu .dropdown").css({
+                overflow: 'visible',
+                display: 'none'
+            });
+            function show() {
+                $(this).children(".dropdown").slideDown();
+            }
+            function hide() {
+                $(this).children(".dropdown").slideUp();
+            }
+            $(".hover-menu").hoverIntent({
+                sensitivity: 1,
+                interval: 50,
+                over: show,
+                timeout: 500,
+                out: hide
+            });
+        });
+    </script>
 {% endblock %}
 {% block extrajavascript %}
 {% endblock %}
@@ -34,7 +54,7 @@
     <ul id="menu">
         {% if user.is_authenticated %}
             <li>Welcome, {{ user.first_name }}</li>
-            <li><a href=".">My Content</a>
+            <li class="hover-menu"><a href=".">My Content</a>
                 <div class="dropdown">
                     <div>
                         <a href="{% url presentation-manage %}">My Presentations</a>
@@ -51,7 +71,7 @@
             <li><a href="{% url login %}">Log in</a></li>
         {% endif %}        
         <li><a href="{% url solr-search %}">Explore</a></li>
-        <li><a href=".">Resources</a>
+        <li class="hover-menu"><a href=".">Resources</a>
             <div class="dropdown">                
                 <div>
                     <a href=".">Presentations</a>
