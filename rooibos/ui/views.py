@@ -3,9 +3,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from rooibos.util import json_view
-from rooibos.data.models import Record
+from rooibos.data.models import Record, Collection
 from rooibos.storage import get_thumbnail_for_record
-from rooibos.access import filter_by_access
+from rooibos.access import accessible_ids
 from rooibos.ui.templatetags.ui import session_status_rendered
 
 def main(request):
@@ -23,7 +23,7 @@ def select_record(request):
     result = []
     if checked:
         ids = set(ids) - set(selected)
-        records = filter_by_access(request.user, Record.objects.filter(id__in=ids))
+        records = Record.objects.filter(id__in=ids, collection__id__in=accessible_ids(request.user, Collection))
         for record in records:
             thumb = get_thumbnail_for_record(record)
             selected = set(selected) | set([record.id])
@@ -34,5 +34,5 @@ def select_record(request):
     else:
         selected = set(selected) - set(ids)
 
-    request.session['selected_records'] = selected    
+    request.session['selected_records'] = selected
     return dict(status=session_status_rendered(RequestContext(request)), records=result)
