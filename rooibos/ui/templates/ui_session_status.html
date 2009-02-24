@@ -1,4 +1,4 @@
 {% load humanize %}
-{% if selected %}<a href="{% url data-selected %}">{% endif %}
+{% if selected %}<a href="{% url data-selected %}">{% else %}<span class="nolink">{% endif %}
 {{ selected|intcomma }} record{{ selected|pluralize }} selected
-{% if selected %}</a>{% endif %}
+{% if selected %}</a>{% else %}</span>{% endif %}

@@ -43,9 +43,9 @@
     white-space: nowrap;
 }
 
-#menu a {
+#menu a, #menu .nolink {
     padding: 0.3em;
-    border: 1px solid #2D678E;
+    border: 1px solid #2D678E; /* same color as background, to prevent repositioning when hover border appears */
 }
 
 #menu a:hover {
