@@ -7,6 +7,19 @@
     {% pagehelp 'facet_search' %}
 {% endblock %}
 
+{% block extrajavascript %}
+<script type="text/javascript">
+    function selectAllOnPage() {
+        ids = Array();
+        $(".record-select").each(function (i) { ids[i] = this.value; }).val(ids);
+        recordSelection(ids, true);
+    }
+    $(document).ready(function() {
+        $("#submit_record_selections").replaceWith($("<input type='button' value='Select all on page'>").click(selectAllOnPage));
+    });
+</script>    
+{% endblock %}    
+    
 {% block content %}
 
 <form method="GET" action="{{ limit_url }}">
@@ -20,7 +33,7 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 {% endif %}
 <a href="{{ reset_url }}">Reset</a>
 {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
-<input type="submit" name="action" value="Select" />
+<input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
 {% for f,v in hiddenfields %}

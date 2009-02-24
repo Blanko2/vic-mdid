@@ -17,22 +17,22 @@ def main(request):
 
 @json_view
 def select_record(request):
-    id = int(request.POST.get('id'))
+    ids = map(int, request.POST.getlist('id'))
     checked = request.POST.get('checked') == 'true'
     selected = request.session.get('selected_records', ())
-
-    if checked:    
-        record = filter_by_access(request.user, Record.objects.filter(id=id))[0]
-        thumb = get_thumbnail_for_record(record)
-        selected = set(selected) | set([record.id])
-        result = dict(id=record.id,
-                    title=record.title,
-                    record_url=record.get_absolute_url(),
-                    img_url=thumb and thumb.get_absolute_url() or '')
+    result = []
+    if checked:
+        ids = set(ids) - set(selected)
+        records = filter_by_access(request.user, Record.objects.filter(id__in=ids))
+        for record in records:
+            thumb = get_thumbnail_for_record(record)
+            selected = set(selected) | set([record.id])
+            result.append(dict(id=record.id,
+                               title=record.title,
+                               record_url=record.get_absolute_url(),
+                               img_url=thumb and thumb.get_absolute_url() or ''))
     else:
-        selected = set(selected) - set([id])
-        result = dict()
+        selected = set(selected) - set(ids)
 
     request.session['selected_records'] = selected    
-    result['status'] = session_status_rendered(RequestContext(request))
-    return result
+    return dict(status=session_status_rendered(RequestContext(request)), records=result)

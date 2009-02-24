@@ -77,9 +77,13 @@
 }
 
 #selected-records {
-    width: 200px;
+    width: 170px;
     height: 400px;
     overflow: auto;
+}
+
+#selected-records div {
+    margin-bottom: 5px;
 }
 
 #selected-records a {
