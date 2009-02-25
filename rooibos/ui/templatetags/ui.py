@@ -44,7 +44,7 @@ def dir2(var):
 def scale(value, params):
     try:
         omin, omax, nmin, nmax = map(float, params.split())
-        return (value - omin) / (omax - omin) * (nmax - nmin) + nmin
+        return (float(value) - omin) / (omax - omin) * (nmax - nmin) + nmin
     except:
         return ''
     

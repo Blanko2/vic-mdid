@@ -286,10 +286,15 @@ form.vertical label {
     margin: 3px 3px;
 }
 
-form.vertical input, form.vertical select {
+form.vertical input, form.vertical select, form.vertical textarea, form.vertical label.inline {
     display: block;
     float: left;
     margin: 3px;
+}
+
+form.vertical label.inline {
+    clear: none;
+    width: auto;
 }
 
 form.vertical div.row {

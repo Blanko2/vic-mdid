@@ -1,0 +1,48 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h1>{{ presentation.title }}</h1>
+
+<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST" class="vertical">
+    
+{{ form.title.label_tag }}
+{{ form.title }}
+{{ form.title.errors }}
+
+{% if form.tags.field.choices %}
+    {{ form.tags.label_tag }}
+    {{ form.tags }}
+    {{ form.tags.errors }}
+{% endif %}
+
+{{ form.new_tags.label_tag }}
+{{ form.new_tags }}
+{{ form.new_tags.errors }}
+
+{{ form.hidden.label_tag }}
+{{ form.hidden }}
+{{ form.hidden.errors }}
+
+{{ form.description.label_tag }}
+{{ form.description }}
+{{ form.description.errors }}
+
+{{ form.password.label_tag }}
+{{ form.password }}
+{{ form.password.errors }}
+
+
+{{ form.test.label_tag }}
+{{ form.test }}
+{{ form.test.errors }}
+
+<div class="row">
+    <input type="submit" value="Update" />
+    <a href="{% url presentation-manage %}">Cancel</a>
+</div>
+
+</form>
+
+
+{% endblock %}

@@ -13,11 +13,11 @@
 <div class="tagcloud">
 {% for tag in tags %}
     <span style="font-size: {{ tag.font_size|scale:"1 5 1 1.8" }}em;">
-        <a href="{% url presentation-manage %}?tag={{ tag|urlencode }}">{{ tag }}</a>
+        [<a href="{% url presentation-manage %}?tag={{ tag|urlencode }}">{{ tag }}</a>]
     </span>
 {% endfor %}
 {% if tags %}
-    <a href="{% url presentation-manage %}">All</a>
+    [<a href="{% url presentation-manage %}">All</a>]
 {% endif %}
 </div>
 
@@ -26,7 +26,7 @@
 {% paginate %}
 
 <form action="{% url presentation-manage %}?{{ querystring }}" method="POST">
-<table>
+<table summary="List of Presentations">
     <tr>
         <th></th>
         <th>Title</th>

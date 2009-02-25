@@ -7,7 +7,8 @@ from django import forms
 from django.forms.models import modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from models import Collection, Record, Field, FieldValue
+from models import *
+from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access, accessible_ids
 #from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
@@ -44,13 +45,17 @@ def record_raw(request, recordname, owner=None, collection=None):
 
 def selected_records(request):
     
-    groups = filter_by_access(request.user, Collection, write=True).values_list('id', 'title')
+    selected = request.session.get('selected_records', ())
+    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
     
-    class AddToGroupForm(forms.Form):
-        collection = forms.ChoiceField(label='Add to collection', choices=[('', 'New Collection'),] + list(groups))
+    collections = filter_by_access(request.user, Collection, write=True).values_list('id', 'title')
+    presentations = filter_by_access(request.user, Presentation, write=True).values_list('id', 'title')
+    
+    class AddToCollectionForm(forms.Form):
+        collection = forms.ChoiceField(label='Add to collection', choices=[('', 'New Collection'),] + list(collections))
         title = forms.CharField(label='Collection title', max_length=Collection._meta.get_field('title').max_length)
     
-    form = AddToGroupForm()
+    form = AddToCollectionForm()
     
     
     selected = request.session.get('selected_records', ())
