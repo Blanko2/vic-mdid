@@ -23,9 +23,13 @@
 
 <h2>Presentations{% if tag_filter %} filed under {{ tag_filter }}{% endif %}</h2>
 
+<div>
+    <a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a>
+</div>
+
 {% paginate %}
 
-<form action="{% url presentation-manage %}?{{ querystring }}" method="POST">
+<form action="{% url presentation-manage %}?{{ querystring }}" method="POST" class="vertical">
 <table summary="List of Presentations">
     <tr>
         <th></th>
@@ -53,12 +57,25 @@
     </tr>
 {% endfor %}
 </table>
+
+<label>With selected</label>
 <input type="submit" name="hide" value="Hide" />
 <input type="submit" name="unhide" value="Show" />
+
+{{ form.tags.label_tag }}
+{{ form.tags }}
+{{ form.tags.errors }}
+
+{{ form.mode.label_tag }}
+{{ form.mode }}
+{{ form.mode.errors }}
+
+<div class="row">
+    <input type="submit" value="Update" />
+</div>
+
 </form>    
     
-<div>
-    <a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a>
-</div>
+
 
 {% endblock %}

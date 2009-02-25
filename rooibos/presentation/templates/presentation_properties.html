@@ -10,15 +10,9 @@
 {{ form.title }}
 {{ form.title.errors }}
 
-{% if form.tags.field.choices %}
-    {{ form.tags.label_tag }}
-    {{ form.tags }}
-    {{ form.tags.errors }}
-{% endif %}
-
-{{ form.new_tags.label_tag }}
-{{ form.new_tags }}
-{{ form.new_tags.errors }}
+{{ form.tags.label_tag }}
+{{ form.tags }}
+{{ form.tags.errors }}
 
 {{ form.hidden.label_tag }}
 {{ form.hidden }}
@@ -31,11 +25,6 @@
 {{ form.password.label_tag }}
 {{ form.password }}
 {{ form.password.errors }}
-
-
-{{ form.test.label_tag }}
-{{ form.test }}
-{{ form.test.errors }}
 
 <div class="row">
     <input type="submit" value="Update" />

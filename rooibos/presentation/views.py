@@ -20,6 +20,19 @@ def manage(request):
 
     tags = request.GET.getlist('tag')
     querystring = request.GET.urlencode()
+    
+    existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
+                    filters=dict(user=request.user, type=OwnedWrapper.t(Presentation)))
+
+    class ManagePresentationsForm(forms.Form):
+       tags = SplitTaggingField(label='Tags',
+                                choices=[(t, t) for t in existing_tags],
+                                required=False,
+                                add_label='Additional tags')
+       mode = forms.ChoiceField(label='Action',
+                                required=True,
+                                choices=[('add', 'Add to existing tags'), ('replace', 'Replace existing tags')],
+                                initial='add')
 
     if request.method == "POST":
         ids = map(int, request.POST.getlist('h'))
@@ -28,7 +41,22 @@ def manage(request):
             for presentation in Presentation.objects.filter(owner=request.user, id__in=ids):
                 presentation.hidden = hide
                 presentation.save()
-        return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
+            return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
+        
+        form = ManagePresentationsForm(request.POST)
+        if form.is_valid():
+            replace = form.cleaned_data['mode'] == 'replace'
+            for presentation in Presentation.objects.filter(owner=request.user, id__in=ids):
+                if replace:
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            form.cleaned_data['tags'])
+                else:
+                    for tag in parse_tag_input(form.cleaned_data['tags']):
+                        Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            tag)
+            return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
+    else:
+        form = ManagePresentationsForm()
 
     if tags:
         qs = OwnedWrapper.objects.filter(user=request.user, type=OwnedWrapper.t(Presentation))
@@ -47,6 +75,7 @@ def manage(request):
                            'presentations': presentations,
                            'querystring': querystring,
                            'tag_filter': tag_filter,
+                           'form': form,
                            },
                           context_instance=RequestContext(request))
 
