@@ -1,10 +1,8 @@
-For-upstream: maybe
-Website: http://code.djangoproject.com/ticket/10099
-
-diff django/db/backends/__init__.py django/db/backends/__init__.py
---- django/db/backends/__init__.py	2009-01-15 11:06:34.000000000 +0000
-+++ django/db/backends/__init__.py	2009-01-29 13:38:50.000000000 +0000
-@@ -81,6 +81,7 @@
+Index: db/backends/__init__.py
+===================================================================
+--- db/backends/__init__.py	(revision 10069)
++++ db/backends/__init__.py	(working copy)
+@@ -102,6 +102,7 @@
      # If True, don't use integer foreign keys referring to, e.g., positive
      # integer primary keys.
      related_fields_match_type = False
@@ -12,9 +10,10 @@ diff django/db/backends/__init__.py django/db/backends/__init__.py
  
  class BaseDatabaseOperations(object):
      """
-diff django/db/backends/mysql/base.py django/db/backends/mysql/base.py
---- django/db/backends/mysql/base.py	2009-01-15 11:06:34.000000000 +0000
-+++ django/db/backends/mysql/base.py	2009-01-29 13:39:00.000000000 +0000
+Index: db/backends/mysql/base.py
+===================================================================
+--- db/backends/mysql/base.py	(revision 10069)
++++ db/backends/mysql/base.py	(working copy)
 @@ -112,6 +112,7 @@
      update_can_self_select = False
      allows_group_by_pk = True
@@ -23,10 +22,11 @@ diff django/db/backends/mysql/base.py django/db/backends/mysql/base.py
  
  class DatabaseOperations(BaseDatabaseOperations):
      def date_extract_sql(self, lookup_type, field_name):
-diff django/db/models/fields/__init__.py django/db/models/fields/__init__.py
---- django/db/models/fields/__init__.py	2009-01-29 10:46:36.000000000 +0000
-+++ django/db/models/fields/__init__.py	2009-01-29 13:39:39.000000000 +0000
-@@ -193,11 +193,38 @@
+Index: db/models/fields/__init__.py
+===================================================================
+--- db/models/fields/__init__.py	(revision 10069)
++++ db/models/fields/__init__.py	(working copy)
+@@ -193,11 +193,39 @@
  
      def get_db_prep_lookup(self, lookup_type, value):
          "Returns field's value prepared for database lookup."
@@ -49,7 +49,8 @@ diff django/db/models/fields/__init__.py django/db/models/fields/__init__.py
 +                if isinstance(v, list):
 +                    v = v[0]
 +            return v
-         if hasattr(value, 'as_sql'):
++
+         if hasattr(value, 'as_sql') or hasattr(value, '_as_sql'):
              # If the value has a relabel_aliases method, it will need to
              # be invoked before the final SQL is evaluated
              if hasattr(value, 'relabel_aliases'):
@@ -62,12 +63,13 @@ diff django/db/models/fields/__init__.py django/db/models/fields/__init__.py
 +                    ret = map(pk_trace, value)
 +                    value.value_annotation = bool(ret)
 +                    return ret
-             sql, params = value.as_sql()
-             return QueryWrapper(('(%s)' % sql), params)
- 
-diff django/db/models/fields/related.py django/db/models/fields/related.py
---- django/db/models/fields/related.py	2009-01-29 10:46:36.000000000 +0000
-+++ django/db/models/fields/related.py	2009-01-29 13:39:55.000000000 +0000
+             if hasattr(value, 'as_sql'):
+                 sql, params = value.as_sql()
+             else:
+Index: db/models/fields/related.py
+===================================================================
+--- db/models/fields/related.py	(revision 10069)
++++ db/models/fields/related.py	(working copy)
 @@ -145,6 +145,14 @@
              # be invoked before the final SQL is evaluated
              if hasattr(value, 'relabel_aliases'):
@@ -80,6 +82,6 @@ diff django/db/models/fields/related.py django/db/models/fields/related.py
 +                    ret = map(pk_trace, value)
 +                    value.value_annotation = bool(ret)
 +                    return ret
-             sql, params = value.as_sql()
-             return QueryWrapper(('(%s)' % sql), params)
- 
+             if hasattr(value, 'as_sql'):
+                 sql, params = value.as_sql()
+             else:
