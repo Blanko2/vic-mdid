@@ -85,6 +85,7 @@ class Record(models.Model):
     manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
+    fieldset = models.ForeignKey('FieldSet', null=True)
     
     def __unicode__(self):
         return self.name
@@ -147,9 +148,16 @@ class MetadataStandard(models.Model):
     def __unicode__(self):
         return self.title
 
+
 class Field(models.Model):
+    TYPE_CHOICES = (
+        ('T', 'Text'),
+        ('D', 'Date'),
+        ('N', 'Numeric'),
+    )
     label = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
     standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
     equivalent = models.ManyToManyField("self", null=True, blank=True)
 
@@ -168,26 +176,47 @@ class Field(models.Model):
         ordering = ['name']
         order_with_respect_to = 'standard'
     
+
+class FieldSet(models.Model):
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50)
+    fields = models.ManyToManyField(Field, through='FieldSetField')
+    owner = models.ForeignKey(User, null=True, blank=True)    
+    
+    def save(self, **kwargs):
+        unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
+        super(FieldSet, self).save(kwargs)
+        
+    def __unicode__(self):
+        return self.title
+
+
+class FieldSetField(models.Model):
+    fieldset = models.ForeignKey(FieldSet)
+    field = models.ForeignKey(Field)
+    order = models.IntegerField(default=0)
+    importance = models.SmallIntegerField(default=1)
+    
+    def __unicode__(self):
+        return self.field.__unicode__()
+    
+    class Meta:
+        ordering = ['order']
+    
     
 class FieldValue(models.Model):
-    TYPE_CHOICES = (
-        ('T', 'Text'),
-        ('D', 'Date'),
-        ('N', 'Numeric'),
-    )
-    LANGUAGE_CHOICES = (
-        ('en-us', 'English (United States)'),
-    )
-    
     record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
     owner = models.ForeignKey(User, null=True, blank=True)
     label = models.CharField(max_length=100, blank=True)
-    override = models.ForeignKey('self', null=True)
+    override = models.ForeignKey('self', null=True, blank=True)
     hidden = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
     value = models.TextField()
-    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
-    language = models.CharField(max_length=5, blank=True, choices=LANGUAGE_CHOICES)
+    date_start = models.DateTimeField(null=True, blank=True)
+    date_end = models.DateTimeField(null=True, blank=True)
+    numeric_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
+    language = models.CharField(max_length=5, blank=True)
     context_type = models.ForeignKey(ContentType, null=True)
     context_id = models.PositiveIntegerField(null=True)
     context = generic.GenericForeignKey('context_type', 'context_id')

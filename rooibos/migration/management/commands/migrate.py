@@ -8,7 +8,7 @@ import pyodbc
 import gc
 from urlparse import urlparse
 from datetime import datetime
-from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record
+from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
 from rooibos.storage.models import Storage, Media
 from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
@@ -19,7 +19,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.util.models import OwnedWrapper
 
 IMPORT_COLLECTIONS = range(0, 1000)
-IMPORT_RECORDS = 100000 # 200000
+IMPORT_RECORDS = 1000 # 200000
 
 # old permissions
 
@@ -138,6 +138,7 @@ class Command(BaseCommand):
         groups = {}
         collgroups = {}
         storage = {}
+        fieldsets = {}
 
         for row in cursor.execute("SELECT ID,Title FROM CollectionGroups"):
             collgroups[row.ID] = Collection.objects.create(title=row.Title)
@@ -154,7 +155,8 @@ class Command(BaseCommand):
                     storage[row.ID] = {}
                     storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)', system='local', base=row.ResourcePath.replace('\\', '/'))
                     storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)', system='local', base=row.ResourcePath.replace('\\', '/'))
-                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))                    
+                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                fieldsets[row.ID] = FieldSet.objects.create(title='%s fields' % row.Title)
 
         # Migrate collection permissions
        
@@ -218,12 +220,17 @@ class Command(BaseCommand):
         fields = {}
         standard_fields = dict((str(f), f) for f in Field.objects.all())
         
-        for row in cursor.execute("SELECT ID,Name,DCElement,DCRefinement FROM FieldDefinitions"):
+        for row in cursor.execute("SELECT ID,CollectionID,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
+                                  FROM FieldDefinitions ORDER BY DisplayOrder"):
             dc = ('dc:%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
             if standard_fields.has_key(dc):
                 fields[row.ID] = standard_fields[dc]
             else:
-                fields[row.ID] = Field.objects.create(label=row.Name)
+                fields[row.ID] = Field.objects.create(label=row.Name, type='T')            
+            FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
+                                         field=fields[row.ID],
+                                         order=fieldsets[row.CollectionID].fields.count() + 1,
+                                         importance=(row.ShortView and 4) + (row.MediumView and 2) + (row.LongView and 1))
      
         # Migrate records and media
         
@@ -238,7 +245,8 @@ class Command(BaseCommand):
                                                        name=row.Resource.rsplit('.', 1)[0],
                                                        modified=row.Modified or datetime.now(),
                                                        source=row.RemoteID,
-                                                       next_update=row.CachedUntil or row.Expires)
+                                                       next_update=row.CachedUntil or row.Expires,
+                                                       fieldset=fieldsets[row.CollectionID])
                 images[row.ID] = image.id
                 CollectionItem.objects.create(record_id=image.id, collection=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
@@ -271,8 +279,7 @@ class Command(BaseCommand):
                 FieldValue.objects.create(record_id=images[row.ImageID],
                                           field=fields[row.FieldID],
                                           label=row.Label,
-                                          value=row.FieldValue,
-                                          type=row.Type == 2 and 'D' or 'T')
+                                          value=row.FieldValue)
             count += 1
             if count % 100 == 0:
                 pb.update(count)
@@ -317,7 +324,6 @@ class Command(BaseCommand):
                                               owner=slideshows[row.SlideshowID].owner,
                                               label="Annotation",
                                               value=row.Annotation,
-                                              type='T',
                                               context=item)
             count += 1
             if count % 100 == 0:

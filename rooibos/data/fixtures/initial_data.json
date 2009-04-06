@@ -1,182 +1,359 @@
 [
-  {
-    "pk": 1, 
-    "model": "data.metadatastandard", 
-    "fields": {
-      "prefix": "dc", 
-      "name": "dublin-core", 
-      "title": "Dublin Core"
+    {
+        "pk": 1, 
+        "model": "data.metadatastandard", 
+        "fields": {
+            "prefix": "dc", 
+            "name": "dublin-core", 
+            "title": "Dublin Core"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "data.metadatastandard", 
+        "fields": {
+            "prefix": "tag", 
+            "name": "tagging", 
+            "title": "Tagging"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "contributor", 
+            "label": "Contributor"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [
+                13
+            ], 
+            "standard": 2, 
+            "type": "", 
+            "name": "tags", 
+            "label": "Tags"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "coverage", 
+            "label": "Coverage"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "creator", 
+            "label": "Creator"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "date", 
+            "label": "Date"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "description", 
+            "label": "Description"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "format", 
+            "label": "Format"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "identifier", 
+            "label": "Identifier"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "language", 
+            "label": "Language"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "publisher", 
+            "label": "Publisher"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "relation", 
+            "label": "Relation"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "rights", 
+            "label": "Rights"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "source", 
+            "label": "Source"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [
+                16
+            ], 
+            "standard": 1, 
+            "type": "", 
+            "name": "subject", 
+            "label": "Subject"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "title", 
+            "label": "Title"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "data.field", 
+        "fields": {
+            "equivalent": [], 
+            "standard": 1, 
+            "type": "", 
+            "name": "type", 
+            "label": "Type"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "data.fieldset", 
+        "fields": {
+            "owner": null, 
+            "name": "dc", 
+            "title": "Dublin Core"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 7, 
+            "fieldset": 2, 
+            "order": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 10, 
+            "field": 14, 
+            "fieldset": 2, 
+            "order": 2
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 10, 
+            "field": 5, 
+            "fieldset": 2, 
+            "order": 3
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 10, 
+            "field": 3, 
+            "fieldset": 2, 
+            "order": 4
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 8, 
+            "field": 2, 
+            "fieldset": 2, 
+            "order": 5
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 8, 
+            "field": 4, 
+            "fieldset": 2, 
+            "order": 6
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 6, 
+            "field": 15, 
+            "fieldset": 2, 
+            "order": 7
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 8, 
+            "field": 13, 
+            "fieldset": 2, 
+            "order": 8
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 1, 
+            "fieldset": 2, 
+            "order": 9
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 6, 
+            "field": 6, 
+            "fieldset": 2, 
+            "order": 10
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 8, 
+            "fieldset": 2, 
+            "order": 11
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 9, 
+            "fieldset": 2, 
+            "order": 12
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 11, 
+            "fieldset": 2, 
+            "order": 13
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 10, 
+            "fieldset": 2, 
+            "order": 14
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "data.fieldsetfield", 
+        "fields": {
+            "importance": 1, 
+            "field": 12, 
+            "fieldset": 2, 
+            "order": 15
+        }
     }
-  }, 
-  {
-    "pk": 2, 
-    "model": "data.metadatastandard", 
-    "fields": {
-      "prefix": "tag", 
-      "name": "tagging", 
-      "title": "Tagging"
-    }
-  }, 
-  {
-    "pk": 1, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "contributor", 
-      "label": "Contributor"
-    }
-  }, 
-  {
-    "pk": 2, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "coverage", 
-      "label": "Coverage"
-    }
-  }, 
-  {
-    "pk": 3, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "creator", 
-      "label": "Creator"
-    }
-  }, 
-  {
-    "pk": 4, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "date", 
-      "label": "Date"
-    }
-  }, 
-  {
-    "pk": 5, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "description", 
-      "label": "Description"
-    }
-  }, 
-  {
-    "pk": 6, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "format", 
-      "label": "Format"
-    }
-  }, 
-  {
-    "pk": 7, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "identifier", 
-      "label": "Identifier"
-    }
-  }, 
-  {
-    "pk": 8, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "language", 
-      "label": "Language"
-    }
-  }, 
-  {
-    "pk": 9, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "publisher", 
-      "label": "Publisher"
-    }
-  }, 
-  {
-    "pk": 10, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "relation", 
-      "label": "Relation"
-    }
-  }, 
-  {
-    "pk": 11, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "rights", 
-      "label": "Rights"
-    }
-  }, 
-  {
-    "pk": 12, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "source", 
-      "label": "Source"
-    }
-  }, 
-  {
-    "pk": 13, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "subject", 
-      "label": "Subject"
-    }
-  }, 
-  {
-    "pk": 14, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "title", 
-      "label": "Title"
-    }
-  }, 
-  {
-    "pk": 15, 
-    "model": "data.field", 
-    "fields": {
-      "equivalent": [], 
-      "standard": 1, 
-      "name": "type", 
-      "label": "Type"
-    }
-  },
-  {
-    "pk": 16,
-    "model": "data.field",
-    "fields": {
-      "equivalent": [
-        13
-      ],
-      "standard": 2,
-      "name": "tags",
-      "label": "Tags"
-    }
-  }
 ]
