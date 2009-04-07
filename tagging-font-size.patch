@@ -1,0 +1,11 @@
+Index: utils.py
+===================================================================
+--- utils.py	(revision 154)
++++ utils.py	(working copy)
+@@ -260,4 +260,6 @@
+                 if not font_set and tag_weight <= thresholds[i]:
+                     tag.font_size = i + 1
+                     font_set = True
++            if not font_set:
++                tag.font_size = steps
+     return tags

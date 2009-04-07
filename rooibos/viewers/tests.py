@@ -3,7 +3,7 @@ import unittest
 from rooibos.data.models import Collection, CollectionItem, Record, Field, FieldValue
 from rooibos.storage.models import Media, Storage
 from rooibos.presentation.models import Presentation, PresentationItem
-from presentations.powerpoint import PowerPointGenerator
+from viewers.powerpoint import PowerPointGenerator
 import os
 import tempfile
 
