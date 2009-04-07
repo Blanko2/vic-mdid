@@ -93,6 +93,7 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.comments',
     'django_extensions',
+    'google_analytics',    
     'rooibos.data',
     'rooibos.migration',
     'rooibos.util',
@@ -105,8 +106,8 @@ INSTALLED_APPS = (
     'rooibos.viewers',
     'rooibos.help',
     'rooibos.presentation',
-    'rooibos.contrib.tagging',
-    'rooibos.contrib.pagination',
+    'tagging',
+    'pagination',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
@@ -136,3 +137,5 @@ INTERNAL_IPS = ('127.0.0.1',)
 HELP_URL = 'https://wiki.cit.jmu.edu/mdidhelp/index.php/Help_v1:'
 
 DEFAULT_LANGUAGE = 'en-us'
+
+GOOGLE_ANALYTICS_MODEL = True
