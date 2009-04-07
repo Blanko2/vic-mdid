@@ -26,6 +26,8 @@
 <ul>
 {% for rule in rules %}
 <li>{{ rule }}</li>
+{% empty %}
+<li>No rules defined.</li>
 {% endfor %}
 </ul>
 

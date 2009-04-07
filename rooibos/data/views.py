@@ -13,14 +13,14 @@ from rooibos.access import filter_by_access, accessible_ids
 #from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
 
-def groups(request):    
-    groups = filter_by_access(request.user, Collection)    
+def collections(request):    
+    collections = filter_by_access(request.user, Collection)    
     return render_to_response('data_groups.html',
-                              {'groups': groups, },
+                              {'groups': collections, },
                               context_instance=RequestContext(request))
 
-def group_raw(request, groupname):
-    collection = get_object_or_404(filter_by_access(request.user, Collection), name=groupname)
+def collection_raw(request, id, name):
+    collection = get_object_or_404(filter_by_access(request.user, Collection), id=id)
 #    viewers = map(lambda v: v().generate(collection), get_viewers('collection', 'link'))
     return render_to_response('data_group.html',
                               {'collection': collection,
@@ -28,8 +28,8 @@ def group_raw(request, groupname):
                                },
                               context_instance=RequestContext(request))
 
-def record_raw(request, recordname, owner=None, collection=None):
-    record = get_object_or_404(Record.objects.filter(name=recordname,
+def record_raw(request, id, name, owner=None, collection=None):
+    record = get_object_or_404(Record.objects.filter(id=id,
                                                      collection__id__in=accessible_ids(request.user, Collection)).distinct())
     media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
     contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'context_type', 'context_id')        
@@ -67,7 +67,7 @@ def selected_records(request):
 
 
 @login_required
-def record_edit(request, recordname, owner=None, collection=None):
+def record_edit(request, id, name, owner=None, collection=None):
 
     context = _clean_context(owner, collection)
 
@@ -91,7 +91,7 @@ def record_edit(request, recordname, owner=None, collection=None):
         # context given, must have access to any collection containing the record
         valid_ids = accessible_ids(request.user, Collection)
 
-    record = get_object_or_404(Record.objects.filter(name=recordname, collection__id__in=valid_ids).distinct())
+    record = get_object_or_404(Record.objects.filter(id=id, collection__id__in=valid_ids).distinct())
     
 
     def _get_fields():

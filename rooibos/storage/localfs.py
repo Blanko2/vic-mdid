@@ -9,7 +9,10 @@ class LocalFileSystemStorageSystem(FileSystemStorage):
         FileSystemStorage.__init__(self, location=base, base_url=None)
 
     def get_absolute_media_url(self, storage, media):
-        return reverse('storage-retrieve', args=[media.record.name, media.name])
+        return reverse('storage-retrieve', kwargs={'recordid': media.record.id,
+                                                   'record': media.record.name,
+                                                   'mediaid': media.id,
+                                                   'media': media.name})
     
     def get_absolute_file_path(self, storage, media):
         return self.path(media.url)        

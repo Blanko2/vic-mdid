@@ -120,12 +120,11 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
 def selected(request):
     return search(request, selected=True)
 
-def search(request, collection=None, selected=False):
-    if collection:
-        collection = get_object_or_404(filter_by_access(request.user, Collection), name=collection)
-
+def search(request, id=None, name=None, selected=False):
+    collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
+    
     update_record_selection(request)
-
+    
     viewmode = request.GET.get('v', 'i')
     if viewmode == 'l':
         pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 10)
@@ -179,7 +178,7 @@ def search(request, collection=None, selected=False):
         orfacet.set_result(orfacets[f])
     
     if collection:
-        url = reverse('solr-search-collection', kwargs={'collection': collection.name})
+        url = reverse('solr-search-collection', kwargs={'id': collection.id, 'name': collection.name})
     elif selected:
         url = reverse('solr-selected')
     else:

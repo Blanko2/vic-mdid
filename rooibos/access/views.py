@@ -8,10 +8,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from models import AccessControl
 from . import check_access, get_effective_permissions
 
-def access_view(request, app_label, model, object, foruser=None):
+def access_view(request, app_label, model, id, name, foruser=None):
     try:
         model = ContentType.objects.get(app_label=app_label, model=model)
-        object = model.get_object_for_this_type(name=object)        
+        object = model.get_object_for_this_type(id=id)        
     except ObjectDoesNotExist:
         raise Http404
     check_access(request.user, object, manage=True, fail_if_denied=True)

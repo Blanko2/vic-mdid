@@ -11,5 +11,4 @@ urlpatterns = patterns('',
          'mimetype': 'text/xml'}),
     (r'^WebServices/ImageViewer.asmx/Login$', imageviewer_login, {}),
     (r'^WebServices/ImageViewer.asmx/GetSlideshow$', imageviewer_getslideshow, {}),
-    url(r'^image/(?P<record>[-\w]+)/(?P<media>[-\w]+)/$', retrieve, name='legacy-image'),
 )

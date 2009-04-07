@@ -29,7 +29,7 @@ class Collection(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('data-collection', kwargs={'groupname': self.name})
+        return reverse('data-collection', kwargs={'id': self.id, 'name': self.name})
     
     @property
     def all_child_collections(self):
@@ -91,7 +91,7 @@ class Record(models.Model):
         return self.name
     
     def get_absolute_url(self):
-        return reverse('data-record', kwargs={'recordname': self.name})
+        return reverse('data-record', kwargs={'id': self.id, 'name': self.name})
 
     def save(self, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),

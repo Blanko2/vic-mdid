@@ -18,7 +18,7 @@ class PackagePresentation(object):
             return FULL_SUPPORT
     
     def url(self):
-        return url(r'^quicktime-player/(?P<recordid>[\d]+)/(?P<mediaid>[\d]+)/(?P<recordname>[-\w]+)/(?P<medianame>[-\w]+)/$',
+        return url(r'^quicktime-player/(?P<recordid>[\d]+)/(?P<recordname>[-\w]+)/(?P<mediaid>[\d]+)/(?P<medianame>[-\w]+)/$',
                    self.player, name='viewers-quicktime-player')
     
     def url_for_obj(self, obj):

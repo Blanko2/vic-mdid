@@ -58,8 +58,8 @@ def imageviewer_getslideshow(request):
         resultcode = 'SUCCESS'
         errormessage = None
         collection = get_object_or_404(Collection, name='admins-test')
-        # todo: medium size is hardcoded
-        slides = [{'url': reverse('legacy-image', kwargs={'record': r.name, 'media': 'medium'}).split('/', 2)[2] + "?dummy",
+        # todo: medium size is hardcoded, media id is hardcoded as zero
+        slides = [{'url': reverse('storage-retrieve', kwargs={'recordid': r.id, 'record': r.name, 'mediaid': 0, 'media': 'medium'}).split('/', 2)[2] + "?dummy",
                    'id': r.id,
                    'imageid': r.id,
                    'collectionid': collection.id,
