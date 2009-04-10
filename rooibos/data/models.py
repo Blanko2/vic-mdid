@@ -165,11 +165,15 @@ class Field(models.Model):
         unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Field, self).save(kwargs)
 
-    def __unicode__(self):
+    @property
+    def full_name(self):
         if self.standard:
             return "%s:%s" % (self.standard.prefix, self.name)
         else:
             return self.name
+    
+    def __unicode__(self):
+        return self.full_name
     
     class Meta:
         unique_together = ('name', 'standard')

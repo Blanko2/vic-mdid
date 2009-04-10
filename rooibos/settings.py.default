@@ -108,6 +108,7 @@ INSTALLED_APPS = (
     'rooibos.presentation',
     'tagging',
     'pagination',
+    'impersonate',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'

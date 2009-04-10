@@ -9,9 +9,9 @@ class AccessControl(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     user = models.ForeignKey(User, null=True)
     usergroup = models.ForeignKey(Group, null=True)
-    read = models.BooleanField(null=True)
-    write = models.BooleanField(null=True)
-    manage = models.BooleanField(null=True)
+    read = models.NullBooleanField()
+    write = models.NullBooleanField()
+    manage = models.NullBooleanField()
 
     class Meta:
         unique_together = ('content_type', 'object_id', 'user', 'usergroup')
