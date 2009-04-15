@@ -27,5 +27,5 @@ class AccessControl(models.Model):
             elif flag == False: return char.upper()
             else: return ' '
         return '%s %s%s%s %s' % (self.user or self.usergroup,
-                                 f(self.read, 'r'), f(self.read, 'w'), f(self.manage, 'm'),
+                                 f(self.read, 'r'), f(self.write, 'w'), f(self.manage, 'm'),
                                  self.content_object)
