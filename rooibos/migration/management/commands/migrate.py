@@ -1,3 +1,4 @@
+from optparse import make_option
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 from django.db import connection, reset_queries
@@ -19,7 +20,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.util.models import OwnedWrapper
 
 IMPORT_COLLECTIONS = range(0, 1000)
-IMPORT_RECORDS = 1000 # 200000
+IMPORT_RECORDS = 2000000
 
 # old permissions
 
@@ -57,6 +58,9 @@ P = dict(
 class Command(BaseCommand):
     help = 'Migrates database from older version'
     args = "config_file"
+    option_list = BaseCommand.option_list + (
+        make_option('--skip-users', dest='skip_users', action='store_true', help='Do not migrate user accounts'),
+    )
 
     def readConfig(self, file):
         connection = None
@@ -99,26 +103,27 @@ class Command(BaseCommand):
         DisableSolrUpdates()        
    
         # Migrate users
-        print "Migrating users"
         users = {}
-        for row in cursor.execute("SELECT ID,Login,Password,Name,FirstName,Email,Administrator,LastAuthenticated " +
-                                  "FROM Users"):
-            user = User()
-            user.username = row.Login[:30]
-            if row.Password:
-                user.password = row.Password.lower()
-            else:
-                user.set_unusable_password()
-            user.last_name = row.Name[:30]
-            user.first_name = row.FirstName[:30]
-            user.email = row.Email[:75]
-            user.is_superuser = user.is_staff = row.Administrator
-            user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
-            try:
-                user.save()
-                users[row.ID] = user 
-            except:
-                print "Warning: possible duplicate login detected: %s" % row.Login
+        if not options.get('skip_users'):
+            print "Migrating users"
+            for row in cursor.execute("SELECT ID,Login,Password,Name,FirstName,Email,Administrator,LastAuthenticated " +
+                                      "FROM Users"):
+                user = User()
+                user.username = row.Login[:30]
+                if row.Password:
+                    user.password = row.Password.lower()
+                else:
+                    user.set_unusable_password()
+                user.last_name = row.Name[:30]
+                user.first_name = row.FirstName[:30]
+                user.email = row.Email[:75]
+                user.is_superuser = user.is_staff = row.Administrator
+                user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
+                try:
+                    user.save()
+                    users[row.ID] = user 
+                except:
+                    print "Warning: possible duplicate login detected: %s" % row.Login
 
 
         # Migrate user groups
