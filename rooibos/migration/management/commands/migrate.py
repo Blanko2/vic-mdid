@@ -19,9 +19,6 @@ from rooibos.presentation.models import Presentation, PresentationItem, Presenta
 from rooibos.contrib.tagging.models import Tag
 from rooibos.util.models import OwnedWrapper
 
-IMPORT_COLLECTIONS = range(0, 1000)
-IMPORT_RECORDS = 2000000
-
 # old permissions
 
 P = dict(
@@ -54,12 +51,16 @@ P = dict(
 )
 
 
-
 class Command(BaseCommand):
     help = 'Migrates database from older version'
     args = "config_file"
     option_list = BaseCommand.option_list + (
         make_option('--skip-users', dest='skip_users', action='store_true', help='Do not migrate user accounts'),
+        make_option('--max-records', type='int', dest='max_records', action='store', help='Only migrate a certain number of records'),
+        make_option('--collection', '-c', type='int', dest='collection_ids', action='append', help='Primary keys of collections to migrate'),
+        make_option('--local', dest='local_only', action='store_true', help='Migrate local collections only'),
+        make_option('--allow-anonymous', dest='anonymous', action='store_true', help='Make all collections available to anonymous users'),
+        make_option('--skip-personal', dest='skip_personal', action='store_true', help='Do not migrate personal images'),
     )
 
     def readConfig(self, file):
@@ -149,7 +150,8 @@ class Command(BaseCommand):
             collgroups[row.ID] = Collection.objects.create(title=row.Title)
 
         for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
-            if row.ID in IMPORT_COLLECTIONS:
+            if (not options.get('collection_ids') or (row.ID in options['collection_ids'])) and \
+                (not options.get('local_only') or row.Type == 'I'):
                 manager = None
                 if row.Type == 'N':
                     manager = 'nasaimageexchange'
@@ -219,6 +221,15 @@ class Command(BaseCommand):
                 if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                     ac.save()
 
+        if options.get('anonymous'):
+            for id in groups.keys():
+                AccessControl.objects.create(content_object=groups[id], read=True)
+                if storage.has_key(id):
+                    AccessControl.objects.create(content_object=storage[id]['full'], read=True)
+                    AccessControl.objects.create(content_object=storage[id]['medium'], read=True)
+                    AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
+
+
         # Migrate fields
         
         print "Migrating fields"
@@ -245,7 +256,8 @@ class Command(BaseCommand):
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Images"))[0].C)
         for row in cursor.execute("SELECT ID,CollectionID,Resource,Created,Modified,RemoteID," +
                                   "CachedUntil,Expires,UserID,Flags FROM Images"):
-            if groups.has_key(row.CollectionID):
+            if groups.has_key(row.CollectionID) and \
+                (not options.get('skip_personal') or not row.UserID):
                 image = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
                                                        name=row.Resource.rsplit('.', 1)[0],
                                                        modified=row.Modified or datetime.now(),
@@ -269,7 +281,7 @@ class Command(BaseCommand):
             if count % 100 == 0:
                 pb.update(count)
                 reset_queries()
-            if count >= IMPORT_RECORDS:
+            if options.get('max_records') and count >= options['max_records']:
                 break
         pb.done()
 
