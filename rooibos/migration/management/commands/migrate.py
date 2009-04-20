@@ -274,7 +274,7 @@ class Command(BaseCommand):
                             Media.objects.create(
                                 record_id=image.id,
                                 name=type,
-                                url='%s/%s' % (type, row.Resource),
+                                url='%s/%s' % (type, row.Resource.strip()),
                                 storage=storage[row.CollectionID][type],
                                 mimetype='image/jpeg')          
             count += 1
