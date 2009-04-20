@@ -10,7 +10,7 @@
 <h1>{{ record.title }}</h1>
 
 <div>
-    <img src="{% thumbnail record %}" />
+    <img src="{% thumbnail record %}" alt="{{ record.title }}" />
 </div>
 
 {% block record_content %}

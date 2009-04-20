@@ -19,7 +19,7 @@ class FieldSetAdmin(admin.ModelAdmin):
 
 class FieldValueInline(admin.TabularInline):
     model = FieldValue
-    raw_id_fields = ['owner', 'override', 'context_type',]
+    raw_id_fields = ['owner', 'context_type',]
 
 class RecordAdmin(admin.ModelAdmin):
     inlines = [FieldValueInline,]

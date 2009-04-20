@@ -290,13 +290,14 @@ class Command(BaseCommand):
         print "Migrating field values"
         count = 0
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM FieldData"))[0].C)
-        for row in cursor.execute("SELECT ImageID,FieldID,FieldValue,OriginalValue,Type,Label " +
+        for row in cursor.execute("SELECT ImageID,FieldID,FieldValue,OriginalValue,Type,Label,DisplayOrder " +
                                   "FROM FieldData INNER JOIN FieldDefinitions ON FieldID=FieldDefinitions.ID"):
             if images.has_key(row.ImageID):
                 FieldValue.objects.create(record_id=images[row.ImageID],
                                           field=fields[row.FieldID],
                                           label=row.Label,
-                                          value=row.FieldValue)
+                                          value=row.FieldValue,
+                                          order=row.DisplayOrder)
             count += 1
             if count % 100 == 0:
                 pb.update(count)

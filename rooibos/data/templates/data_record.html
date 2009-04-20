@@ -7,23 +7,20 @@
 <div>
     <h2>Available Metadata</h2>
     
+    <form action="." method="GET">
+    Display metadata as: <select name="fieldset">
+    <option value="_all"{% ifequal selected_fieldset "_all" %} selected="selected"{% endifequal %}>Show All</option>
+    <option value=""{% if not selected_fieldset %} selected="selected"{% endif %}>Default</option>
+    {% for fieldset in fieldsets %}
+    <option value="{{ fieldset.name }}"{% ifequal selected_fieldset fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
+    {% endfor %}
+    </select>
+    <input type="submit" value="Change" />
+    </form>
+    
     <div>
-        Current context:
-        <ul>
-            <li>Owner: {{ owner }}</li>
-            <li>Collection: {{ collection }}</li>
-        </ul>
-        
-        Available contexts: <ul>
-        {% for c in contexts %}
-        <li>{{ c }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    <hr />
-    <div>
-    {% for value in record.fieldvalue_set.all %}
-        <span>{{ value.resolved_label }}:</span> <span>{{ value.value|safe }}</span><br />
+    {% for value in fieldvalues %}
+        <span>{{ value.resolved_label }}:</span> <span>{{ value.value }}</span><br />
     {% endfor %}
     </div>
 </div>
@@ -31,7 +28,7 @@
 <div>
     <h2>Available Media</h2>
     {% if media %}
-    <table>
+    <table summary="Available Media">
         <tr>
             <th>Name</th>
             <th>Storage</th>

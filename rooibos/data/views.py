@@ -28,18 +28,34 @@ def collection_raw(request, id, name):
                                },
                               context_instance=RequestContext(request))
 
-def record_raw(request, id, name, owner=None, collection=None):
+def record_raw(request, id, name):
     record = get_object_or_404(Record.objects.filter(id=id,
                                                      collection__id__in=accessible_ids(request.user, Collection)).distinct())
     media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
-    contexts = FieldValue.objects.filter(record=record).order_by().distinct().values('owner__username', 'context_type', 'context_id')        
-#    contexts = [_clean_context(**c) for c in contexts]
+
+    fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
+    
+    selected_fieldset = request.GET.get('fieldset')
+    if selected_fieldset == '_all':
+        fieldset = None
+    elif selected_fieldset:
+        f = fieldsets.filter(name=selected_fieldset)
+        if f:
+            fieldset = f[0]
+        else:
+            fieldset = record.fieldset
+            selected_fieldset = None            
+    else:
+        fieldset = record.fieldset
+    
+    fieldvalues = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
+
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
-                               'contexts': contexts,
-                               'owner': owner,
-                               'collection': collection,},
+                               'fieldsets': fieldsets,
+                               'selected_fieldset': selected_fieldset,
+                               'fieldvalues': fieldvalues,},
                               context_instance=RequestContext(request))
 
 
@@ -67,8 +83,13 @@ def selected_records(request):
 
 
 @login_required
-def record_edit(request, id, name, owner=None, collection=None):
+def record_edit(request, id, name):
 
+    owner=None
+    collection=None
+    
+    
+    
     context = _clean_context(owner, collection)
 
     if owner and owner != '-':

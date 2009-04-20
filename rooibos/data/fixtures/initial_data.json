@@ -203,7 +203,8 @@
         "fields": {
             "owner": null, 
             "name": "dc", 
-            "title": "Dublin Core"
+            "title": "Dublin Core",
+            "standard": true
         }
     }, 
     {

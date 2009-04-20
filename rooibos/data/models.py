@@ -99,26 +99,21 @@ class Record(models.Model):
         self._clear_cached_items()
         super(Record, self).save(kwargs)
         
-    def get_fieldvalues(self, owner=None, context=None,
-                        filter_overridden=False, filter_hidden=False, filter_context=False):
-        q_context = context and Q(context_type=ContentType.objects.get_for_model(context.__class__),
-                                  context_id=context.id) \
-                            or Q()
-        if not filter_context:
-            q_context = q_context | Q(context_type=None, context_id=None)
+    def get_fieldvalues(self, owner=None, context=None, fieldset=None):
+        qc = Q(context_type=None, context_id=None)
+        if context:
+            qc = qc | Q(context_type=ContentType.objects.get_for_model(context.__class__), context_id=context.id)
+        qo = Q(owner=None)
+        if owner:
+            qo = qo | Q(owner=owner)
         
-        q_owner = Q(owner=owner)
-        if not filter_context:
-            q_owner = q_owner | Q(owner=None)
+        values = self.fieldvalue_set.filter(qc, qo).order_by('order')
         
-        values = self.fieldvalue_set.filter(q_context, q_owner)
-        remove = []
-        for v in values:
-            if filter_overridden and v.override_id:
-                remove.append(v.override_id)
-            if filter_hidden and v.hidden:
-                remove.append(v.id)
-        return values.exclude(id__in=remove)
+        if fieldset:
+            #TODO: map result to fieldset if given
+            pass
+            
+        return values    
     
     def dump(self, owner=None, collection=None):
         print("Created: %s" % self.created)
@@ -185,7 +180,8 @@ class FieldSet(models.Model):
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
     fields = models.ManyToManyField(Field, through='FieldSetField')
-    owner = models.ForeignKey(User, null=True, blank=True)    
+    owner = models.ForeignKey(User, null=True, blank=True)
+    standard = models.BooleanField(default=False)
     
     def save(self, **kwargs):
         unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
@@ -213,7 +209,6 @@ class FieldValue(models.Model):
     field = models.ForeignKey(Field)
     owner = models.ForeignKey(User, null=True, blank=True)
     label = models.CharField(max_length=100, blank=True)
-    override = models.ForeignKey('self', null=True, blank=True)
     hidden = models.BooleanField(default=False)
     order = models.IntegerField(default=0)
     value = models.TextField()
@@ -230,11 +225,7 @@ class FieldValue(models.Model):
     
     @property
     def resolved_label(self):
-        if self.label:
-            return self.label
-        if self.override:
-            return self.override.resolved_label
-        return self.field.label
+        return self.label or self.field.label
     
     def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
