@@ -107,12 +107,31 @@ class Record(models.Model):
         if owner:
             qo = qo | Q(owner=owner)
         
-        values = self.fieldvalue_set.filter(qc, qo).order_by('order')
+        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo).order_by('order')
         
         if fieldset:
-            #TODO: map result to fieldset if given
-            pass
+            values_to_map = []
+            result = {}
+            eq_cache = {}
+            target_fields = fieldset.fields.all().order_by('fieldsetfield__order')
             
+            for v in values:
+                if v.field in target_fields:
+                    result.setdefault(v.field, []).append(DisplayFieldValue.from_value(v, v.field))
+                else:
+                    values_to_map.append(v)
+            
+            for v in values_to_map:
+                eq = eq_cache.has_key(v.field) and eq_cache[v.field] or eq_cache.setdefault(v.field, v.field.get_equivalent_fields())
+                for f in eq:
+                    if f in target_fields:
+                        result.setdefault(f, []).append(DisplayFieldValue.from_value(v, f))
+                        break
+            
+            values = []
+            for f in target_fields:
+                values.extend(result.get(f, []))
+
         return values    
     
     def dump(self, owner=None, collection=None):
@@ -166,6 +185,14 @@ class Field(models.Model):
             return "%s:%s" % (self.standard.prefix, self.name)
         else:
             return self.name
+
+    def get_equivalent_fields(self):
+        ids = list(self.equivalent.values_list('id', flat=True))
+        more = len(ids) > 1
+        while more:
+            more = Field.objects.filter(~Q(id__in=ids), equivalent__id__in=ids).values_list('id', flat=True)
+            ids.extend(more)
+        return Field.objects.select_related('standard').filter(id__in=ids)
     
     def __unicode__(self):
         return self.full_name
@@ -221,7 +248,7 @@ class FieldValue(models.Model):
     context = generic.GenericForeignKey('context_type', 'context_id')
         
     def __unicode__(self):
-        return "%s=%s" % (self.label, self.value[:20])
+        return "%s=%s" % (self.resolved_label, self.value)
     
     @property
     def resolved_label(self):
@@ -232,3 +259,26 @@ class FieldValue(models.Model):
 
     class Meta:
         order_with_respect_to = 'record'
+
+
+class DisplayFieldValue(FieldValue):
+    """
+    Represents a mapped field value for display.  Cannot be saved.
+    """
+    def save(self, *args, **kwargs):
+        raise NotImplementedError()
+        
+    @staticmethod
+    def from_value(value, field):
+        return DisplayFieldValue(record=value.record,
+                                 field=field,
+                                 owner=value.owner,
+                                 hidden=value.hidden,
+                                 order=value.order,
+                                 value=value.value,
+                                 date_start=value.date_start,
+                                 date_end=value.date_end,
+                                 numeric_value=value.numeric_value,
+                                 language=value.language,
+                                 context_type=value.context_type,
+                                 context_id=value.context_id)
