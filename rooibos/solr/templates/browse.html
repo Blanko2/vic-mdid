@@ -4,6 +4,18 @@
 {% load humanize %}
 {% load pagination_tags %}
 
+{% block extrajavascript %}
+<script type="text/javascript">
+$(document).ready(function() {
+    enableRelatedImages();
+    var t;
+    $(".browsecolumn a").hover(function() { var q = this.href.substring(this.href.indexOf('?') + 1);
+                                            t = setTimeout(function() { showRelatedImages(q) }, 1000); },
+                               function() { clearTimeout(t); });    
+});
+</script>
+{% endblock %}
+
 {% block help %}
     {% pagehelp 'browse' %}
 {% endblock %}

@@ -324,3 +324,20 @@ form.vertical ul.errorlist li {
     text-indent: -20px;
     padding-left: 20px;
 }
+
+#related-images-bar {
+    height: 140px;
+    left: 0px;
+    bottom: 0px;
+    position: fixed;
+    background-color: #F0F0F0;
+    border-top: thin solid black;
+}
+
+#related-images-bar-toggle {
+    width: 100%;
+    text-align: right;
+    height: 18px;
+    font-size: 12px;
+    border-bottom: thin solid grey;
+}

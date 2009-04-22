@@ -20,19 +20,19 @@ def select_record(request):
     ids = map(int, request.POST.getlist('id'))
     checked = request.POST.get('checked') == 'true'
     selected = request.session.get('selected_records', ())
-    result = []
     if checked:
-        ids = set(ids) - set(selected)
-        records = Record.objects.filter(id__in=ids, collection__id__in=accessible_ids(request.user, Collection))
-        for record in records:
-            thumb = get_thumbnail_for_record(record)
-            selected = set(selected) | set([record.id])
-            result.append(dict(id=record.id,
-                               title=record.title,
-                               record_url=record.get_absolute_url(),
-                               img_url=thumb and thumb.get_absolute_url() or ''))
-    else:
+        selected = set(selected) | set(ids)
+    else:        
         selected = set(selected) - set(ids)
+
+    result = []
+    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+    for record in records:
+        thumb = get_thumbnail_for_record(record)
+        result.append(dict(id=record.id,
+                           title=record.title,
+                           record_url=record.get_absolute_url(),
+                           img_url=thumb and thumb.get_absolute_url() or ''))
 
     request.session['selected_records'] = selected
     return dict(status=session_status_rendered(RequestContext(request)), records=result)

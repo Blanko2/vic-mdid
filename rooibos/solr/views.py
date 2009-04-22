@@ -3,10 +3,11 @@ from django.core.cache import cache
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
-from rooibos.util import safe_int
+from rooibos.util import safe_int, json_view
 from rooibos.data.models import Field, Collection, FieldValue
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
@@ -145,16 +146,18 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
 def selected(request):
     return search(request, selected=True)
 
-def search(request, id=None, name=None, selected=False):
+def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
     
     update_record_selection(request)
     
+    templates = dict(l='list')
+    
     viewmode = request.GET.get('v', 'i')
     if viewmode == 'l':
-        pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 10)
+        pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
     else:
-        pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 10)
+        pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'score')
     criteria = request.GET.getlist('c')
@@ -186,8 +189,19 @@ def search(request, id=None, name=None, selected=False):
     query = _generate_query(search_facets, request.user, collection, criteria, keywords, selected, remove)
        
     s = SolrIndex()
+    
+    if json:
+        return_facets = []
+    else:
+        return_facets = search_facets.keys()
+    
     (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=search_facets.keys(), facet_mincount=1, facet_limit=50)
+                                       facets=return_facets, facet_mincount=1, facet_limit=50)
+
+    if json:
+        return render_to_string('results_bare_' + templates.get(viewmode, 'icons') + '.html',
+                              {'records': records,},
+                              context_instance=RequestContext(request))
 
     for f in search_facets:
         search_facets[f].set_result(facets.get(f))
@@ -255,9 +269,7 @@ def search(request, id=None, name=None, selected=False):
         f.clean_result(hits)
     
     # remove facets with only no filter options
-    facets = filter(lambda f: len(f.facets) > 0, facets)
-
-    templates = dict(l='list')
+    facets = filter(lambda f: len(f.facets) > 0, facets)    
 
     return render_to_response('results_' + templates.get(viewmode, 'icons') + '.html',
                               {'criteria': map(readable_criteria, criteria),
@@ -278,6 +290,11 @@ def search(request, id=None, name=None, selected=False):
                                'orquery': orquery,},
                               context_instance=RequestContext(request))
 
+
+@json_view
+def search_json(request, id=None, name=None, selected=False):
+    return dict(html=search(request, id, name, selected, json=True))
+    
 
 def browse(request, id=None, name=None):
     

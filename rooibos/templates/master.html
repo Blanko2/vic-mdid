@@ -23,6 +23,7 @@
 {% endblock %}
 {% block javascript %}
     <script type="text/javascript" src="/static/scripts/selected-records.js"></script>
+    <script type="text/javascript" src="/static/scripts/related-images-bar.js"></script>
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->        
     <script type="text/javascript">
         $(document).ready(function() {
@@ -39,7 +40,7 @@
                 timeout: 500,
                 out: function() { $(this).children(".dropdown").slideUp(); },
             });
-            {% add_selected_records_to_menu %}
+            updateSelectedRecords();
         });
     </script>
 {% endblock %}
@@ -112,6 +113,13 @@
         <div><input type="button" id="selected-records-deselect-all" value="Deselect all records" /></div>
     </div>
 </div>
+
+<div id="related-images-bar" style="display: none;">
+    <div id="related-images-bar-toggle">Toggle</div>
+    <div id="related-images-bar-content"></div>
+</div>
+<div id="related-images-bar-placeholder" style="visibility: hidden;"></div>
+
 {% analytics %}
 </body>
 

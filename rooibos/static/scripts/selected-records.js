@@ -7,14 +7,17 @@ function recordSelection(ids, checked) {
         data: {'id': ids, 'checked': checked},
         dataType: 'json',
         success: function(r) {
-                if (checked) {
-                    for (i in r.records) {
-                        addSelectedRecord(r.records[i].id, r.records[i].img_url, r.records[i].record_url, r.records[i].title);
-                    }
+                $("#selected-records div[id^=selected-record-]").remove();
+                for (i in r.records) {
+                    addSelectedRecord(r.records[i].id, r.records[i].img_url, r.records[i].record_url, r.records[i].title);
                 }
                 $("#session-status").html(r.status);
             }
     })
+}
+
+function updateSelectedRecords() {
+    recordSelection(0, false);
 }
 
 function addSelectedRecord(id, img_url, record_url, title) {
@@ -43,9 +46,13 @@ function deselectAll() {
     recordSelection(ids, false);
 }
 
+function bindSelectRecordCheckboxes() {
+    $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
+}
+
 $(document).ready(function() {
     $("#selected-records-menu").append($('<div class="dropdown">').append($("#selected-records")));
-    $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
+    bindSelectRecordCheckboxes()
     $("#selected-records-deselect-all").click(deselectAll);
     $(window).resize(adjustSelectedMenuHeight);
     adjustSelectedMenuHeight();

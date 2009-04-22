@@ -47,14 +47,3 @@ def scale(value, params):
         return (float(value) - omin) / (omax - omin) * (nmax - nmin) + nmin
     except:
         return ''
-    
-@register.tag
-def add_selected_records_to_menu(parser, token):
-    class Script(template.Node):
-        def render(self, context):
-            ids = context['request'].session.get('selected_records', ())
-            records = Record.objects.filter(id__in=ids)
-            return '\n'.join('addSelectedRecord(%s,"%s","%s","%s");' % (r.id, thumbnail(r), r.get_absolute_url(),
-                                                                        escape(r.title))
-                             for r in records)
-    return Script()

@@ -1,0 +1,7 @@
+{% load ui %}
+
+<div class="resultlist">
+{% for r in records %}
+    {% record_list r 'selectable' request.session.selected_records %}
+{% endfor %}
+</div>
