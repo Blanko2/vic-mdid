@@ -1,0 +1,56 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+{% load pagination_tags %}
+
+{% block help %}
+    {% pagehelp 'browse' %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Browse collections</h1>
+
+<form method="GET" action=".">
+    Collection:
+    <select name="c">
+        {% for collection in collections %}
+        <option value="{{ collection.name }}"{% ifequal selected_collection.id collection.id %} selected="selected"{% endifequal %}>{{ collection.title }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Browse" />
+</form>
+
+<form method="GET" action=".">
+    Fields:
+    <select name="f">
+        {% for field in fields %}
+        <option value="{{ field.name }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Browse" />
+</form>
+
+{% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+<a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.name }}&amp;s={{ letter }}">{{ letter }}</a>
+{% endfor %}
+
+{% autopaginate values 50 %}
+{% paginate %}
+
+<div class="browsecolumn">
+{% for v in values %}
+{% ifchanged %}<div style="font-size: x-large; font-weight: bolder;">{{ v.value|slice:":1" }}</div>{% endifchanged %}
+    <div><a href="{% url solr-search %}?c=collections:{{ selected_collection.id }}&amp;c={{ selected_field.name }}_s:{{ v.value|urlencode }}">{{ v.value }}</a> ({{ v.freq }})</div>
+    {% ifequal forloop.counter 25 %}
+    </div>
+    <div class="browsecolumn">
+    {% endifequal %}
+{% endfor %}
+</div>
+
+<div style="clear: both;"></div>
+
+{% paginate %}
+{% endblock %}

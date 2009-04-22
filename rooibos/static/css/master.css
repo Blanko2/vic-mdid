@@ -313,3 +313,14 @@ form.vertical ul.errorlist li {
 .tagcloud a {
     text-decoration: none;
 }
+
+.browsecolumn {
+    float: left;
+    margin: 10px;
+    width: 45%;
+}
+
+.browsecolumn div {
+    text-indent: -20px;
+    padding-left: 20px;
+}

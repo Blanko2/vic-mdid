@@ -5,4 +5,6 @@ urlpatterns = patterns('',
     url(r'^search/$', search, name='solr-search'),
     url(r'^search/(?P<id>\d+)/(?P<name>[\w-]+)/$', search, name='solr-search-collection'),
     url(r'^selected/$', selected, name='solr-selected'),
+    url(r'^browse/$', browse, name='solr-browse'),
+    url(r'^browse/(?P<id>\d+)/(?P<name>[\w-]+)/$', browse, name='solr-browse-collection'),
 )

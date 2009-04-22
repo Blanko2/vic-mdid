@@ -1,11 +1,13 @@
+from django.db.models import Count
+from django.core.cache import cache
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int
-from rooibos.data.models import Field, Collection
+from rooibos.data.models import Field, Collection, FieldValue
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
@@ -32,6 +34,9 @@ class SearchFacet(object):
         # sort facet items and remove the ones that match all hits
         self.facets = filter(lambda f: f[1] < hits, self.facets)
         self.facets = sorted(self.facets, key=lambda f: len(f) > 2 and f[2] or f[0])
+        
+    def or_available(self):
+        return True
 
 
 class StorageSearchFacet(SearchFacet):
@@ -66,6 +71,21 @@ class CollectionSearchFacet(SearchFacet):
         super(CollectionSearchFacet, self).set_result(result)
 
 
+class ExactValueSearchFacet(SearchFacet):
+    
+    _special = re.compile(r'(\+|-|&&|\|\||!|\(|\)|\{|}|\[|\]|\^|"|~|\*|\?|:|\\)')
+    
+    def __init__(self, name):
+        field = Field.objects.get(name=name[:-2])
+        super(ExactValueSearchFacet, self).__init__(name, field.label)
+    
+    def process_criteria(self, criteria, *args, **kwargs):
+        return '"' + self._special.sub(r'\\\1', criteria) + '"'
+
+    def or_available(self):
+        return False
+
+
 def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
 
     fields = {}
@@ -76,6 +96,11 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         if f.startswith('-'):
             f = 'NOT ' + f[1:]
         fname = f.rsplit(' ',1)[-1]
+        
+        # create exact match criteria on the fly if needed
+        if fname.endswith('_s') and not search_facets.has_key(fname):
+            search_facets[fname] = ExactValueSearchFacet(fname)
+        
         o = search_facets[fname].process_criteria(o, user)
         fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
@@ -219,7 +244,7 @@ def search(request, id=None, name=None, selected=False):
         if f.startswith('-'):
             return (c, '%s not in %s' % (o, search_facets[f[1:]].label), False)
         else:
-            return (c, '%s in %s' % (o, search_facets[f].label), True)
+            return (c, '%s in %s' % (o, search_facets[f].label), search_facets[f].or_available())
 
     
     # sort facets by label
@@ -251,4 +276,48 @@ def search(request, id=None, name=None, selected=False):
                                'facets': facets,
                                'orfacet': orfacet,
                                'orquery': orquery,},
+                              context_instance=RequestContext(request))
+
+
+def browse(request, id=None, name=None):
+    
+    collections = filter_by_access(request.user, Collection).order_by('title')
+    if not collections:
+        raise Http404()
+    
+    if request.GET.has_key('c'):
+        collection = get_object_or_404(collections, name=request.GET['c'])
+        return HttpResponseRedirect(reverse('solr-browse-collection',
+                                            kwargs={'id': collection.id, 'name': collection.name}))
+    
+    collection = id and get_object_or_404(collections, id=id) or collections[0]
+
+    fields = cache.get('browse_fields_%s' % collection.id)
+    if fields:
+        fields = list(Field.objects.filter(id__in=fields))
+    else:
+        fields = list(Field.objects.filter(fieldvalue__record__collection=collection).distinct())
+        cache.set('browse_fields_%s' % collection.id, [f.id for f in fields], 60)        
+    if not fields:
+        raise Http404()
+        
+    if request.GET.has_key('f'):
+        field = get_object_or_404(Field, name=request.GET['f'], id__in=(f.id for f in fields))
+    else:
+        field = fields[0]
+        
+    values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value')).order_by('value')
+    
+    if request.GET.has_key('s'):
+        start = values.filter(value__lt=request.GET['s']).count() / 50 + 1
+        return HttpResponseRedirect(reverse('solr-browse-collection',
+                                            kwargs={'id': collection.id, 'name': collection.name}) +
+                                    "?f=%s&page=%s" % (field.name, start))
+    
+    return render_to_response('browse.html',
+                              {'collections': collections,
+                               'selected_collection': collection and collection or None,
+                               'fields': fields,
+                               'selected_field': field,
+                               'values': values,},
                               context_instance=RequestContext(request))

@@ -87,7 +87,11 @@ class SolrIndex():
         doc = { 'id': str(record.id) }
         for v in fieldvalues:
             required_fields.pop(v.field.name, None)
-            doc.setdefault(v.field.name + '_t', []).append(self._clean_string(v.value))
+            clean_value = self._clean_string(v.value)
+            # For indexing
+            doc.setdefault(v.field.name + '_t', []).append(clean_value)
+            # For exact retrieval through browsing
+            doc.setdefault(v.field.name + '_s', []).append(clean_value)
         for f in required_fields:
             doc[f + '_t'] = SOLR_EMPTY_FIELD_VALUE
         parents = map(lambda gm: gm.collection_id, groups)
