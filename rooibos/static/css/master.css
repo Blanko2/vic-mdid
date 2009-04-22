@@ -326,7 +326,7 @@ form.vertical ul.errorlist li {
 }
 
 #related-images-bar {
-    height: 140px;
+    height: 18px;
     left: 0px;
     bottom: 0px;
     position: fixed;
@@ -336,7 +336,6 @@ form.vertical ul.errorlist li {
 
 #related-images-bar-toggle {
     width: 100%;
-    text-align: right;
     height: 18px;
     font-size: 12px;
     border-bottom: thin solid grey;

@@ -7,23 +7,28 @@
 {% block extrajavascript %}
 <script type="text/javascript">
 $(document).ready(function() {
-    enableRelatedImages();
+    enableRelatedImages("Hover over a browsable term to see selected matching images");
     var t;
-    $(".browsecolumn a").hover(function() { var q = this.href.substring(this.href.indexOf('?') + 1);
-                                            t = setTimeout(function() { showRelatedImages(q) }, 1000); },
-                               function() { clearTimeout(t); });    
+    $(".browsecolumn a").hover(function() {
+                                    var e = this; var q = e.href.substring(this.href.indexOf('?') + 1);
+                                    t = setTimeout(function() { showRelatedImages(q, e) }, 1000); },
+                               function() { clearTimeout(t); });
+    $("#browse-forms select").change(function () { this.form.submit(); });
+    $("#browse-forms :submit").remove();
+    
 });
 </script>
 {% endblock %}
 
 {% block help %}
-    {% pagehelp 'browse' %}
+    {% pagehelp 'Browse' %}
 {% endblock %}
 
 {% block content %}
 
 <h1>Browse collections</h1>
 
+<div id="browse-forms">
 <form method="GET" action=".">
     Collection:
     <select name="c">
@@ -43,6 +48,7 @@ $(document).ready(function() {
     </select>
     <input type="submit" value="Browse" />
 </form>
+</div>
 
 {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
 <a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.name }}&amp;s={{ letter }}">{{ letter }}</a>

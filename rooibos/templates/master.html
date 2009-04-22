@@ -71,7 +71,13 @@
         {% else %}
             <li><a href="{% url login %}">Log in</a></li>
         {% endif %}        
-        <li><a href="{% url solr-search %}">Explore</a></li>
+        <li class="hover-menu"><a href="{% url solr-search %}">Explore</a>
+            <div class="dropdown">                
+                <div class="menu">
+                    <a href="{% url solr-browse %}">Browse</a>
+                </div>
+            </div>
+        </li>
         <li class="hover-menu"><a href=".">Resources</a>
             <div class="dropdown">                
                 <div class="menu">
@@ -95,9 +101,27 @@
 
 {% block footer %}
 <div id="footer">
-    Copyright 1997-2009
+    Copyright 1997-2009 James Madison University
 </div>
 {% endblock %}
+
+<div style="display: none;">    
+    <div id="selected-records" class="menu">
+        <div><input type="button" id="selected-records-deselect-all" value="Deselect all records" /></div>
+    </div>
+</div>
+
+<div id="related-images-bar" style="display: none;">
+    <div id="related-images-bar-toggle">
+        <div id="related-images-bar-hide" style="float: right;"></div>
+        <span id="related-images-bar-hint"></span>
+        <span id="related-images-bar-all" style="margin-left: 20px; "></span>
+    </div>
+    <div id="related-images-bar-content"></div>
+</div>
+<div id="related-images-bar-placeholder" style="visibility: hidden;"></div>
+
+{% analytics %}
 
 {% if debug %}<!--
 {{ sql_queries|length }} queries:
@@ -107,20 +131,6 @@
 -->
 <div id="stats"><!-- STATS: Total: %(totTime).2fs <br/>Python: %(pyTime).2fs <br/>DB: %(dbTime).2fs <br/>Queries: %(queries)d --></div>
 {% endif %}
-
-<div style="display: none;">    
-    <div id="selected-records" class="menu">
-        <div><input type="button" id="selected-records-deselect-all" value="Deselect all records" /></div>
-    </div>
-</div>
-
-<div id="related-images-bar" style="display: none;">
-    <div id="related-images-bar-toggle">Toggle</div>
-    <div id="related-images-bar-content"></div>
-</div>
-<div id="related-images-bar-placeholder" style="visibility: hidden;"></div>
-
-{% analytics %}
 </body>
 
 </html>
