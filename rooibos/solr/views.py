@@ -159,7 +159,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     else:
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
     page = safe_int(request.GET.get('p', '1'), 1)
-    sort = request.GET.get('s', 'score')
+    sort = request.GET.get('s', 'score desc')
     criteria = request.GET.getlist('c')
     orquery = request.GET.get('or', None)
     remove = request.GET.get('rem', None)
@@ -195,7 +195,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     else:
         return_facets = search_facets.keys()
     
-    (hits, records, facets) = s.search(query, rows=pagesize, start=(page - 1) * pagesize,
+    (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
                                        facets=return_facets, facet_mincount=1, facet_limit=50)
 
     if json:
@@ -337,4 +337,13 @@ def browse(request, id=None, name=None):
                                'fields': fields,
                                'selected_field': field,
                                'values': values,},
+                              context_instance=RequestContext(request))
+
+
+def overview(request):
+    
+    collections = filter_by_access(request.user, Collection).order_by('title').annotate(num_records=Count('records'))
+    
+    return render_to_response('overview.html',
+                              {'collections': collections,},
                               context_instance=RequestContext(request))

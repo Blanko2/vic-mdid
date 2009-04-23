@@ -7,7 +7,7 @@ function showRelatedImages(querystring, element) {
         $.ajax({
             mode: 'queue',
             type: 'GET',
-            url: '/explore/api/search/?' + querystring + "&ps=" + Math.floor($("#related-images-bar").width() / 170),
+            url: '/explore/api/search/?' + querystring + "&s=random_" + (new Date().getTime()) + "+asc&ps=" + Math.floor($("#related-images-bar").width() / 170),
             dataType: 'json',
             success: function(r) {
                     $("#related-images-bar-content").html(r.html);
@@ -49,4 +49,11 @@ function enableRelatedImages(hint) {
     $("#related-images-bar").show()
     $("#related-images-bar-placeholder").height($("#related-images-bar").height());
     relatedImagesEnabled = true;
+    var t;
+    $("a.related-images").hover(
+        function() {
+            var e = this;
+            var q = e.href.substring(this.href.indexOf('?') + 1);
+            t = setTimeout(function() { showRelatedImages(q, e) }, 1000); },
+       function() { clearTimeout(t); });
 }

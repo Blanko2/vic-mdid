@@ -8,11 +8,6 @@
 <script type="text/javascript">
 $(document).ready(function() {
     enableRelatedImages("Hover over a browsable term to see selected matching images");
-    var t;
-    $(".browsecolumn a").hover(function() {
-                                    var e = this; var q = e.href.substring(this.href.indexOf('?') + 1);
-                                    t = setTimeout(function() { showRelatedImages(q, e) }, 1000); },
-                               function() { clearTimeout(t); });
     $("#browse-forms select").change(function () { this.form.submit(); });
     $("#browse-forms :submit").remove();
     
@@ -60,7 +55,7 @@ $(document).ready(function() {
 <div class="browsecolumn">
 {% for v in values %}
 {% ifchanged %}<div style="font-size: x-large; font-weight: bolder;">{{ v.value|slice:":1" }}</div>{% endifchanged %}
-    <div><a href="{% url solr-search %}?c=collections:{{ selected_collection.id }}&amp;c={{ selected_field.name }}_s:{{ v.value|urlencode }}">{{ v.value }}</a> ({{ v.freq }})</div>
+    <div><a class="related-images" href="{% url solr-search %}?c=collections:{{ selected_collection.id }}&amp;c={{ selected_field.name }}_s:{{ v.value|urlencode }}">{{ v.value }}</a> ({{ v.freq }})</div>
     {% ifequal forloop.counter 25 %}
     </div>
     <div class="browsecolumn">
