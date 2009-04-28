@@ -1,11 +1,12 @@
 from django.conf.urls.defaults import *
-
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+from django.conf import settings
+from django.views.generic.simple import direct_to_template
+from rooibos.ui.views import main
+
+
 admin.autodiscover()
 
-from rooibos.ui.views import main
-from django.conf import settings
 
 urlpatterns = patterns('',    
     (r'^$', main),
@@ -23,6 +24,8 @@ urlpatterns = patterns('',
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^presentation/', include('rooibos.presentation.urls')),
     (r'^viewers/', include('rooibos.viewers.urls')),
+
+    url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
 )
 
 if settings.DEBUG:
