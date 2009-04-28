@@ -2,12 +2,22 @@
 {% load ui %}
 {% load viewers %}
 
+{% block extrajavascript %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#metadata-form select").change(function () { this.form.submit(); });
+    $("#metadata-form :submit").remove();
+});
+</script>
+{% endblock %}
+
 {% block record_content %}
 
 <div>
     <h2>Available Metadata</h2>
     
-    <form action="." method="GET">
+    <form id="metadata-form" action="." method="GET">
     Display metadata as: <select name="fieldset">
     <option value="_all"{% ifequal selected_fieldset "_all" %} selected="selected"{% endifequal %}>Show All</option>
     <option value=""{% if not selected_fieldset %} selected="selected"{% endif %}>Default</option>
