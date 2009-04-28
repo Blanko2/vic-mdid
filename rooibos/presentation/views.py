@@ -163,3 +163,7 @@ def edit(request, id, name):
                        'form': form,},
                       context_instance=RequestContext(request))
 
+
+def view(request, id, name):
+    
+    pass

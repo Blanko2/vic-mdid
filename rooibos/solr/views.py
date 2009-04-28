@@ -200,7 +200,8 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     if json:
         return render_to_string('results_bare_' + templates.get(viewmode, 'icons') + '.html',
-                              {'records': records,},
+                              {'records': records,
+                               'selectable': True,},
                               context_instance=RequestContext(request))
 
     for f in search_facets:

@@ -1,22 +1,33 @@
 {% extends "master.html" %}
 {% load humanize %}
+{% load help %}
 
+{% block help %}
+    {% pagehelp 'Selected_Records' %}
+{% endblock %}
 
 {% block content %}
 
-<a href="{% url solr-selected %}">View {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
+<h1>Selected Records</h1>
 
+
+{% if presentation_form %}
 <form method="POST" action=".">
-<table summary="">
-{{ form }}    
+<table summary="Add to presentation">
+{{ presentation_form }}
+<tr>
+    <td></td>
+    <td><input type="submit" name="addtopresentation" value="Add selected records" /></td>
+</tr>
 </table>
 </form>
+{% endif %}
 
-<ul>
-    <li>Add to new collection</li>
-    <li>Add to existing collection</li>
-    <li>Add to favorites</li>
-    <li>Delete</li>
-</ul>
+
+<a href="{% url solr-selected %}">Explore {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
+
+{% with False as selectable %}
+{% include "results_bare_icons.html" %}
+{% endwith %}
 
 {% endblock %}

@@ -10,15 +10,9 @@
 {{ form.title }}
 {{ form.title.errors }}
 
-{% if form.tags.field.choices %}
-    {{ form.tags.label_tag }}
-    {{ form.tags }}
-    {{ form.tags.errors }}
-{% endif %}
-
-{{ form.new_tags.label_tag }}
-{{ form.new_tags }}
-{{ form.new_tags.errors }}
+{{ form.tags.label_tag }}
+{{ form.tags }}
+{{ form.tags.errors }}
 
 {% if selected %}
     {{ form.add_selected.label_tag }}

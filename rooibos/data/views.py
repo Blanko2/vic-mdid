@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
@@ -63,21 +63,43 @@ def selected_records(request):
     
     selected = request.session.get('selected_records', ())
     records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+
+    class AddToPresentationForm(forms.Form):
+        def available_presentations():
+            presentations = list(filter_by_access(request.user, Presentation, write=True).values_list('id', 'title'))
+            if request.user.has_perm('data.add_presentation'):
+                presentations.insert(0, ('new', 'New Presentation'))
+            return presentations
+        def clean(self):
+            if self.cleaned_data.get("presentation") == 'new' and not self.cleaned_data.get("title"):
+                raise forms.ValidationError("Please select an existing presentation or specify a new presentation title")
+            return self.cleaned_data
+        presentation = forms.ChoiceField(label='Add to presentation', choices=available_presentations())
+        title = forms.CharField(label='Presentation title', max_length=Presentation._meta.get_field('title').max_length, required=False)    
+
+    if request.method == "POST":
+        presentation_form = AddToPresentationForm(request.POST)
+        if presentation_form.is_valid():
+            presentation = presentation_form.cleaned_data['presentation']
+            title = presentation_form.cleaned_data['title']
+            if presentation == 'new':
+                if not request.user.has_perm('data.add_presentation'):
+                    return HttpResponseForbidden("You are not allowed to create new presentations")
+                presentation = Presentation.objects.create(title=title, owner=request.user, hidden=True)
+            else:
+                presentation = get_object_or_404(filter_by_access(request.user, Presentation, write=True), id=presentation)
+            c = presentation.items.count()
+            for record in records:
+                c += 1
+                presentation.items.create(record=record, order=c)
+            return HttpResponseRedirect(presentation.get_absolute_url(edit=True))
+    else:
+        presentation_form = AddToPresentationForm()
     
-    collections = filter_by_access(request.user, Collection, write=True).values_list('id', 'title')
-    presentations = filter_by_access(request.user, Presentation, write=True).values_list('id', 'title')
-    
-    class AddToCollectionForm(forms.Form):
-        collection = forms.ChoiceField(label='Add to collection', choices=[('', 'New Collection'),] + list(collections))
-        title = forms.CharField(label='Collection title', max_length=Collection._meta.get_field('title').max_length)
-    
-    form = AddToCollectionForm()
-    
-    
-    selected = request.session.get('selected_records', ())
     return render_to_response('data_selected_records.html',
                               {'selected': selected,
-                               'form': form,
+                               'records': records,
+                               'presentation_form': presentation_form,
                               },
                               context_instance=RequestContext(request))
 

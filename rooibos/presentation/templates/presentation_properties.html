@@ -34,4 +34,13 @@
 </form>
 
 
+
+<h2>Included records</h2>
+
+{% with presentation.records as records %}
+{% with 1 as selectable %}
+{% include "results_bare_icons.html" %}
+{% endwith %}
+{% endwith %}
+
 {% endblock %}
