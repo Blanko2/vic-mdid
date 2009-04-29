@@ -12,14 +12,14 @@ import random
 class Collection(models.Model):
     
     title = models.CharField(max_length=100)
-    name = models.SlugField(max_length=50, unique=True)
-    children = models.ManyToManyField('self', symmetrical=False)
+    name = models.SlugField(max_length=50, unique=True, blank=True)
+    children = models.ManyToManyField('self', symmetrical=False, blank=True)
     records = models.ManyToManyField('Record', through='CollectionItem')
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     hidden = models.BooleanField(default=False)
-    description = models.TextField(null=True)
-    agreement = models.TextField(null=True)
-    password = models.CharField(max_length=32, null=True)
+    description = models.TextField(blank=True)
+    agreement = models.TextField(blank=True)
+    password = models.CharField(max_length=32, blank=True)
     
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
@@ -171,7 +171,6 @@ class Field(models.Model):
     )
     label = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
-    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
     standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
     equivalent = models.ManyToManyField("self", null=True, blank=True)
 
@@ -234,13 +233,15 @@ class FieldSetField(models.Model):
 class FieldValue(models.Model):
     record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
+    refinement = models.CharField(max_length=100, blank=True)
     owner = models.ForeignKey(User, null=True, blank=True)
     label = models.CharField(max_length=100, blank=True)
     hidden = models.BooleanField(default=False)
     order = models.IntegerField(default=0)
+    group = models.IntegerField(null=True, blank=True)
     value = models.TextField()
-    date_start = models.DateTimeField(null=True, blank=True)
-    date_end = models.DateTimeField(null=True, blank=True)
+    date_start = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
+    date_end = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     numeric_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
     language = models.CharField(max_length=5, blank=True)
     context_type = models.ForeignKey(ContentType, null=True)
@@ -248,7 +249,7 @@ class FieldValue(models.Model):
     context = generic.GenericForeignKey('context_type', 'context_id')
         
     def __unicode__(self):
-        return "%s=%s" % (self.resolved_label, self.value)
+        return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
     
     @property
     def resolved_label(self):
@@ -256,9 +257,6 @@ class FieldValue(models.Model):
     
     def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
-
-    class Meta:
-        order_with_respect_to = 'record'
 
 
 class DisplayFieldValue(FieldValue):

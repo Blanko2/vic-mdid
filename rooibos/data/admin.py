@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import MetadataStandard, Field, FieldSet, FieldSetField, Record, FieldValue
+from models import MetadataStandard, Field, FieldSet, FieldSetField, Record, FieldValue, Collection
 
 class MetadataStandardAdmin(admin.ModelAdmin):
     pass
@@ -26,6 +26,11 @@ class RecordAdmin(admin.ModelAdmin):
     pass
 
 
+class CollectionAdmin(admin.ModelAdmin):
+    pass
+
+
+admin.site.register(Collection, CollectionAdmin)
 admin.site.register(MetadataStandard, MetadataStandardAdmin)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(FieldSet, FieldSetAdmin)
