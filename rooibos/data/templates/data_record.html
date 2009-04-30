@@ -1,6 +1,10 @@
-{% extends "data_record_master.html" %}
+{% extends "master.html" %}
 {% load ui %}
 {% load viewers %}
+
+{% block titledetail %}
+- {{ record.title }}
+{% endblock %}
 
 {% block extrajavascript %}
 {{ block.super }}
@@ -12,9 +16,64 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 
-{% block record_content %}
+{% block content %}
+
+<div class="sidebar">
+
+<div class="sidebar-item">
+    <img src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ record.title }}" />
+</div>
+
+{% if record.parent %}
+<div class="sidebar-item">
+    <h2>Parent record</h2>
+    {% record record.parent 'selectable' %}
+    <br style="clear: both" />
+</div>
+{% endif %}
+
+{% if record.record_set.count %}
+<div class="sidebar-item">
+    <h2>Child records</h2>
+    <div style="max-height: 400px; overflow: auto; ">
+        {% for child in record.record_set.all %}
+            {% record child 'selectable' %}
+        {% endfor %}
+        <br style="clear: both" />
+    </div>
+</div>
+{% endif %}
+
+{% if media %}
+<div>
+    <h2>Media</h2>
+    <ul>
+    {% for m in media %}
+        <li>
+            <a href="{{ m.get_absolute_url }}">{{ m.name }}</a>
+            {{ m.mimetype }}
+            {% if m.width and m.height %}
+                {{ m.width }}x{{ m.height }}
+            {% endif %}
+        </li>    
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+</div>
+
+
+
 
 <div>
+
+
+<h1>{{ record.title }}</h1>
+
+
+
+
     <h2>Available Metadata</h2>
     
     <form id="metadata-form" action="." method="GET">
@@ -35,33 +94,6 @@ $(document).ready(function() {
     </div>
 </div>
 
-<div>
-    <h2>Available Media</h2>
-    {% if media %}
-    <table summary="Available Media">
-        <tr>
-            <th>Name</th>
-            <th>Storage</th>
-            <th>Mimetype</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Bitrate</th>
-        </tr>
-    {% for m in media %}
-        <tr>
-            <td><a href="{{ m.get_absolute_url }}">{{ m.name }}</a></td>
-            <td>{{ m.storage.title }}</td>
-            <td>{{ m.mimetype }}</td>
-            <td>{{ m.width }}</td>
-            <td>{{ m.height }}</td>
-            <td>{{ m.bitrate }}</td>
-        </tr>
-    {% endfor %}
-    </table>
-    
-    {% else %}
-    No media is available for this record.
-    {% endif %}
-</div>
+
 
 {% endblock %}

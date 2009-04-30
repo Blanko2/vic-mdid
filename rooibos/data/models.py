@@ -9,6 +9,7 @@ from datetime import datetime
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import random
 
+
 class Collection(models.Model):
     
     title = models.CharField(max_length=100)
@@ -92,6 +93,11 @@ class Record(models.Model):
     
     def get_absolute_url(self):
         return reverse('data-record', kwargs={'id': self.id, 'name': self.name})
+
+    def get_thumbnail_url(self):
+        from rooibos.storage import get_thumbnail_for_record
+        media = get_thumbnail_for_record(self)    
+        return media and media.get_absolute_url() or None
 
     def save(self, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),

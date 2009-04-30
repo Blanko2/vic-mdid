@@ -7,24 +7,19 @@ from rooibos.data.models import Record
 
 register = template.Library()
 
-@register.simple_tag
-def thumbnail(record):
-    media = get_thumbnail_for_record(record)    
-    return media and media.get_absolute_url() or ''
-
-@register.inclusion_tag('ui_record.html')
-def record(record, selectable=False, selected_records=()):
+@register.inclusion_tag('ui_record.html', takes_context=True)
+def record(context, record, selectable=False):
     media = get_thumbnail_for_record(record)
     return {'record': record,
             'selectable': selectable,
-            'selected': record.id in selected_records,
+            'selected': record.id in context['request'].session.get('selected_records', ()),
             'thumbnail': media and media.get_absolute_url() or '/static/images/nothumbnail.png'}
 
-@register.inclusion_tag('ui_record_list.html')
-def record_list(record, selectable=False, selected_records=()):
+@register.inclusion_tag('ui_record_list.html', takes_context=True)
+def record_list(context, record, selectable=False):
     return {'record': record,
             'selectable': selectable,
-            'selected': record.id in selected_records,
+            'selected': record.id in context['request'].session.get('selected_records', ()),
             'icon': None or '/static/images/filetypes/none.png'}
 
 @register.inclusion_tag('ui_session_status.html', takes_context=True)

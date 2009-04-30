@@ -340,3 +340,19 @@ form.vertical ul.errorlist li {
     font-size: 12px;
     border-bottom: thin solid grey;
 }
+
+.sidebar {
+    float: right;
+    width: 200px;
+}
+
+.sidebar-item {
+    border: 1px solid grey;
+    margin: 5px;
+    padding: 2px;
+    -moz-border-radius: 5px;
+}
+
+.sidebar-item h2 {
+    margin: 5px;
+}
