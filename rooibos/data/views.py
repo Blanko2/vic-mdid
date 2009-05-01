@@ -54,7 +54,7 @@ def record_raw(request, id, name):
                               {'record': record,
                                'media': media,
                                'fieldsets': fieldsets,
-                               'selected_fieldset': selected_fieldset,
+                               'selected_fieldset': fieldset,
                                'fieldvalues': fieldvalues,},
                               context_instance=RequestContext(request))
 

@@ -20,7 +20,7 @@ def read_core4(file):
     def dot(*values):
         return '.'.join(filter(None, values))
 
-    def process_date(element, field, counter, refinement=None):
+    def process_date(element, field, counter, refinement=None, order=0):
         type = element.getAttribute('type')
         earliest = element.getElementsByTagName('earliestDate') or None
         latest = element.getElementsByTagName('latestDate') or None
@@ -29,19 +29,21 @@ def read_core4(file):
         if earliest or latest:
             return [FieldValue(field=field, refinement=dot(refinement, type),
                                value='%s - %s' % (earliest, latest), hidden=True,
-                               date_start=earliest, date_end=latest, group=counter)]
+                               date_start=earliest, date_end=latest, group=counter, order=order)]
         return []
 
     def process_element(element, field, counter):
         type = element.getAttribute('type')
         children = elementNodes(element.childNodes)
         values = []
+        order = 0
         if children:
             for e in children:
                 value = e.firstChild and e.firstChild.nodeValue or None
                 if value:
+                    order += 1
                     values.append(FieldValue(field=field, refinement=dot(type, e.localName, e.getAttribute('type')),
-                                             value=value, group=counter))
+                                             value=value, group=counter, order=order))
         else:
             value = element.firstChild and element.firstChild.nodeValue or None
             if value: value = value.strip()
@@ -50,15 +52,19 @@ def read_core4(file):
     
     def process_element_agent(element, field, counter):
         values = []
+        order = 0
         for e in elementNodes(element.childNodes):
             value = e.firstChild and e.firstChild.nodeValue or None
-            if e.localName == 'dates':
-                values.extend(process_date(e, field, counter, 'dates'))
-            elif e.localName == 'name':
-                if value:
-                    values.append(FieldValue(field=field, refinement=dot('name', e.getAttribute('type')), value=value, group=counter))
-            elif value:
-                values.append(FieldValue(field=field, refinement=e.localName, value=value, group=counter))                
+            if value:
+                order += 1
+                if e.localName == 'dates':
+                    values.extend(process_date(e, field, counter, 'dates', order))
+                elif e.localName == 'name':
+                    values.append(FieldValue(field=field, refinement=dot('name', e.getAttribute('type')),
+                                             value=value, group=counter, order=order))
+                else:
+                    values.append(FieldValue(field=field, refinement=e.localName,
+                                             value=value, group=counter, order=order))                
         return values
     
     def process_element_measurement(element, field, counter):        

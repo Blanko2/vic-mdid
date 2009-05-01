@@ -1,6 +1,7 @@
 {% extends "master.html" %}
 {% load ui %}
 {% load viewers %}
+{% load data %}
 
 {% block titledetail %}
 - {{ record.title }}
@@ -64,33 +65,24 @@ $(document).ready(function() {
 </div>
 
 
-
-
 <div>
-
-
-<h1>{{ record.title }}</h1>
-
-
-
-
-    <h2>Available Metadata</h2>
+    <h1>{{ record.title }}</h1>
     
     <form id="metadata-form" action="." method="GET">
     Display metadata as: <select name="fieldset">
-    <option value="_all"{% ifequal selected_fieldset "_all" %} selected="selected"{% endifequal %}>Show All</option>
-    <option value=""{% if not selected_fieldset %} selected="selected"{% endif %}>Default</option>
+    <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
+    <option value="">Default</option>
     {% for fieldset in fieldsets %}
-    <option value="{{ fieldset.name }}"{% ifequal selected_fieldset fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
+    <option value="{{ fieldset.name }}"{% ifequal selected_fieldset.name fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
     {% endfor %}
     </select>
     <input type="submit" value="Change" />
     </form>
+
+
     
     <div>
-    {% for value in fieldvalues %}
-        <span>{{ value.resolved_label }}:</span> <span>{{ value.value }}</span><br />
-    {% endfor %}
+        {% metadata record selected_fieldset %}
     </div>
 </div>
 

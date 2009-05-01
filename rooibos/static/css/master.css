@@ -356,3 +356,28 @@ form.vertical ul.errorlist li {
 .sidebar-item h2 {
     margin: 5px;
 }
+
+
+
+div.metadata {
+    font-size: smaller;
+}
+
+div.metadata div.label {
+    position: absolute;
+    width: 150px;
+    font-weight: bold;
+    text-align: right;
+}
+
+div.metadata div.label:after {
+    content: ":";
+}
+
+div.metadata div.value {
+    padding-left: 155px;
+}
+
+div.metadata-subitem div.label {
+    display: none;
+}

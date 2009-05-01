@@ -9,11 +9,10 @@ register = template.Library()
 
 @register.inclusion_tag('ui_record.html', takes_context=True)
 def record(context, record, selectable=False):
-    media = get_thumbnail_for_record(record)
     return {'record': record,
             'selectable': selectable,
             'selected': record.id in context['request'].session.get('selected_records', ()),
-            'thumbnail': media and media.get_absolute_url() or '/static/images/nothumbnail.png'}
+            }
 
 @register.inclusion_tag('ui_record_list.html', takes_context=True)
 def record_list(context, record, selectable=False):

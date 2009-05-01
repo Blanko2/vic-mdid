@@ -113,7 +113,8 @@ class Record(models.Model):
         if owner:
             qo = qo | Q(owner=owner)
         
-        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo).order_by('order')
+        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo) \
+                    .order_by('field','group','order','refinement')
         
         if fieldset:
             values_to_map = []
@@ -136,7 +137,7 @@ class Record(models.Model):
             
             values = []
             for f in target_fields:
-                values.extend(result.get(f, []))
+                values.extend(sorted(result.get(f, [])))
 
         return values    
     
@@ -272,13 +273,23 @@ class DisplayFieldValue(FieldValue):
     def save(self, *args, **kwargs):
         raise NotImplementedError()
         
+    def __cmp__(self, other):
+        order_by = ('_original_field_name', 'group', 'order', 'refinement')
+        for ob in order_by:
+            s = getattr(self, ob)
+            o = getattr(other, ob)
+            if s <> o: return cmp(s, o)
+        return 0
+    
     @staticmethod
     def from_value(value, field):
-        return DisplayFieldValue(record=value.record,
+        dfv = DisplayFieldValue(record=value.record,
                                  field=field,
+                                 refinement=value.refinement,
                                  owner=value.owner,
                                  hidden=value.hidden,
                                  order=value.order,
+                                 group=value.group,
                                  value=value.value,
                                  date_start=value.date_start,
                                  date_end=value.date_end,
@@ -286,3 +297,5 @@ class DisplayFieldValue(FieldValue):
                                  language=value.language,
                                  context_type=value.context_type,
                                  context_id=value.context_id)
+        dfv._original_field_name = value.field.name
+        return dfv
