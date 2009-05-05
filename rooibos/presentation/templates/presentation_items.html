@@ -1,14 +1,48 @@
 {% extends "master.html" %}
 {% load ui %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+        $(document).ready(function() {
+            $("#dragdropnote").show();
+            $(".orderinput").hide();
+            $("#items tbody").sortable({
+                axis: 'y',
+                handle: 'img',
+                update: function(event, ui) {
+                    $("#items tbody tr:even").removeClass('altrow');
+                    $("#items tbody tr:odd").addClass('altrow');
+                    $(".orderinput input").each(function(i) { $(this).val(i); });
+                },
+                start: function(event, ui) {
+                    $(".controls", ui.helper).hide();
+                    ui.helper.removeClass('altrow');
+                },
+                });
+            $(".delete input").click(function() {
+                $(".thumbnail", $(this).parent().parent()).toggle();
+            });
+        });
+</script>
+{% endblock %}
+
+
 {% block content %}
 
 <h1>{{ presentation.title }}</h1>
+<a href="{% url presentation-edit presentation.id, presentation.name %}">Presentation properties</a>
 
+<div id="dragdropnote" style="display: none;">Drag and drop thumbnails into desired order.</div>
 
 <form method="POST" action="">
 {{ formset.management_form }}
-<table summary="Included records">
+<table id="items" summary="Included records">
+    <thead>    
+    <tr>
+        <td colspan="2"></td>
+        <td colspan="3"><input type="submit" value="Submit changes" /></td>
+    </tr>
     <tr>
         <th>Thumbnail</th>
         <th>Title</th>
@@ -16,19 +50,24 @@
         <th>Hidden</th>
         <th>Remove</th>
     </tr>
+    </thead>
+    <tbody>
 {% for form in formset.forms %}
-    <tr class="{% cycle "" "altrow" %}">
+    <tr class="sortable{% cycle "" " altrow" %}">
         <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ form.instance.record.title }}" /></a></td>
         <td>{{ form.instance.record.title }}</td>
         <td class="orderinput">{{ form.order }} {{ form.order.errors }}</td>
-        <td>{{ form.hidden }}</td>
-        <td>{{ form.DELETE }}</td>
+        <td class="controls">{{ form.hidden }}</td>
+        <td class="controls delete">{{ form.DELETE }}</td>
     </tr>
 {% endfor %}
+    </tbody>
+    <tfoot>
     <tr>
         <td colspan="2"></td>
         <td colspan="3"><input type="submit" value="Submit changes" /></td>
     </tr>
+    </tfoot>
 </table>
 </form>
 
