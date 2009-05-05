@@ -324,7 +324,7 @@ def browse(request, id=None, name=None):
     else:
         field = fields[0]
         
-    values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value')).order_by('value')
+    values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value', distinct=True)).order_by('value')
     
     if request.GET.has_key('s'):
         start = values.filter(value__lt=request.GET['s']).count() / 50 + 1
