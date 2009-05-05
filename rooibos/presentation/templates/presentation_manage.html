@@ -34,15 +34,23 @@
     <tr>
         <th></th>
         <th>Title</th>
+        <th>Tags</th>
+        <th>Items</th>
         <th>Hidden</th>
         <th>Created</th>
         <th>Modified</th>
         <th></th>
     </tr>
 {% for presentation in presentations %}
-    <tr>
+    {% owned_tags_for_object presentation for request.user as ptags %}
+    <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td><a href="{% url presentation-edit presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
+        <td>{% for ptag in  ptags %}
+                <span class="tag">{{ ptag.name }} <a class="removetag" href="">X</a></span>
+            {% endfor %}
+        </td>
+        <td>{{ presentation.item_count }}</td>
         <td>{{ presentation.hidden|yesno:"hidden," }}</td>
         <td>{{ presentation.created|naturalday:"M j, Y" }}</td>
         <td>{{ presentation.modified|naturalday:"M j, Y" }}</td>
@@ -50,7 +58,7 @@
     </tr>
 {% empty %}
     <tr>
-        <td colspan="6">
+        <td colspan="7">
             No presentations available.
             <a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a>
         </td>

@@ -3,16 +3,18 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
+from django.forms.models import modelformset_factory
+from django.db.models.aggregates import Count
+from django.contrib.contenttypes.models import ContentType
+from django.core.paginator import Paginator
+from django import forms
 from rooibos.contrib.tagging.models import Tag, TaggedItem
 from rooibos.contrib.tagging.forms import TagField
 from rooibos.contrib.tagging.utils import parse_tag_input
-from django import forms
-from models import Presentation, PresentationItem
 from rooibos.util.models import OwnedWrapper
-from django.contrib.contenttypes.models import ContentType
-from django.core.paginator import Paginator
 from rooibos.access import filter_by_access, accessible_ids
 from rooibos.ui.forms import SplitTaggingField
+from models import Presentation, PresentationItem
 
 
 @login_required
@@ -61,9 +63,9 @@ def manage(request):
     if tags:
         qs = OwnedWrapper.objects.filter(user=request.user, type=OwnedWrapper.t(Presentation))
         ids = list(TaggedItem.objects.get_by_model(qs, tags).values_list('object_id', flat=True))
-        presentations = Presentation.objects.filter(owner=request.user, id__in=ids).order_by('title')
+        presentations = Presentation.objects.annotate(item_count=Count('items')).filter(owner=request.user, id__in=ids).order_by('title')
     else:
-        presentations = Presentation.objects.filter(owner=request.user).order_by('title')
+        presentations = Presentation.objects.annotate(item_count=Count('items')).filter(owner=request.user).order_by('title')
     
     tag_filter = " and ".join(tags)
         
@@ -72,6 +74,7 @@ def manage(request):
         
     return render_to_response('presentation_manage.html',
                           {'tags': tags,
+                           'tagobjects': Tag.objects,
                            'presentations': presentations,
                            'querystring': querystring,
                            'tag_filter': tag_filter,
@@ -162,6 +165,29 @@ def edit(request, id, name):
                       {'presentation': presentation,
                        'form': form,},
                       context_instance=RequestContext(request))
+
+
+@login_required
+def items(request, id, name):
+    
+    presentation = get_object_or_404(Presentation.objects.filter(
+        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+                
+    OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True, exclude=('record','presentation'))
+    if request.method == 'POST':
+        formset = OrderingFormSet(request.POST, queryset=presentation.items.all())
+        if formset.is_valid():
+            formset.save()
+            request.user.message_set.create(message="Changes to presentation items saved successfully.")
+            return HttpResponseRedirect(reverse('presentation-items', kwargs={'id': presentation.id, 'name': presentation.name}))
+    else:
+        formset = OrderingFormSet(queryset=presentation.items.all())    
+    
+    return render_to_response('presentation_items.html',
+                      {'presentation': presentation,
+                       'formset': formset,},
+                      context_instance=RequestContext(request))
+    
 
 
 def view(request, id, name):

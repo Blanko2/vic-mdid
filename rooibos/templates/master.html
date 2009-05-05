@@ -95,6 +95,16 @@
         <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
     </ul>    
 </div>
+{% if messages %}
+<div id="messages">
+<ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block content %}

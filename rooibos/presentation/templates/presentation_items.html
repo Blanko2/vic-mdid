@@ -1,0 +1,35 @@
+{% extends "master.html" %}
+{% load ui %}
+
+{% block content %}
+
+<h1>{{ presentation.title }}</h1>
+
+
+<form method="POST" action="">
+{{ formset.management_form }}
+<table summary="Included records">
+    <tr>
+        <th>Thumbnail</th>
+        <th>Title</th>
+        <th class="orderinput">Order</th>
+        <th>Hidden</th>
+        <th>Remove</th>
+    </tr>
+{% for form in formset.forms %}
+    <tr class="{% cycle "" "altrow" %}">
+        <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ form.instance.record.title }}" /></a></td>
+        <td>{{ form.instance.record.title }}</td>
+        <td class="orderinput">{{ form.order }} {{ form.order.errors }}</td>
+        <td>{{ form.hidden }}</td>
+        <td>{{ form.DELETE }}</td>
+    </tr>
+{% endfor %}
+    <tr>
+        <td colspan="2"></td>
+        <td colspan="3"><input type="submit" value="Submit changes" /></td>
+    </tr>
+</table>
+</form>
+
+{% endblock %}

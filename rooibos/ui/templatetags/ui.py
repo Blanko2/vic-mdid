@@ -1,9 +1,12 @@
+import re
 from django import template
 from django.utils.html import escape
 from django.template.loader import get_template
-from django.template import Context
+from django.template import Context, Variable
+from rooibos.contrib.tagging.models import Tag
 from rooibos.storage import get_thumbnail_for_record
 from rooibos.data.models import Record
+from rooibos.util.models import OwnedWrapper
 
 register = template.Library()
 
@@ -41,3 +44,26 @@ def scale(value, params):
         return (float(value) - omin) / (omax - omin) * (nmax - nmin) + nmin
     except:
         return ''
+
+
+class OwnedTagsForObjectNode(template.Node):
+    def __init__(self, object, user, var_name):
+        self.object = object
+        self.user = user
+        self.var_name = var_name
+    def render(self, context):
+        ownedwrapper = OwnedWrapper.objects.get_for_object(self.user.resolve(context), self.object.resolve(context))
+        context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
+        return ''
+    
+@register.tag
+def owned_tags_for_object(parser, token):
+    try:
+        tag_name, arg = token.contents.split(None, 1)
+    except ValueError:
+        raise template.TemplateSyntaxError, "%r tag requires arguments" % token.contents.split()[0]
+    m = re.search(r'(.*?) for (.*?) as (\w+)', arg)
+    if not m:
+        raise template.TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
+    object, user, var_name = m.groups()
+    return OwnedTagsForObjectNode(Variable(object), Variable(user), var_name)
