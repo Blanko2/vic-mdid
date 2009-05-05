@@ -13,8 +13,8 @@ class Presentation(models.Model):
     name = models.SlugField(max_length=50, unique=True)
     owner = models.ForeignKey(User)
     hidden = models.BooleanField(default=False)
-    description = models.TextField(blank=True)
-    password = models.CharField(max_length=32, blank=True)
+    description = models.TextField(blank=True, null=True)
+    password = models.CharField(max_length=32, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     ownedwrapper = generic.GenericRelation('util.OwnedWrapper')
@@ -49,6 +49,9 @@ class PresentationItem(models.Model):
     hidden = models.BooleanField(default=False)
     type = models.CharField(max_length=16, blank=True)
     order = models.SmallIntegerField()
+    
+    class Meta:
+        ordering = ['order']
 
 
 class PresentationItemInfo(models.Model):

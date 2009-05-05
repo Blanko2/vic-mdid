@@ -242,7 +242,7 @@ class Command(BaseCommand):
             if standard_fields.has_key(dc):
                 fields[row.ID] = standard_fields[dc]
             else:
-                fields[row.ID] = Field.objects.create(label=row.Name, type='T')            
+                fields[row.ID] = Field.objects.create(label=row.Name)            
             FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
                                          field=fields[row.ID],
                                          order=fieldsets[row.CollectionID].fields.count() + 1,

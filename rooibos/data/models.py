@@ -19,7 +19,7 @@ class Collection(models.Model):
     owner = models.ForeignKey(User, null=True, blank=True)
     hidden = models.BooleanField(default=False)
     description = models.TextField(blank=True)
-    agreement = models.TextField(blank=True)
+    agreement = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=32, blank=True)
     
     def save(self, **kwargs):
