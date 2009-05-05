@@ -7,7 +7,8 @@
     {% pagehelp 'facet_search' %}
 {% endblock %}
 
-{% block extrajavascript %}
+{% block javascript %}
+{{ block.super }}
 <script type="text/javascript">
     function selectAllOnPage() {
         ids = Array();

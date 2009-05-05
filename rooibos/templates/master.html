@@ -12,16 +12,12 @@
     <link href="/static/css/master-ie.css" rel="stylesheet" type="text/css" media="screen">
 <![endif]-->
 {% endblock %}
-{% block extrastylesheets %}
-{% endblock %}
-{% block jquery %}
+{% block javascript %}
     <script type="text/javascript" src="/static/jquery/jquery-1.2.6.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery-ui-personalized-1.5.2.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.hoverIntent.minified.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.ajaxQueue.js"></script>
-{% endblock %}
-{% block javascript %}
     <script type="text/javascript" src="/static/scripts/selected-records.js"></script>
     <script type="text/javascript" src="/static/scripts/related-images-bar.js"></script>
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->        
@@ -43,8 +39,6 @@
             updateSelectedRecords();
         });
     </script>
-{% endblock %}
-{% block extrajavascript %}
 {% endblock %}
 </head>
 

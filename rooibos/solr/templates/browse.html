@@ -4,7 +4,8 @@
 {% load humanize %}
 {% load pagination_tags %}
 
-{% block extrajavascript %}
+{% block javascript %}
+{{ block.super }}
 <script type="text/javascript">
 $(document).ready(function() {
     enableRelatedImages("Hover over a browsable term to see selected matching images");

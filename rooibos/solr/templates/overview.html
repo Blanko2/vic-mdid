@@ -3,7 +3,8 @@
 {% load help %}
 {% load humanize %}
 
-{% block extrajavascript %}
+{% block javascript %}
+{{ block.super }}
 <script type="text/javascript">
 $(document).ready(function() {
     enableRelatedImages("Hover over a collection to see selected matching images");    
