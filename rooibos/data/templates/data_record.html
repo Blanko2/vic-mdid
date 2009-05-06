@@ -25,6 +25,29 @@ $(document).ready(function() {
     <img src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ record.title }}" />
 </div>
 
+<div class="sidebar-item">
+{% if request.user.is_authenticated %}
+    <h2>Your Tags</h2>
+    {% owned_tags_for_object record for request.user as tags %}
+    {% for tag in tags %}
+        {% tag tag record "True" %}
+    {% empty %}
+    Not tagged yet.
+    {% endfor %}    
+    
+    {% add_tags_form record %}   
+    
+{% endif %}
+
+    <h2>All Tags</h2>
+    {% owned_tags_for_object record except request.user as tags %}
+    {% for tag in tags %}
+        {% tag tag record %}
+    {% empty %}
+    Not tagged yet.
+    {% endfor %}    
+</div>
+
 {% if record.parent %}
 <div class="sidebar-item">
     <h2>Parent record</h2>
@@ -46,7 +69,7 @@ $(document).ready(function() {
 {% endif %}
 
 {% if media %}
-<div>
+<div class="sidebar-item">
     <h2>Media</h2>
     <ul>
     {% for m in media %}

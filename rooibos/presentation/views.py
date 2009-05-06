@@ -55,7 +55,7 @@ def manage(request):
                 else:
                     for tag in parse_tag_input(form.cleaned_data['tags']):
                         Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                            tag)
+                                            '"%s"' % tag)
             return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
     else:
         form = ManagePresentationsForm()

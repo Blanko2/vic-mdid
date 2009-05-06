@@ -389,6 +389,20 @@ div.metadata-subitem div.label {
     font-family: sans-serif;
     -moz-border-radius: 3px;
     padding: 2px 4px 2px 5px;
+    white-space: nowrap;
+    line-height: 1.8em;
+}
+
+.tag2 {
+    font-size: 0.9em;
+}
+
+.tag3 {
+    font-size: 1.1em;
+}
+
+.tag4 {
+    font-size: 1.3em;
 }
 
 .removetag {

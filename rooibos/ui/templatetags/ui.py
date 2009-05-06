@@ -3,6 +3,7 @@ from django import template
 from django.utils.html import escape
 from django.template.loader import get_template
 from django.template import Context, Variable
+from django.contrib.contenttypes.models import ContentType
 from rooibos.contrib.tagging.models import Tag
 from rooibos.storage import get_thumbnail_for_record
 from rooibos.data.models import Record
@@ -47,13 +48,22 @@ def scale(value, params):
 
 
 class OwnedTagsForObjectNode(template.Node):
-    def __init__(self, object, user, var_name):
+    def __init__(self, object, user, var_name, include=True):
         self.object = object
         self.user = user
         self.var_name = var_name
+        self.include = include
     def render(self, context):
-        ownedwrapper = OwnedWrapper.objects.get_for_object(self.user.resolve(context), self.object.resolve(context))
-        context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
+        object = self.object.resolve(context)
+        user = self.user.resolve(context)
+        if self.include:
+            ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
+            context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
+        else:
+            qs = OwnedWrapper.objects.filter(object_id=object.id, type=ContentType.objects.get_for_model(object.__class__)) 
+            if not user.is_anonymous():
+                qs = qs.exclude(user=user)                
+            context[self.var_name] = Tag.objects.cloud_for_queryset(qs)
         return ''
     
 @register.tag
@@ -62,8 +72,26 @@ def owned_tags_for_object(parser, token):
         tag_name, arg = token.contents.split(None, 1)
     except ValueError:
         raise template.TemplateSyntaxError, "%r tag requires arguments" % token.contents.split()[0]
-    m = re.search(r'(.*?) for (.*?) as (\w+)', arg)
+    m = re.search(r'(.*?) (for|except) (.*?) as (\w+)', arg)
     if not m:
         raise template.TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
-    object, user, var_name = m.groups()
-    return OwnedTagsForObjectNode(Variable(object), Variable(user), var_name)
+    object, rule, user, var_name = m.groups()
+    return OwnedTagsForObjectNode(Variable(object), Variable(user), var_name, rule == 'for')
+
+
+@register.inclusion_tag('ui_tagging_form.html', takes_context=True)
+def add_tags_form(context, object):
+    return {'object_id': object.id,
+            'object_type': ContentType.objects.get_for_model(object.__class__).id,
+            'request': context['request'],
+            }
+
+
+@register.inclusion_tag('ui_tag.html', takes_context=True)
+def tag(context, tag, object=None, removable=False):
+    return {'object_id': object and object.id or None,
+            'object_type': object and ContentType.objects.get_for_model(object.__class__).id or None,
+            'tag': tag,
+            'removable': removable,
+            'request': context['request'],
+            }

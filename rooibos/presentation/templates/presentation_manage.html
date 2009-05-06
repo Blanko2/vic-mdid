@@ -47,7 +47,7 @@
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td><a href="{% url presentation-edit presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
         <td>{% for ptag in  ptags %}
-                <span class="tag">{{ ptag.name }} <a class="removetag" href="">X</a></span>
+                {% tag ptag presentation "True" %}                
             {% endfor %}
         </td>
         <td>{{ presentation.item_count }}</td>
