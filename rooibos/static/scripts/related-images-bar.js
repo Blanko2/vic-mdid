@@ -1,7 +1,5 @@
 var relatedImagesEnabled = false;
 
-var temp;
-
 function showRelatedImages(querystring, element) {
     if (relatedImagesEnabled) {
         $.ajax({
