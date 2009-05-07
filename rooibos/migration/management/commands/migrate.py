@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 from django.db import connection, reset_queries
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from xml.dom import minidom
 import os
 import pyodbc
@@ -284,6 +285,16 @@ class Command(BaseCommand):
             if options.get('max_records') and count >= options['max_records']:
                 break
         pb.done()
+        
+        # Migrate favorite images
+        
+        print "Migrating favorite images"
+        image_type = ContentType.objects.get_for_model(Record)
+        for row in cursor.execute("SELECT UserID,ImageID FROM FavoriteImages"):
+            if images.has_key(row.ImageID) and users.has_key(row.UserID):
+                Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(
+                                user=users[row.UserID], object_id=images[row.ImageID], type=image_type),
+                                'favorite')
 
         # Migrate field values
         
