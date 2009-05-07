@@ -4,8 +4,11 @@ from threading import Thread
 from django.conf import settings
 from django.db.models import Q
 from django.db import reset_queries
+from django.contrib.contenttypes.models import ContentType
 from rooibos.data.models import Record, Collection, Field, FieldValue, CollectionItem
 from rooibos.storage.models import Media
+from rooibos.util.models import OwnedWrapper
+from rooibos.contrib.tagging.models import Tag, TaggedItem
 from pysolr import Solr
 from rooibos.util.progressbar import ProgressBar
 
@@ -15,6 +18,7 @@ class SolrIndex():
     
     def __init__(self):
         self._clean_string_re = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f]')
+        self._record_type = int(ContentType.objects.get_for_model(Record).id)
     
     def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0, fields=None):
         if not fields:
@@ -102,6 +106,11 @@ class SolrIndex():
         for m in media:
             doc.setdefault('mimetype', []).append('s%s-%s' % (m.storage_id, m.mimetype))
             doc.setdefault('resolution', []).append('s%s-%s' % (m.storage_id, self._determine_resolution_label(m.width, m.height)))
+        # Index tags
+        for ownedwrapper in OwnedWrapper.objects.select_related('user').filter(type=self._record_type, object_id=record.id):
+            for tag in ownedwrapper.taggeditem.select_related('tag').all().values_list('tag__name', flat=True):
+                doc.setdefault('tag', []).append(tag)
+                doc.setdefault('ownedtag', []).append('%s-%s' % (ownedwrapper.user.id, tag))
         return doc    
     
     def _clean_string(self, s):
