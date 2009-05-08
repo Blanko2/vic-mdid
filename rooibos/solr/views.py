@@ -179,7 +179,7 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
  
-    search_facets = [SearchFacet(field.name + '_t', field.label) for field in fields]
+    search_facets = [SearchFacet('tag', 'Tags')] + [SearchFacet(field.name + '_t', field.label) for field in fields]
     search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
     search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
     search_facets.append(CollectionSearchFacet('collections', 'Collection'))
