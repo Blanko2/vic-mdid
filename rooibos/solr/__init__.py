@@ -57,21 +57,23 @@ class SolrIndex():
             if not records:
                 break
             media_dict = self._preload_related(Media, records)
-            fieldvalue_dict = self._preload_related(FieldValue, records, related=1)
+            fieldvalue_dict = self._preload_related(FieldValue, records, related=2)
             groups_dict = self._preload_related(CollectionItem, records)
             count += len(records)
             
-            def process_data():
-                docs = []
-                for record in records:
-                    docs += [self._record_to_solr(record, required_fields, groups_dict.get(record.id, []),
-                                                  fieldvalue_dict.get(record.id, []), media_dict.get(record.id, []))]
-                    #RecordInfo.objects.create(record=record, last_index=datetime.now())
-                conn.add(docs)
+            def process_data(groups, fieldvalues, media):
+                def process():
+                    docs = []
+                    for record in records:
+                        docs += [self._record_to_solr(record, required_fields, groups.get(record.id, []),
+                                                      fieldvalues.get(record.id, []), media.get(record.id, []))]
+                        #RecordInfo.objects.create(record=record, last_index=datetime.now())
+                    conn.add(docs)                
+                return process
                 
             if process_thread:
                 process_thread.join()
-            process_thread = Thread(target=process_data)
+            process_thread = Thread(target=process_data(groups_dict, fieldvalue_dict, media_dict))
             process_thread.start()
             reset_queries()
 
@@ -95,7 +97,7 @@ class SolrIndex():
             # For indexing
             doc.setdefault(v.field.name + '_t', []).append(clean_value)
             # For exact retrieval through browsing
-            doc.setdefault(v.field.name + '_s', []).append(clean_value)
+            doc.setdefault(v.field.full_name + '_s', []).append(clean_value)
         for f in required_fields:
             doc[f + '_t'] = SOLR_EMPTY_FIELD_VALUE
         parents = map(lambda gm: gm.collection_id, groups)

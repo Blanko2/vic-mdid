@@ -77,7 +77,11 @@ class ExactValueSearchFacet(SearchFacet):
     _special = re.compile(r'(\+|-|&&|\|\||!|\(|\)|\{|}|\[|\]|\^|"|~|\*|\?|:|\\)')
     
     def __init__(self, name):
-        field = Field.objects.get(name=name[:-2])
+        prefix, name = ([None] + name[:-2].split('.'))[-2:]
+        if prefix:
+            field = Field.objects.get(standard__prefix=prefix, name=name)
+        else:
+            field = Field.objects.get(standard=None, name=name)
         super(ExactValueSearchFacet, self).__init__(name, field.label)
     
     def process_criteria(self, criteria, *args, **kwargs):
@@ -324,7 +328,7 @@ def browse(request, id=None, name=None):
     else:
         field = fields[0]
         
-    values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value', distinct=True)).order_by('value')
+    values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value', distinct=False)).order_by('value')
     
     if request.GET.has_key('s'):
         start = values.filter(value__lt=request.GET['s']).count() / 50 + 1

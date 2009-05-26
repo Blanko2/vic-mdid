@@ -188,7 +188,7 @@ class Field(models.Model):
     @property
     def full_name(self):
         if self.standard:
-            return "%s:%s" % (self.standard.prefix, self.name)
+            return "%s.%s" % (self.standard.prefix, self.name)
         else:
             return self.name
 
