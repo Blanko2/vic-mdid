@@ -49,7 +49,7 @@ def add_tags(request, type, id):
     if request.method <> 'POST':
         return HttpResponseNotAllowed(['POST'])
     tags = parse_tag_input(request.POST.get('tags'))
-    ownedwrapper = OwnedWrapper.objects.get_for_object(user=request.user, type=type, object_id=id)
+    ownedwrapper = OwnedWrapper.objects.get_for_object(user=request.user, content_type=type, object_id=id)
     for tag in tags:
         Tag.objects.add_tag(ownedwrapper, '"%s"' % tag)
     return HttpResponseRedirect(request.GET.get('next') or '/')
@@ -59,7 +59,7 @@ def add_tags(request, type, id):
 def remove_tag(request, type, id):
     tag = request.GET.get('tag')
     if request.method == 'POST':
-        ownedwrapper = OwnedWrapper.objects.get_for_object(user=request.user, type=type, object_id=id)
+        ownedwrapper = OwnedWrapper.objects.get_for_object(user=request.user, content_type=type, object_id=id)
         Tag.objects.update_tags(ownedwrapper,  ' '.join(map(lambda s: '"%s"' % s,
             Tag.objects.get_for_object(ownedwrapper).exclude(name=tag).values_list('name'))))
         if request.is_ajax():

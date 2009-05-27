@@ -24,7 +24,7 @@ def manage(request):
     querystring = request.GET.urlencode()
     
     existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
-                    filters=dict(user=request.user, type=OwnedWrapper.t(Presentation)))
+                    filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
 
     class ManagePresentationsForm(forms.Form):
        tags = SplitTaggingField(label='Tags',
@@ -44,6 +44,9 @@ def manage(request):
                 presentation.hidden = hide
                 presentation.save()
             return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
+            
+        if request.POST.get('delete'):
+            Presentation.objects.filter(owner=request.user, id__in=ids).delete()
         
         form = ManagePresentationsForm(request.POST)
         if form.is_valid():
@@ -61,7 +64,7 @@ def manage(request):
         form = ManagePresentationsForm()
 
     if tags:
-        qs = OwnedWrapper.objects.filter(user=request.user, type=OwnedWrapper.t(Presentation))
+        qs = OwnedWrapper.objects.filter(user=request.user, content_type=OwnedWrapper.t(Presentation))
         ids = list(TaggedItem.objects.get_by_model(qs, tags).values_list('object_id', flat=True))
         presentations = Presentation.objects.annotate(item_count=Count('items')).filter(owner=request.user, id__in=ids).order_by('title')
     else:
@@ -70,7 +73,7 @@ def manage(request):
     tag_filter = " and ".join(tags)
         
     tags = Tag.objects.cloud_for_model(OwnedWrapper, steps=5,
-                        filters=dict(user=request.user, type=OwnedWrapper.t(Presentation)))
+                        filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
         
     return render_to_response('presentation_manage.html',
                           {'tags': tags,
@@ -88,7 +91,7 @@ def manage(request):
 def create(request):
 
     existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
-                        filters=dict(user=request.user, type=OwnedWrapper.t(Presentation)))
+                        filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
 
     selected = request.session.get('selected_records', ())
     next = request.GET.get('next', '') or reverse('presentation-manage')
@@ -128,7 +131,7 @@ def edit(request, id, name):
     presentation = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
     existing_tags = [t.name for t in Tag.objects.usage_for_model(
-        OwnedWrapper, filters=dict(user=request.user, type=OwnedWrapper.t(Presentation)))]
+        OwnedWrapper, filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))]
     tags = Tag.objects.get_for_object(
         OwnedWrapper.objects.get_for_object(user=request.user, object=presentation))
         

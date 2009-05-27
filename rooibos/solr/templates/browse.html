@@ -26,7 +26,7 @@ $(document).ready(function() {
 
 <div id="browse-forms">
 <form method="GET" action=".">
-    Collection:
+    <label for="c">Collection:</label>
     <select name="c">
         {% for collection in collections %}
         <option value="{{ collection.name }}"{% ifequal selected_collection.id collection.id %} selected="selected"{% endifequal %}>{{ collection.title }}</option>
@@ -36,7 +36,7 @@ $(document).ready(function() {
 </form>
 
 <form method="GET" action=".">
-    Fields:
+    <label for="f">Fields:</label>
     <select name="f">
         {% for field in fields %}
         <option value="{{ field.name }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
@@ -46,6 +46,7 @@ $(document).ready(function() {
 </form>
 </div>
 
+Jump to:
 {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
 <a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.name }}&amp;s={{ letter }}">{{ letter }}</a>
 {% endfor %}

@@ -239,7 +239,7 @@ class Command(BaseCommand):
         
         for row in cursor.execute("SELECT ID,CollectionID,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
                                   FROM FieldDefinitions ORDER BY DisplayOrder"):
-            dc = ('dc:%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
+            dc = ('dc.%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
             if standard_fields.has_key(dc):
                 fields[row.ID] = standard_fields[dc]
             else:

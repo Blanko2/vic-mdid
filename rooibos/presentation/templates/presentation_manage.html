@@ -4,6 +4,17 @@
 {% load pagination_tags %}
 {% load viewers %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+        $(document).ready(function() {
+            $("#delete").click(function() {
+                return confirm("Are you sure you want to delete the selected presentations?");
+            });
+        });
+</script>
+{% endblock %}
+
 {% block content %}
 
 {% autopaginate presentations 25 %}
@@ -29,8 +40,9 @@
 
 {% paginate %}
 
+{% if presentations %}
 <form action="{% url presentation-manage %}?{{ querystring }}" method="POST" class="vertical">
-<table summary="List of Presentations">
+<table summary="List of Presentations" class="list">
     <tr>
         <th></th>
         <th>Title</th>
@@ -46,7 +58,7 @@
     <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td><a href="{% url presentation-edit presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
-        <td>{% for ptag in  ptags %}
+        <td>{% for ptag in ptags %}
                 {% tag ptag presentation "True" %}                
             {% endfor %}
         </td>
@@ -56,19 +68,13 @@
         <td>{{ presentation.modified|naturalday:"M j, Y" }}</td>
         <td>{% list_viewers presentation %}</td>
     </tr>
-{% empty %}
-    <tr>
-        <td colspan="7">
-            No presentations available.
-            <a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a>
-        </td>
-    </tr>
 {% endfor %}
 </table>
 
 <label>With selected</label>
 <input type="submit" name="hide" value="Hide" />
 <input type="submit" name="unhide" value="Show" />
+<input type="submit" id="delete" name="delete" value="Delete" />
 
 {{ form.tags.label_tag }}
 {{ form.tags }}
@@ -82,8 +88,11 @@
     <input type="submit" value="Update" />
 </div>
 
-</form>    
-    
+</form>
+
+{% else %}
+No presentations available.
+{% endif %}
 
 
 {% endblock %}

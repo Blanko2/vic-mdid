@@ -109,7 +109,7 @@ class SolrIndex():
             doc.setdefault('mimetype', []).append('s%s-%s' % (m.storage_id, m.mimetype))
             doc.setdefault('resolution', []).append('s%s-%s' % (m.storage_id, self._determine_resolution_label(m.width, m.height)))
         # Index tags
-        for ownedwrapper in OwnedWrapper.objects.select_related('user').filter(type=self._record_type, object_id=record.id):
+        for ownedwrapper in OwnedWrapper.objects.select_related('user').filter(content_type=self._record_type, object_id=record.id):
             for tag in ownedwrapper.taggeditem.select_related('tag').all().values_list('tag__name', flat=True):
                 doc.setdefault('tag', []).append(tag)
                 doc.setdefault('ownedtag', []).append('%s-%s' % (ownedwrapper.user.id, tag))

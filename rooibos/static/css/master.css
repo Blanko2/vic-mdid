@@ -21,6 +21,10 @@
     text-decoration: none;
 }
 
+#content {
+    margin: 10px;
+}
+
 #menu {
     display: block;
     float: right;
@@ -92,7 +96,7 @@
 }
 
 #footer {
-    margin-top: 10px;
+    margin-top: 60px;
     padding: 4px;
     border-top: solid thin lightgrey;
     font-size: smaller;
@@ -421,7 +425,20 @@ table {
     border-collapse: collapse;
 }
 
-td {
+table.list {
+    margin: 10px 0 10px 0;
+}
+
+table.list th {
+    background-color: #F0F0F0;
+    text-align: left;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright: 5px;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+
+td, th {
     padding: 4px;
 }
 

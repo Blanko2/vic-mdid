@@ -60,7 +60,7 @@ class OwnedTagsForObjectNode(template.Node):
             ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
             context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
         else:
-            qs = OwnedWrapper.objects.filter(object_id=object.id, type=ContentType.objects.get_for_model(object.__class__)) 
+            qs = OwnedWrapper.objects.filter(object_id=object.id, content_type=OwnedWrapper.t(object.__class__)) 
             if not user.is_anonymous():
                 qs = qs.exclude(user=user)                
             context[self.var_name] = Tag.objects.cloud_for_queryset(qs)
