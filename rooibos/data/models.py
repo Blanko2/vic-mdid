@@ -217,7 +217,7 @@ class FieldSet(models.Model):
     standard = models.BooleanField(default=False)
     
     def save(self, **kwargs):
-        unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
+        unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(FieldSet, self).save(kwargs)
         
     def __unicode__(self):
