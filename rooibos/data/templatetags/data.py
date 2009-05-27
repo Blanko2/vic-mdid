@@ -15,9 +15,9 @@ class MetaDataNode(template.Node):
     def render(self, context):
         record = self.record.resolve(context)
         fieldvalues = list(record.get_fieldvalues(owner=context['request'].user,
-                                                  fieldset=self.fieldset.resolve(context)))
-        
-        fieldvalues[0]._subitem = False
+                                                  fieldset=self.fieldset.resolve(context)))        
+        if fieldvalues:
+            fieldvalues[0]._subitem = False
         for i in range(1, len(fieldvalues)):
             fieldvalues[i]._subitem = (fieldvalues[i].field == fieldvalues[i - 1].field and
                                       fieldvalues[i].group == fieldvalues[i - 1].group)
