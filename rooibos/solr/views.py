@@ -200,7 +200,7 @@ def search(request, id=None, name=None, selected=False, json=False):
         return_facets = search_facets.keys()
     
     (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=return_facets, facet_mincount=1, facet_limit=50)
+                                       facets=return_facets, facet_mincount=1, facet_limit=100)
 
     if json:
         return render_to_string('results_bare_' + templates.get(viewmode, 'icons') + '.html',
@@ -216,7 +216,7 @@ def search(request, id=None, name=None, selected=False, json=False):
         (f, v) = orquery.split(':', 1)
         orfacets = s.search(_generate_query(search_facets, request.user, collection, criteria, keywords, selected,
                                             remove, orquery),
-                            rows=0, facets=[f], facet_mincount=1, facet_limit=50)[2]
+                            rows=0, facets=[f], facet_mincount=1, facet_limit=100)[2]
         orfacet = copy.copy(search_facets[f])
         orfacet.label = '%s in %s or...' % (v.replace("|", " or "), orfacet.label)
         orfacet.set_result(orfacets[f])

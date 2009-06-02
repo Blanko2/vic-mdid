@@ -17,6 +17,23 @@
     }
     $(document).ready(function() {
         $("#submit_record_selections").replaceWith($("<input type='button' value='Select all on page'>").click(selectAllOnPage));
+        
+        $(".facet-body").each(function(i, facet) {
+            function sortByFreq(a, b) {
+                var fa = $(".facet-freq", a).text().replace(/,/, "");
+                var fb = $(".facet-freq", b).text().replace(/,/, "");
+                fa = fa ? parseInt(fa) : 0;
+                fb = fb ? parseInt(fb) : 0;
+                return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
+            }            
+            var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);            
+            if (terms.length)
+            {
+                $(terms).hide();
+                $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
+            }            
+        });
+        
     });
 </script>    
 {% endblock %}    
@@ -28,9 +45,9 @@
 <div class="horizontal-block">
 Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 {% if pages %}
-    Page {{ page|intcomma  }} of {{ pages|intcomma  }}.
-    {% if prev_page %}<a href="{{ prev_page}}">Previous</a>{% endif %}
-    {% if next_page %}<a href="{{ next_page}}">Next</a>{% endif %}
+    Page {{ page|intcomma }} of {{ pages|intcomma }}.
+    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
+    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
 {% endif %}
 <a href="{{ reset_url }}">Reset</a>
 {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
@@ -56,8 +73,11 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ orfacet.label }}</div>
         <div class="facet-body">
         {% for term,freq,label in orfacet.facets %}
+            <div class="facet-line">
             <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
+            </div>
         {% endfor %}
+        <a class="facet-more" style="display: none;" href="#{{ orfacet.name|urlencode }}">more...</a>
         </div>
     </div>
 {% endif %}
@@ -68,9 +88,12 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq,label in facet.facets %}
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}&nbsp;(<a
+            <div class="facet-line">            
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
                href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}">&times;</a>)
+            </div>
         {% endfor %}
+        <a class="facet-more" style="display: none;" href="#{{ facet.name|urlencode }}">more...</a>
         </div>
     </div>
 {% endif %}    
