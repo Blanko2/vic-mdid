@@ -17,7 +17,7 @@ class Command(BaseCommand):
                     s.index(verbose=True)
                 elif command == 'reindex':
                     s.clear()
-                    s.index(verbose=True)
+                    s.index(verbose=True, all=True)
                 elif command == 'clear':
                     s.clear()
                 else:

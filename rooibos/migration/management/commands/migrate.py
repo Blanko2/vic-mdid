@@ -12,7 +12,6 @@ from urlparse import urlparse
 from datetime import datetime
 from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
 from rooibos.storage.models import Storage, Media
-from rooibos.solr.models import DisableSolrUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 from rooibos.util.progressbar import ProgressBar
@@ -102,8 +101,6 @@ class Command(BaseCommand):
         
         print "Migrating from version %s" % version
 
-        DisableSolrUpdates()        
-   
         # Migrate users
         users = {}
         if not options.get('skip_users'):

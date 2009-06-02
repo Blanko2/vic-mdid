@@ -33,27 +33,46 @@ class SolrIndex():
         return (result.hits, filter(None, map(lambda i: records.get(i), ids)), result.facets)
         
     def clear(self):
-        from models import RecordInfo
-        RecordInfo.objects.all().delete()
+        from models import SolrIndexUpdates
+        SolrIndexUpdates.objects.filter(delete=True).delete()
         conn = Solr(settings.SOLR_URL)
-        conn.delete(q='*:*')    
+        conn.delete(q='*:*')        
         
     def optimize(self):
         conn = Solr(settings.SOLR_URL)
         conn.optimize()
     
-    def index(self, verbose=False):
-        from models import RecordInfo
+    def index(self, verbose=False, all=False):
+        from models import SolrIndexUpdates
         self._build_group_tree()
         conn = Solr(settings.SOLR_URL)
         required_fields = Field.objects.filter(standard__prefix='dc').values_list('name', flat=True)
         count = 0
-        batch_size = 1000
+        batch_size = 500
         process_thread = None
-        if verbose: pb = ProgressBar(Record.objects.count())
+        if all:
+            total_count = Record.objects.count()            
+        else:
+            processed_updates = []
+            to_update = []
+            to_delete = []
+            for id,record,delete in SolrIndexUpdates.objects.all()[:batch_size].values_list('id', 'record', 'delete'):
+                processed_updates.append(id)
+                if delete:
+                    to_delete.append(record)
+                else:
+                    to_update.append(record)
+            if to_delete:
+                conn.delete(q='id:(%s)' % ' '.join(map(str, to_delete)))
+            total_count = len(to_update)
+                
+        if verbose: pb = ProgressBar(total_count)
         while True:
             if verbose: pb.update(count)
-            records = Record.objects.filter(recordinfo=None)[count:count + batch_size]
+            if all:
+                records = Record.objects.all()[count:count + batch_size]
+            else:
+                records = Record.objects.filter(id__in=to_update)[count:count + batch_size]
             if not records:
                 break
             media_dict = self._preload_related(Media, records)
@@ -67,7 +86,6 @@ class SolrIndex():
                     for record in records:
                         docs += [self._record_to_solr(record, required_fields, groups.get(record.id, []),
                                                       fieldvalues.get(record.id, []), media.get(record.id, []))]
-                        #RecordInfo.objects.create(record=record, last_index=datetime.now())
                     conn.add(docs)                
                 return process
                 
@@ -80,6 +98,16 @@ class SolrIndex():
         if process_thread:
             process_thread.join()    
         if verbose: pb.done()
+        
+        if all:
+            SolrIndexUpdates.objects.filter(delete=False).delete()
+        else:
+            SolrIndexUpdates.objects.filter(id__in=processed_updates).delete()
+    
+    @staticmethod
+    def mark_for_update(record_id, delete=False):
+        from models import mark_for_update
+        mark_for_update(record_id, delete)
     
     def _preload_related(self, model, records, filter=Q(), related=0):
         dict = {}
