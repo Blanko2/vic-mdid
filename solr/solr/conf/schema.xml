@@ -146,6 +146,17 @@
       </analyzer>
     </fieldType>
 
+   <fieldType name="textFacet" class="solr.TextField" positionIncrementGap="100" >
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.PatternReplaceFilterFactory" pattern="(^[0-9-]+$)" replacement="" replace="all" /> 
+        <filter class="solr.LengthFilterFactory" min="2" max="100" />
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
     <!-- This is an example of using the KeywordTokenizer along
          With various TokenFilterFactories to produce a sortable field
          that does not include some properties of the source text
@@ -258,7 +269,7 @@
    <dynamicField name="*_i"  type="sint"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_l"  type="slong"   indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_t"  type="textSpell" indexed="true"  stored="false" multiValued="true"/>
+   <dynamicField name="*_t"  type="textFacet" indexed="true"  stored="false" multiValued="true"/>
    <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_f"  type="sfloat"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_d"  type="sdouble" indexed="true"  stored="true" multiValued="true"/>

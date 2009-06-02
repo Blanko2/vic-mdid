@@ -178,8 +178,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     
     available_storage = accessible_ids_list(request.user, Storage)
     
-# TODO: let user configure
-    exclude_facets = ['date', 'identifier', 'relation', 'source']
+    exclude_facets = ['identifier']
 
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
  

@@ -144,7 +144,7 @@
 
 .facets {
     float: right;
-    width: 20%;
+    width: 12em;
 }
 
 .facet {
@@ -162,6 +162,8 @@
 .facet-body {
     font-size: smaller;
     padding: 2px;
+    max-height: 400px;
+    overflow: auto;
 }
 
 .facet-body a {

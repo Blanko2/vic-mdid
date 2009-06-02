@@ -46,7 +46,7 @@ class SolrIndex():
         from models import SolrIndexUpdates
         self._build_group_tree()
         conn = Solr(settings.SOLR_URL)
-        required_fields = Field.objects.filter(standard__prefix='dc').values_list('name', flat=True)
+        core_fields = dict((f, f.get_equivalent_fields()) for f in Field.objects.filter(standard__prefix='dc'))
         count = 0
         batch_size = 500
         process_thread = None
@@ -84,7 +84,7 @@ class SolrIndex():
                 def process():
                     docs = []
                     for record in records:
-                        docs += [self._record_to_solr(record, required_fields, groups.get(record.id, []),
+                        docs += [self._record_to_solr(record, core_fields, groups.get(record.id, []),
                                                       fieldvalues.get(record.id, []), media.get(record.id, []))]
                     conn.add(docs)                
                 return process
@@ -116,14 +116,19 @@ class SolrIndex():
             dict.setdefault(x.record_id, []).append(x)
         return dict
     
-    def _record_to_solr(self, record, required_fields, groups, fieldvalues, media):
-        required_fields = dict((f,None) for f in required_fields)
-        doc = { 'id': str(record.id) }
+    def _record_to_solr(self, record, core_fields, groups, fieldvalues, media):
+        required_fields = dict((f.name, None) for f in core_fields.keys())
+        doc = { 'id': str(record.id) }        
         for v in fieldvalues:
-            required_fields.pop(v.field.name, None)
             clean_value = self._clean_string(v.value)
-            # For indexing
-            doc.setdefault(v.field.name + '_t', []).append(clean_value)
+            # Store Dublin Core or equivalent field for use with facets
+            for cf, cfe in core_fields.iteritems():
+                if v.field == cf or v.field in cfe:
+                    doc.setdefault(cf.name + '_t', []).append(clean_value)
+                    required_fields.pop(cf.name, None)
+                    break
+            else:
+                doc.setdefault(v.field.name + '_t', []).append(clean_value)
             # For exact retrieval through browsing
             doc.setdefault(v.field.full_name + '_s', []).append(clean_value)
         for f in required_fields:
