@@ -19,7 +19,7 @@ class ProgressBar:
         
     def update(self, current, force=False):
         now = time.time()
-        if not force and now - self.lastupdate <= self.mindelay:
+        if (not force and now - self.lastupdate <= self.mindelay) or self.total == 0:
             return
         self.lastupdate = now
         remainingtime = ''
