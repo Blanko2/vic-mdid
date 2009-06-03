@@ -13,6 +13,7 @@ from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
 import copy
+import random
 
 
 class SearchFacet(object):
@@ -163,7 +164,8 @@ def search(request, id=None, name=None, selected=False, json=False):
     else:
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
     page = safe_int(request.GET.get('p', '1'), 1)
-    sort = request.GET.get('s', 'score desc')
+    sort = request.GET.get('s', 'score desc').lower()
+    if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
     criteria = request.GET.getlist('c')
     orquery = request.GET.get('or', None)
     remove = request.GET.get('rem', None)
@@ -242,7 +244,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                 hiddenfields.append((f, l))
     qurl = q.urlencode()
     q.setlist('c', filter(lambda c: c != orquery, criteria))
-    qurl_orquery = q.urlencode()
+    qurl_orquery = q.urlencode()    
     limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
     limit_url_orquery = "%s?%s%s" % (url, qurl_orquery, qurl_orquery and '&' or '')
     prev_page_url = None
@@ -255,6 +257,8 @@ def search(request, id=None, name=None, selected=False, json=False):
         q['p'] = page + 1
         next_page_url = "%s?%s" % (url, q.urlencode())
 
+    q.pop('s', None)
+    form_url = "%s?%s" % (url, q.urlencode())
 
     def readable_criteria(c):
         (f, o) = c.split(':', 1)
@@ -275,6 +279,9 @@ def search(request, id=None, name=None, selected=False, json=False):
     # remove facets with only no filter options
     facets = filter(lambda f: len(f.facets) > 0, facets)    
 
+    sort = sort.startswith('random') and 'random' or sort.split()[0]
+    sort = sort.endswith('_sort') and sort[:-5] or sort
+
     return render_to_response('results_' + templates.get(viewmode, 'icons') + '.html',
                               {'criteria': map(readable_criteria, criteria),
                                'query': query,
@@ -287,11 +294,15 @@ def search(request, id=None, name=None, selected=False, json=False):
                                'prev_page': prev_page_url,
                                'next_page': next_page_url,
                                'reset_url': url,
+                               'form_url': form_url,
                                'limit_url': limit_url,
                                'limit_url_orquery': limit_url_orquery,
                                'facets': facets,
                                'orfacet': orfacet,
-                               'orquery': orquery,},
+                               'orquery': orquery,
+                               'sort': sort,
+                               'sortfields': fields,
+                               'random': random.random(),},
                               context_instance=RequestContext(request))
 
 

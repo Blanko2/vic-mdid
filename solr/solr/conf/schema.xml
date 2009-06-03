@@ -269,11 +269,13 @@
    <dynamicField name="*_i"  type="sint"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_l"  type="slong"   indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_t"  type="textFacet" indexed="true"  stored="false" multiValued="true"/>
    <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_f"  type="sfloat"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_d"  type="sdouble" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_dt" type="date"    indexed="true"  stored="true" multiValued="true"/>
+
+   <dynamicField name="*_t"  type="textFacet" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_sort"  type="alphaOnlySort" />
 
    <field name="tag"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <field name="ownedtag"  type="string"  indexed="true"  stored="false" multiValued="true"/>
@@ -304,6 +306,6 @@
   is added to the index.  It's used either to index the same field differently,
   or to add multiple fields to the same field for easier/faster searching.  -->
   <copyField source="*_t" dest="text"/>
-  <copyField source="*_t" dest="spell"/>
+  <!-- <copyField source="*_t" dest="spell"/> -->
 
 </schema>

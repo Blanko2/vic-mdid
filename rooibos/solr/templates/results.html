@@ -34,13 +34,16 @@
             }            
         });
         
+        $("#sort_dropdown").change(function() { $("form").submit(); })
+        $("#sort_go_button").hide();
+        
     });
 </script>    
 {% endblock %}    
     
 {% block raw-content %}
 
-<form method="GET" action="{{ limit_url }}">
+<form method="GET" action="{{ form_url }}">
 
 <div class="horizontal-block">
 Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
@@ -65,6 +68,15 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
   {% if c.2 %}<a href="{{ limit_url }}or={{ c.0|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
   <a href="{{ limit_url }}rem={{ c.0|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>  
 {% endfor %}
+    Sort by:
+    <select name="s" id="sort_dropdown">
+        <option value="score desc"{% ifequal sort "score" %} selected="selected"{% endifequal %}>Score</option>
+        <option value="random_{{ random }}"{% ifequal sort "random" %} selected="selected"{% endifequal %}>Random</option>
+{% for f in sortfields %}
+        <option value="{{ f.name }}_sort"{% ifequal sort f.name %} selected="selected"{% endifequal %}>{{ f.label }}</option>
+{% endfor %}
+    </select>
+    <input type="submit" value="Go" id="sort_go_button" />
 </div>
 
 <div class="facets">
