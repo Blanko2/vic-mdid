@@ -25,13 +25,10 @@ def post_record_save_callback(sender, **kwargs):
     mark_for_update(record_id=kwargs['instance'].id)
 
 
-_record_content_type = ContentType.objects.get_for_model(Record)
-_ownedwrapper_content_type = ContentType.objects.get_for_model(OwnedWrapper)
-
 def post_taggeditem_callback(sender, instance, **kwargs):
-    if instance.content_type == _ownedwrapper_content_type:
+    if instance.content_type == ContentType.objects.get_for_model(OwnedWrapper):
         instance = instance.object
-        if instance.content_type == _record_content_type:
+        if instance.content_type == ContentType.objects.get_for_model(Record):
             mark_for_update(record_id=instance.object_id)
 
     

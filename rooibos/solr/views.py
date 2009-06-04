@@ -158,7 +158,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     
     templates = dict(l='list')
     
-    viewmode = request.GET.get('v', 'i')
+    viewmode = request.GET.get('v', 'thumb')
     if viewmode == 'l':
         pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
     else:
