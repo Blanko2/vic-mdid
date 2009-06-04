@@ -12,18 +12,12 @@ from rooibos.util.models import OwnedWrapper
 register = template.Library()
 
 @register.inclusion_tag('ui_record.html', takes_context=True)
-def record(context, record, selectable=False):
+def record(context, record, selectable=False, viewmode="thumb"):
     return {'record': record,
             'selectable': selectable,
             'selected': record.id in context['request'].session.get('selected_records', ()),
+            'viewmode': viewmode,
             }
-
-@register.inclusion_tag('ui_record_list.html', takes_context=True)
-def record_list(context, record, selectable=False):
-    return {'record': record,
-            'selectable': selectable,
-            'selected': record.id in context['request'].session.get('selected_records', ()),
-            'icon': None or '/static/images/filetypes/none.png'}
 
 @register.inclusion_tag('ui_session_status.html', takes_context=True)
 def session_status(context):

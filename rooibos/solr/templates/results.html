@@ -34,7 +34,7 @@
             }            
         });
         
-        $("#sort_dropdown").change(function() { $("form").submit(); })
+        $("#sort_dropdown, #viewmode_dropdown").change(function() { $("form").submit(); })
         $("#sort_go_button").hide();
         
     });
@@ -68,6 +68,11 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
   {% if c.2 %}<a href="{{ limit_url }}or={{ c.0|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
   <a href="{{ limit_url }}rem={{ c.0|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>  
 {% endfor %}
+    View:
+    <select name="v" id="viewmode_dropdown">
+        <option value="thumb"{% ifequal viewmode "thumb" %} selected="selected"{% endifequal %}>Thumbnails</option>
+        <option value="list"{% ifequal viewmode "list" %} selected="selected"{% endifequal %}>List</option>
+    </select>
     Sort by:
     <select name="s" id="sort_dropdown">
         <option value="score desc"{% ifequal sort "score" %} selected="selected"{% endifequal %}>Score</option>
@@ -113,8 +118,11 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
 
 {% if records %}
-{% block records %}
-{% endblock %}
+<div class="resultlist">
+{% for r in records %}
+    {% record r 'selectable' viewmode %}
+{% endfor %}
+</div>
 {% endif %}
 
 </form>

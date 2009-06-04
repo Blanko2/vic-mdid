@@ -282,7 +282,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     sort = sort.startswith('random') and 'random' or sort.split()[0]
     sort = sort.endswith('_sort') and sort[:-5] or sort
 
-    return render_to_response('results_' + templates.get(viewmode, 'icons') + '.html',
+    return render_to_response('results.html',
                               {'criteria': map(readable_criteria, criteria),
                                'query': query,
                                'keywords': keywords,
@@ -302,7 +302,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                                'orquery': orquery,
                                'sort': sort,
                                'sortfields': fields,
-                               'random': random.random(),},
+                               'random': random.random(),
+                               'viewmode': viewmode,},
                               context_instance=RequestContext(request))
 
 

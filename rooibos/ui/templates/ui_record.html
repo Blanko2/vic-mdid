@@ -1,3 +1,4 @@
+{% ifequal viewmode|default:"thumb" "thumb" %}
 <div class="record">
 <a href="{{ record.get_absolute_url }}"><img class="thumbnail" src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ record.title }}" /></a>
 {% if selectable %}
@@ -7,3 +8,13 @@
 <br />
 {{ record.title }}<br />
 </div>
+{% endifequal %}
+{% ifequal viewmode "list" %}
+<div class="record_list">
+{% if selectable %}
+<input type="checkbox" class="record-select" name="r" value="{{ record.id }}"{% if selected %} checked="checked"{% endif %} />
+{% if selected %}<input type="hidden" name="sr" value="{{ record.id }}" />{% endif %}
+{% endif %}
+<a href="{{ record.get_absolute_url }}"><img src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" />{{ record.title }}</a>
+</div>
+{% endifequal %}
