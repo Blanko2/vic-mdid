@@ -25,14 +25,16 @@ class PowerpointTestCase(unittest.TestCase):
         file = os.path.join(self.tempdir, 'test.pptx')
         collection = Collection.objects.create(title='Simple Collection', description='Simple collection')
         field = Field.objects.get(name='title', standard__prefix='dc')
-        presentation = Presentation.objects.create(title='Simple Presentation', description='This is a PowerPoint presentation created from a template and populated with data.')
+        presentation = Presentation.objects.create(title='Simple Presentation',
+                                                   description='This is a PowerPoint presentation created from a template and populated with data.',
+                                                   owner_id=1)
         for n in range(1, 11):
             record = Record.objects.create()
             FieldValue.objects.create(record=record, field=field, value='Record %s' % n)
             CollectionItem.objects.create(collection=collection, record=record)
             PresentationItem.objects.create(presentation=presentation, record=record, order=n)
             media = Media.objects.create(record=record, storage=self.storage, mimetype='image/jpeg')
-            with open(os.path.join(os.path.dirname(__file__), 'presentations/powerpoint/test_data', '%02d.jpg' % n), 'rb') as f:
+            with open(os.path.join(os.path.dirname(__file__), 'viewers', 'powerpoint', 'test_data', '%02d.jpg' % n), 'rb') as f:
                 media.save_file('%02d.jpg' % n, f)            
         
         g = PowerPointGenerator(presentation)

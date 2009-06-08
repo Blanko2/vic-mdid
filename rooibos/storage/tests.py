@@ -23,11 +23,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
                 os.rmdir(os.path.join(root, name))
         self.record.delete()
         self.storage.delete()
-    
-    def test_retrieve_url(self):                        
-        thumb = Media.objects.create(record=self.record, name='thumb', storage=self.storage)        
-        self.assertEqual('/media/get/monalisa/thumb/', thumb.get_absolute_url())
-    
+        
     def test_save_and_retrieve_file(self):
         media = Media.objects.create(record=self.record, name='image', storage=self.storage)
         content = StringIO('hello world')

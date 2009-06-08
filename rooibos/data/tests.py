@@ -23,14 +23,14 @@ class FieldValueTestCase(unittest.TestCase):
         record = Record.objects.create()
         CollectionItem.objects.create(record=record, collection=self.collection)
         
-        t1 = record.fieldvalue_set.create(field=self.titleField, label='Caption', value='Photograph of Mona Lisa', type='T')
-        t2 = record.fieldvalue_set.create(field=self.titleField, value='Photo Lisa', type='T')                
-        c1 = record.fieldvalue_set.create(field=self.creatorField, label='Photographer', value='John Doe', type='T')
-        c2 = record.fieldvalue_set.create(field=self.creatorField, value='John X. Doe', type='T', context=self.collection)
-        l1 = record.fieldvalue_set.create(field=self.locationField, value='Harrisonburg', type='T', owner=self.user)
+        t1 = record.fieldvalue_set.create(field=self.titleField, label='Caption', value='Photograph of Mona Lisa')
+        t2 = record.fieldvalue_set.create(field=self.titleField, value='Photo Lisa')                
+        c1 = record.fieldvalue_set.create(field=self.creatorField, label='Photographer', value='John Doe')
+        c2 = record.fieldvalue_set.create(field=self.creatorField, value='John X. Doe', context=self.collection)
+        l1 = record.fieldvalue_set.create(field=self.locationField, value='Harrisonburg', owner=self.user)
                 
-        self.assertEqual(True, datetime.now() - record.created < timedelta(0, 60))
-        self.assertEqual(True, datetime.now() - record.modified < timedelta(0, 60))
+        self.assertEqual(True, datetime.now() - record.created < timedelta(0, 120))
+        self.assertEqual(True, datetime.now() - record.modified < timedelta(0, 120))
         
         self.assertEqual("Caption", t1.resolved_label)
         self.assertEqual("Title", t2.resolved_label)
@@ -40,17 +40,6 @@ class FieldValueTestCase(unittest.TestCase):
         self.assertEqual(4, len(record.get_fieldvalues(owner=self.user)))
         self.assertEqual(5, len(record.get_fieldvalues(owner=self.user, context=self.collection)))
         
-        
-    def testFieldValueHide(self):
-        record = Record.objects.create()
-        CollectionItem.objects.create(record=record, collection=self.collection)
-        
-        t1 = record.fieldvalue_set.create(field=self.titleField, value='Original', type='T')
-        t2 = record.fieldvalue_set.create(field=self.titleField, override=t1, hidden=True, owner=self.user)
-       
-        self.assertEqual(1, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True)))
-        self.assertEqual(0, len(record.get_fieldvalues(filter_overridden=True, filter_hidden=True, owner=self.user)))
-
 
 class GroupTestCase(unittest.TestCase):
 
