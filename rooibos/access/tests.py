@@ -2,7 +2,7 @@ import unittest
 from rooibos.data.models import Collection, Record, Field
 from rooibos.storage.models import Storage
 from models import AccessControl
-from . import check_access, get_effective_permissions, filter_by_access
+from . import check_access, get_effective_permissions, filter_by_access, get_effective_permissions_and_restrictions
 from django.contrib.auth.models import User, Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 
@@ -135,4 +135,25 @@ class AccessTestCase(unittest.TestCase):
             self.assertEqual('result', 'this code should not run')
         except ValueError:
             pass
+    
+    def testRestrictions(self):
+        user = User.objects.create(username='test-restr')
+        usergroup1 = Group.objects.create(name='group-restr-1')
+        usergroup2 = Group.objects.create(name='group-restr-2')
+        storage = Storage.objects.create(name='test-restr')
+        user.groups.add(usergroup1)
+        user.groups.add(usergroup2)
         
+        AccessControl.objects.create(usergroup=usergroup1, content_object=storage, read=True,
+                                     restrictions=dict(width=200, height=200))
+        AccessControl.objects.create(usergroup=usergroup2, content_object=storage, read=True,
+                                     restrictions=dict(width=300, height=300))
+
+        (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)        
+        self.assertEqual(200, restrictions.get('width'))
+        
+        AccessControl.objects.create(user=user, content_object=storage, read=True,
+                                     restrictions=dict(width=500, height=500))        
+
+        (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)        
+        self.assertEqual(500, restrictions.get('width'))

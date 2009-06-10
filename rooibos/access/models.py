@@ -12,6 +12,7 @@ class AccessControl(models.Model):
     read = models.NullBooleanField()
     write = models.NullBooleanField()
     manage = models.NullBooleanField()
+    restrictions_repr = models.TextField(blank=True, default='')
 
     class Meta:
         unique_together = ('content_type', 'object_id', 'user', 'usergroup')
@@ -25,7 +26,21 @@ class AccessControl(models.Model):
         def f(flag, char):
             if flag == True: return char
             elif flag == False: return char.upper()
-            else: return ' '
-        return '%s %s%s%s %s' % (self.user or self.usergroup,
+            else: return '-'
+        return '%s [%s%s%s] %s (%s)' % (self.user or self.usergroup or 'AnonymousUser',
                                  f(self.read, 'r'), f(self.write, 'w'), f(self.manage, 'm'),
-                                 self.content_object)
+                                 self.content_object, self.content_type)
+
+    def restrictions_get(self):
+        if self.restrictions_repr:
+            return eval(self.restrictions_repr, {"__builtins__": None}, {})
+        else:
+            return None
+
+    def restrictions_set(self, value):
+        if value:
+            self.restrictions_repr = repr(value)
+        else:
+            self.restrictions_repr = ''
+        
+    restrictions = property(restrictions_get, restrictions_set)

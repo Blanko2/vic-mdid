@@ -3,13 +3,13 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import _get_queryset
 
-def get_effective_permissions(user, model_instance):
+def get_effective_permissions_and_restrictions(user, model_instance):
     from models import AccessControl
     if user.is_superuser:
-        return (True, True, True)
+        return (True, True, True, None)
     owner = getattr(model_instance, 'owner', None)
     if owner and owner == user:
-        return (True, True, True)
+        return (True, True, True, None)
     if user.is_anonymous():
         q = Q(user=None, usergroup=None)
     else:
@@ -22,18 +22,30 @@ def get_effective_permissions(user, model_instance):
             if a == False or (a == True and b == None): return a
             else: return b
         read = write = manage = None
+        restrictions = dict()
         for ac in filter(f, aclist):
             read = combine(ac.read, read)
             write = combine(ac.write, write)
             manage = combine(ac.manage, manage)
-        return (read, write, manage)
+            if ac.restrictions:
+                for k, v in ac.restrictions.iteritems():
+                    if not restrictions.has_key(k) or restrictions[k] > v:
+                        restrictions[k] = v;
+        return (read, write, manage, restrictions)
     
-    (gr, gw, gm) = reduce_by_filter(lambda a: a.usergroup)
-    (ur, uw, um) = reduce_by_filter(lambda a: a.user)
+    (gr, gw, gm, restrictions) = reduce_by_filter(lambda a: a.usergroup)
+    (ur, uw, um, urestrictions) = reduce_by_filter(lambda a: a.user)
+    
+    restrictions.update(urestrictions)
     
     return (ur or (ur == None and gr),
             uw or (uw == None and gw),
-            um or (um == None and gm))
+            um or (um == None and gm),
+            restrictions or None)
+
+
+def get_effective_permissions(user, model_instance):
+    return get_effective_permissions_and_restrictions(user, model_instance)[:3]
 
 
 def check_access(user, model_instance, read=True, write=False, manage=False, fail_if_denied=False):
@@ -85,3 +97,19 @@ def accessible_ids(user, queryset, read=True, write=False, manage=False):
 def accessible_ids_list(user, queryset, read=True, write=False, manage=False):
     queryset = _get_queryset(queryset)
     return filter_by_access(user, queryset, read, write, manage).values_list('id', flat=True)
+
+
+def sync_access(from_instance, to_instance):
+    from models import AccessControl
+    from_model_type = ContentType.objects.get_for_model(from_instance)
+    to_model_type = ContentType.objects.get_for_model(to_instance)
+    AccessControl.objects.filter(content_type=to_model_type, object_id=to_instance.id).delete()
+    for ac in AccessControl.objects.filter(content_type=from_model_type, object_id=from_instance.id):
+        AccessControl.objects.create(content_type=to_model_type,
+                                     object_id=to_instance.id,
+                                     user=ac.user,
+                                     usergroup=ac.usergroup,
+                                     read=ac.read,
+                                     write=ac.write,
+                                     manage=ac.manage,
+                                     restrictions_repr=ac.restrictions_repr)
