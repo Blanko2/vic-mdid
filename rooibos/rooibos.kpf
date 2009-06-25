@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="049390f7-34ac-407f-9713-11bb7522bed4" kpf_version="4" name="rooibos.kpf">
+<file id="4e921b01-1e0f-4901-9e0f-e58a1856b189" idref="049390f7-34ac-407f-9713-11bb7522bed4" name="pilquality.py" url="file:///D:/dev/piltest/pilquality.py">
+</file>
 <preference-set idref="049390f7-34ac-407f-9713-11bb7522bed4">
   <boolean id="import_live">1</boolean>
 </preference-set>

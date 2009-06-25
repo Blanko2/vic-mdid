@@ -29,7 +29,7 @@ PROCESS_FILES = {
 
 class PowerPointGenerator:
     
-    def __init__(self, presentation):        
+    def __init__(self, presentation, user):        
         self.presentation = presentation
         self.items = presentation.items.all()
         self.slide_template = None
@@ -39,6 +39,7 @@ class PowerPointGenerator:
         self.placeholder_image = None
         self.remove_placeholder_image = True
         self.media = {}
+        self.user = user
         
     @staticmethod
     def get_templates():
@@ -80,7 +81,7 @@ class PowerPointGenerator:
                     t = record.title
                 e.firstChild.nodeValue = t
             # insert image if available
-            image = get_image_for_record(record, 800, 600, prefer_larger=True)
+            image = get_image_for_record(record, self.user, 800, 600)
             if image:                
                 # add image to outfile
                 f = image.load_file()
@@ -231,7 +232,7 @@ class PowerPointPresentation(object):
     
     def generate(self, request, id, name, template):
         presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)        
-        g = PowerPointGenerator(presentation)
+        g = PowerPointGenerator(presentation, request.user)
         filename = os.tempnam()
         try:
             g.generate(template, filename)

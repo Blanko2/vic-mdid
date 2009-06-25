@@ -82,11 +82,13 @@ $(document).ready(function() {
         </li>    
     {% endfor %}
     </ul>
+    {% if can_edit %}
+        <a href="{% url storage-upload record.id, record.name %}?next={{ request.get_full_path|urlencode }}">Upload media</a>
+    {% endif %}
 </div>
 {% endif %}
 
 </div>
-
 
 <div>
     <h1>{{ record.title }}</h1>
@@ -101,14 +103,10 @@ $(document).ready(function() {
     </select>
     <input type="submit" value="Change" />
     </form>
-
-
     
     <div>
         {% metadata record selected_fieldset %}
     </div>
 </div>
-
-
 
 {% endblock %}

@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from models import *
 from rooibos.presentation.models import Presentation
-from rooibos.access import filter_by_access, accessible_ids
+from rooibos.access import filter_by_access, accessible_ids, check_access
 #from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
 
@@ -33,7 +33,10 @@ def record_raw(request, id, name):
                                                      collection__id__in=accessible_ids(request.user, Collection)).distinct())
     media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
 
-    fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
+    if request.user.is_authenticated():
+        fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
+    else:
+        fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
     
     selected_fieldset = request.GET.get('fieldset')
     if selected_fieldset == '_all':
@@ -55,7 +58,9 @@ def record_raw(request, id, name):
                                'media': media,
                                'fieldsets': fieldsets,
                                'selected_fieldset': fieldset,
-                               'fieldvalues': fieldvalues,},
+                               'fieldvalues': fieldvalues,
+                               'can_edit': check_access(request.user, record, write=True),
+                               },
                               context_instance=RequestContext(request))
 
 

@@ -1,10 +1,12 @@
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import _get_queryset
 
 def get_effective_permissions_and_restrictions(user, model_instance):
     from models import AccessControl
+    user = user or AnonymousUser()
     if user.is_superuser:
         return (True, True, True, None)
     owner = getattr(model_instance, 'owner', None)
@@ -59,6 +61,7 @@ def check_access(user, model_instance, read=True, write=False, manage=False, fai
 
 def filter_by_access(user, queryset, read=True, write=False, manage=False):
     from models import AccessControl
+    user = user or AnonymousUser()
     queryset = _get_queryset(queryset)
     if not (read or write or manage) or user.is_superuser:  # nothing to do
         return queryset

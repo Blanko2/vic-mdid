@@ -118,11 +118,11 @@ STORAGE_SYSTEMS = {
     'online': 'rooibos.storage.online.OnlineStorageSystem',
 }
 
+SCRATCH_DIRS = 'd:/dev/rooibos/scratch/'
+
 GROUP_MANAGERS = {
     'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
 }
-
-LOCAL_FILE_SYSTEM_STORAGE_DEFAULT_BASE = 'c:/temp/'
 
 WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 

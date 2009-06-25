@@ -1,0 +1,13 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h2>Upload Media</h2>
+
+<form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data">
+    {{ form.as_p }}
+    <br />
+    <input type="submit" value="Upload Media" />
+</form>
+
+{% endblock %}

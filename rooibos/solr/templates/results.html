@@ -91,7 +91,7 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
         <div class="facet-body">
         {% for term,freq,label in orfacet.facets %}
             <div class="facet-line">
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
             </div>
         {% endfor %}
         <a class="facet-more" style="display: none;" href="#{{ orfacet.name|urlencode }}">more...</a>
@@ -106,8 +106,8 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
         <div class="facet-body">
         {% for term,freq,label in facet.facets %}
             <div class="facet-line">            
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
-               href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}">&times;</a>)
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
+               href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}" rel="nofollow">&times;</a>)
             </div>
         {% endfor %}
         <a class="facet-more" style="display: none;" href="#{{ facet.name|urlencode }}">more...</a>

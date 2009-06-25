@@ -1,10 +1,16 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, get_list_or_404
+from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError
+from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.views.decorators.cache import cache_control
-from rooibos.access import accessible_ids
-from rooibos.data.models import Collection
-from models import Media, Storage
+from django.template import RequestContext
 from django.shortcuts import _get_queryset
+from django import forms
+from django.contrib.auth.decorators import login_required
+from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions
+from rooibos.data.models import Collection, Record
+from rooibos.storage import get_image_for_record
+from models import Media, Storage
+import os
+
 
 @cache_control(max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):    
@@ -12,8 +18,68 @@ def retrieve(request, recordid, record, mediaid, media):
                                  record__id=recordid,
                                  record__collection__id__in=accessible_ids(request.user, Collection),
                                  storage__id__in=accessible_ids(request.user, Storage)).distinct())
+    
+    r, w, m, restrictions = get_effective_permissions_and_restrictions(request.user, mediaobj.storage)
+    # if size restrictions exist, no direct download of a media file is allowed
+    if restrictions and (restrictions.has_key('width') or restrictions.has_key('height')):
+        raise Http404()
+        
     content = mediaobj.load_file()
     if content:
         return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
     else:
         return HttpResponseRedirect(mediaobj.get_absolute_url())
+
+
+def retrieve_image(request, recordid, record, width='100000', height='100000'):
+
+    width = int(width)
+    height = int(height)
+    
+    media = get_image_for_record(recordid, width, height, request.user)
+    
+    if not media:
+        raise Http404()
+    
+    # return resulting image
+    content = media.load_file()
+    if content:
+        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
+    else:
+        return HttpResponseServerError()
+    
+
+@login_required
+def media_upload(request, recordid, record):
+    
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True
+                                         ).values_list('name','title'))
+    record = get_object_or_404(filter_by_access(request.user, Record, write=True), id=recordid)
+    
+    class UploadFileForm(forms.Form):
+        storage = forms.ChoiceField(choices=available_storage)
+        file = forms.FileField()
+    
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            storage = Storage.objects.get(name=form.cleaned_data['storage'])
+            file = request.FILES['file']
+            
+            media = Media.objects.create(record=record,
+                                         name=os.path.splitext(file.name)[0],
+                                         storage=storage,
+                                         mimetype=file.content_type)
+            media.save_file(file.name, file)
+
+            next = request.GET.get('next')
+            return HttpResponseRedirect(next or '.')
+    else:
+        form = UploadFileForm()
+    
+    return render_to_response('storage_upload.html',
+                              {'record': record,
+                               'form': form,
+                               },
+                              context_instance=RequestContext(request))
+

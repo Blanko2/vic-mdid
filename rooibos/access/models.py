@@ -3,6 +3,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 
+#class AccessControlManager(models.Manager):
+    #def create(self, **kwargs):
+    #    #print kwargs
+    #    #if kwargs.has_key('restrictions'):
+    #    #    kwargs['restrictions_repr'] = repr(kwargs['restrictions'])
+    #    #    del kwargs['restrictions']
+    #    #print kwargs
+    #    super(AccessControlManager, self).create(**kwargs)
+
+
 class AccessControl(models.Model):    
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
@@ -13,6 +23,13 @@ class AccessControl(models.Model):
     write = models.NullBooleanField()
     manage = models.NullBooleanField()
     restrictions_repr = models.TextField(blank=True, default='')
+#    objects = AccessControlManager()
+
+    #def __init__(self, **kwargs):
+    #    #if kwargs.has_key('restrictions'):
+    #    #    kwargs['restrictions_repr'] = repr(kwargs['restrictions'])
+    #    #    del kwargs['restrictions']
+    #    super(AccessControl, self).__init__(kwargs)
 
     class Meta:
         unique_together = ('content_type', 'object_id', 'user', 'usergroup')

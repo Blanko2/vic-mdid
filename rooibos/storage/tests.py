@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import unittest
 import tempfile
 import os.path
@@ -7,13 +8,21 @@ from django.core.files import File
 from rooibos.data.models import *
 from rooibos.storage.models import *
 from localfs import LocalFileSystemStorageSystem
+from rooibos.storage import get_thumbnail_for_record, get_image_for_record
+from rooibos.access.models import AccessControl
+from rooibos.presentation.models import Presentation, PresentationItem
+
 
 class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
     
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
+        self.collection = Collection.objects.create(title='Test')
         self.storage = Storage.objects.create(title='Test', name='test', system='local', base=self.tempdir)
         self.record = Record.objects.create(name='monalisa')
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        AccessControl.objects.create(content_object=self.storage, read=True)
+        AccessControl.objects.create(content_object=self.collection, read=True)
         
     def tearDown(self):
         for root, dirs, files in os.walk(self.tempdir, topdown=False):
@@ -23,11 +32,12 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
                 os.rmdir(os.path.join(root, name))
         self.record.delete()
         self.storage.delete()
+        self.collection.delete()
         
     def test_save_and_retrieve_file(self):
+        Media.objects.filter(record=self.record).delete()
         media = Media.objects.create(record=self.record, name='image', storage=self.storage)
-        content = StringIO('hello world')
-        content.size = content.len
+        content = StringIO('hello world')        
         media.save_file('test.txt', content)
         
         self.assertEqual('test.txt', media.url)
@@ -35,6 +45,95 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         content = media.load_file()
         self.assertEqual('hello world', content.read())
         
+        media.delete()        
+
+    def test_thumbnail(self):
+        Media.objects.filter(record=self.record).delete()
+        media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)
+        with open(os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif'), 'rb') as f:
+            media.save_file('dcmetro.tif', f)
+        
+        thumbnail = get_thumbnail_for_record(self.record)
+        self.assertTrue(thumbnail.width == 100)
+        self.assertTrue(thumbnail.height < 100)
+        
+        media.delete()
+
+    def test_derivative_permissions(self):
+        Media.objects.filter(record=self.record).delete()
+        media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)
+        with open(os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif'), 'rb') as f:
+            media.save_file('dcmetro.tif', f)
+        
+        user1 = User.objects.create(username='test1890723589075')
+        user2 = User.objects.create(username='test2087358972359')
+        
+        AccessControl.objects.create(content_object=self.collection, user=user1, read=True)
+        AccessControl.objects.create(content_object=self.collection, user=user2, read=True)
+        
+        AccessControl.objects.create(content_object=self.storage, user=user1, read=True)
+        AccessControl.objects.create(content_object=self.storage, user=user2, read=True,
+                                     restrictions=dict(width=200, height=200))
+        
+        result1 = get_image_for_record(self.record, width=400, height=400, user=user1)
+        result2 = get_image_for_record(self.record, width=400, height=400, user=user2)
+        
+        self.assertEqual(400, result1.width)
+        self.assertEqual(200, result2.width)
+        
+        result3 = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(result2.id, result3.id)
+        
+        media.delete()
+        
+
+    def test_access_through_presentation(self):
+        Media.objects.filter(record=self.record).delete()
+        media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)
+        with open(os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif'), 'rb') as f:
+            media.save_file('dcmetro.tif', f)
+        
+        user1 = User.objects.create(username='test3097589074404')
+        user2 = User.objects.create(username='test4589570974047')
+        
+        AccessControl.objects.create(content_object=self.collection, user=user1, read=True)
+        storage_acl = AccessControl.objects.create(content_object=self.storage, user=user1, read=True)
+
+        presentation = Presentation.objects.create(title='test47949074', owner=user1)
+        presentation.items.create(record=self.record, order=1)
+        
+        # user2 has no access to storage or collection, so should not get result
+        result = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(None, result)
+
+        # give access to presentation
+        AccessControl.objects.create(content_object=presentation, user=user2, read=True)   
+
+        # user2 has no access to storage yet, so still should not get result
+        result = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(None, result)
+
+        # give user2 access to storage
+        user2_storage_acl = AccessControl.objects.create(content_object=self.storage, user=user2, read=True)
+        
+        # now user2 should get the image
+        result = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(400, result.width)
+
+        # password protect the presentation
+        presentation.password='secret'
+        presentation.save()
+        
+        # user2 has not provided presentation password, so should not get result
+        result = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(None, result)
+
+        # with presentation password, image should be returned
+        result = get_image_for_record(self.record, width=400, height=400, user=user2,
+                                      passwords={presentation.id: 'secret'})
+        self.assertEqual(400, result.width)
+
+
 
 class ImageCompareTest(unittest.TestCase):
     
@@ -63,4 +162,4 @@ class ImageCompareTest(unittest.TestCase):
         self.assertEqual(data[3].width, 10)
         self.assertEqual(data[3].height, 5)
         
-        
+

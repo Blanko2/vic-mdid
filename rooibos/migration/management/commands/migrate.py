@@ -140,6 +140,7 @@ class Command(BaseCommand):
          
         print "Migrating collections"
         groups = {}
+        groups_medium_dimensions = {}
         collgroups = {}
         storage = {}
         fieldsets = {}
@@ -147,7 +148,7 @@ class Command(BaseCommand):
         for row in cursor.execute("SELECT ID,Title FROM CollectionGroups"):
             collgroups[row.ID] = Collection.objects.create(title=row.Title)
 
-        for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,GroupID,ResourcePath FROM Collections"):
+        for row in cursor.execute("SELECT ID,Type,Title,Description,UsageAgreement,MediumImageHeight,MediumImageWidth,GroupID,ResourcePath FROM Collections"):
             if (not options.get('collection_ids') or (row.ID in options['collection_ids'])) and \
                 (not options.get('local_only') or row.Type == 'I'):
                 manager = None
@@ -157,15 +158,27 @@ class Command(BaseCommand):
                 if collgroups.has_key(row.GroupID):
                     collgroups[row.GroupID].children.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
-                    storage[row.ID] = {}
-                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)', system='local', base=row.ResourcePath.replace('\\', '/'))
-                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)', system='local', base=row.ResourcePath.replace('\\', '/'))
-                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)', system='local', base=row.ResourcePath.replace('\\', '/'))
+                    base = row.ResourcePath.replace('\\', '/')
+                    storage[row.ID] = dict()
+                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)',
+                                                                     system='local',
+                                                                     base=os.path.join(base, 'full'))
+                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)',
+                                                                       system='local',
+                                                                       base=os.path.join(base, 'medium'))
+                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)',
+                                                                      system='local',
+                                                                      base=os.path.join(base, 'thumb'))
+                    storage[row.ID]['general'] = Storage.objects.create(title=row.Title[:91],
+                                                                        system='local',
+                                                                        base=base)
                 fieldsets[row.ID] = FieldSet.objects.create(title='%s fields' % row.Title)
+                
+                groups_medium_dimensions[row.ID] = dict(max_height=row.MediumImageHeight, max_width=row.MediumImageWidth)
 
         # Migrate collection permissions
        
-        def populate_access_control(ac, row, readmask, writemask, managemask):
+        def populate_access_control(ac, row, readmask, writemask, managemask, restrictions_callback=None):
             def tristate(mask):
                 if row.DenyPriv and row.DenyPriv & mask: return False
                 if row.GrantPriv and row.GrantPriv & mask: return True                
@@ -177,8 +190,12 @@ class Command(BaseCommand):
                 ac.user = users[row.UserID]
             elif usergroups.has_key(row.GroupID):
                 ac.usergroup = usergroups[row.GroupID]
+            elif row.UserID == -1 and not options.get('anonymous'):
+                pass
             else:
                 return False
+            if restrictions_callback:
+                restrictions_callback(ac, row)            
             return True
        
         #Privilege.ModifyACL  -> manage
@@ -218,6 +235,18 @@ class Command(BaseCommand):
                 ac.content_object = storage[row.ObjectID]['thumb']
                 if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                     ac.save()
+                # new general storage
+                
+                def general_restrictions(ac, row):
+                    full_access = row.GrantPriv and row.GrantPriv & P['FullSizedImages']
+                    if ac.read and not full_access:
+                        ac.restrictions = groups_medium_dimensions[row.ObjectID]
+                
+                ac = AccessControl()
+                ac.content_object = storage[row.ObjectID]['general']                
+                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection'],
+                                           general_restrictions):
+                    ac.save()
 
         if options.get('anonymous'):
             for id in groups.keys():
@@ -226,6 +255,7 @@ class Command(BaseCommand):
                     AccessControl.objects.create(content_object=storage[id]['full'], read=True)
                     AccessControl.objects.create(content_object=storage[id]['medium'], read=True)
                     AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
+                    AccessControl.objects.create(content_object=storage[id]['general'], read=True)
 
 
         # Migrate fields
@@ -272,7 +302,7 @@ class Command(BaseCommand):
                             Media.objects.create(
                                 record_id=image.id,
                                 name=type,
-                                url='%s/%s' % (type, row.Resource.strip()),
+                                url=row.Resource.strip(),
                                 storage=storage[row.CollectionID][type],
                                 mimetype='image/jpeg')          
             count += 1

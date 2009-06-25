@@ -110,7 +110,7 @@ class Record(models.Model):
         if context:
             qc = qc | Q(context_type=ContentType.objects.get_for_model(context.__class__), context_id=context.id)
         qo = Q(owner=None)
-        if owner:
+        if owner and owner.is_authenticated():
             qo = qo | Q(owner=owner)
         
         values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo) \

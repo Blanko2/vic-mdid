@@ -1,22 +1,33 @@
 from django.db import models
 from django.core.files import File
-from rooibos.util import unique_slug, cached_property, clear_cached_properties
-from rooibos.data.models import Record
 from django.conf import settings
 import random
 import Image
+import os
+from rooibos.util import unique_slug, cached_property, clear_cached_properties
+from rooibos.data.models import Record
+from rooibos.access import sync_access
 
 class Storage(models.Model):
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
     system = models.CharField(max_length=50)
     base = models.CharField(max_length=1024, null=True)
+    derivative = models.OneToOneField('self', null=True, related_name='master')
+    
+    class Meta:
+        verbose_name_plural = 'storage'
     
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Storage, self).save(kwargs)
         
     def __unicode__(self):
+        try:
+            if self.master:
+                return self.name + " (derivative)"
+        except:
+            pass
         return self.name
     
     def _get_storage_system(self):
@@ -45,7 +56,20 @@ class Storage(models.Model):
     def load_file(self, name):
         storage = self._get_storage_system()
         return storage and storage.open(name) or None
-        
+    
+    def file_exists(self, name):
+        storage = self._get_storage_system()
+        return storage and storage.exists(name) or False
+    
+    def get_derivative_storage(self):
+        if not self.derivative:
+            self.derivative = Storage.objects.create(title=self.title,
+                                                     system='local',
+                                                     base=os.path.join(settings.SCRATCH_DIR, self.name))
+            self.save()        
+            sync_access(self, self.derivative)
+        return self.derivative
+    
 
 class Media(models.Model):
     record = models.ForeignKey(Record)
@@ -56,6 +80,7 @@ class Media(models.Model):
     width = models.IntegerField(null=True)
     height = models.IntegerField(null=True)
     bitrate = models.IntegerField(null=True)
+    master = models.ForeignKey('self', null=True, related_name='derivatives')
 
     class Meta:
         unique_together = ("record", "name")
@@ -80,6 +105,8 @@ class Media(models.Model):
             content.name = name
         if not hasattr(content, 'mode'):
             content.mode = 'r'
+        if not hasattr(content, 'size') and hasattr(content, 'len'):
+            content.size = content.len
         if not content is File:
             content = File(content)
         name = self.storage and self.storage.save_file(name, content) or None
@@ -92,18 +119,20 @@ class Media(models.Model):
 
     def load_file(self):
         return self.storage and self.storage.load_file(self.url) or None
+        
+    def file_exists(self):
+        return self.storage and self.storage.file_exists(self.url) or False
 
     def identify(self, save=True):
         type = self.mimetype.split('/')[0]
         if type == 'image':
             try:
                 im = Image.open(self.get_absolute_file_path())
-                (self.width, self.height) = im.size
-                if save:
-                    self.save()
+                (self.width, self.height) = im.size                
             except IOError:
                 self.width = None
                 self.height = None
+            if save:
                 self.save()
         elif type == 'video':
             pass

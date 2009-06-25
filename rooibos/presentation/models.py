@@ -2,6 +2,7 @@ from django.db import models, connection
 from django.contrib.auth.models import User
 from django.contrib.contenttypes import generic
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from rooibos.data.models import Record
 from rooibos.storage.models import Media
 from rooibos.util import unique_slug
@@ -40,6 +41,14 @@ class Presentation(models.Model):
 
     def records(self):
         return [i.record for i in self.items.all()]
+
+    @staticmethod
+    def check_passwords(passwords):
+        if passwords:
+            q = reduce(lambda a,b: a|b, (Q(id=id, password=password) for id, password in passwords.iteritems()))
+            return Presentation.objects.filter(q).values_list('id', flat=True)
+        else:
+            return []
 
 
 class PresentationItem(models.Model):

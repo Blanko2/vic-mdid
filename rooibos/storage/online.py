@@ -16,3 +16,6 @@ class OnlineStorageSystem():
     
     def open(self, name):
         return None
+
+    def exists(self, name):
+        return False
