@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions
 from rooibos.data.models import Collection, Record
-from rooibos.storage import get_image_for_record
+from rooibos.storage import get_image_for_record, get_thumbnail_for_record
 from models import Media, Storage
 import os
 
@@ -54,7 +54,8 @@ def media_upload(request, recordid, record):
     
     available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True
                                          ).values_list('name','title'))
-    record = get_object_or_404(filter_by_access(request.user, Record, write=True), id=recordid)
+    record = get_object_or_404(Record.objects.filter(id=recordid,
+        collection__id__in=accessible_ids(request.user, Collection)).distinct())
     
     class UploadFileForm(forms.Form):
         storage = forms.ChoiceField(choices=available_storage)
@@ -83,3 +84,19 @@ def media_upload(request, recordid, record):
                                },
                               context_instance=RequestContext(request))
 
+
+
+def record_thumbnail(request, id, name):
+    record = get_object_or_404(Record.objects.filter(id=id,
+        collection__id__in=accessible_ids(request.user, Collection)).distinct())
+    
+    media = get_thumbnail_for_record(record, request.user)
+    
+    if media:
+        content = media.load_file()
+        if content:
+            return HttpResponse(content=content, mimetype=str(media.mimetype))
+        else:
+            return HttpResponseServerError()
+    else:
+        return HttpResponseRedirect('/static/images/nothumbnail.jpg')

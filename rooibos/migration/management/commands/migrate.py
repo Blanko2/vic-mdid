@@ -13,11 +13,12 @@ from datetime import datetime
 from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
 from rooibos.storage.models import Storage, Media
 from rooibos.solr import SolrIndex
-from rooibos.access.models import AccessControl
+from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP
 from rooibos.util.progressbar import ProgressBar
 from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
 from rooibos.contrib.tagging.models import Tag
 from rooibos.util.models import OwnedWrapper
+from rooibos.contrib.ipaddr import IP
 
 # old permissions
 
@@ -61,6 +62,7 @@ class Command(BaseCommand):
         make_option('--local', dest='local_only', action='store_true', help='Migrate local collections only'),
         make_option('--allow-anonymous', dest='anonymous', action='store_true', help='Make all collections available to anonymous users'),
         make_option('--skip-personal', dest='skip_personal', action='store_true', help='Do not migrate personal images'),
+        make_option('--full-only', dest='full_images_only', action='store_true', help='Only migrate full-size images'),
     )
 
     def readConfig(self, file):
@@ -129,8 +131,19 @@ class Command(BaseCommand):
         print "Migrating user groups"
         usergroups = {}
         for row in cursor.execute("SELECT ID,Title,Type FROM UserGroups"):
-            usergroups[row.ID] = Group.objects.create(name=row.Title)
-            # todo: handle non-membership groups
+            if row.Type == 'M':
+                usergroups[row.ID] = Group.objects.create(name=row.Title)
+            else:
+                usergroups[row.ID] = ExtendedGroup.objects.create(name=row.Title, type=row.Type)
+
+        for row in cursor.execute("SELECT GroupID,Subnet,Mask FROM UserGroupIPRanges"):
+            if usergroups.has_key(row.GroupID) and usergroups[row.GroupID].type == IP_BASED_GROUP:
+                usergroups[row.GroupID].subnet_set.create(subnet=str(IP('%s/%s' % (row.Subnet, row.Mask))))
+            
+        for row in cursor.execute("SELECT GroupID,Attribute,AttributeValue FROM UserGroupAttributes"):
+            if usergroups.has_key(row.GroupID) and usergroups[row.GroupID].type == ATTRIBUTE_BASED_GROUP:
+                attr, created = usergroups[row.GroupID].attribute_set.get_or_create(attribute=row.Attribute)
+                attr.attributevalue_set.create(value=row.AttributeValue)
         
         for row in cursor.execute("SELECT UserID,GroupID FROM UserGroupMembers"):
             if users.has_key(row.UserID):
@@ -160,18 +173,19 @@ class Command(BaseCommand):
                 if row.Type in ('I', 'N', 'R'):
                     base = row.ResourcePath.replace('\\', '/')
                     storage[row.ID] = dict()
-                    storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)',
-                                                                     system='local',
-                                                                     base=os.path.join(base, 'full'))
-                    storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)',
-                                                                       system='local',
-                                                                       base=os.path.join(base, 'medium'))
-                    storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)',
-                                                                      system='local',
-                                                                      base=os.path.join(base, 'thumb'))
                     storage[row.ID]['general'] = Storage.objects.create(title=row.Title[:91],
                                                                         system='local',
                                                                         base=base)
+                    if not options.get('full_images_only'):
+                        storage[row.ID]['full'] = Storage.objects.create(title=row.Title[:91] + ' (full)',
+                                                                         system='local',
+                                                                         base=os.path.join(base, 'full'))
+                        storage[row.ID]['medium'] = Storage.objects.create(title=row.Title[:91] + ' (medium)',
+                                                                           system='local',
+                                                                           base=os.path.join(base, 'medium'))
+                        storage[row.ID]['thumb'] = Storage.objects.create(title=row.Title[:91] + ' (thumb)',
+                                                                          system='local',
+                                                                          base=os.path.join(base, 'thumb'))
                 fieldsets[row.ID] = FieldSet.objects.create(title='%s fields' % row.Title)
                 
                 groups_medium_dimensions[row.ID] = dict(max_height=row.MediumImageHeight, max_width=row.MediumImageWidth)
@@ -222,19 +236,20 @@ class Command(BaseCommand):
             # full storage
             ac = AccessControl()
             if storage.has_key(row.ObjectID):
-                ac.content_object = storage[row.ObjectID]['full']
-                if populate_access_control(ac, row, P['FullSizedImages'], P['ModifyImages'], P['ManageCollection']):
-                    ac.save()
-                # medium storage
-                ac = AccessControl()
-                ac.content_object = storage[row.ObjectID]['medium']
-                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
-                    ac.save()
-                # thumb storage
-                ac = AccessControl()
-                ac.content_object = storage[row.ObjectID]['thumb']
-                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
-                    ac.save()
+                if not options.get('full_images_only'):
+                    ac.content_object = storage[row.ObjectID]['full']
+                    if populate_access_control(ac, row, P['FullSizedImages'], P['ModifyImages'], P['ManageCollection']):
+                        ac.save()
+                    # medium storage
+                    ac = AccessControl()
+                    ac.content_object = storage[row.ObjectID]['medium']
+                    if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                        ac.save()
+                    # thumb storage
+                    ac = AccessControl()
+                    ac.content_object = storage[row.ObjectID]['thumb']
+                    if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
+                        ac.save()
                 # new general storage
                 
                 def general_restrictions(ac, row):
@@ -266,15 +281,16 @@ class Command(BaseCommand):
         
         for row in cursor.execute("SELECT ID,CollectionID,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
                                   FROM FieldDefinitions ORDER BY DisplayOrder"):
-            dc = ('dc.%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
-            if standard_fields.has_key(dc):
-                fields[row.ID] = standard_fields[dc]
-            else:
-                fields[row.ID] = Field.objects.create(label=row.Name)            
-            FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
-                                         field=fields[row.ID],
-                                         order=fieldsets[row.CollectionID].fields.count() + 1,
-                                         importance=(row.ShortView and 4) + (row.MediumView and 2) + (row.LongView and 1))
+            if groups.has_key(row.CollectionID):
+                dc = ('dc.%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
+                if standard_fields.has_key(dc):
+                    fields[row.ID] = standard_fields[dc]
+                else:
+                    fields[row.ID] = Field.objects.create(label=row.Name)            
+                FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
+                                             field=fields[row.ID],
+                                             order=fieldsets[row.CollectionID].fields.count() + 1,
+                                             importance=(row.ShortView and 4) + (row.MediumView and 2) + (row.LongView and 1))
      
         # Migrate records and media
         
@@ -296,15 +312,23 @@ class Command(BaseCommand):
                 CollectionItem.objects.create(record_id=image.id, collection=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
                     if row.Resource.endswith('.xml'):
-                        self.process_xml_resource(image, storage[row.CollectionID]["full"], row.Resource)
+                        self.process_xml_resource(image, storage[row.CollectionID]["general"], row.Resource)
                     else:
-                        for type in ('full', 'medium', 'thumb'):
+                        if not options.get('full_images_only'):
+                            for type in ('full', 'medium', 'thumb'):
+                                Media.objects.create(
+                                    record_id=image.id,
+                                    name=type,
+                                    url=row.Resource.strip(),
+                                    storage=storage[row.CollectionID][type],
+                                    mimetype='image/jpeg')
+                        else:
                             Media.objects.create(
                                 record_id=image.id,
-                                name=type,
-                                url=row.Resource.strip(),
-                                storage=storage[row.CollectionID][type],
-                                mimetype='image/jpeg')          
+                                name=row.Resource.rsplit('.', 1)[0],
+                                url=os.path.join('full', row.Resource.strip()),
+                                storage=storage[row.CollectionID]['general'],
+                                mimetype='image/jpeg')
             count += 1
             if count % 100 == 0:
                 pb.update(count)
@@ -376,7 +400,7 @@ class Command(BaseCommand):
                                                hidden=row.Scratch)
                 if row.Annotation:
                     FieldValue.objects.create(record_id=images[row.ImageID],
-                                              field=standard_fields["dc:description"],
+                                              field=standard_fields["dc.description"],
                                               owner=slideshows[row.SlideshowID].owner,
                                               label="Annotation",
                                               value=row.Annotation,

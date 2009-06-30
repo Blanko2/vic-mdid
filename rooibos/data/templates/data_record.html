@@ -22,7 +22,7 @@ $(document).ready(function() {
 <div class="sidebar">
 
 <div class="sidebar-item">
-    <img src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ record.title }}" />
+    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" />
 </div>
 
 <div class="sidebar-item">

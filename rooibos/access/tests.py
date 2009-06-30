@@ -1,7 +1,8 @@
 import unittest
 from rooibos.data.models import Collection, Record, Field
 from rooibos.storage.models import Storage
-from models import AccessControl
+from models import AccessControl, ExtendedGroup, \
+    ATTRIBUTE_BASED_GROUP, AUTHENTICATED_GROUP, EVERYBODY_GROUP, IP_BASED_GROUP
 from . import check_access, get_effective_permissions, filter_by_access, get_effective_permissions_and_restrictions
 from django.contrib.auth.models import User, Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
@@ -157,3 +158,72 @@ class AccessTestCase(unittest.TestCase):
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)        
         self.assertEqual(500, restrictions.get('width'))
+
+
+class ExtendedGroupTestCase(unittest.TestCase):
+    
+    def testIPBased(self):
+        usergroup = ExtendedGroup.objects.create(name='ipbased-test', type=IP_BASED_GROUP)
+        usergroup.subnet_set.create(subnet='134.126.0.0/255.255.0.0')
+        
+        user = User.objects.create(username='ipbased-testuser-1')        
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'ip': '134.126.1.2'})
+        self.assertTrue(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'ip': '127.0.0.1'})
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+     
+    def testAttributeBased(self):
+        usergroup = ExtendedGroup.objects.create(name='attrbased-test', type=ATTRIBUTE_BASED_GROUP)
+        attribute = usergroup.attribute_set.create(attribute='employeeType')
+        attribute.attributevalue_set.create(value='faculty')
+        attribute.attributevalue_set.create(value='staff')
+        attribute.attributevalue_set.create(value='administrator')
+        
+        user = User.objects.create(username='attrbased-testuser-1')        
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'attr': {'employeeType': 'student'}})
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'attr': {'employeeType': ['staff', 'student']}})
+        self.assertTrue(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'attr': {}})
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        
+        attribute2 = usergroup.attribute_set.create(attribute='campus')
+        attribute2.attributevalue_set.create(value='harrisonburg')
+        
+        ExtendedGroup.objects.update_membership(user, info={'attr': {'employeeType': ['staff', 'student']}})
+        self.assertFalse(usergroup.id in user.groups.all().values_list('id', flat=True))
+        
+        ExtendedGroup.objects.update_membership(user, info={'attr': {
+            'employeeType': ['staff', 'student'],
+            'campus': 'harrisonburg',
+            'other': 'some other data'}})
+        self.assertTrue(usergroup.id in user.groups.all().values_list('id', flat=True))
+
+    def testExtraGroups(self):
+        user = User.objects.create(username='extragroups-testuser-1')     
+        usergroup = ExtendedGroup.objects.create(name='everybody-test', type=EVERYBODY_GROUP)
+        
+        groups = ExtendedGroup.objects.get_extra_groups(user)
+        self.assertEqual(1, len(groups))
+        self.assertTrue(usergroup.id in groups.values_list('id', flat=True))
+        
+        anonymous = AnonymousUser()
+        authgroup = ExtendedGroup.objects.create(name='authgroup-test', type=AUTHENTICATED_GROUP)
+        
+        groups = ExtendedGroup.objects.get_extra_groups(user)
+        self.assertEqual(2, len(groups))
+        self.assertTrue(usergroup.id in groups.values_list('id', flat=True))
+        self.assertTrue(authgroup.id in groups.values_list('id', flat=True))
+        
+        groups = ExtendedGroup.objects.get_extra_groups(anonymous)
+        self.assertEqual(1, len(groups))
+        self.assertTrue(usergroup.id in groups.values_list('id', flat=True))
+        self.assertFalse(authgroup.id in groups.values_list('id', flat=True))

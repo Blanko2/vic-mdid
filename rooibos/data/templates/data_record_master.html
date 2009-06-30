@@ -10,7 +10,7 @@
 <h1>{{ record.title }}</h1>
 
 <div>
-    <img src="{{ record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ record.title }}" />
+    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" />
 </div>
 
 {% block record_content %}

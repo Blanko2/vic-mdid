@@ -95,9 +95,7 @@ class Record(models.Model):
         return reverse('data-record', kwargs={'id': self.id, 'name': self.name})
 
     def get_thumbnail_url(self):
-        from rooibos.storage import get_thumbnail_for_record
-        media = get_thumbnail_for_record(self)    
-        return media and media.get_absolute_url() or None
+        return reverse('storage-thumbnail', kwargs={'id': self.id, 'name': self.name})
 
     def save(self, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),

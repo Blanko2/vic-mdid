@@ -313,11 +313,10 @@ def search_json(request, id=None, name=None, selected=False):
     
 
 def browse(request, id=None, name=None):
-    
-    collections = filter_by_access(request.user, Collection).order_by('title')
+    collections = filter_by_access(request.user, Collection) \
+        .annotate(num_records=Count('records')).filter(num_records__gt=0).order_by('title')
     if not collections:
         raise Http404()
-    
     if request.GET.has_key('c'):
         collection = get_object_or_404(collections, name=request.GET['c'])
         return HttpResponseRedirect(reverse('solr-browse-collection',
@@ -331,9 +330,10 @@ def browse(request, id=None, name=None):
     else:
         fields = list(Field.objects.filter(fieldvalue__record__collection=collection).distinct())
         cache.set('browse_fields_%s' % collection.id, [f.id for f in fields], 60)        
+    
     if not fields:
         raise Http404()
-        
+    
     if request.GET.has_key('f'):
         field = get_object_or_404(Field, name=request.GET['f'], id__in=(f.id for f in fields))
     else:

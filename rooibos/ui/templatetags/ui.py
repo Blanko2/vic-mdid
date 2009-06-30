@@ -5,7 +5,6 @@ from django.template.loader import get_template
 from django.template import Context, Variable
 from django.contrib.contenttypes.models import ContentType
 from rooibos.contrib.tagging.models import Tag
-from rooibos.storage import get_thumbnail_for_record
 from rooibos.data.models import Record
 from rooibos.util.models import OwnedWrapper
 

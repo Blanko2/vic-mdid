@@ -54,7 +54,7 @@
     <tbody>
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %}">
-        <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url|default:"/static/images/nothumbnail.png" }}" alt="{{ form.instance.record.title }}" /></a></td>
+        <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url }}" alt="{{ form.instance.record.title }}" /></a></td>
         <td>{{ form.instance.record.title }}</td>
         <td class="orderinput">{{ form.order }} {{ form.order.errors }}</td>
         <td class="controls">{{ form.hidden }}</td>
