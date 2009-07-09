@@ -72,7 +72,14 @@ class ExtendedGroupManager(models.Manager):
             
 
 class ExtendedGroup(Group):
-    type = models.CharField(max_length=1)
+    TYPE_CHOICES = (
+        ('A', 'Authenticated'),
+        ('I', 'IP Address based'),
+        ('P', 'Attribute based'),
+        ('E', 'Everybody'),
+    )
+    
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
     
     objects = ExtendedGroupManager()
     
@@ -109,15 +116,26 @@ class ExtendedGroup(Group):
                 return False
         return True
 
+    def _full_type(self):
+        return filter(lambda (a,f): a==self.type, self.TYPE_CHOICES)[0][1]
+
+    def __unicode__(self):
+        return '%s (%s)' % (self.name, self._full_type())
     
 class Subnet(models.Model):
     group = models.ForeignKey(ExtendedGroup, limit_choices_to={'type': 'I'})
     subnet = models.CharField(max_length=80)
     
+    def __unicode__(self):
+        return '%s: %s' % (self.group.name, self.subnet)
+    
     
 class Attribute(models.Model):
     group = models.ForeignKey(ExtendedGroup, limit_choices_to={'type': 'P'})
     attribute = models.CharField(max_length=255)
+    
+    def __unicode__(self):
+        return '%s: %s' % (self.group.name, self.attribute)
     
     
 class AttributeValue(models.Model):
