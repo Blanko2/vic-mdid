@@ -24,7 +24,10 @@ urlpatterns = patterns('',
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^presentation/', include('rooibos.presentation.urls')),
     (r'^viewers/', include('rooibos.viewers.urls')),
-
+    
+    (r'^api/', include('rooibos.api.urls')),
+    (r'^flickr/', include('rooibos.flickr.urls')),
+    
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
 )
 
