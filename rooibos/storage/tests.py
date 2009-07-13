@@ -2,9 +2,11 @@ from __future__ import with_statement
 import unittest
 import tempfile
 import os.path
+import Image
 from StringIO import StringIO
 from django.test.client import Client
 from django.core.files import File
+from django.utils import simplejson
 from rooibos.data.models import *
 from rooibos.storage.models import *
 from localfs import LocalFileSystemStorageSystem
@@ -163,3 +165,67 @@ class ImageCompareTest(unittest.TestCase):
         self.assertEqual(data[3].height, 5)
         
 
+class ProxyUrlTest(unittest.TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='proxytest')
+        self.user.set_password('test')
+        self.user.save()
+        self.tempdir = tempfile.mkdtemp()
+        self.collection = Collection.objects.create(title='Test')
+        self.storage = Storage.objects.create(title='Test', name='test', system='local', base=self.tempdir)
+        self.record = Record.objects.create(name='monalisa')
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        AccessControl.objects.create(content_object=self.storage, user=self.user, read=True,
+                                     restrictions=dict(width=50, height=50))
+        AccessControl.objects.create(content_object=self.collection, user=self.user, read=True)
+        media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)
+        with open(os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif'), 'rb') as f:
+            media.save_file('dcmetro.tif', f)
+        
+    def tearDown(self):
+        for root, dirs, files in os.walk(self.tempdir, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        self.record.delete()
+        self.storage.delete()
+        self.collection.delete()
+
+    
+    def test_proxy_url(self):
+        
+        c = Client()        
+        response = c.post('/media/proxy/create/')
+        # Response is JSON, should always be 200
+        self.assertEqual(200, response.status_code)        
+        # Result should be error since we did not provide any credentials
+        data = simplejson.loads(response.content)
+        self.assertEqual('error', data['result'])
+
+        login = c.login(username='proxytest', password='test')
+        self.assertTrue(login)
+        
+        TrustedSubnet.objects.create(subnet='127.0.0.1')
+        
+        response = c.post('/media/proxy/create/',
+                          {'url': self.record.get_thumbnail_url(), 'context': '_1_2'},
+                          HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(200, response.status_code)        
+        data = simplejson.loads(response.content)
+        self.assertEqual('ok', data['result'])
+        id = data['id']
+        c.logout()
+                
+        # try to retrieve content
+        url = '/media/proxy/%s/' % id
+        response = c.get(url, {'context': '_1_2'})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('image/jpeg', response['content-type'])
+        
+        # make sure image dimension restrictions took effect
+        image = Image.open(StringIO(response.content))
+        width, height = image.size
+        self.assertEqual(50, width)
+        

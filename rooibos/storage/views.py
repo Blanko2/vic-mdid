@@ -1,15 +1,23 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError
+from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, \
+    HttpResponseServerError, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.views.decorators.cache import cache_control
 from django.template import RequestContext
 from django.shortcuts import _get_queryset
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, authenticate
+from django.core.urlresolvers import resolve
+from django.conf import settings
 from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions
 from rooibos.data.models import Collection, Record
 from rooibos.storage import get_image_for_record, get_thumbnail_for_record
-from models import Media, Storage
+from rooibos.contrib.ipaddr import IP
+from rooibos.util import json_view
+from models import Media, Storage, TrustedSubnet, ProxyUrl
 import os
+import uuid
+from datetime import datetime
 
 
 @cache_control(max_age=3600)
@@ -100,3 +108,53 @@ def record_thumbnail(request, id, name):
             return HttpResponseServerError()
     else:
         return HttpResponseRedirect('/static/images/nothumbnail.jpg')
+
+
+@json_view
+def create_proxy_url(request):
+    if request.method == 'POST':
+        ip = IP(request.META['REMOTE_ADDR'])
+        for subnet in TrustedSubnet.objects.all():
+            if ip in IP(subnet.subnet):
+                break
+        else:
+            return HttpResponseForbidden()
+            
+        if hasattr(request.user, 'backend'):
+            backend = request.user.backend
+        else:
+            backend = None
+        proxy_url = ProxyUrl.objects.create(uuid=str(uuid.uuid4()),
+                                            subnet=subnet,
+                                            url=request.POST['url'],
+                                            context=request.POST['context'],
+                                            user=request.user,
+                                            user_backend=backend)
+        return dict(id=proxy_url.uuid)
+    else:
+        return HttpResponseNotAllowed(['POST'])
+        
+
+def call_proxy_url(request, uuid):
+    context = request.GET['context']
+
+    ip = IP(request.META['REMOTE_ADDR'])
+    for subnet in TrustedSubnet.objects.all():
+        if ip in IP(subnet.subnet):
+            break
+    else:
+        return HttpResponseForbidden()
+
+    proxy_url = get_object_or_404(ProxyUrl.objects.filter(uuid=uuid, context=context, subnet=subnet))    
+    proxy_url.last_access = datetime.now()
+    proxy_url.save()
+
+    view, args, kwargs = resolve(proxy_url.url)
+    
+    user = proxy_url.user
+    user.backend = proxy_url.user_backend or settings.AUTHENTICATION_BACKENDS[0]
+    login(request, user)
+    
+    kwargs['request'] = request
+    
+    return view(*args, **kwargs)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.files import File
 from django.conf import settings
+from django.contrib.auth.models import User
 import random
 import Image
 import os
@@ -138,3 +139,20 @@ class Media(models.Model):
             pass
         else:
             pass
+
+
+class TrustedSubnet(models.Model):
+    subnet = models.CharField(max_length=80)
+    
+
+class ProxyUrl(models.Model):
+    uuid = models.CharField(max_length=36, unique=True)
+    subnet = models.ForeignKey(TrustedSubnet)
+    url = models.CharField(max_length=1024)
+    context = models.CharField(max_length=256, null=True, blank=True)
+    user = models.ForeignKey(User)
+    user_backend = models.CharField(max_length=256, null=True, blank=True)
+    last_access = models.DateTimeField(null=True, blank=True)
+    
+    def __unicode__(self):
+        return 'ProxyUrl %s: %s (Ctx %s, Usr %s, Sbn %s)' % (self.uuid, self.url, self.context, self.user, self.subnet)
