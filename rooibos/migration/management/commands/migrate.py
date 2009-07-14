@@ -267,11 +267,11 @@ class Command(BaseCommand):
             for id in groups.keys():
                 AccessControl.objects.create(content_object=groups[id], read=True)
                 if storage.has_key(id):
-                    AccessControl.objects.create(content_object=storage[id]['full'], read=True)
-                    AccessControl.objects.create(content_object=storage[id]['medium'], read=True)
-                    AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
                     AccessControl.objects.create(content_object=storage[id]['general'], read=True)
-
+                    if not options.get('full_images_only'):
+                        AccessControl.objects.create(content_object=storage[id]['full'], read=True)
+                        AccessControl.objects.create(content_object=storage[id]['medium'], read=True)
+                        AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
 
         # Migrate fields
         
@@ -354,7 +354,7 @@ class Command(BaseCommand):
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM FieldData"))[0].C)
         for row in cursor.execute("SELECT ImageID,FieldID,FieldValue,OriginalValue,Type,Label,DisplayOrder " +
                                   "FROM FieldData INNER JOIN FieldDefinitions ON FieldID=FieldDefinitions.ID"):
-            if images.has_key(row.ImageID):
+            if images.has_key(row.ImageID) and row.FieldValue:
                 FieldValue.objects.create(record_id=images[row.ImageID],
                                           field=fields[row.FieldID],
                                           label=row.Label,

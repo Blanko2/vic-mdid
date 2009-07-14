@@ -25,7 +25,7 @@ class MetaDataNode(template.Node):
         result = []
         for value in fieldvalues:
             result.append('<div class="metadata-%sitem"><div class="label">%s</div><div class="value">%s</div></div>\n' %
-                          (value._subitem and 'sub' or '', value.resolved_label, value.value))
+                          (value._subitem and 'sub' or '', value.resolved_label, value.value or '&nbsp;'))
         
         return '<div class="metadata">%s</div>' % ''.join(result)
         
