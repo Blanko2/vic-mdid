@@ -144,6 +144,8 @@ class Media(models.Model):
 class TrustedSubnet(models.Model):
     subnet = models.CharField(max_length=80)
     
+    def __unicode__(self):
+        return "TrustedSubnet (%s)" % self.subnet
 
 class ProxyUrl(models.Model):
     uuid = models.CharField(max_length=36, unique=True)
