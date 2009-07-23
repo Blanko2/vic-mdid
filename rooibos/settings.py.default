@@ -120,7 +120,7 @@ STORAGE_SYSTEMS = {
     'online': 'rooibos.storage.online.OnlineStorageSystem',
 }
 
-SCRATCH_DIRS = 'd:/dev/rooibos/scratch/'
+SCRATCH_DIR = 'd:/dev/rooibos/scratch/'
 
 GROUP_MANAGERS = {
     'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
