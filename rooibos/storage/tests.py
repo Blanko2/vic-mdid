@@ -192,6 +192,7 @@ class ProxyUrlTest(unittest.TestCase):
         self.record.delete()
         self.storage.delete()
         self.collection.delete()
+        self.user.delete()
 
     
     def test_proxy_url(self):
@@ -229,3 +230,38 @@ class ProxyUrlTest(unittest.TestCase):
         width, height = image.size
         self.assertEqual(50, width)
         
+        
+    def test_duplicate_proxy_url(self):
+        
+        TrustedSubnet.objects.create(subnet='127.0.0.1')
+        proxy_url = ProxyUrl.create_proxy_url('/some/url', 'ctx1', '127.0.0.1', self.user)
+        proxy_url2 = ProxyUrl.create_proxy_url('/some/url', 'ctx2', '127.0.0.1', self.user)
+        proxy_url3 = ProxyUrl.create_proxy_url('/some/url', 'ctx1', '127.0.0.1', self.user)
+        self.assertEqual(proxy_url.uuid, proxy_url3.uuid)
+        self.assertNotEqual(proxy_url.uuid, proxy_url2.uuid)
+        
+        
+class OnlineStorageSystemTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.collection = Collection.objects.create(title='Test')
+        self.storage = Storage.objects.create(title='Test', name='test', system='online')
+        self.record = Record.objects.create(name='monalisa')
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        AccessControl.objects.create(content_object=self.storage, read=True)
+        AccessControl.objects.create(content_object=self.collection, read=True)
+        
+    def tearDown(self):
+        self.record.delete()
+        self.storage.delete()
+        self.collection.delete()
+ 
+    def test_retrieval(self):        
+        url = "file://" + os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif').replace('\\', '/')
+        media = Media.objects.create(record=self.record, storage=self.storage, url=url, mimetype='image/tiff')
+        
+        thumbnail = get_thumbnail_for_record(self.record)
+        self.assertTrue(thumbnail.width == 100)
+        self.assertTrue(thumbnail.height < 100)
+        
+        media.delete()

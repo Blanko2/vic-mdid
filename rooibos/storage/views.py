@@ -39,12 +39,12 @@ def retrieve(request, recordid, record, mediaid, media):
         return HttpResponseRedirect(mediaobj.get_absolute_url())
 
 
-def retrieve_image(request, recordid, record, width='100000', height='100000'):
+def retrieve_image(request, recordid, record, width=None, height=None):
 
-    width = int(width)
-    height = int(height)
+    width = int(width or '100000')
+    height = int(height or '100000')
     
-    media = get_image_for_record(recordid, width, height, request.user)
+    media = get_image_for_record(recordid, request.user, width, height)
     
     if not media:
         raise Http404()
@@ -52,7 +52,7 @@ def retrieve_image(request, recordid, record, width='100000', height='100000'):
     # return resulting image
     content = media.load_file()
     if content:
-        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
+        return HttpResponse(content=content, mimetype=str(media.mimetype))
     else:
         return HttpResponseServerError()
     
@@ -111,32 +111,21 @@ def record_thumbnail(request, id, name):
 
 
 @json_view
-def create_proxy_url(request):
+def create_proxy_url_view(request):
     if request.method == 'POST':
-        ip = IP(request.META['REMOTE_ADDR'])
-        for subnet in TrustedSubnet.objects.all():
-            if ip in IP(subnet.subnet):
-                break
-        else:
-            return HttpResponseForbidden()
-            
-        if hasattr(request.user, 'backend'):
-            backend = request.user.backend
-        else:
-            backend = None
-        proxy_url = ProxyUrl.objects.create(uuid=str(uuid.uuid4()),
-                                            subnet=subnet,
-                                            url=request.POST['url'],
-                                            context=request.POST['context'],
-                                            user=request.user,
-                                            user_backend=backend)
+        proxy_url = ProxyUrl.create_proxy_url(request.POST['url'],
+                                     request.POST['context'],
+                                     request.META['REMOTE_ADDR'],
+                                     request.user)
+        if not proxy_url:
+            return HttpResponseForbidden()        
         return dict(id=proxy_url.uuid)
     else:
         return HttpResponseNotAllowed(['POST'])
         
 
 def call_proxy_url(request, uuid):
-    context = request.GET['context']
+    context = request.GET.get('context')
 
     ip = IP(request.META['REMOTE_ADDR'])
     for subnet in TrustedSubnet.objects.all():
@@ -155,6 +144,7 @@ def call_proxy_url(request, uuid):
     user.backend = proxy_url.user_backend or settings.AUTHENTICATION_BACKENDS[0]
     login(request, user)
     
+    request.proxy_url = proxy_url
     kwargs['request'] = request
     
     return view(*args, **kwargs)
