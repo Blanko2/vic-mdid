@@ -14,6 +14,7 @@ from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
 import copy
 import random
+from rooibos.flickr.models import FlickrSearch
 
 
 class SearchFacet(object):
@@ -172,6 +173,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
     
+    search = FlickrSearch()
+    results = search.photoSearch(keywords)
+    flickr_total = results['total']
+    
     if request.GET.has_key('action'):
         page = safe_int(request.GET.get('op', '1'), 1)
     
@@ -303,7 +308,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                                'sort': sort,
                                'sortfields': fields,
                                'random': random.random(),
-                               'viewmode': viewmode,},
+                               'viewmode': viewmode,
+                               'flickr_total': flickr_total,},
                               context_instance=RequestContext(request))
 
 

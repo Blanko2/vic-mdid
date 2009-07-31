@@ -15,7 +15,7 @@ from rooibos.storage import get_thumbnail_for_record
 
 from rooibos.access import filter_by_access
 from django.conf import settings
-
+   
 def about(request):
     return render_to_response('main.html',
                               {},

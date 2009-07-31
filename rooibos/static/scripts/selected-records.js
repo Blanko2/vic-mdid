@@ -46,6 +46,10 @@ function deselectAll() {
     recordSelection(ids, false);
 }
 
+function exportAll() {
+	document.location = "/flickr/export-photo-list"
+}
+
 function bindSelectRecordCheckboxes() {
     $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
 }
@@ -54,6 +58,7 @@ $(document).ready(function() {
     $("#selected-records-menu").append($('<div class="dropdown">').append($("#selected-records")));
     bindSelectRecordCheckboxes()
     $("#selected-records-deselect-all").click(deselectAll);
+    $("#selected-records-export-flickr").click(exportAll);
     $(window).resize(adjustSelectedMenuHeight);
     adjustSelectedMenuHeight();
 });

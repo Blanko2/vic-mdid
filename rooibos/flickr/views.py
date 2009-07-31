@@ -12,10 +12,12 @@ from rooibos.settings import FLICKR_KEY, FLICKR_SECRET
 from forms import PeopleSearchForm
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
-
+from rooibos.flickr.models import FlickrUploadr, FlickrSearch, FlickrImportr
+from django.utils import simplejson
+from rooibos.util import json_view
+from rooibos.ui.templatetags.ui import session_status_rendered
 
 flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=True)
-
 
 def _save_file(targeturl, base, filename):
     try:
@@ -69,7 +71,7 @@ def photosets(request, id=None):
     except flickrapi.FlickrError:
         pass
 
-def set(request, setid=None):
+def flickrSet(request, setid=None):
     try:
         if setid:
             extras = 'url_t, url_s, url_m, url_o'
@@ -128,7 +130,148 @@ def import_set_photos(request):
             return render_to_response('flickr_setphotos.html', {'results': e},
                                       context_instance=RequestContext(request))
         else:
-            pass 
+            pass
     except flickrapi.FlickrError:
         pass
+		
 
+def export_photo_get_frob(request):
+	filename_array = request.POST.getlist('images[filename]')
+	title_array = request.POST.getlist('images[title]')
+	description_array = request.POST.getlist('images[description]')
+	# tags_array = request.POST.getlist('images[tags]')
+	is_public_array = request.POST.getlist('images[is_public]')
+	is_friend_array = request.POST.getlist('images[is_friend]')
+	is_family_array = request.POST.getlist('images[is_family]')
+	
+	
+	images = []
+	length = len(filename_array)
+	for i in range(0, length):
+		images.append( {'filename':filename_array[i],
+					    'imageInfo':{"title": title_array[i],
+            						'description': description_array[i], 
+            						# 'tags': tags_array[i], 
+            						'is_public': is_public_array[i], 
+            						'is_friend': is_friend_array[i], 
+            						'is_family': is_family_array[i] 
+                                }
+					} )
+	
+	request.session["images"] = images
+	uploadr = FlickrUploadr()
+	frob =  uploadr.flickrInstance().auth_getFrob(api_key=FLICKR_KEY)
+	frob = frob[0].text					
+
+	auth_url = uploadr.flickrInstance().auth_url('write', frob)
+	return render_to_response('flickr_authenticate_upload.html', { 'auth_url':auth_url }, 
+                                      context_instance=RequestContext(request))
+				      
+def export_photo_upload(request):
+	images = request.session.get("images",[])
+	frob = request.GET.get("frob", None)
+	
+	uploadr = FlickrUploadr()
+	try:
+		token = uploadr.flickrInstance().get_token(frob)
+	except Exception, detail:
+		return HttpResponseRedirect('/flickr')
+	errors = []
+	response = 'Success!'
+	
+	# uploadr.flickrInstance().get_token_part_two((token, frob))
+	
+	for image in images:
+		filename = image["filename"]
+		imageInfo = image["imageInfo"]
+		e = uploadr.uploadImage(filename, imageInfo)
+		e= str(e)
+		index = e.find('Error')
+		if index != -1:
+			errors.append(e[e.rfind(':')+1:])
+		index = e.find('Errno')
+		if index != -1:
+			errors.append(e[e.rfind(']')+1:])
+		
+	if len(errors) > 0:
+		response = "Errors:<br/><ul>"
+		for error in errors:
+			response += "<li>" + error + "</li>"
+		response += "</ul>"
+	# response= e
+		
+	return render_to_response('flickr_main.html', {'response':response},
+                                      context_instance=RequestContext(request))
+	
+def export_photo_list(request):
+	selected = request.session.get('selected_records', ())
+	
+	result = []
+	records = Record.objects.filter(id__in=selected)
+	for record in records:
+		media = Media.objects.select_related().filter(record=record)
+		
+		if request.user == record.owner or record.owner == None: # cmp(record.owner.get_full_name(),request.user.get_full_name()):
+			permission=True
+		else:
+			permission=False
+
+		result.append(dict(id=record.id,
+			title=record.title,
+			record_url=record.get_absolute_url(),
+			img_url=record.get_thumbnail_url(),
+			media_filepath=media[0].get_absolute_file_path(),
+			owner=record.owner,
+			permission=permission
+			)
+		)
+	
+	
+	return render_to_response('flickr_photo_list.html', {'request':request,'selected':result })
+    
+def photo_search(request):
+    search = FlickrSearch()
+    search_string = request.POST.get("search_string", "")
+    search_page = request.POST.get("search_page", 1)
+    view = request.POST.get("view", "thumb")
+    results = search.photoSearch(search_string,search_page)
+    
+    return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page, 'view':view},
+                                      context_instance=RequestContext(request))
+
+@json_view    
+def select_flickr(request):
+    ids = map(None, request.POST.getlist('id'))
+    checked = request.POST.get('checked') == 'true'
+    selected = request.session.get('selected_flickrs', ())
+    if checked:
+        selected = set(selected) | set(ids)
+    else:        
+        selected = set(selected) - set(ids)
+
+    result = []
+    for flickr in selected:
+        info = flickr.split('|')
+        result.append(dict(id=int(info[0]), title=info[1]))
+
+    request.session['selected_flickrs'] = selected
+    return dict(status=session_status_rendered(RequestContext(request)), flickrs=result, num_selected=len(result))
+
+def import_photos(request):
+    importr = FlickrImportr()
+    photos = request.session['selected_flickrs']
+    
+    imported_photos = []
+    for photo in photos:
+        id = photo.split('|')[0]
+        title = photo.split('|')[1]
+        result = importr.importPhoto(id, title)
+        imported_photos.append(result)
+    
+    si = SolrIndex()
+    si.index()
+    
+    request.session['selected_flickrs'] = []
+    return render_to_response('flickr_imported_photos.html',  {'photos':imported_photos},
+                                      context_instance=RequestContext(request))
+    

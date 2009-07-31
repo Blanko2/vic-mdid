@@ -15,10 +15,15 @@
 
 <h1>MDID flickr Portal</h1>
 
+<div>{{response|safe}} </div>
 <div>
 	<ul>
     	<li><a href="{% url flickr-people %}">Find flickr users</a></li>
     </ul>
+    <form action="{% url flickr-photo-search %}" method="post">
+        Search: <input name="search_string" type="text_field" value="" />
+        <input type="submit" value="Search" />
+    </form>
 </div>
 
 {% endblock %}
