@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.core.urlresolvers import reverse
+from django.conf import settings
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
 from django.db.models import Q
@@ -7,6 +8,7 @@ from django import forms
 from django.forms.models import modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.utils.http import urlquote
 from models import *
 from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access, accessible_ids, check_access
@@ -74,7 +76,6 @@ def selected_records(request):
                               context_instance=RequestContext(request))
 
 
-@login_required
 def record(request, id, name, edit=False):
 
     record = get_object_or_404(Record.objects.filter(id=id,
@@ -173,3 +174,15 @@ def record(request, id, name, edit=False):
                                },
                               context_instance=RequestContext(request))
 
+
+def record_autocomplete(request):
+    collections = filter_by_access(request.user, Collection)
+    if not collections:
+        raise Http404()
+    query = request.GET.get('q', '').lower()
+    limit = min(int(request.GET.get('limit', '10')), 100)    
+    field = get_object_or_404(Field, id=request.GET.get('field', '0'))
+    values = FieldValue.objects.filter(field=field, record__collection__in=collections, value__icontains=query) \
+        .values_list('value', flat=True).distinct().order_by('value')[:limit]
+    values = '\n'.join(urlquote(v) for v in values)
+    return HttpResponse(content=values)

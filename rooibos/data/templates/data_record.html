@@ -11,8 +11,16 @@
 {% endif %}
 {% endblock %}
 
+{% block stylesheets %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
+{% endblock %}
+
 {% block javascript %}
 {{ block.super }}
+<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
+<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
+
 <script type="text/javascript">
     $(document).ready(function() {
         function hide_empty(elements) {
@@ -42,7 +50,14 @@
                 ui.helper.removeClass('alternate-row');
             },
             });
-
+        $(".autocomplete :input").each(function() { 
+            var f = $('#' + this.id.substring(0, this.id.length - 5) + "field");
+            $(this).autocomplete('{% url data-record-autocomplete %}', {
+                extraParams: {field: function() { return f.val(); }},
+                formatItem: function(row, pos, num, query) { return decodeURIComponent(row); },
+                formatResult: function(row, pos, num) { return decodeURIComponent(row); },
+                });
+            });
     });
 </script>
 {% endblock %}
@@ -83,7 +98,7 @@
                     <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
                 </div>
                 <div class="column">
-                    <span class="row">{{ form.value }}</span>
+                    <span class="row autocomplete">{{ form.value }}</span>
                 </div>
                 <div class="column narrow">
                     <span class="row advanced"><label for="{{ form.date_start.html_name }}">Start year:</label> {{ form.date_start }}</span>
