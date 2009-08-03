@@ -1,98 +1,53 @@
-{% extends "master.html" %}
+{% extends "data_record_master.html" %}
 {% load ui %}
 {% load viewers %}
 {% load data %}
 
-{% block titledetail %}
-- {{ record.title }}
+{% block sidebar-extra %}
+{% if can_edit %}
+<div class="sidebar-item">
+    <a href="{% url data-record-edit record.id record.name%}">Edit</a>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
-$(document).ready(function() {
-    $("#metadata-form select").change(function () { this.form.submit(); });
-    $("#metadata-form :submit").remove();
-});
+    $(document).ready(function() {
+        function hide_empty(elements) {
+            empty = $.grep($(":text", elements), function(a) { return !a.value; });
+            empty = empty.concat($.grep($(":checkbox", elements), function(a) { return !a.checked; }));
+            $(empty).closest("span.row").hide("fast");
+        }
+        hide_empty($(".advanced"));
+        $(".advanced-switch input").attr("checked", false).click(function(e) {
+            e = $(this).closest(".fieldvalue-edit").find(".advanced");
+            if (this.checked) e.show("fast"); else hide_empty(e);
+            });
+        $(".advanced-switch").show();
+        $(".orderinput").hide();
+        $("#fieldvalues").css("cursor", "move").sortable({
+            axis: 'y',
+            stop: function(event, ui) {
+                $("#fieldvalues .fieldvalue-edit:even").removeClass('alternate-row');
+                $("#fieldvalues .fieldvalue-edit:odd").addClass('alternate-row');
+                $(".orderinput input").each(function(i) {
+                    // only set order if a field is selected
+                    if ($('#' + this.id.substring(0, this.id.length - 5) + "field").val())
+                        $(this).val(i + 1);
+                });
+            },
+            start: function(event, ui) {
+                ui.helper.removeClass('alternate-row');
+            },
+            });
+
+    });
 </script>
 {% endblock %}
 
-{% block content %}
-
-<div class="sidebar">
-
-<div class="sidebar-item">
-    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" />
-</div>
-
-<div class="sidebar-item">
-{% if request.user.is_authenticated %}
-    <h2>Your Tags</h2>
-    {% owned_tags_for_object record for request.user as tags %}
-    {% for tag in tags %}
-        {% tag tag record "True" %}
-    {% empty %}
-    Not tagged yet.
-    {% endfor %}    
-    
-    {% add_tags_form record %}   
-    
-{% endif %}
-
-    <h2>All Tags</h2>
-    {% owned_tags_for_object record except request.user as tags %}
-    {% for tag in tags %}
-        {% tag tag record %}
-    {% empty %}
-    Not tagged yet.
-    {% endfor %}    
-</div>
-
-{% if record.parent %}
-<div class="sidebar-item">
-    <h2>Parent record</h2>
-    {% record record.parent 'selectable' %}
-    <br style="clear: both" />
-</div>
-{% endif %}
-
-{% if record.record_set.count %}
-<div class="sidebar-item">
-    <h2>Child records</h2>
-    <div style="max-height: 400px; overflow: auto; ">
-        {% for child in record.record_set.all %}
-            {% record child 'selectable' %}
-        {% endfor %}
-        <br style="clear: both" />
-    </div>
-</div>
-{% endif %}
-
-{% if media %}
-<div class="sidebar-item">
-    <h2>Media</h2>
-    <ul>
-    {% for m in media %}
-        <li>
-            <a href="{{ m.get_absolute_url }}">{{ m.name }}</a>
-            {{ m.mimetype }}
-            {% if m.width and m.height %}
-                {{ m.width }}x{{ m.height }}
-            {% endif %}
-        </li>    
-    {% endfor %}
-    </ul>
-    {% if can_edit %}
-        <a href="{% url storage-upload record.id, record.name %}?next={{ request.get_full_path|urlencode }}">Upload media</a>
-    {% endif %}
-</div>
-{% endif %}
-
-</div>
-
-<div>
-    <h1>{{ record.title }}</h1>
-    
+{% block record-content %}
     <form id="metadata-form" action="." method="GET">
     Display metadata as: <select name="fieldset">
     <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
@@ -107,6 +62,51 @@ $(document).ready(function() {
     <div>
         {% metadata record selected_fieldset %}
     </div>
-</div>
-
+    
+{% if fv_formset %}
+    <div style="clear: both;">
+    <h2>Edit Metadata</h2>    
+    <form method="POST" action="">
+        {{ fv_formset.management_form }}
+        <div>
+            <input type="submit" value="Submit Changes" />
+            <div id="fieldvalues">
+        {% for form in fv_formset.forms %}        
+            <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
+                {{ form.errors }}
+                {{ form.id }}
+                {{ form.context_type }}
+                {{ form.context_id }}
+                <div class="column">
+                    <span class="row"><label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}</span>
+                    <span class="row advanced"><label for="{{ form.refinement.html_name }}">Refinement:</label> {{ form.refinement }}</span>
+                    <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
+                </div>
+                <div class="column">
+                    <span class="row">{{ form.value }}</span>
+                </div>
+                <div class="column narrow">
+                    <span class="row advanced"><label for="{{ form.date_start.html_name }}">Start year:</label> {{ form.date_start }}</span>
+                    <span class="row advanced"><label for="{{ form.date_end.html_name }}">End year:</label> {{ form.date_end }}</span>
+                    <span class="row advanced"><label for="{{ form.numeric.html_name }}">Numeric:</label> {{ form.numeric_value }}</span>
+                </div>
+                <div class="column narrow">
+                    <span class="row advanced"><label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}</span>
+                    <span class="row orderinput"><label for="{{ form.order.html_name }}">Order:</label> {{ form.order }}</span>
+                    <span class="row advanced"><label for="{{ form.group.html_name }}">Group:</label> {{ form.group }}</span>
+                </div>
+                <div class="column">
+                    <span class="row advanced"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>                    
+                    <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
+                    <span class="row advanced-switch" style="display: none;"><label>Advanced:</label> <input type="checkbox" /></span>
+                </div>
+            </div>
+        {% endfor %}
+            </div>
+            <input type="submit" value="Submit Changes" />
+        </div>
+    </form>
+    </div>
+{% endif %}    
+    
 {% endblock %}

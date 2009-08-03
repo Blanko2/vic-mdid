@@ -28,41 +28,6 @@ def collection_raw(request, id, name):
                                },
                               context_instance=RequestContext(request))
 
-def record_raw(request, id, name):
-    record = get_object_or_404(Record.objects.filter(id=id,
-                                                     collection__id__in=accessible_ids(request.user, Collection)).distinct())
-    media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
-
-    if request.user.is_authenticated():
-        fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
-    else:
-        fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
-    
-    selected_fieldset = request.GET.get('fieldset')
-    if selected_fieldset == '_all':
-        fieldset = None
-    elif selected_fieldset:
-        f = fieldsets.filter(name=selected_fieldset)
-        if f:
-            fieldset = f[0]
-        else:
-            fieldset = record.fieldset
-            selected_fieldset = None            
-    else:
-        fieldset = record.fieldset
-    
-    fieldvalues = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
-
-    return render_to_response('data_record.html',
-                              {'record': record,
-                               'media': media,
-                               'fieldsets': fieldsets,
-                               'selected_fieldset': fieldset,
-                               'fieldvalues': fieldvalues,
-                               'can_edit': check_access(request.user, record, write=True),
-                               },
-                              context_instance=RequestContext(request))
-
 
 def selected_records(request):
     
@@ -110,118 +75,101 @@ def selected_records(request):
 
 
 @login_required
-def record_edit(request, id, name):
+def record(request, id, name, edit=False):
 
-    owner=None
-    collection=None
-    
-    
-    
-    context = _clean_context(owner, collection)
+    record = get_object_or_404(Record.objects.filter(id=id,
+                                                     collection__id__in=accessible_ids(request.user, Collection)).distinct())
+    media = Media.objects.select_related().filter(record=record,
+                                                  storage__id__in=accessible_ids(request.user, Storage),
+                                                  master=None)
 
-    if owner and owner != '-':
-        owner = get_object_or_404(User, username=owner)
-        # cannot edit other user's metadata
-        if request.user != owner and not request.user.is_superuser:
-            raise Http404
+    if request.user.is_authenticated():
+        fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
     else:
-        owner = None
-    if collection and collection != '-':
-        # if collection given, must specify user context or have write access to collection
-        collection = get_object_or_404(filter_by_access(request.user, Collection, write=(owner != None)))
-    else:
-        collection = None
-        
-    if not owner and not collection:
-        # no context given, must have write access to a containing collection or be owner (handled below)
-        valid_ids = accessible_ids(request.user, Collection, write=True)
-    else:
-        # context given, must have access to any collection containing the record
-        valid_ids = accessible_ids(request.user, Collection)
-
-    record = get_object_or_404(Record.objects.filter(id=id, collection__id__in=valid_ids).distinct())
+        fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
     
-
-    def _get_fields():
-        return Field.objects.select_related('standard').all().order_by('standard', 'name')
-    
-    def _field_choices():        
-        grouped = {}
-        for f in _get_fields():
-            grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
-        return [('', '-' * 10)] + [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
-
-    class FieldValueForm(forms.ModelForm):
-        
-        def __init__(self, *args, **kwargs):
-            super(FieldValueForm, self).__init__(*args, **kwargs)
-            self.is_overriding = (self.instance.override != None)
-        
-        def clean_field(self):
-            if not hasattr(self, '_fields'):
-                self._fields = _get_fields()
-            data = self.cleaned_data['field']
-            return self._fields.get(id=data)
-
-        def clean(self):
-            cleaned_data = super(forms.ModelForm, self).clean()
-            cleaned_data['owner'] = owner
-            cleaned_data['collection'] = collection
-            cleaned_data['override'] = self.instance.override
-            return cleaned_data
-                    
-        field = forms.ChoiceField(choices=_field_choices())        
-        
-        class Meta:
-            model = FieldValue
-            exclude = ('override',)
-
-    
-    if owner or collection:    
-        fieldvalues_readonly = record.get_fieldvalues(filter_overridden=True, filter_hidden=True)    
-        fieldvalues = record.get_fieldvalues(owner=owner, collection=collection, filter_overridden=True, filter_context=True)
+    selected_fieldset = request.GET.get('fieldset')
+    if selected_fieldset == '_all':
+        fieldset = None
+    elif selected_fieldset:
+        f = fieldsets.filter(name=selected_fieldset)
+        if f:
+            fieldset = f[0]
+        else:
+            fieldset = record.fieldset
+            selected_fieldset = None            
     else:
+        fieldset = record.fieldset
+    
+    if edit:
+
+        def _get_fields():
+            return Field.objects.select_related('standard').all().order_by('standard', 'name')
+        
+        def _field_choices():        
+            grouped = {}
+            for f in _get_fields():
+                grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
+            return [('', '-' * 10)] + [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
+    
+        class FieldValueForm(forms.ModelForm):
+            
+            def __init__(self, *args, **kwargs):
+                super(FieldValueForm, self).__init__(*args, **kwargs)
+            
+            def clean_field(self):
+                if not hasattr(self, '_fields'):
+                    self._fields = _get_fields()
+                data = self.cleaned_data.get('field')
+                return self._fields.get(id=data)
+
+            def clean(self):
+                cleaned_data = super(forms.ModelForm, self).clean()
+                return cleaned_data
+                        
+            field = forms.ChoiceField(choices=_field_choices())
+            context_type = forms.IntegerField(widget=forms.HiddenInput, required=False)
+            context_id = forms.IntegerField(widget=forms.HiddenInput, required=False)
+            
+            class Meta:
+                model = FieldValue
+                exclude = []
+    
         fieldvalues_readonly = []
         fieldvalues = record.get_fieldvalues()
-    
-    FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
-                                             exclude=FieldValueForm.Meta.exclude, can_order=True, can_delete=True, extra=3)    
-    if request.method == 'POST':
-        if request.POST.has_key('override_values'):
-            override = map(int, request.POST.getlist('override'))
-            for v in fieldvalues_readonly.filter(id__in=override):
-                FieldValue.objects.create(record=record, field=v.field, label=v.label, value=v.value, type=v.type,
-                                          override=v, owner=owner, collection=collection)
-            return HttpResponseRedirect(request.META['PATH_INFO'])
-        else:
+        
+        FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
+                                                 exclude=FieldValueForm.Meta.exclude, can_delete=True, extra=3)    
+        if request.method == 'POST':
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
             if formset.is_valid():
                 instances = formset.save(commit=False)
-                for instance in instances:
+                o1 = fieldvalues and max(v.order for v in fieldvalues) or 0
+                o2 = instances and max(v.order for v in instances) or 0
+                order = max(o1, o2, 0)
+                for instance in instances:                    
                     instance.record = record
+                    if instance.order == 0:
+                        order += 1
+                        instance.order = order
                     instance.save()
-                record.set_fieldvalue_order([instance.id for instance in fieldvalues_readonly] +
-                                            [form.instance.id for form in formset.ordered_forms])
+                request.user.message_set.create(message="Changes to metadata saved successfully.")
                 return HttpResponseRedirect(request.META['PATH_INFO'])
+        else:
+            formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv')
+
     else:
-        formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv')
-    
-    return render_to_response('data_record_edit.html',
+        fieldvalues_readonly = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
+        formset = None
+
+    return render_to_response('data_record.html',
                               {'record': record,
-                               'context': context,
-                               'owner': owner,
-                               'collection': collection,
+                               'media': media,
+                               'fieldsets': fieldsets,
+                               'selected_fieldset': fieldset,
+                               'fieldvalues': fieldvalues_readonly,
                                'fv_formset': formset,
-                               'fieldvalues': fieldvalues_readonly,},
+                               'can_edit': check_access(request.user, record, write=True),
+                               },
                               context_instance=RequestContext(request))
-    
-    
-def _clean_context(owner__username, collection__name):
-    c = {}
-    c['owner'] = owner__username or '-'
-    c['collection'] = collection__name or '-'
-    if c['owner'] == '-' and c['collection'] == '-':
-        c['label'] = 'Default'
-    else:
-        c['label'] = 'Owner: %s Collection: %s' % (c['owner'], c['collection'])
-    return c
+

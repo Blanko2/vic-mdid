@@ -112,7 +112,7 @@ class Record(models.Model):
             qo = qo | Q(owner=owner)
         
         values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo) \
-                    .order_by('field','group','order','refinement')
+                    .order_by('order','field','group','refinement')
         
         if fieldset:
             values_to_map = []
@@ -249,8 +249,8 @@ class FieldValue(models.Model):
     date_end = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     numeric_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
     language = models.CharField(max_length=5, blank=True)
-    context_type = models.ForeignKey(ContentType, null=True)
-    context_id = models.PositiveIntegerField(null=True)
+    context_type = models.ForeignKey(ContentType, null=True, blank=True)
+    context_id = models.PositiveIntegerField(null=True, blank=True)
     context = generic.GenericForeignKey('context_type', 'context_id')
         
     def __unicode__(self):

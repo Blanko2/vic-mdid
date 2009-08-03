@@ -233,8 +233,8 @@ div.fieldvalue-edit optgroup {
     border-top: 1px solid black;
 }
 
-div.fieldvalue-edit span.fs-order input {
-    width: 30px;
+div.fieldvalue-edit div.narrow input {
+    width: 50px;
 }
 
 #comments {
