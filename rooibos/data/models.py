@@ -194,7 +194,7 @@ class Field(models.Model):
         ids = list(self.equivalent.values_list('id', flat=True))
         more = len(ids) > 1
         while more:
-            more = Field.objects.filter(~Q(id__in=ids), equivalent__id__in=ids).values_list('id', flat=True)
+            more = Field.objects.filter(~Q(id__in=ids), ~Q(standard=self.standard), equivalent__id__in=ids).values_list('id', flat=True)
             ids.extend(more)
         return Field.objects.select_related('standard').filter(id__in=ids)
     
