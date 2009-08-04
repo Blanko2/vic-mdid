@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
+from django.utils.http import urlquote
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
@@ -369,3 +370,16 @@ def overview(request):
     return render_to_response('overview.html',
                               {'collections': collections,},
                               context_instance=RequestContext(request))
+    
+    
+def fieldvalue_autocomplete(request):
+    collections = filter_by_access(request.user, Collection)
+    if not collections:
+        raise Http404()
+    query = request.GET.get('q', '').lower()
+    limit = min(int(request.GET.get('limit', '10')), 100)    
+    field = get_object_or_404(Field, id=request.GET.get('field', '0'))
+    values = FieldValue.objects.filter(field=field, record__collection__in=collections, value__icontains=query) \
+        .values_list('value', flat=True).distinct().order_by('value')[:limit]
+    values = '\n'.join(urlquote(v) for v in values)
+    return HttpResponse(content=values)

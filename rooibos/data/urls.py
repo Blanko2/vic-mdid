@@ -14,6 +14,5 @@ urlpatterns = patterns('',
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/$', record, name='data-record'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/edit/$', record, kwargs={'edit': True}, name='data-record-edit'),
     url(r'^selected/$', selected_records, name='data-selected'),
-    url(r'^autocomplete/$', record_autocomplete, name='data-record-autocomplete'),
     (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
 )
