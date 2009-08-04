@@ -1,0 +1,63 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+
+{% block stylesheets %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
+<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#criteria :text").each(function() { 
+            var f = $('#' + this.id.substring(0, this.id.length - 8) + "field");
+            $(this).autocomplete('{% url api-solr-autocomplete %}', {
+                extraParams: {
+                    field: function() { return f.val(); },
+                    collections: function() {
+                        return Array.join($("#collections :checked").map(function(a,b){return $(b).val()}))
+                        },
+                },
+                formatItem: function(row, pos, num, query) { return decodeURIComponent(row); },
+                formatResult: function(row, pos, num) { return decodeURIComponent(row); },
+                });
+            });
+});
+</script>
+{% endblock %}
+
+{% block help %}
+    {% pagehelp 'Search' %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Search collections</h1>
+
+<form method="POST" action=".">
+{{ formset.management_form }}
+
+Collections: <br />
+<div id="collections" style="overflow: auto; max-height: 8em; float: left; border: solid grey thin; white-space: nowrap; padding-right: 50px;">
+{{ collectionform.collections }}
+</div>
+
+<div id="criteria" style="clear: left; padding: 20px 0;">
+{% for form in formset.forms %}
+    <div>
+    {{ form }}
+    </div>
+{% endfor %}
+</div>
+
+    <input type="submit" value="Search" />
+</form>
+
+
+{% endblock %}

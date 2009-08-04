@@ -1,5 +1,11 @@
 @import url("flickr.css");
 
+form ul {
+    list-style-type: none;
+    padding: 0px;
+    margin: 0px;
+}
+
 #header {
     height: 1.6em;
     background-color: #2D678E;

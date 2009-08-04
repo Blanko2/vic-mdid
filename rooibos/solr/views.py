@@ -6,6 +6,9 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.utils.http import urlquote
+from django import forms
+from django.forms.formsets import formset_factory
+from django.db.models import Q
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
@@ -373,13 +376,97 @@ def overview(request):
     
     
 def fieldvalue_autocomplete(request):
-    collections = filter_by_access(request.user, Collection)
+    collection_ids = request.GET.get('collections')
+    q = collection_ids and Collection.objects.filter(id__in=collection_ids.split(',')) or Collection
+    collections = filter_by_access(request.user, q)
     if not collections:
         raise Http404()
     query = request.GET.get('q', '').lower()
     limit = min(int(request.GET.get('limit', '10')), 100)    
-    field = get_object_or_404(Field, id=request.GET.get('field', '0'))
-    values = FieldValue.objects.filter(field=field, record__collection__in=collections, value__icontains=query) \
+    field = request.GET.get('field')
+    q = field and Q(field__id=field) or Q()
+    values = FieldValue.objects.filter(q, record__collection__in=collections, value__icontains=query) \
         .values_list('value', flat=True).distinct().order_by('value')[:limit]
     values = '\n'.join(urlquote(v) for v in values)
     return HttpResponse(content=values)
+
+
+def search_form(request):
+    
+    collections = filter_by_access(request.user, Collection)
+    if not collections:
+        raise Http404()
+
+    def _get_fields():
+        return Field.objects.select_related('standard').all().order_by('standard__title', 'name')
+    
+    def _cmp(x, y):
+        if x == "Other": return 1
+        if y == "Other": return -1
+        return cmp(x, y)
+    
+    def _field_choices():        
+        grouped = {}
+        for f in _get_fields():
+            grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
+        return [('', 'Any')] + [(g, [(f.id, f.label) for f in grouped[g]]) for g in sorted(grouped, _cmp)]
+
+    class SearchForm(forms.Form):
+        TYPE_CHOICES = (('t', 'in'), ('T', 'not in'))
+        criteria = forms.CharField(required=False)        
+        type = forms.ChoiceField(choices=TYPE_CHOICES, required=False, label='')
+        field = forms.ChoiceField(choices=_field_choices(), required=False, label='')
+        
+    def _collection_choices():
+        result = []
+        for c in collections:
+            title = c.title
+            children = c.all_child_collections
+            if children:
+                title += " (including %s sub-collections)" % len(children)
+            result.append((c.id, title))
+        return result
+        
+    class CollectionForm(forms.Form):
+        collections = forms.MultipleChoiceField(choices=_collection_choices(),
+                                                widget=forms.CheckboxSelectMultiple,
+                                                required=False)
+        
+    SearchFormFormSet = formset_factory(form=SearchForm, extra=5)
+    
+    if request.method == "POST":
+        collectionform = CollectionForm(request.POST, prefix='coll')
+        formset = SearchFormFormSet(request.POST, prefix='crit')        
+        if formset.is_valid() and collectionform.is_valid():
+            core_fields = dict((f, f.get_equivalent_fields()) for f in Field.objects.filter(standard__prefix='dc'))
+            query = []
+            keywords = []
+            for form in formset.forms:
+                field = form.cleaned_data['field']
+                type = form.cleaned_data['type']
+                criteria = form.cleaned_data['criteria']
+                if criteria:
+                    if field:
+                        field = Field.objects.get(id=field)                        
+                        for cf, cfe in core_fields.iteritems():
+                            if field == cf or field in cfe:
+                                field = cf
+                                break
+                        query.append('c=%s%s_%s:%s' % (type.isupper() and '-' or '', field.name, type.lower(), urlquote(criteria)))
+                    else:
+                        keywords.append('%s"%s"' % (type.isupper() and '-' or '', urlquote(criteria)))
+            collections = collectionform.cleaned_data['collections']
+            if collections:
+                query.append('c=collections:%s' % '|'.join(collections))
+            if query or keywords:
+                qs = 'kw=%s&' % '+'.join(keywords) + '&'.join(query)
+                return HttpResponseRedirect(reverse('solr-search') + '?' + qs)
+    else:
+        collectionform = CollectionForm(prefix='coll')
+        formset = SearchFormFormSet(prefix='crit')
+    
+    return render_to_response('search.html',
+                              {'collectionform': collectionform,
+                               'formset': formset,
+                               },
+                              context_instance=RequestContext(request))
