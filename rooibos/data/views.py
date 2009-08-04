@@ -84,6 +84,8 @@ def record(request, id, name, edit=False):
                                                   storage__id__in=accessible_ids(request.user, Storage),
                                                   master=None)
 
+    can_edit = check_access(request.user, record, write=True)
+
     if request.user.is_authenticated():
         fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
     else:
@@ -103,6 +105,9 @@ def record(request, id, name, edit=False):
         fieldset = record.fieldset
     
     if edit:
+        
+        if not can_edit:
+            return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
         def _get_fields():
             return Field.objects.select_related('standard').all().order_by('standard', 'name')
@@ -170,7 +175,7 @@ def record(request, id, name, edit=False):
                                'selected_fieldset': fieldset,
                                'fieldvalues': fieldvalues_readonly,
                                'fv_formset': formset,
-                               'can_edit': check_access(request.user, record, write=True),
+                               'can_edit': can_edit,
                                },
                               context_instance=RequestContext(request))
 
