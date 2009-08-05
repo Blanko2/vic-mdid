@@ -14,6 +14,8 @@ from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
 from rooibos.access import filter_by_access, accessible_ids
 from rooibos.ui.forms import SplitTaggingField
+from rooibos.util import json_view
+from rooibos.storage.models import ProxyUrl
 from models import Presentation, PresentationItem
 
 
@@ -196,3 +198,27 @@ def items(request, id, name):
 def view(request, id, name):
     
     pass
+
+
+@json_view
+def temp_json(request, id, name):
+    presentation = get_object_or_404(Presentation.objects.filter(id=id))
+    
+    items = presentation.items.all()
+    
+    def process_url(url):
+        if hasattr(request, 'proxy_url'):
+            return request.proxy_url.get_additional_url(url).get_absolute_url()
+        else:
+            return url
+    
+    return dict(
+        title=presentation.title,
+        items=[
+            dict(
+                title=item.record.title,
+                url=process_url(item.record.get_thumbnail_url())
+            )
+            for item in items
+        ]
+    )
