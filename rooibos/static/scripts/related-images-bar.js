@@ -2,8 +2,7 @@ var relatedImagesEnabled = false;
 
 function showRelatedImages(querystring, element) {
     if (relatedImagesEnabled) {
-        $.ajax({
-            mode: 'queue',
+        ajaxManager.add({
             type: 'GET',
             url: '/explore/api/search/?' + querystring + "&s=random_" + (new Date().getTime()) + "+asc&ps=" + Math.floor($("#related-images-bar").width() / 170),
             dataType: 'json',

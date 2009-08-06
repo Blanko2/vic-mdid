@@ -1,7 +1,6 @@
 function flickrSelection(ids, checked) {
     if (!ids.length) ids = [ids];
-    $.ajax({
-        mode: 'queue',
+    ajaxManager.add({
         type: 'POST',
         url: '/flickr/select-flickr/',
         data: {'id': ids, 'checked': checked},

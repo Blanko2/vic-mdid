@@ -1,7 +1,6 @@
 function recordSelection(ids, checked) {
     if (!ids.length) ids = [ids];
-    $.ajax({
-        mode: 'queue',
+    ajaxManager.add({
         type: 'POST',
         url: '/ui/api/select-record/',
         data: {'id': ids, 'checked': checked},

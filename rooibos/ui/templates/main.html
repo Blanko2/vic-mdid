@@ -9,7 +9,7 @@
         var loadingRandomImages = true;    
         function showRandomImages() {            
             $("#randomimages").fadeOut("fast");
-            $.ajax({
+            ajaxManager.add({
                 type: 'GET',
                 url: '/explore/api/search/?v=im&s=random_' + (new Date().getTime()) + "+asc&ps=" + Math.floor($("#randomimages").width() / 110),
                 dataType: 'json',

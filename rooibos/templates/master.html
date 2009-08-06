@@ -17,7 +17,10 @@
     <script type="text/javascript" src="/static/jquery/jquery-ui-1.7.2.custom.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.hoverIntent.minified.js"></script>
-    <script type="text/javascript" src="/static/jquery/jquery.ajaxQueue.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery.ajaxmanager.js"></script>
+    <script type="text/javascript">
+        var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
+    </script>    
     <script type="text/javascript" src="/static/scripts/selected-records.js"></script>
     <script type="text/javascript" src="/static/scripts/related-images-bar.js"></script>
     <script type="text/javascript" src="/static/scripts/ui-scripts.js"></script>

@@ -1,8 +1,7 @@
 $(document).ready(function() {
     $(".removetag").click(function() {
         var span = $(this).parent();
-        $.ajax({
-            mode: 'queue',
+        ajaxManager.add({
             type: 'POST',
             url: this.href,
             dataType: 'json',
