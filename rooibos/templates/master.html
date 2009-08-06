@@ -62,7 +62,7 @@
 <body class="ui-reset">
 {% block header %}
 <div id="header">
-    
+    <div id="main-menu-anchor"><h1><a href="/">MDID 3</a></h1></div>    
     <div id="main-menu">
         <span>My Content</span>
         <a href="{% url presentation-manage %}">My Presentations</a>
@@ -78,11 +78,6 @@
         <a href="{% url flickr-main %}">Flickr</a>
         <a href="{% url about %}">About</a>
     </div>
-        
-        
-    
-    
-    <div id="main-menu-anchor"><h1><a href="/">MDID 3</a></h1></div>
     <ul id="menu">
         {% if user.is_authenticated %}
             <li><span class="nolink">Welcome, {{ user.first_name }}</span></li>
@@ -98,6 +93,10 @@
         {% endif %}
         <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
     </ul>    
+    <form method="GET" action="{% url solr-search %}" id="quicksearch">
+        Quick search: <input type="text" name="kw" />
+        <input type="submit" value="Go" />
+    </form>
 </div>
 {% if messages %}
 <div id="messages">

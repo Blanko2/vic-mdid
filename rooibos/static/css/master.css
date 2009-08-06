@@ -59,6 +59,10 @@ form ul {
     margin: 10px;
 }
 
+#quicksearch {
+    float: right;
+}
+
 #menu {
     display: block;
     float: right;
