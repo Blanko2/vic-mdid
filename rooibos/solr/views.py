@@ -161,7 +161,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     
     update_record_selection(request)
     
-    templates = dict(l='list')
+    templates = dict(l='list', im='images')
     
     viewmode = request.GET.get('v', 'thumb')
     if viewmode == 'l':

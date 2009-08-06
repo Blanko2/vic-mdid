@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotAllow
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.access import accessible_ids
@@ -15,8 +16,10 @@ from rooibos.util.models import OwnedWrapper
 
 def main(request):
     
+    form = AuthenticationForm()
+    
     return render_to_response('main.html',
-                              {},
+                              {'form': form,},
                               context_instance=RequestContext(request))
 
 

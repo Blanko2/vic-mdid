@@ -3,9 +3,91 @@
 {% load comments %}
 {% load humanize %}
 
+{% block javascript %}
+{{ block.super }}
+    <script type="text/javascript">    
+        var loadingRandomImages = true;    
+        function showRandomImages() {            
+            $("#randomimages").fadeOut("fast");
+            $.ajax({
+                type: 'GET',
+                url: '/explore/api/search/?v=im&s=random_' + (new Date().getTime()) + "+asc&ps=" + Math.floor($("#randomimages").width() / 110),
+                dataType: 'json',
+                success: function(r) {
+                    $("#randomimages").html(r.html);
+                    loadingRandomImages = true;
+                }
+            });
+        }
+        function displayRandomImages() {
+            if (loadingRandomImages) {
+                var ready = true;
+                $("#randomimages img").each(function (e,i) { ready = ready && i.complete; });
+                if (ready) {
+                    loadingRandomImages = false;
+                    $("#randomimages").fadeIn("slow");                    
+                }
+            }
+        }        
+        $(document).ready(function() {
+            showRandomImages();
+            setInterval("displayRandomImages();", 1000);
+            setInterval("showRandomImages();", 20000);
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
 
-<div id="comments">
+<div>
+    
+    <div id="main">
+    
+    <div id="randomimages"></div>
+    <h1>Welcome</h1>
+    
+    <div style="clear: both;"></div>
+    
+<div class="main-block">
+    <h2>Find Content</h2>
+    
+    <a href="{% url solr-search %}">Explore</a>
+    <a href="{% url solr-searchform %}">Search</a>
+    <a href="{% url solr-browse %}">Browse</a>
+    <a href="{% url solr-overview %}">Collection Overview</a>
+    <a href=".">Presentations</a>
+    <a href="{% url flickr-main %}">Flickr</a>
+    <a href="{% url about %}">About</a>
+    
+</div>
+
+<div class="main-block">
+    <h2>My content</h2>
+    
+    {% if user.is_authenticated %}
+    
+    <a href="{% url presentation-manage %}">My Presentations</a>
+    <a href=".">My Favorites</a>
+    <a href=".">My Content</a>
+    <a href=".">Options</a>
+    <a href="{% url logout %}">Log out</a>
+    
+    {% else %}
+
+    Please log in to see your content:
+    
+    <form method="POST" action="{% url login %}">
+        {{ form.as_p }}
+        <input type="submit" value="Log in" />
+    </form>
+    
+    {% endif %}
+</div>
+
+
+<div id="comments" class="main-block">
+    <h2>Announcements</h2>
+    
     {% get_comment_list for flatpages.flatpage 1 as comments %}
     {% for comment in comments %}
         {{ comment.comment|linebreaks }}
@@ -13,11 +95,8 @@
     {% endfor %}
 </div>
 
-<h1>Welcome</h1>
+<div style="clear: both;"></div>
 
-<div>
-    <a href="{% url solr-search %}">Explore local content</a> {% help 'explore' %}
-    
 </div>
 
 {% endblock %}

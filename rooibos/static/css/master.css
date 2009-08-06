@@ -10,7 +10,7 @@ form ul {
     height: 1.6em;
     background-color: #2D678E;
     color: white;
-    padding: 4px;
+    padding: 0.3em;
     margin-bottom: 5px;
     border-bottom: 2px solid black;
 }
@@ -27,6 +27,32 @@ form ul {
 #header a {
     color: white;
     text-decoration: none;
+}
+
+#main-menu {
+    background-color: #2D678E;
+    color: white;
+    display: none;
+    position: absolute;
+    top: 2.2em;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    padding: 10px;
+}
+
+#main-menu span, #main-menu a
+{
+    font-size: larger;
+    line-height: 120%;
+    float: left;
+    clear: left;
+    padding-left: 1em;
+}
+
+#main-menu span
+{
+    padding-left: 0;
+    margin-top: 0.5em;
 }
 
 #content {
@@ -243,14 +269,57 @@ div.fieldvalue-edit div.narrow input {
     width: 50px;
 }
 
-#comments {
-    float: right;
-    width: 300px;
+#main {
     -moz-border-radius: 5px;
     border: 1px solid black;
-    padding: 5px;
-    margin: 5px;
+    background-color: #DFF2FF;
+    padding: 10px;
+}
+
+#main h1 {
+    height: 100px;
+    padding: 0px;
+    float: left;
+    margin: 0 0 10px 20px;
+}
+
+.main-block {
+    float: left;
+    width: 28%;
+    min-height: 25em;
+    -moz-border-radius: 5px;
+    border: 1px solid black;
     background-color: #f9f9f9;
+    margin: 1%;
+    padding: 1%;
+}
+
+.main-block h2 {
+    margin-top: 0px;
+}
+
+.main-block a {
+    float: left;
+    clear: both;
+    font-size: x-large;
+    text-decoration: none;
+    line-height: 140%;
+}
+
+#randomimages {
+    height: 100px;
+    padding: 0px;
+    float: right;
+    margin: 0 40px 0 10px;
+    width: 60%;
+    text-align: right;
+}
+
+#randomimages img {
+    margin: 0 5px;
+    max-height: 100px;
+    max-width: 100px;
+    border: thin solid grey;
 }
 
 #comments p {
