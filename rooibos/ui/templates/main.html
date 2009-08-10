@@ -20,7 +20,7 @@
             });
         }
         function displayRandomImages() {
-            if (loadingRandomImages) {
+            if (loadingRandomImages && $("#randomimages img").length > 0) {
                 var ready = true;
                 $("#randomimages img").each(function (e,i) { ready = ready && i.complete; });
                 if (ready) {
@@ -87,7 +87,7 @@
     
     <a href="{% url presentation-manage %}">My Presentations</a>
     <a href=".">My Favorites</a>
-    <a href=".">My Content</a>
+    <a href="{% url solr-search %}?owner={{ user.id }}">My Content</a>
     <a href=".">Options</a>
     <a href="{% url logout %}">Log out</a>
     

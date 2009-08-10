@@ -9,6 +9,7 @@ from django.utils.http import urlquote
 from django import forms
 from django.forms.formsets import formset_factory
 from django.db.models import Q
+from django.contrib.auth.models import User
 from . import SolrIndex
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
@@ -31,7 +32,7 @@ class SearchFacet(object):
         return criteria
         
     def set_result(self, facets):
-        # break down dicts into tupels
+        # break down dicts into tuples
         if hasattr(facets, 'items'):
             self.facets = facets.items()
         else:
@@ -44,7 +45,20 @@ class SearchFacet(object):
         
     def or_available(self):
         return True
+    
+    def display_value(self, value):
+        return value.replace('|', ' or ')
 
+
+class OwnerSearchFacet(SearchFacet):
+    
+    def display_value(self, value):
+        value = '|'.join(User.objects.filter(id__in=value.split('|')).values_list('username', flat=True))
+        return super(OwnerSearchFacet, self).display_value(value)
+    
+    def set_result(self, facets):
+        self.facets = ()
+        
 
 class StorageSearchFacet(SearchFacet):
 
@@ -76,6 +90,10 @@ class CollectionSearchFacet(SearchFacet):
         for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
             result.append((id, facets[str(id)], title))
         super(CollectionSearchFacet, self).set_result(result)
+
+    def display_value(self, value):
+        value = '|'.join(Collection.objects.filter(id__in=value.split('|')).values_list('title', flat=True))
+        return super(CollectionSearchFacet, self).display_value(value)
 
 
 class ExactValueSearchFacet(SearchFacet):
@@ -111,9 +129,9 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         # create exact match criteria on the fly if needed
         if fname.endswith('_s') and not search_facets.has_key(fname):
             search_facets[fname] = ExactValueSearchFacet(fname)
-        
         o = search_facets[fname].process_criteria(o, user)
         fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
+
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
                  fields.iteritems())
     
@@ -197,6 +215,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
     search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
     search_facets.append(CollectionSearchFacet('collections', 'Collection'))
+    search_facets.append(OwnerSearchFacet('owner', 'Owner'))
     # convert to dictionary
     search_facets = dict((f.name, f) for f in search_facets)
 
@@ -270,12 +289,13 @@ def search(request, id=None, name=None, selected=False, json=False):
     form_url = "%s?%s" % (url, q.urlencode())
 
     def readable_criteria(c):
-        (f, o) = c.split(':', 1)
-        o = o.replace('|', ' or ')
+        (f, o) = c.split(':', 1)        
         if f.startswith('-'):
-            return (c, '%s not in %s' % (o, search_facets[f[1:]].label), False)
+            return (c, '%s not in %s' % (search_facets[f[1:]].display_value(o),
+                                         search_facets[f[1:]].label), False)
         else:
-            return (c, '%s in %s' % (o, search_facets[f].label), search_facets[f].or_available())
+            return (c, '%s in %s' % (search_facets[f].display_value(o),
+                                     search_facets[f].label), search_facets[f].or_available())
 
     
     # sort facets by label
