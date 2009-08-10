@@ -87,7 +87,7 @@
     
     <a href="{% url presentation-manage %}">My Presentations</a>
     <a href=".">My Favorites</a>
-    <a href="{% url solr-search %}?owner={{ user.id }}">My Content</a>
+    <a href="{% url solr-search %}?c=owner:{{ user.id }}">My Content</a>
     <a href=".">Options</a>
     <a href="{% url logout %}">Log out</a>
     

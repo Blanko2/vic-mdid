@@ -59,6 +59,9 @@ class OwnerSearchFacet(SearchFacet):
     def set_result(self, facets):
         self.facets = ()
         
+    def or_available(self):
+        return False
+    
 
 class StorageSearchFacet(SearchFacet):
 

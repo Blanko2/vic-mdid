@@ -1,6 +1,7 @@
 {% load ui %}
 {% load help %}
 {% load analytics %}
+{% load humanize %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -53,7 +54,9 @@
                 timeout: 500,
                 out: function() { $(this).children(".dropdown").slideUp(); },
             });            */
-            updateSelectedRecords();            
+            updateSelectedRecords();
+            
+            $("quicksearchkw").hint();
         });
     </script>
 {% endblock %}
@@ -65,10 +68,14 @@
     <div id="main-menu-anchor"><h1><a href="/">MDID 3</a></h1></div>    
     <div id="main-menu">
         <span>My Content</span>
+        {% if user.is_authenticated %}        
         <a href="{% url presentation-manage %}">My Presentations</a>
         <a href=".">My Favorites</a>
-        <a href=".">My Content</a>
+        <a href="{% url solr-search %}?c=owner:{{ user.id }}">My Content</a>
         <a href=".">Options</a>
+        {% else %}
+        <a href="{% url login %}">Log in</a>
+        {% endif %}
         <span>Find Content</span>
         <a href="{% url solr-search %}">Explore</a>
         <a href="{% url solr-searchform %}">Search</a>
@@ -86,16 +93,18 @@
             {% endif %}
         {% else %}
             <li><a href="{% url login %}">Log in</a></li>
-        {% endif %}                
-        <li class="--hover-menu" id="selected-records-menu"><span id="session-status">{% session_status %}</span></li>
+        {% endif %}
+        {% with request.session.selected_records|length as selected %}
+            <li><a href="{% url data-selected %}">{{ selected|intcomma }} record{{ selected|pluralize }} selected</a>
+        {% endwith %}
         {% if user.is_authenticated %}
         <li><a href="{% url logout %}">Log out</a></li>
         {% endif %}
         <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
     </ul>    
     <form method="GET" action="{% url solr-search %}" id="quicksearch">
-        Quick search: <input type="text" name="kw" />
-        <input type="submit" value="Go" />
+        <label id="quicksearchlabel" for="quicksearchkw">Quick search:</label>
+        <input type="text" name="kw" id="quicksearchkw" title="Quick search" />
     </form>
 </div>
 {% if messages %}
