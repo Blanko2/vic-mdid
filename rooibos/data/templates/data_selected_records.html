@@ -26,6 +26,9 @@
 
 <a href="{% url solr-selected %}">Explore {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
 
+<a href="{% url flickr-export-photo-list %}">Export to Flickr</a>
+
+
 {% with False as selectable %}
 {% include "results_bare_icons.html" %}
 {% endwith %}

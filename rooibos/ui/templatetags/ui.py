@@ -2,7 +2,7 @@ import re
 from django import template
 from django.utils.html import escape
 from django.template.loader import get_template
-from django.template import Context, Variable
+from django.template import Context, Variable, Template
 from django.contrib.contenttypes.models import ContentType
 from rooibos.contrib.tagging.models import Tag
 from rooibos.data.models import Record
@@ -18,13 +18,11 @@ def record(context, record, selectable=False, viewmode="thumb"):
             'viewmode': viewmode,
             }
 
-@register.inclusion_tag('ui_session_status.html', takes_context=True)
-def session_status(context):
-    return {'selected': len(context['request'].session.get('selected_records', ())),
-            }
 
-def session_status_rendered(context):
-    return get_template('ui_session_status.html').render(Context(session_status(context)))
+def session_status_rendered(context):    
+    t = Template('{% load humanize %}{{ selected|intcomma }} record{{ selected|pluralize }} selected')
+    c = Context(dict(selected = len(context['request'].session.get('selected_records', ()))))
+    return t.render(c)
 
 
 @register.simple_tag

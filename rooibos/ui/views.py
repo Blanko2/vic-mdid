@@ -25,13 +25,14 @@ def main(request):
 
 @json_view
 def select_record(request):
-    ids = map(int, request.POST.getlist('id'))
-    checked = request.POST.get('checked') == 'true'
     selected = request.session.get('selected_records', ())
-    if checked:
-        selected = set(selected) | set(ids)
-    else:        
-        selected = set(selected) - set(ids)
+    if request.method == "POST":
+        ids = map(int, request.POST.getlist('id'))
+        checked = request.POST.get('checked') == 'true'
+        if checked:
+            selected = set(selected) | set(ids)
+        else:        
+            selected = set(selected) - set(ids)
 
     result = []
     records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))

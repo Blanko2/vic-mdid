@@ -81,11 +81,6 @@ form ul {
     border-left: 2px solid white;
 }
 
-#menu .dropdown a {
-    display: block;
-    white-space: nowrap;
-}
-
 #menu a, #menu .nolink {
     padding: 0.3em;
     border: 1px solid #2D678E; /* same color as background, to prevent repositioning when hover border appears */
@@ -93,45 +88,6 @@ form ul {
 
 #menu a:hover {
     border: 1px dotted white;
-}
-
-#menu .dropdown {
-    overflow: hidden;
-    display: block;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    padding-top: 1.8em;
-    height: 0px;
-    min-width: 120px;
-}
-
-#menu .dropdown:hover {
-    overflow: visible;
-}
-
-#menu .dropdown div.menu {
-    background-color: #2D678E;
-    padding: 0.4em;
-    -moz-border-radius-bottomright: 5px;
-    -moz-border-radius-bottomleft: 5px;
-    border-right: 2px solid black;
-    border-bottom: 2px solid black;
-}
-
-#selected-records {
-    width: 170px;
-    height: 400px;
-    overflow: auto;
-}
-
-#selected-records div {
-    margin-bottom: 5px;
-}
-
-#selected-records a {
-    display: inline !important;
-    border: none !important;
 }
 
 #footer {

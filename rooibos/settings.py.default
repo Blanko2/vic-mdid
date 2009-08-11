@@ -108,6 +108,8 @@ INSTALLED_APPS = (
     'rooibos.viewers',
     'rooibos.help',
     'rooibos.presentation',
+    'rooibos.statistics',
+    'rooibos.flickr',
     'tagging',
     'pagination',
     'impersonate',
