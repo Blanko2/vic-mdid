@@ -1,14 +1,10 @@
-{% extends "data_record_master.html" %}
+{% extends "master.html" %}
 {% load ui %}
 {% load viewers %}
 {% load data %}
 
-{% block sidebar-extra %}
-{% if can_edit %}
-<div class="sidebar-item">
-    <a href="{% url data-record-edit record.id record.name%}">Edit</a>
-</div>
-{% endif %}
+{% block titledetail %}
+- {{ record.title }}
 {% endblock %}
 
 {% block stylesheets %}
@@ -18,11 +14,19 @@
 
 {% block javascript %}
 {{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+});
+</script>
+
 <script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
 <script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
 
 <script type="text/javascript">
     $(document).ready(function() {
+        $("#metadata-form select").change(function () { this.form.submit(); });
+        $("#metadata-form :submit").remove();
+
         function hide_empty(elements) {
             empty = $.grep($(":text", elements), function(a) { return !a.value; });
             empty = empty.concat($.grep($(":checkbox", elements), function(a) { return !a.checked; }));
@@ -62,7 +66,88 @@
 </script>
 {% endblock %}
 
-{% block record-content %}
+{% block content %}
+
+<div class="sidebar">
+
+{% if can_edit %}
+<div class="sidebar-item">
+    <a href="{% url data-record-edit record.id record.name%}">Edit</a>
+</div>
+{% endif %}
+
+<div class="sidebar-item">
+    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" />
+</div>
+
+<div class="sidebar-item">
+{% if request.user.is_authenticated %}
+    <h2>Your Tags</h2>
+    {% owned_tags_for_object record for request.user as tags %}
+    {% for tag in tags %}
+        {% tag tag record "True" %}
+    {% empty %}
+    Not tagged yet.
+    {% endfor %}    
+    
+    {% add_tags_form record %}   
+    
+{% endif %}
+
+    <h2>All Tags</h2>
+    {% owned_tags_for_object record except request.user as tags %}
+    {% for tag in tags %}
+        {% tag tag record %}
+    {% empty %}
+    Not tagged yet.
+    {% endfor %}    
+</div>
+
+{% if record.parent %}
+<div class="sidebar-item">
+    <h2>Parent record</h2>
+    {% record record.parent 'selectable' %}
+    <br style="clear: both" />
+</div>
+{% endif %}
+
+{% if record.record_set.count %}
+<div class="sidebar-item">
+    <h2>Child records</h2>
+    <div style="max-height: 400px; overflow: auto; ">
+        {% for child in record.record_set.all %}
+            {% record child 'selectable' %}
+        {% endfor %}
+        <br style="clear: both" />
+    </div>
+</div>
+{% endif %}
+
+{% if media %}
+<div class="sidebar-item">
+    <h2>Media</h2>
+    <ul>
+    {% for m in media %}
+        <li>
+            <a href="{{ m.get_absolute_url }}">{{ m.name }}</a>
+            {{ m.mimetype }}
+            {% if m.width and m.height %}
+                {{ m.width }}x{{ m.height }}
+            {% endif %}
+        </li>    
+    {% endfor %}
+    </ul>
+    {% if can_edit %}
+        <a href="{% url storage-upload record.id, record.name %}?next={{ request.get_full_path|urlencode }}">Upload media</a>
+    {% endif %}
+</div>
+{% endif %}
+
+</div>
+
+<div>
+    <h1>{{ record.title }}</h1>
+    
     <form id="metadata-form" action="." method="GET">
     Display metadata as: <select name="fieldset">
     <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
@@ -124,4 +209,6 @@
     </div>
 {% endif %}    
     
+</div>
+
 {% endblock %}
