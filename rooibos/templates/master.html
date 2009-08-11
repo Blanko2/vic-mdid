@@ -65,7 +65,7 @@
         <a href="{% url solr-search %}?c=owner:{{ user.id }}">My Content</a>
         <a href=".">Options</a>
         {% else %}
-        <a href="{% url login %}">Log in</a>
+        <a href="{% url login %}?next={{ request.get_full_path }}">Log in</a>
         {% endif %}
         <span>Find Content</span>
         <a href="{% url solr-search %}">Explore</a>
@@ -83,7 +83,7 @@
                 <li><a href="{% url admin "" %}">Administration</a></li>
             {% endif %}
         {% else %}
-            <li><a href="{% url login %}">Log in</a></li>
+            <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
         {% endif %}
         {% with request.session.selected_records|length as selected %}
             <li><a href="{% url data-selected %}" id="session-status">{{ selected|intcomma }} record{{ selected|pluralize }} selected</a></li>
