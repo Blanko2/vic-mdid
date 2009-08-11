@@ -561,3 +561,7 @@ img.thumbnail {
     padding: 0;
     margin: 0;
 }
+
+.blur {
+    color: grey;
+}
