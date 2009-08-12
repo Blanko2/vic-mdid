@@ -38,8 +38,12 @@
             });
         }
     
-        $(document).ready(function() {
+        function bindSelectRecordCheckboxes() {
             $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
+        }
+    
+        $(document).ready(function() {
+            bindSelectRecordCheckboxes();
             var hidemainmenutimeout;
             $("#main-menu-anchor, #main-menu").hover(
                 function() { clearTimeout(hidemainmenutimeout); $("#main-menu").show(); },
@@ -58,6 +62,12 @@
 <div id="header">
     <div id="main-menu-anchor"><h1><a href="/">MDID 3</a></h1></div>    
     <div id="main-menu">
+        {% if user.is_authenticated %}
+            <span class="nolink">Welcome, {{ user.first_name }}</span>
+            {% if user.is_staff %}
+                <li><a href="{% url admin "" %}">Administration</a></li>
+            {% endif %}
+        {% endif %}
         <span>My Content</span>
         {% if user.is_authenticated %}        
         <a href="{% url presentation-manage %}">My Presentations</a>
@@ -77,19 +87,13 @@
         <a href="{% url about %}">About</a>
     </div>
     <ul id="menu">
-        {% if user.is_authenticated %}
-            <li><span class="nolink">Welcome, {{ user.first_name }}</span></li>
-            {% if user.is_staff %}
-                <li><a href="{% url admin "" %}">Administration</a></li>
-            {% endif %}
-        {% else %}
-            <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
-        {% endif %}
         {% with request.session.selected_records|length as selected %}
             <li><a href="{% url data-selected %}" id="session-status">{{ selected|intcomma }} record{{ selected|pluralize }} selected</a></li>
         {% endwith %}
         {% if user.is_authenticated %}
         <li><a href="{% url logout %}">Log out</a></li>
+        {% else %}
+        <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
         {% endif %}
         <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
     </ul>    
