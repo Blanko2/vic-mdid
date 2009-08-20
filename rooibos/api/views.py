@@ -226,6 +226,7 @@ def presentation_detail(request, id):
                         id=item.record.id,
                         name=item.record.name,
                         title=item.record.title,
+                        thumbnail=item.record.get_thumbnail_url(),
                         metadata=[
                             dict(
                                 label=value.resolved_label,
