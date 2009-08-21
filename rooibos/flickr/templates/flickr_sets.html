@@ -22,18 +22,21 @@ function jsonFlickrApi(rsp){
 		// something broke!
 		return;
 	}
-
-	var ul = document.createElement("ul");
-	for (var i=0; i<rsp.photosets.photoset.length; i++){
-		var photoset = rsp.photosets.photoset[i];
-		var li = document.createElement("li");
-		var backlink = document.createElement("a");
-		backlink.setAttribute("href", "{% url flickr-set %}"+photoset.id);
-		backlink.appendChild(document.createTextNode(photoset.title._content));
-		li.appendChild(backlink);
-		ul.appendChild(li);
+	if(rsp.photosets.photoset.length > 0) {
+		var ul = document.createElement("ul");
+		for (var i=0; i<rsp.photosets.photoset.length; i++){
+			var photoset = rsp.photosets.photoset[i];
+			var li = document.createElement("li");
+			var backlink = document.createElement("a");
+			backlink.setAttribute("href", "{% url flickr-set %}"+photoset.id);
+			backlink.appendChild(document.createTextNode(photoset.title._content));
+			li.appendChild(backlink);
+			ul.appendChild(li);
+		}
+		document.body.appendChild(ul);
+	} else {
+		document.write("No public sets found.  Verify the set permissions are public.");
 	}
-	document.body.appendChild(ul);
 }
 {{results|safe}} ;
 </script>

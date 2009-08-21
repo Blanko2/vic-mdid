@@ -90,7 +90,6 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
     if m.width > width or m.height > height or m.mimetype != 'image/jpeg':
         
         def derivative_image(master, width, height):
-            file = None
             try:
                 file = master.load_file()
                 image = Image.open(file)
@@ -99,8 +98,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                 image.save(output, 'JPEG', quality=95, optimize=True)
                 return output, image.size
             finally:
-                if file:
-                    file.close()
+                file.close()
                 
         # See if a derivative already exists
         d = m.derivatives.filter(Q(width=width, height__lte=height) | Q(width__lte=width, height=height),

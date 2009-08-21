@@ -12,7 +12,7 @@ from rooibos.settings import FLICKR_KEY, FLICKR_SECRET
 from forms import PeopleSearchForm
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
-from rooibos.flickr.models import FlickrUploadr, FlickrSearch, FlickrImportr
+from rooibos.flickr.models import FlickrUploadr, FlickrSearch, FlickrImportr, FlickrSetPhotos
 from django.utils import simplejson
 from rooibos.util import json_view
 from rooibos.ui.templatetags.ui import session_status_rendered
@@ -70,18 +70,19 @@ def photosets(request, id=None):
             pass
     except flickrapi.FlickrError:
         pass
-
+       
 def flickrSet(request, setid=None):
-    try:
-        if setid:
-            extras = 'url_t, url_s, url_m, url_o'
-            e = flickr.photosets_getPhotos(photoset_id=setid, extras=extras, format='json')
-            return render_to_response('flickr_setphotos.html', {'results': e, 'setid': setid},
-                                      context_instance=RequestContext(request))
-        else:
-            pass 
-    except flickrapi.FlickrError:
-        pass
+	setPhotos = FlickrSetPhotos()	
+	id = setid
+	search_page = request.POST.get("search_page", 1)
+	view = request.POST.get("view", "thumb")
+	sort = 'relevance'
+	if request.POST.get("interesting"):
+		sort = 'interestingness-desc'
+	results = setPhotos.setPhotos(id,search_page,sort)
+	
+	return render_to_response('flickr_setphotos.html',  {'results':results,'setid':id,'search_page':search_page,'sort':sort,'view':view},
+									  context_instance=RequestContext(request))       
 
 def make_collection(request):
     storage = Storage.objects.get(name='flickr-full')
@@ -97,7 +98,7 @@ def import_set_photos(request):
             collection, created = Collection.objects.get_or_create(title=title, name=title)
             if created:
                 collection.save()
-                ms.append('Created Collection %s' % collection.title)
+                # ms.append('Created Collection %s' % collection.title)
 
             extras = 'license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias, url_sq, url_t, url_s, url_m, url_o'
             e = flickr.photosets_getPhotos(photoset_id=setid, extras=extras)
@@ -115,13 +116,13 @@ def import_set_photos(request):
                 CollectionItem.objects.create(record=record, collection=collection).save()
                 media = Media(record=record, 
                               name='full',
-                              url = photo.attrib['url_o'].split('/')[-1],
+                              url = photo.attrib['url_m'].split('/')[-1],
                               storage = storage,
-                              mimetype = 'image/jpeg',
-                              width = photo.attrib['width_o'],
-                              height = photo.attrib['height_o'])
+                              mimetype = 'image/jpeg')
+                              #width = photo.attrib['width_o'],
+                              #height = photo.attrib['height_o'])
                 media.save()
-                _save_file(photo.attrib['url_o'], storage.base, photo.attrib['url_o'].split('/')[-1])
+                _save_file(photo.attrib['url_m'], storage.base, photo.attrib['url_m'].split('/')[-1])
 
                 siu = SolrIndexUpdates(record=record.id)
                 siu.save()
@@ -215,8 +216,13 @@ def export_photo_list(request):
 			permission=True
 		else:
 			permission=False
+		
+		legend = record.title
+		if legend and len(legend) > 0 and len(legend) > 75:
+			legend = record.title[:75] + "..."
 
 		result.append(dict(id=record.id,
+			legend=legend,
 			title=record.title,
 			record_url=record.get_absolute_url(),
 			img_url=record.get_thumbnail_url(),
@@ -227,16 +233,20 @@ def export_photo_list(request):
 		)
 	
 	
-	return render_to_response('flickr_photo_list.html', {'request':request,'selected':result })
+	return render_to_response('flickr_photo_list.html', {'request':request,'selected':result },
+                                      context_instance=RequestContext(request))
     
 def photo_search(request):
     search = FlickrSearch()
     search_string = request.POST.get("search_string", "")
     search_page = request.POST.get("search_page", 1)
     view = request.POST.get("view", "thumb")
-    results = search.photoSearch(search_string,search_page)
+    sort = 'relevance'
+    if request.POST.get("interesting"):
+    	sort = 'interestingness-desc'
+    results = search.photoSearch(search_string,search_page,sort)
     
-    return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page, 'view':view},
+    return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view},
                                       context_instance=RequestContext(request))
 
 @json_view    

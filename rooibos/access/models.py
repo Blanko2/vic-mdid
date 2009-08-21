@@ -6,13 +6,6 @@ from django.contrib.auth.models import User, Group
 from rooibos.contrib.ipaddr import IP
 
 
-class SystemAccess(models.Model):
-    name = models.CharField(max_length=32)
-    
-    def __unicode__(self):
-        return "SystemAccess (%s)" % self.name
-    
-
 class AccessControl(models.Model):    
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()

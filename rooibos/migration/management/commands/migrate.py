@@ -13,7 +13,7 @@ from datetime import datetime
 from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
 from rooibos.storage.models import Storage, Media
 from rooibos.solr import SolrIndex
-from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP, SystemAccess
+from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP
 from rooibos.util.progressbar import ProgressBar
 from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
 from rooibos.contrib.tagging.models import Tag
@@ -211,23 +211,6 @@ class Command(BaseCommand):
             if restrictions_callback:
                 restrictions_callback(ac, row)            
             return True
-       
-        # Migrate system permissions
-        
-        system_permissions = [
-            ('CreateSlideshow', SystemAccess.objects.get(name='SLIDESHOW_CREATE')),
-            ('PublishSlideshow', SystemAccess.objects.get(name='SLIDESHOW_PUBLISH')),
-            ('UserOptions', SystemAccess.objects.get(name='USER_OPTIONS'))
-        ]
-        
-        for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
-                                  "FROM AccessControl WHERE ObjectType='O' AND ObjectID=1"):
-            for (perm, obj) in system_permissions:
-                ac = AccessControl()
-                ac.content_object = obj
-                if populate_access_control(ac, row, P[perm], 0, 0):
-                    if ac.read != None:
-                        ac.save()
        
         #Privilege.ModifyACL  -> manage
         #Privilege.ManageCollection  -> manage
@@ -445,10 +428,9 @@ class Command(BaseCommand):
                     ac.save()
 
 
-                    
-            
-            
+        # Migrate system permissions
         
+        # todo
 
     def process_xml_resource(self, record, storage, file):
         

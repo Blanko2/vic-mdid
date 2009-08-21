@@ -46,6 +46,9 @@
 <form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
     <input name="search_string" type="hidden" value="{{ keywords }}" />
 </form>
+<form id="artstor_form" name="artstor_form" method="POST" action="{% url artstor-photo-search %}">
+    <input name="search_string" type="hidden" value="{{ keywords }}" />
+</form>
 
 <form method="GET" action="{{ form_url }}">
 
@@ -61,7 +64,8 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 <input id="submit_record_selections" type="submit" name="action" value="Select" />
 
-Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results on Flickr.
+Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
+Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
 </div>
 
 {% for f,v in hiddenfields %}

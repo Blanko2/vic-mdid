@@ -21,9 +21,8 @@
 </div>
 
 <div class="horizontal-block">
-    <form action="{% url flickr-photo-search %}" method="post">
+    <form action="{% url artstor-photo-search %}" method="post">
         Keywords: <input name="search_string" type="text_field" value="{{ search_string }}" />
-        <input type="checkbox" class="flickr-select" name="interesting" value="1" {% ifequal sort "interestingness-desc" %} checked="checked" {% endifequal %}> Interesting
         <input type="submit" value="Go" />
         View:
         <select name="view" id="view_dropdown" onchange="pagination.view.value = this[this.selectedIndex].value; paginate(0)">

@@ -16,8 +16,7 @@
 	position: relative;
 	vertical-align: middle;
 	float: left;
-	margin: 5px;
-	width: 80px;
+	width: 75px;
 	overflow: visible;
 }
 
@@ -27,14 +26,12 @@
 
 .flickr input {
 	float: left;
-	margin: 5px;
-	width: 300px; 
+	width: 350px; 
 }
 
 .flickr textarea {
 	float: left;
-	margin: 5px;
-	width: 300px; 
+	width: 350px; 
 }
 
 .flickr-search ul {

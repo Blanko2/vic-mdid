@@ -2,42 +2,32 @@
 {% load help %}
 {% load comments %}
 {% load humanize %}
+{% load smart_if %}
+{% load flickr_ui %}
 
 {% block content %}
 
-<div id="comments">
-    {% get_comment_list for flatpages.flatpage 1 as comments %}
-    {% for comment in comments %}
-        {{ comment.comment|linebreaks }}
-        <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
-    {% endfor %}
+<div class="horizontal-block">
+    Your query found {{ results.total }} hit(s).
+    Page {{ results.page }} of {{ results.pages }}.
+    {% if results.page > 1 %}<a href="javascript:;" onclick="paginate(-1)">Previous</a>{% endif %}
+    {% if results.page < results.pages %}<a href="javascript:;"  onclick="paginate(1)">Next</a>{% endif %}
 </div>
 
-<h1>flickr Sets</h1>
+<div class="horizontal-block">
+    {% if user.is_authenticated %}
+		<form method="POST" action="{% url flickr-import-set %}">
+			<input type="hidden" name="setid" value="{{ setid }}"/>
+			<input type="submit" value="Import Collection"/>
+		</form>
+    {% endif %}
+</div>
 
-<script type="text/javascript">
-function jsonFlickrApi(rsp){
+<div class="resultlist">
+	{% for photo in results.photos %}
+	    {% photo photo 'selectable' view %}
+	{% endfor %}
+</div>
 
-	if (rsp.stat != "ok"){
-		// something broke!
-		return;
-	}
 
-	for (var i=0; i<rsp.photoset.photo.length; i++){
-		var photo = rsp.photoset.photo[i];
-		var link = document.createElement("a");
-		link.setAttribute("href", photo.url_o);
-		var img = document.createElement("img");
-		img.setAttribute("src", photo.url_t);
-		link.appendChild(img);
-		document.body.appendChild(link);
-	}
-}
-{{results|safe}} ;
-</script>
-
-<form method="POST" action="{% url flickr-import-set %}">
-<input type="hidden" name="setid" value="{{ setid }}"/>
-<input type="submit" value="Import Collection"/>
-</form>
 {% endblock %}

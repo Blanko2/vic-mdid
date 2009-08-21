@@ -1,11 +1,9 @@
-import flickrapi
 import urllib, urllib2, time
 from os import makedirs
 from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
 from rooibos.storage import Storage, Media
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
-from rooibos.settings import FLICKR_KEY, FLICKR_SECRET
 from rooibos.access.models import AccessControl
 
 def _save_file(targeturl, base, filename):
@@ -22,17 +20,17 @@ def _save_file(targeturl, base, filename):
     except Exception, detail:
 		print 'Error:', detail
 		
-class FlickrUploadr:
+class ArtstorUploadr:
 
-	flickr = None
+	artstor = None
 	
 	def __init__(self):
-		self.flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=False, store_token=False)
+		self.artstor = artstorapi.ArtstorAPI(FLICKR_KEY, FLICKR_SECRET, cache=False, store_token=False)
 		
-	def flickrInstance(self):
-		return self.flickr
+	def artstorInstance(self):
+		return self.artstor
 	
-	def flickr_callback(progress, done):
+	def artstor_callback(progress, done):
 		if done:
 			return done
 		else:
@@ -41,60 +39,33 @@ class FlickrUploadr:
 	def uploadImage(self, imageFilename, imageInfo={"title": "", "description": "", "tags": "", "is_public": 1, "is_friend": 0, "is_family": 0 }
 ):
 		try:
-			answer = self.flickr.upload(filename=imageFilename.encode('utf-8'), callabck=self.flickr_callback, title=imageInfo.get("title", "").encode('utf-8'), description=imageInfo.get("description", "").encode('utf-8'), tags=imageInfo.get("tags", "").encode('utf-8'), is_public=imageInfo.get("is_public", 1), is_friend=imageInfo.get("is_friend", 0), is_family=imageInfo.get("is_family", 0))
+			answer = self.artstor.upload(filename=imageFilename.encode('utf-8'), callabck=self.artstor_callback, title=imageInfo.get("title", "").encode('utf-8'), description=imageInfo.get("description", "").encode('utf-8'), tags=imageInfo.get("tags", "").encode('utf-8'), is_public=imageInfo.get("is_public", 1), is_friend=imageInfo.get("is_friend", 0), is_family=imageInfo.get("is_family", 0))
 			return answer
 		except Exception, detail:
 			return detail
 		return
 	
-class FlickrSearch:
-	
-	flickr = None
-	
-	def __init__(self):
-		self.flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=True, store_token=False)
-		
-	def flickrInstance(self):
-		return self.flickr
-	
-	def photoSearch(self, searchString="", page=1, sort='date-posted-desc', perpage=50):
+class ArtstorSearch:
+
+	def photoSearch(self, searchString="", page=1, sort='date-posted-desc', per_page=50):
+		pages = "1"
+		photos = {}
+		total = "42"		
 		if searchString == "":
 			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
-		try:
-			results = self.flickr.flickr_call(method='flickr.photos.search', text=searchString, api_key=FLICKR_KEY, format='xmlnode', page=page, per_page=perpage, extras='url_t,path_alias', sort=sort)
-		except Exception, detail:
-		  return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
-		
-		total = results.photos[0]['total']
-		if int(total) == 0:
-			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
-		
-		page = results.photos[0]['page']
-		pages = results.photos[0]['pages']
-		per_page = results.photos[0]['perpage']
-		raw_photos = results.photos[0].photo
-		photos = []				
-		for photo in raw_photos:
-			if photo['title'] == "":
-				photo['title'] = 'None'
-			photos.append({'id': photo['id'], 'title': photo['title'], 'thumb': photo['url_t'], 'photo_page': "http://www.flickr.com/photos/" + photo['owner'] + "/" + photo['id']})
-			
 		return {"total": int(total), "page": int(page), "pages": int(pages), "per_page": int(per_page), "photos": photos}
 		
-class FlickrImportr:
+class ArtstorImportr:
 	
-	flickr = None
-	
-	def __init__(self):
-		self.flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=False, store_token=False)
-		
-	def flickrInstance(self):
-		return self.flickr
+	artstor = None
+			
+	def artstorInstance(self):
+		return self.artstor
 	
 	def getOriginalPhoto(self, photoId):
 		info = []
 		try:
-			info = self.flickr.flickr_call(method='flickr.photos.getSizes', api_key=FLICKR_KEY, format='xmlnode', photo_id=photoId)
+			info = self.artstor.artstor_call(method='artstor.photos.getSizes', api_key=FLICKR_KEY, format='xmlnode', photo_id=photoId)
 		except Exception, detail:
 			return []
 		
@@ -105,7 +76,7 @@ class FlickrImportr:
 	def importPhoto(self, photoId, title):
 		originalInfo = self.getOriginalPhoto(photoId)
 		
-		collection, created = Collection.objects.get_or_create(title='flickr Import', name='flickr-import')
+		collection, created = Collection.objects.get_or_create(title='artstor Import', name='artstor-import')
 		if created:
 			collection.save()		
 		
@@ -138,21 +109,18 @@ class FlickrImportr:
 		siu.save()
 		return dict(record=record, media=media)
 
-class FlickrSetPhotos:
+class ArtstorSetPhotos:
 	
-	flickr = None
-	
-	def __init__(self):
-		self.flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=True, store_token=False)
-		
-	def flickrInstance(self):
-		return self.flickr
+	artstor = None
+			
+	def artstorInstance(self):
+		return self.artstor
 	
 	def setPhotos(self, setId="", page=1, sort='date-posted-desc', perpage=50):
 		if setId == "":
 			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
 		try:
-			results = self.flickr.flickr_call(method='flickr.photosets.getPhotos', photoset_id=setId, api_key=FLICKR_KEY, format='xmlnode', page=page, per_page=perpage, extras='url_t,path_alias', sort=sort)
+			results = self.artstor.artstor_call(method='artstor.photosets.getPhotos', photoset_id=setId, api_key=FLICKR_KEY, format='xmlnode', page=page, per_page=perpage, extras='url_t,path_alias', sort=sort)
 		except Exception, detail:
 		  return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(10), "photos": {}}
 		
@@ -169,5 +137,5 @@ class FlickrSetPhotos:
 		for photo in raw_photos:
 			if photo['title'] == "":
 				photo['title'] = 'None'
-			photos.append({'id': photo['id'], 'title': photo['title'], 'thumb': photo['url_t'], 'photo_page': "http://www.flickr.com/photos/" + owner + "/" + photo['id']})			
+			photos.append({'id': photo['id'], 'title': photo['title'], 'thumb': photo['url_t'], 'photo_page': "http://www.artstor.com/photos/" + owner + "/" + photo['id']})			
 		return {"total": int(total), "page": int(page), "pages": int(pages), "per_page": int(per_page), "photos": photos}

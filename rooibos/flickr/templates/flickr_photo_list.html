@@ -22,11 +22,14 @@
 			<li><input type="submit" value="Export to Flickr" style="width:120px;" /></li>
 			{% for photo in selected %}
 				<fieldset>
-				<legend>{{ photo.title}}</legend>
+				<legend>{{ photo.legend}}</legend>
 				{% if photo.permission %}
 					<ul>
 						<input type="hidden" name="images[filename]" value="{{ photo.media_filepath }}" />
 						<input type="hidden" name="images[id]" value="{{ photo.id }}" />
+						<li>
+							<a href="{{ photo.record_url }}" target="_blank"><img src="{{ photo.img_url }}" style="border:none" /></a>
+						</li>
 						<li>
 							<label>Owner:</label>
 							{{ photo.owner }}

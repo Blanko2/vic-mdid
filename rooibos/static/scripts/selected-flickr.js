@@ -1,6 +1,7 @@
 function flickrSelection(ids, checked) {
     if (!ids.length) ids = [ids];
-    ajaxManager.add({
+    $.ajax({
+        mode: 'queue',
         type: 'POST',
         url: '/flickr/select-flickr/',
         data: {'id': ids, 'checked': checked},
@@ -20,15 +21,23 @@ function updateSelectedFlickrs() {
 }
 
 function addSelectedFlickr(id, title) {
+    var a = $("<a>").attr('href', 'javascript:flickrDeselect(\''+id+'|'+title+'\')').append('x');
     var div = $("<div>").attr('id', 'selected-flickr-' + id + '|' + title);
     $("#selected-flickrs").append(div);
-    document.getElementById('selected-flickr-' + id + '|' + title).appendChild(document.createTextNode(title));
+    document.getElementById('selected-flickr-' + id + '|' + title).appendChild(document.createTextNode(title+" ("));
+    div.append(a);
+    document.getElementById('selected-flickr-' + id + '|' + title).appendChild(document.createTextNode(")"));
 }
 
 function flickrSelectAllOnPage() {
     ids = Array();
     $(".flickr-select").each(function (i) { ids[i] = this.value; }).val(ids);
     flickrSelection(ids, true);
+}
+
+function flickrDeselect(id) {
+    $(".flickr-select[value='" + id + "']").removeAttr("checked");
+	flickrSelection(id, false);
 }
 
 function flickrDeselectAll() {
