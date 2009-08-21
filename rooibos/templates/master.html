@@ -1,6 +1,7 @@
 {% load ui %}
 {% load help %}
 {% load analytics %}
+{% load humanize %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -13,31 +14,44 @@
 <![endif]-->
 {% endblock %}
 {% block javascript %}
-    <script type="text/javascript" src="/static/jquery/jquery-1.2.6.min.js"></script>
-    <script type="text/javascript" src="/static/jquery/jquery-ui-personalized-1.5.2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery-ui-1.7.2.custom.min.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/jquery.hoverIntent.minified.js"></script>
-    <script type="text/javascript" src="/static/jquery/jquery.ajaxQueue.js"></script>
-    <script type="text/javascript" src="/static/scripts/selected-records.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery.ajaxmanager.js"></script>
+    <script type="text/javascript">
+        var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
+    </script>    
     <script type="text/javascript" src="/static/scripts/related-images-bar.js"></script>
     <script type="text/javascript" src="/static/scripts/ui-scripts.js"></script>
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->        
     <script type="text/javascript">
+        function recordSelection(ids, checked) {
+            var method = ids == 0 ? 'GET' : 'POST';
+            if (!ids.length) ids = [ids];
+            ajaxManager.add({
+                type: method,
+                url: '/ui/api/select-record/',
+                data: {'id': ids, 'checked': checked},
+                dataType: 'json',
+                success: function(r) { $("#session-status").html(r.status); }
+            });
+        }
+    
+        function bindSelectRecordCheckboxes() {
+            $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
+        }
+    
         $(document).ready(function() {
-            $("#menu .dropdown").css({
-                'overflow': 'visible',
-                'display': 'none',
-                'top': '1.8em',
-                'padding-top': '0px'
-            });
-            $(".hover-menu").hoverIntent({
-                sensitivity: 1,
-                interval: 50,
-                over: function() { $(this).children(".dropdown").slideDown(); },
-                timeout: 500,
-                out: function() { $(this).children(".dropdown").slideUp(); },
-            });
-            updateSelectedRecords();
+            bindSelectRecordCheckboxes();
+            var hidemainmenutimeout;
+            $("#main-menu-anchor, #main-menu").hover(
+                function() { clearTimeout(hidemainmenutimeout); $("#main-menu").show(); },
+                function() { hidemainmenutimeout = setTimeout('$("#main-menu").hide();', 500); }
+            );
+            $("#quicksearchkw").hint();
+            $("#quicksearchlabel").hide();            
+            recordSelection(0, false);
         });
     </script>
 {% endblock %}
@@ -46,50 +60,47 @@
 <body class="ui-reset">
 {% block header %}
 <div id="header">
-    <h1><a href="/">MDID 3</a></h1>
-    <ul id="menu">
+    <div id="main-menu-anchor"><h1><a href="/">MDID 3</a></h1></div>    
+    <div id="main-menu">
         {% if user.is_authenticated %}
-            <li><span class="nolink">Welcome, {{ user.first_name }}</span></li>
-            <li class="hover-menu"><a href=".">My Content</a>
-                <div class="dropdown">
-                    <div class="menu">
-                        <a href="{% url presentation-manage %}">My Presentations</a>
-                        <a href=".">My Favorites</a>
-                        <a href=".">My Content</a>
-                        <a href=".">Options</a>
-                    </div>
-                </div>
-            </li>
+            <span class="nolink">Welcome, {{ user.first_name }}</span>
             {% if user.is_staff %}
                 <li><a href="{% url admin "" %}">Administration</a></li>
             {% endif %}
+        {% endif %}
+        <span>My Content</span>
+        {% if user.is_authenticated %}        
+        <a href="{% url presentation-manage %}">My Presentations</a>
+        <a href=".">My Favorites</a>
+        <a href="{% url solr-search %}?c=owner:{{ user.id }}">My Content</a>
+        <a href=".">Options</a>
         {% else %}
-            <li><a href="{% url login %}">Log in</a></li>
-        {% endif %}        
-        <li class="hover-menu"><a href="{% url solr-search %}">Explore</a>
-            <div class="dropdown">                
-                <div class="menu">
-                    <a href="{% url solr-browse %}">Browse</a>
-                    <a href="{% url solr-overview %}">Collection Overview</a>
-                    <a href="{% url flickr-main %}">Flickr</a>
-                </div>
-            </div>
-        </li>
-        <li class="hover-menu"><a href=".">Resources</a>
-            <div class="dropdown">                
-                <div class="menu">
-                    <a href=".">Presentations</a>
-                    <a href=".">Collections</a>
-                    <a href="{% url about %}">About</a>
-                </div>
-            </div>
-        </li>
-        <li class="hover-menu" id="selected-records-menu"><span id="session-status">{% session_status %}</span></li>
+        <a href="{% url login %}?next={{ request.get_full_path }}">Log in</a>
+        {% endif %}
+        <span>Find Content</span>
+        <a href="{% url solr-search %}">Explore</a>
+        <a href="{% url solr-searchform %}">Search</a>
+        <a href="{% url solr-browse %}">Browse</a>
+        <a href="{% url solr-overview %}">Collection Overview</a>
+        <a href=".">Presentations</a>
+        <a href="{% url flickr-main %}">Flickr</a>
+        <a href="{% url about %}">About</a>
+    </div>
+    <ul id="menu">
+        {% with request.session.selected_records|length as selected %}
+            <li><a href="{% url data-selected %}" id="session-status">{{ selected|intcomma }} record{{ selected|pluralize }} selected</a></li>
+        {% endwith %}
         {% if user.is_authenticated %}
         <li><a href="{% url logout %}">Log out</a></li>
+        {% else %}
+        <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
         {% endif %}
         <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
     </ul>    
+    <form method="GET" action="{% url solr-search %}" id="quicksearch">
+        <label id="quicksearchlabel" for="quicksearchkw">Quick search:</label>
+        <input type="text" name="kw" id="quicksearchkw" title="Quick search" />
+    </form>
 </div>
 {% if messages %}
 <div id="messages">
