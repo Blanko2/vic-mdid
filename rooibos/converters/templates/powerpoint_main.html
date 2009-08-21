@@ -1,0 +1,38 @@
+{% extends "master.html" %}
+{% load help %}
+{% load comments %}
+{% load humanize %}
+
+{% block content %}
+
+<div id="comments">
+    {% get_comment_list for flatpages.flatpage 1 as comments %}
+    {% for comment in comments %}
+        {{ comment.comment|linebreaks }}
+        <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
+    {% endfor %}
+</div>
+
+<h1>MDID Power Point Converter</h1>
+
+
+{% if error %}
+	<div style="color:red">
+		Error: {{error}}
+	</div>
+{% endif %}
+
+{% if success %}
+	<div style="color:green">
+		Power Point Slides Uploaded and Converted.
+	</div>
+{% endif %}
+
+<div>
+    <form action="{% url powerpoint-main %}" method="post" enctype="multipart/form-data">
+		{{ form.as_p }}
+        <input type="submit" value="Upload" />
+    </form>
+</div>
+
+{% endblock %}

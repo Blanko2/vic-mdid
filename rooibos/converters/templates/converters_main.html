@@ -1,0 +1,25 @@
+{% extends "master.html" %}
+{% load help %}
+{% load comments %}
+{% load humanize %}
+
+{% block content %}
+
+<div id="comments">
+    {% get_comment_list for flatpages.flatpage 1 as comments %}
+    {% for comment in comments %}
+        {{ comment.comment|linebreaks }}
+        <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
+    {% endfor %}
+</div>
+
+<h1>MDID Coverters</h1>
+
+<div>{{response|safe}} </div>
+<div>
+	<ul>
+    	<li><a href="{% url powerpoint-main %}">Power Point Converter</a></li>
+    </ul>
+</div>
+
+{% endblock %}
