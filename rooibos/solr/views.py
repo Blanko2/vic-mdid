@@ -204,12 +204,12 @@ def search(request, id=None, name=None, selected=False, json=False):
     
     if keywords:
         search = FlickrSearch()
-	results = search.photoSearch(keywords)
-	flickr_total = results['total']
+        results = search.photoSearch(keywords)
+        flickr_total = results['total']
 
-	search = ArtstorSearch()
-	results = search.photoSearch(keywords)
-	artstor_total = results['total']
+        search = ArtstorSearch()
+        results = search.photoSearch(keywords)
+        artstor_total = results['total']
 
     if request.GET.has_key('action'):
         page = safe_int(request.GET.get('op', '1'), 1)
