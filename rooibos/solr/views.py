@@ -20,6 +20,7 @@ import re
 import copy
 import random
 from rooibos.flickr.models import FlickrSearch
+from rooibos.artstor.models import ArtstorSearch
 
 
 class SearchFacet(object):
@@ -197,11 +198,19 @@ def search(request, id=None, name=None, selected=False, json=False):
     remove = request.GET.get('rem', None)
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
+
+    flickr_total = 0
+    artstor_total = 0
     
-    search = FlickrSearch()
-    results = search.photoSearch(keywords)
-    flickr_total = results['total']
-    
+    if keywords:
+        search = FlickrSearch()
+	results = search.photoSearch(keywords)
+	flickr_total = results['total']
+
+	search = ArtstorSearch()
+	results = search.photoSearch(keywords)
+	artstor_total = results['total']
+
     if request.GET.has_key('action'):
         page = safe_int(request.GET.get('op', '1'), 1)
     
@@ -336,7 +345,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                                'sortfields': fields,
                                'random': random.random(),
                                'viewmode': viewmode,
-                               'flickr_total': flickr_total,},
+                               'flickr_total': flickr_total,
+                               'artstor_total': artstor_total,},
                               context_instance=RequestContext(request))
 
 
