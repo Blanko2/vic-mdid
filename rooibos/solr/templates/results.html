@@ -46,8 +46,7 @@
 <form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
     <input name="search_string" type="hidden" value="{{ keywords }}" />
 </form>
-<form id="artstor_form" name="artstor_form" method="POST" action="{% url artstor-photo-search %}">
-    <input name="search_string" type="hidden" value="{{ keywords }}" />
+<form id="artstor_form" name="artstor_form" method="GET" action="http://library.artstor.org/library/welcome.html#3|search|1|{{ keywords }}|Multiple20Collection20Search|||type3D3126kw3D{{ keywords }}26id3Dall26name3D">
 </form>
 
 <form method="GET" action="{{ form_url }}">
