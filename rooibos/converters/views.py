@@ -12,7 +12,7 @@ from rooibos.storage import Storage, Media
 from forms import UploadFileForm
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
-from rooibos.converters.models import PowerPointUploader
+from rooibos.converters.models import PowerPointUploader, ImageConverter
 from rooibos.ui.templatetags.ui import session_status_rendered	
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -42,6 +42,29 @@ def powerpoint_main(request):
     	# Display Upload Form
         form = UploadFileForm()
     return render_to_response('powerpoint_main.html', {'form': form},
+                              context_instance=RequestContext(request))
+    
+def image_main(request):
+	
+	selected = request.session.get('selected_records', ())
+	
+	titles = []
+	images = []
+	ppt_file = str(time.time())+".ppt"
+	records = Record.objects.filter(id__in=selected)
+	for record in records:
+		media = Media.objects.select_related().filter(record=record)
+		
+		images.append(media[0].get_absolute_file_path())
+		titles.append(record.title)
+
+	converter = ImageConverter()
+	try:
+		converter.convert_images(ppt_file,images)
+	except Exception, detail:
+	    return render_to_response('image_main.html', {'error': detail},
+								context_instance=RequestContext(request))
+	return render_to_response('image_main.html', {'success':1,'titles':titles, 'images':images, 'ppt_file':ppt_file},
                               context_instance=RequestContext(request))
 
 def handle_uploaded_file(f,temp_full_path):

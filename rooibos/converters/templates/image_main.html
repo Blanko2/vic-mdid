@@ -1,0 +1,31 @@
+{% extends "master.html" %}
+{% load help %}
+{% load comments %}
+{% load humanize %}
+
+{% block content %}
+
+<div id="comments">
+    {% get_comment_list for flatpages.flatpage 1 as comments %}
+    {% for comment in comments %}
+        {{ comment.comment|linebreaks }}
+        <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
+    {% endfor %}
+</div>
+
+<h1>MDID Image to Power Point Converter</h1>
+
+
+{% if error %}
+	<div style="color:red">
+		Error: {{error}}
+	</div>
+{% endif %}
+
+{% if success %}
+	<div style="color:green">
+		<a href="/static/ppt/{{ppt_file}}">Download Power Point Slides</a>.
+	</div>
+{% endif %}
+
+{% endblock %}
