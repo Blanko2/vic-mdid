@@ -2,9 +2,12 @@ from django.db import models
 from django.core.files import File
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 import random
 import Image
 import os
+import uuid
+from rooibos.contrib.ipaddr import IP
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 from rooibos.data.models import Record
 from rooibos.access import sync_access
@@ -158,3 +161,37 @@ class ProxyUrl(models.Model):
     
     def __unicode__(self):
         return 'ProxyUrl %s: %s (Ctx %s, Usr %s, Sbn %s)' % (self.uuid, self.url, self.context, self.user, self.subnet)
+        
+    def get_absolute_url(self):
+        return reverse('storage-proxyurl', kwargs=dict(uuid=self.uuid))
+    
+    @staticmethod
+    def create_proxy_url(url, context, ip, user):    
+        ip = IP(ip)
+        for subnet in TrustedSubnet.objects.all():
+            if ip in IP(subnet.subnet):
+                break
+        else:
+            return None        
+        if hasattr(user, 'backend'):
+            backend = user.backend
+        else:
+            backend = None
+        proxy_url, created = ProxyUrl.objects.get_or_create(
+                                            subnet=subnet,
+                                            url=url,
+                                            context=context,
+                                            user=user,
+                                            user_backend=backend,
+                                            defaults=dict(uuid=str(uuid.uuid4())))
+        return proxy_url
+
+    def get_additional_url(self, url):
+        proxy_url, created = ProxyUrl.objects.get_or_create(
+                                            subnet=self.subnet,
+                                            url=url,
+                                            context=self.context,
+                                            user=self.user,
+                                            user_backend=self.user_backend,
+                                            defaults=dict(uuid=str(uuid.uuid4())))
+        return proxy_url
