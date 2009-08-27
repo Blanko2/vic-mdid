@@ -12,10 +12,12 @@ from rooibos.data.models import Field, Collection, FieldValue, Record
 from rooibos.solr.views import *
 from rooibos.data.models import *
 from rooibos.storage import get_thumbnail_for_record
+from rooibos.storage.views import create_proxy_url_if_needed
 from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
+import django.contrib.auth
 
 
 @json_view
@@ -46,7 +48,7 @@ def login(request):
         password = request.POST["password"]
         user = authenticate(username=username, password=password)
         if (user is not None) and user.is_active:
-            login(request, user)
+            django.contrib.auth.login(request, user)
             return dict(result='ok', sessionid=request.session.session_key)
         else:
             return dict(result='Login failed')
@@ -56,16 +58,17 @@ def login(request):
 
 @json_view
 def logout(request):
-    logout(request)
+    django.contrib.auth.logout(request)
     return dict(result='ok')
 
 
-def _record_as_json(record, owner=None, context=None):
+def _record_as_json(record, owner=None, context=None, process_url=lambda url: url):
     return dict(
                 id=record.id,
                 name=record.name,
                 title=record.title,
-                thumbnail=record.get_thumbnail_url(),
+                thumbnail=process_url(record.get_thumbnail_url()),
+                image=process_url(record.get_image_url()),
                 metadata=[
                     dict(
                         label=value.resolved_label,
@@ -75,8 +78,8 @@ def _record_as_json(record, owner=None, context=None):
                 ]
             )
 
-def _records_as_json(records, owner=None, context=None):
-    return [_record_as_json(record, owner, context) for record in records]
+def _records_as_json(records, owner=None, context=None, process_url=lambda url: url):
+    return [_record_as_json(record, owner, context, process_url) for record in records]
 
 
 @json_view
@@ -123,5 +126,7 @@ def presentation_detail(request, id):
                 created=p.created.isoformat(),
                 modified=p.modified.isoformat(),
                 content=_records_as_json(map(lambda i: i.record, p.items.select_related('record').filter(hidden=False)),
-                                         owner=request.user, context=p)
+                                         owner=request.user,
+                                         context=p,
+                                         process_url=lambda url:create_proxy_url_if_needed(url, request))
             )

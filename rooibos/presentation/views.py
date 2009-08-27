@@ -24,7 +24,7 @@ def manage(request):
 
     tags = request.GET.getlist('tag')
     querystring = request.GET.urlencode()
-    
+
     existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
                     filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
 
@@ -46,10 +46,10 @@ def manage(request):
                 presentation.hidden = hide
                 presentation.save()
             return HttpResponseRedirect(reverse('presentation-manage') + '?' + querystring)
-            
+
         if request.POST.get('delete'):
             Presentation.objects.filter(owner=request.user, id__in=ids).delete()
-        
+
         form = ManagePresentationsForm(request.POST)
         if form.is_valid():
             replace = form.cleaned_data['mode'] == 'replace'
@@ -71,12 +71,12 @@ def manage(request):
         presentations = Presentation.objects.annotate(item_count=Count('items')).filter(owner=request.user, id__in=ids).order_by('title')
     else:
         presentations = Presentation.objects.annotate(item_count=Count('items')).filter(owner=request.user).order_by('title')
-    
+
     tag_filter = " and ".join(tags)
-        
+
     tags = Tag.objects.cloud_for_model(OwnedWrapper, steps=5,
                         filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
-        
+
     return render_to_response('presentation_manage.html',
                           {'tags': tags,
                            'tagobjects': Tag.objects,
@@ -97,11 +97,11 @@ def create(request):
 
     selected = request.session.get('selected_records', ())
     next = request.GET.get('next', '') or reverse('presentation-manage')
-    
-    class CreatePresentationForm(forms.Form):        
+
+    class CreatePresentationForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
         tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
-                    required=False, add_label='Additional tags')   
+                    required=False, add_label='Additional tags')
         add_selected = forms.BooleanField(label='Add selected records immediately', required=False, initial=True)
 
     if request.method == "POST":
@@ -116,7 +116,7 @@ def create(request):
             Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
                                     form.cleaned_data['tags'])
             return HttpResponseRedirect(next)
-    else:        
+    else:
         form = CreatePresentationForm()
 
     return render_to_response('presentation_create.html',
@@ -129,26 +129,26 @@ def create(request):
 
 @login_required
 def edit(request, id, name):
-    
+
     presentation = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
     existing_tags = [t.name for t in Tag.objects.usage_for_model(
         OwnedWrapper, filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))]
     tags = Tag.objects.get_for_object(
         OwnedWrapper.objects.get_for_object(user=request.user, object=presentation))
-        
+
     class PropertiesForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
         tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
-                                         required=False, add_label='Additional tags')        
+                                         required=False, add_label='Additional tags')
         hidden = forms.BooleanField(label='Hidden', required=False)
         description = forms.CharField(label='Description', widget=forms.Textarea, required=False)
         password = forms.CharField(label='Password', required=False,
                                    max_length=Presentation._meta.get_field('password').max_length)
-    
+
     if request.method == "POST":
         form = PropertiesForm(request.POST)
-        if form.is_valid():            
+        if form.is_valid():
             presentation.title = form.cleaned_data['title']
             presentation.name = None
             presentation.hidden = form.cleaned_data['hidden']
@@ -156,8 +156,8 @@ def edit(request, id, name):
             presentation.password = form.cleaned_data['password']
             presentation.save()
             Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                    form.cleaned_data['tags'])            
-            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))    
+                                    form.cleaned_data['tags'])
+            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
         form = PropertiesForm(initial={'title': presentation.title,
                                'hidden': presentation.hidden,
@@ -165,7 +165,7 @@ def edit(request, id, name):
                                'description': presentation.description,
                                'hidden': presentation.hidden,
                                })
-    
+
     return render_to_response('presentation_properties.html',
                       {'presentation': presentation,
                        'form': form,},
@@ -174,10 +174,10 @@ def edit(request, id, name):
 
 @login_required
 def items(request, id, name):
-    
+
     presentation = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
-                
+
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True, exclude=('record','presentation'))
     if request.method == 'POST':
         formset = OrderingFormSet(request.POST, queryset=presentation.items.all())
@@ -186,39 +186,15 @@ def items(request, id, name):
             request.user.message_set.create(message="Changes to presentation items saved successfully.")
             return HttpResponseRedirect(reverse('presentation-items', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
-        formset = OrderingFormSet(queryset=presentation.items.all())    
-    
+        formset = OrderingFormSet(queryset=presentation.items.all())
+
     return render_to_response('presentation_items.html',
                       {'presentation': presentation,
                        'formset': formset,},
                       context_instance=RequestContext(request))
-    
+
 
 
 def view(request, id, name):
-    
+
     pass
-
-
-@json_view
-def temp_json(request, id, name):
-    presentation = get_object_or_404(Presentation.objects.filter(id=id))
-    
-    items = presentation.items.all()
-    
-    def process_url(url):
-        if hasattr(request, 'proxy_url'):
-            return request.proxy_url.get_additional_url(url).get_absolute_url()
-        else:
-            return url
-    
-    return dict(
-        title=presentation.title,
-        items=[
-            dict(
-                title=item.record.title,
-                url=process_url(item.record.get_thumbnail_url())
-            )
-            for item in items
-        ]
-    )

@@ -11,7 +11,7 @@ import random
 
 
 class Collection(models.Model):
-    
+
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50, unique=True, blank=True)
     children = models.ManyToManyField('self', symmetrical=False, blank=True)
@@ -21,17 +21,17 @@ class Collection(models.Model):
     description = models.TextField(blank=True)
     agreement = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=32, blank=True)
-    
+
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Collection, self).save(kwargs)
-        
+
     def __unicode__(self):
         return self.name
 
     def get_absolute_url(self):
         return reverse('data-collection', kwargs={'id': self.id, 'name': self.name})
-    
+
     @property
     def all_child_collections(self):
         sub = list(self.children.all())
@@ -46,9 +46,9 @@ class Collection(models.Model):
                         todo += (g,)
             if not todo:
                 break
-            sub = todo            
+            sub = todo
         return result
-    
+
     @property
     def all_parent_collections(self):
         parents = list(self.collection_set.all())
@@ -63,9 +63,9 @@ class Collection(models.Model):
                         todo += (g,)
             if not todo:
                 break
-            sub = todo            
+            sub = todo
         return result
-            
+
     @property
     def all_records(self):
         return Record.objects.filter(collection__in=self.all_child_collections + (self,)).distinct()
@@ -87,22 +87,25 @@ class Record(models.Model):
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
     fieldset = models.ForeignKey('FieldSet', null=True)
-    
+
     def __unicode__(self):
         return self.name
-    
+
     def get_absolute_url(self):
         return reverse('data-record', kwargs={'id': self.id, 'name': self.name})
 
     def get_thumbnail_url(self):
         return reverse('storage-thumbnail', kwargs={'id': self.id, 'name': self.name})
 
+    def get_image_url(self):
+        return reverse('storage-retrieve-image-nosize', kwargs={'recordid': self.id, 'record': self.name})
+
     def save(self, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),
                     slug_field='name', check_current_slug=kwargs.get('force_insert'))
         self._clear_cached_items()
         super(Record, self).save(kwargs)
-        
+
     def get_fieldvalues(self, owner=None, context=None, fieldset=None):
         qc = Q(context_type=None, context_id=None)
         if context:
@@ -110,35 +113,35 @@ class Record(models.Model):
         qo = Q(owner=None)
         if owner and owner.is_authenticated():
             qo = qo | Q(owner=owner)
-        
+
         values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo) \
                     .order_by('order','field','group','refinement')
-        
+
         if fieldset:
             values_to_map = []
             result = {}
             eq_cache = {}
             target_fields = fieldset.fields.all().order_by('fieldsetfield__order')
-            
+
             for v in values:
                 if v.field in target_fields:
                     result.setdefault(v.field, []).append(DisplayFieldValue.from_value(v, v.field))
                 else:
                     values_to_map.append(v)
-            
+
             for v in values_to_map:
                 eq = eq_cache.has_key(v.field) and eq_cache[v.field] or eq_cache.setdefault(v.field, v.field.get_equivalent_fields())
                 for f in eq:
                     if f in target_fields:
                         result.setdefault(f, []).append(DisplayFieldValue.from_value(v, f))
                         break
-            
+
             values = []
             for f in target_fields:
                 values.extend(sorted(result.get(f, [])))
 
-        return values    
-    
+        return values
+
     def dump(self, owner=None, collection=None):
         print("Created: %s" % self.created)
         print("Modified: %s" % self.modified)
@@ -146,7 +149,7 @@ class Record(models.Model):
         for v in self.fieldvalue_set.all():
             v.dump(owner, collection)
 
-    @property            
+    @property
     def title(self):
         def query():
             return self.fieldvalue_set.filter(
@@ -156,7 +159,6 @@ class Record(models.Model):
 
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')
-        
 
 
 class MetadataStandard(models.Model):
@@ -197,15 +199,15 @@ class Field(models.Model):
             more = Field.objects.filter(~Q(id__in=ids), ~Q(standard=self.standard), equivalent__id__in=ids).values_list('id', flat=True)
             ids.extend(more)
         return Field.objects.select_related('standard').filter(id__in=ids)
-    
+
     def __unicode__(self):
         return self.full_name
-    
+
     class Meta:
         unique_together = ('name', 'standard')
         ordering = ['name']
         order_with_respect_to = 'standard'
-    
+
 
 class FieldSet(models.Model):
     title = models.CharField(max_length=100)
@@ -213,11 +215,11 @@ class FieldSet(models.Model):
     fields = models.ManyToManyField(Field, through='FieldSetField')
     owner = models.ForeignKey(User, null=True, blank=True)
     standard = models.BooleanField(default=False)
-    
+
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(FieldSet, self).save(kwargs)
-        
+
     def __unicode__(self):
         return self.title
 
@@ -227,14 +229,14 @@ class FieldSetField(models.Model):
     field = models.ForeignKey(Field)
     order = models.IntegerField(default=0)
     importance = models.SmallIntegerField(default=1)
-    
+
     def __unicode__(self):
         return self.field.__unicode__()
-    
+
     class Meta:
         ordering = ['order']
-    
-    
+
+
 class FieldValue(models.Model):
     record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
@@ -252,14 +254,14 @@ class FieldValue(models.Model):
     context_type = models.ForeignKey(ContentType, null=True, blank=True)
     context_id = models.PositiveIntegerField(null=True, blank=True)
     context = generic.GenericForeignKey('context_type', 'context_id')
-        
+
     def __unicode__(self):
         return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
-    
+
     @property
     def resolved_label(self):
         return self.label or self.field.label
-    
+
     def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
 
@@ -270,7 +272,7 @@ class DisplayFieldValue(FieldValue):
     """
     def save(self, *args, **kwargs):
         raise NotImplementedError()
-        
+
     def __cmp__(self, other):
         order_by = ('_original_field_name', 'group', 'order', 'refinement')
         for ob in order_by:
@@ -278,7 +280,7 @@ class DisplayFieldValue(FieldValue):
             o = getattr(other, ob)
             if s <> o: return cmp(s, o)
         return 0
-    
+
     @staticmethod
     def from_value(value, field):
         dfv = DisplayFieldValue(record=value.record,
