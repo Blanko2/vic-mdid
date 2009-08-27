@@ -136,7 +136,7 @@ def import_set_photos(request):
         pass
 		
 
-def export_photo_get_frob(request):
+def export_photo_get_frob(request):	
 	filename_array = request.POST.getlist('images[filename]')
 	title_array = request.POST.getlist('images[title]')
 	description_array = request.POST.getlist('images[description]')
@@ -144,7 +144,6 @@ def export_photo_get_frob(request):
 	is_public_array = request.POST.getlist('images[is_public]')
 	is_friend_array = request.POST.getlist('images[is_friend]')
 	is_family_array = request.POST.getlist('images[is_family]')
-	
 	
 	images = []
 	length = len(filename_array)
@@ -170,39 +169,41 @@ def export_photo_get_frob(request):
 				      
 def export_photo_upload(request):
 	images = request.session.get("images",[])
-	frob = request.GET.get("frob", None)
-	
-	uploadr = FlickrUploadr()
-	try:
-		token = uploadr.flickrInstance().get_token(frob)
-	except Exception, detail:
-		return HttpResponseRedirect('/flickr')
-	errors = []
-	response = 'Success!'
-	
-	# uploadr.flickrInstance().get_token_part_two((token, frob))
-	
-	for image in images:
-		filename = image["filename"]
-		imageInfo = image["imageInfo"]
-		e = uploadr.uploadImage(filename, imageInfo)
-		e= str(e)
-		index = e.find('Error')
-		if index != -1:
-			errors.append(e[e.rfind(':')+1:])
-		index = e.find('Errno')
-		if index != -1:
-			errors.append(e[e.rfind(']')+1:])
+	frob = request.GET.get("frob", None)	
+
+	# if redirecting from photo search
+	if request.session.get("search_string"):
+		return private_photo_search(request,frob)
+	else:	
+		uploadr = FlickrUploadr()
+		try:
+			token = uploadr.flickrInstance().get_token(frob)
+		except Exception, detail:
+			return HttpResponseRedirect('/flickr')
+		errors = []
+		response = 'Success!'
 		
-	if len(errors) > 0:
-		response = "Errors:<br/><ul>"
-		for error in errors:
-			response += "<li>" + error + "</li>"
-		response += "</ul>"
-	# response= e
-		
-	return render_to_response('flickr_main.html', {'response':response},
-                                      context_instance=RequestContext(request))
+		for image in images:
+			filename = image["filename"]
+			imageInfo = image["imageInfo"]
+			e = uploadr.uploadImage(filename, imageInfo)
+			e= str(e)
+			index = e.find('Error')
+			if index != -1:
+				errors.append(e[e.rfind(':')+1:])
+			index = e.find('Errno')
+			if index != -1:
+				errors.append(e[e.rfind(']')+1:])
+			
+		if len(errors) > 0:
+			response = "Errors:<br/><ul>"
+			for error in errors:
+				response += "<li>" + error + "</li>"
+			response += "</ul>"
+		# response= e
+			
+		return render_to_response('flickr_main.html', {'response':response},
+	                                      context_instance=RequestContext(request))
 	
 def export_photo_list(request):
 	selected = request.session.get('selected_records', ())
@@ -235,19 +236,77 @@ def export_photo_list(request):
 	
 	return render_to_response('flickr_photo_list.html', {'request':request,'selected':result },
                                       context_instance=RequestContext(request))
-    
+
 def photo_search(request):
-    search = FlickrSearch()
-    search_string = request.POST.get("search_string", "")
-    search_page = request.POST.get("search_page", 1)
-    view = request.POST.get("view", "thumb")
-    sort = 'relevance'
-    if request.POST.get("interesting"):
-    	sort = 'interestingness-desc'
-    results = search.photoSearch(search_string,search_page,sort)
-    
-    return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view},
+	if request.GET.get("frob"):
+		private_photo_search(request)
+	if request.POST.get("search_string"):
+		if request.POST.get("private"):
+			request.session["search_string"] = request.POST.get("search_string")
+		else:
+			return public_photo_search(request)
+		return private_search_get_frob(request)
+	else:
+		return render_to_response('flickr_photo_search.html',{'results':{},'search_string':"",'search_page':1,'sort':"",'view':""},
+				context_instance=RequestContext(request))
+	
+def private_search_get_frob(request):	
+	search_string = request.POST.get("search_string", "")
+	search_page = request.POST.get("search_page", "1")
+	view = request.POST.get("view", "thumb")
+	sort = 'relevance'
+	if request.POST.get("interesting"):
+		sort = 'interestingness-desc'
+	# save parameters to session since request is lost in flickr redirect
+	request.session["search_string"] = search_string
+	request.session["search_page"] = search_page
+	request.session["view"] = view
+	request.session["sort"] = sort
+	
+	uploadr = FlickrUploadr()
+	frob =  uploadr.flickrInstance().auth_getFrob(api_key=FLICKR_KEY)
+	frob = frob[0].text					
+
+	auth_url = uploadr.flickrInstance().auth_url('write', frob)
+	return render_to_response('flickr_authenticate_upload.html', { 'auth_url':auth_url }, 
                                       context_instance=RequestContext(request))
+
+def private_photo_search(request,frob):
+	search_string = request.session.get("search_string")
+	del request.session["search_string"]
+	search_page = request.session.get("search_page")
+	del request.session["search_page"]
+	view = request.session.get("view")
+	del request.session["view"]
+	sort = request.session.get("sort")
+	del request.session["sort"]
+
+	if sort == "interesting":
+		sort = 'interestingness-desc'	
+	
+	search = FlickrSearch()
+	try:
+		token = search.flickrInstance().get_token(frob)
+	except Exception, detail:
+		return HttpResponseRedirect('/flickr')
+	errors = []
+	page = int(search_page)
+	results = search.photoSearch(search_string, page=1, sort='date-posted-desc', private=1, token=token)
+	return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view,'private':1},
+							  context_instance=RequestContext(request))
+
+def public_photo_search(request):
+	search = FlickrSearch()
+	search_string = request.POST.get("search_string", "")
+	search_page = request.POST.get("search_page", 1)
+	view = request.POST.get("view", "thumb")
+	sort = 'relevance'
+	if request.POST.get("interesting"):
+		sort = 'interestingness-desc'
+	results = search.photoSearch(search_string,search_page,sort)
+	
+	return render_to_response('flickr_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view},
+									  context_instance=RequestContext(request))
 
 @json_view    
 def select_flickr(request):

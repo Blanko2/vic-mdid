@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     url(r'^export-photo-upload/$', export_photo_upload, name='flickr-export-photo-upload'),
     url(r'^export-photo-list/$', export_photo_list, name='flickr-export-photo-list'),
     url(r'^photo-search/$', photo_search, name='flickr-photo-search'),
+    url(r'^private-photo-search/$', private_photo_search, name='flickr-private-photo-search'),
     url(r'^select-flickr/$', select_flickr, name='flickr-select-flickr'),
     url(r'^import-photos/$', import_photos, name='flickr-import-photos'),
 )
