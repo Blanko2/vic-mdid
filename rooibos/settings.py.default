@@ -147,3 +147,5 @@ GOOGLE_ANALYTICS_MODEL = True
 
 FLICKR_KEY = ''
 FLICKR_SECRET = ''
+
+ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'

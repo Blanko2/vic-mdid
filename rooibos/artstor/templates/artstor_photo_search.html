@@ -30,11 +30,7 @@
             <option value="list"{% ifequal view "list" %} selected="selected"{% endifequal %}>List</option>
         </select>
     </form>
-    {% if user.is_authenticated %}
-	    <form name="flickr-import-photos" action="{% url flickr-import-photos %}" method="post">
-	        <input type="submit" value="Import Photos" onclick="$('#progressbar-dialog').dialog('open')"/>
-	    </form>
-    {% endif %}
+
 </div>
 
 <div class="facet" style="width:250px;float:right">
@@ -56,7 +52,7 @@
 </div>
 {% endif %}
 
-<form name="pagination" action="{% url flickr-photo-search %}" method="post">
+<form name="pagination" action="{% url artstor-photo-search %}" method="post">
     <input name="search_string" type="hidden" value="{{ search_string }}"/>
     <input name="search_page" type="hidden" value="{{ search_page }}"/>
     <input name="view" type="hidden" value="{{ view }}"/>
