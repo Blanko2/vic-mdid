@@ -44,7 +44,7 @@ def photo_search(request):
     sort = 'relevance'
     if request.POST.get("interesting"):
     	sort = 'interestingness-desc'
-    results = search.photoSearch(search_string,search_page,sort)
+    results = search.photoSearch(search_string,search_page)
     
     return render_to_response('artstor_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view},
                                       context_instance=RequestContext(request))

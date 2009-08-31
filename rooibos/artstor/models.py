@@ -47,8 +47,9 @@ class ArtstorSearch:
 
         results = ElementTree.ElementTree(file=handle)
         total = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')
+        if not total: total = 0
 
-        if searchString == "":
+        if searchString == "" or total == 0:
 			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
 
         raw_photos = results.findall('//{info:srw/schema/1/dc-v1.1}dc')
@@ -67,4 +68,4 @@ class ArtstorSearch:
                            'thumb': tn, 
                            'photo_page': url})
 
-    return {"total": int(total), "page": int(page), "pages": int(pages), "per_page": int(per_page), "photos": photos}
+        return {"total": int(total), "page": int(page), "pages": int(pages), "per_page": int(per_page), "photos": photos}
