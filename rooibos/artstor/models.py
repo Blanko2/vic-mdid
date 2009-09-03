@@ -1,11 +1,11 @@
-import urllib, urllib2, time
-import cookielib
+import urllib, urllib2, time, cookielib, math
 from os import makedirs
 from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
 from rooibos.storage import Storage, Media
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
+from xml.etree.ElementTree import ElementTree
 from rooibos.settings import ARTSTOR_GATEWAY
 
 class SmartRedirectHandler(urllib2.HTTPRedirectHandler):
@@ -23,7 +23,10 @@ class SmartRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class ArtstorSearch:
 
-    def photoSearch(self, searchString="", page=1, per_page=50, summary=True):
+    def photoSearch(self, searchString="", page=1, per_page=50):    
+    
+        if searchString == "":
+			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
         urlopen = urllib2.urlopen
         Request = urllib2.Request
         cj = cookielib.CookieJar()
@@ -31,24 +34,15 @@ class ArtstorSearch:
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), SmartRedirectHandler())
         urllib2.install_opener(opener)
         
-        if summary: max_recs = 0
-        else: max_recs = 1000
+        url = ARTSTOR_GATEWAY+'?query="'+urllib.quote(searchString)+'"&operation=searchRetrieve&version=1.1&maximumRecords='+str(per_page)+'&startRecord='+str(((int(page)-1) * per_page) + 1)
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)	
+        results = ElementTree(file=response)
+        total = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')   
         
-        params = {'query': searchString,
-                  'version': '1.1',
-                  'operation': 'searchRetrieve',
-                  'startRecord': ((page-1) * per_page) + 1,
-                  'maximumRecords': max_recs}
-        
-        txdata = urllib.urlencode(params)
-        txheaders =  {'User-agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'}
-        req = Request(ARTSTOR_GATEWAY, txdata, txheaders)
-        handle = urlopen(req)
-
-        results = ElementTree.ElementTree(file=handle)
-        total = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')
         if not total: total = 0
-
+        
+        pages = int(math.ceil(float(total) / per_page))
         if searchString == "" or total == 0:
 			return {"total": int(0), "page": int(0), "pages": int(0), "per_page": int(0), "photos": {}}
 

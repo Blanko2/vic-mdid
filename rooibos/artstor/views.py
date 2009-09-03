@@ -9,7 +9,7 @@ from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Fi
 from rooibos.storage import Storage, Media
 from rooibos.solr.models import SolrIndexUpdates 
 from rooibos.solr import SolrIndex
-from rooibos.artstor.models import ArtstorUploadr, ArtstorSearch, ArtstorImportr, ArtstorSetPhotos
+from rooibos.artstor.models import ArtstorSearch
 from django.utils import simplejson
 from rooibos.util import json_view
 from rooibos.ui.templatetags.ui import session_status_rendered
