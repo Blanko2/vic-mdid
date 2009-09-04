@@ -18,14 +18,14 @@ class Storage(models.Model):
     system = models.CharField(max_length=50)
     base = models.CharField(max_length=1024, null=True)
     derivative = models.OneToOneField('self', null=True, related_name='master')
-    
+
     class Meta:
         verbose_name_plural = 'storage'
-    
+
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Storage, self).save(kwargs)
-        
+
     def __unicode__(self):
         try:
             if self.master:
@@ -33,7 +33,7 @@ class Storage(models.Model):
         except:
             pass
         return self.name
-    
+
     def _get_storage_system(self):
         if settings.STORAGE_SYSTEMS.has_key(self.system):
             (modulename, classname) = settings.STORAGE_SYSTEMS[self.system].rsplit('.', 1)
@@ -44,7 +44,7 @@ class Storage(models.Model):
             return classobj(base=self.base)
         else:
             return None
-    
+
     def get_absolute_media_url(self, media):
         storage = self._get_storage_system()
         return storage and storage.get_absolute_media_url(self, media) or None
@@ -52,7 +52,7 @@ class Storage(models.Model):
     def get_absolute_file_path(self, media):
         storage = self._get_storage_system()
         return storage and storage.get_absolute_file_path(self, media) or None
-    
+
     def save_file(self, name, content):
         storage = self._get_storage_system()
         return storage and storage.save(name, content) or None
@@ -60,20 +60,20 @@ class Storage(models.Model):
     def load_file(self, name):
         storage = self._get_storage_system()
         return storage and storage.open(name) or None
-    
+
     def file_exists(self, name):
         storage = self._get_storage_system()
         return storage and storage.exists(name) or False
-    
+
     def get_derivative_storage(self):
         if not self.derivative:
             self.derivative = Storage.objects.create(title=self.title,
                                                      system='local',
                                                      base=os.path.join(settings.SCRATCH_DIR, self.name))
-            self.save()        
+            self.save()
             sync_access(self, self.derivative)
         return self.derivative
-    
+
 
 class Media(models.Model):
     record = models.ForeignKey(Record)
@@ -97,7 +97,7 @@ class Media(models.Model):
         unique_slug(self, slug_literal="m-%s" % random.randint(1000000, 9999999),
                     slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Media, self).save(kwargs)
-        
+
     def get_absolute_url(self):
         return self.storage and self.storage.get_absolute_media_url(self) or self.url
 
@@ -123,7 +123,7 @@ class Media(models.Model):
 
     def load_file(self):
         return self.storage and self.storage.load_file(self.url) or None
-        
+
     def file_exists(self):
         return self.storage and self.storage.file_exists(self.url) or False
 
@@ -132,8 +132,8 @@ class Media(models.Model):
         if type == 'image':
             try:
                 im = Image.open(self.get_absolute_file_path())
-                (self.width, self.height) = im.size                
-            except IOError:
+                (self.width, self.height) = im.size
+            except:
                 self.width = None
                 self.height = None
             if save:
@@ -146,7 +146,7 @@ class Media(models.Model):
 
 class TrustedSubnet(models.Model):
     subnet = models.CharField(max_length=80)
-    
+
     def __unicode__(self):
         return "TrustedSubnet (%s)" % self.subnet
 
@@ -158,21 +158,21 @@ class ProxyUrl(models.Model):
     user = models.ForeignKey(User)
     user_backend = models.CharField(max_length=256, null=True, blank=True)
     last_access = models.DateTimeField(null=True, blank=True)
-    
+
     def __unicode__(self):
         return 'ProxyUrl %s: %s (Ctx %s, Usr %s, Sbn %s)' % (self.uuid, self.url, self.context, self.user, self.subnet)
-        
+
     def get_absolute_url(self):
         return reverse('storage-proxyurl', kwargs=dict(uuid=self.uuid))
-    
+
     @staticmethod
-    def create_proxy_url(url, context, ip, user):    
+    def create_proxy_url(url, context, ip, user):
         ip = IP(ip)
         for subnet in TrustedSubnet.objects.all():
             if ip in IP(subnet.subnet):
                 break
         else:
-            return None        
+            return None
         if hasattr(user, 'backend'):
             backend = user.backend
         else:

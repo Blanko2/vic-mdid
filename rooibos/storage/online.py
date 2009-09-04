@@ -2,6 +2,8 @@ from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse
 import os
 import random
+import urllib2
+import StringIO
 
 class OnlineStorageSystem():
 
@@ -10,12 +12,14 @@ class OnlineStorageSystem():
 
     def get_absolute_media_url(self, storage, media):
         return media.url
-    
+
     def get_absolute_file_path(self, storage, media):
         return None
-    
-    def open(self, name):
-        return None
 
-    def exists(self, name):
+    def open(self, url):
+        # TODO: this can be a security issue if file:/// urls are allowed
+        return StringIO.StringIO(urllib2.urlopen(url).read())
+
+    def exists(self, url):
+        # TODO
         return False

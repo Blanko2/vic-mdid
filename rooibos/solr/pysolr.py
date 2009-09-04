@@ -250,7 +250,7 @@ class Solr(object):
             return datetime(*strptime(value[:-1] + ' +0000', "%Y-%m-%dT%H:%M:%S %Z")[0:6])
         else:
         # this throws away fractions of a second
-        return datetime(*strptime(value[:value.find('.')], "%Y-%m-%dT%H:%M:%S")[0:6])
+            return datetime(*strptime(value[:value.find('.')], "%Y-%m-%dT%H:%M:%S")[0:6])
 
     def float_to_python(self, value):
         """
@@ -280,7 +280,7 @@ class Solr(object):
         if facets:
             params['facet'] = 'true'
             params['facet.limit'] = facet_limit
-            params['facet.mincount'] = facet_mincount            
+            params['facet.mincount'] = facet_mincount
             params['facet.field'] = facets
         if fields:
             params['fl'] = ','.join(fields)
@@ -310,8 +310,8 @@ class Solr(object):
                     converter = getattr(self, converter_name)
                     result_val = converter(element.text or "")
                 result[element.get('name')] = result_val
-            results.append(result)            
-        
+            results.append(result)
+
         facets = {}
         for lst in et.findall('lst'):
             if lst.get('name') == 'facet_counts':
@@ -321,9 +321,9 @@ class Solr(object):
                             f = {}
                             for i in field.findall('int'):
                                 f[i.get('name')] = int(i.text)
-                            facets[field.get('name')] = f                
-        
-        return Results(results, hits, facets)        
+                            facets[field.get('name')] = f
+
+        return Results(results, hits, facets)
 
     def add(self, docs, commit=True):
         """Adds or updates documents. For now, docs is a list of dictionaies

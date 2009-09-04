@@ -112,7 +112,7 @@ INSTALLED_APPS = (
     'rooibos.flickr',
     'rooibos.converters',
     'rooibos.artstor',
-    'rooibos.tagging',
+    'rooibos.contrib.tagging',
     'pagination',
     'impersonate',
 )

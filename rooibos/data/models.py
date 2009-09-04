@@ -152,10 +152,10 @@ class Record(models.Model):
     @property
     def title(self):
         def query():
-            return self.fieldvalue_set.filter(
-                Q(field__standard__prefix='dc', field__name='title') |
-                Q(field__equivalent__standard__prefix='dc', field__equivalent__name='title'))[0].value
-        return cached_property(self, 'title', query)
+            titlefield = Field.objects.get(standard__prefix='dc', name='title')
+            titles = self.fieldvalue_set.filter(Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields()))
+            return None if not titles else titles[0].value
+        return query()   # cached_property(self, 'title', query)
 
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')
