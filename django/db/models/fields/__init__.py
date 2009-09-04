@@ -193,11 +193,39 @@ class Field(object):
 
     def get_db_prep_lookup(self, lookup_type, value):
         "Returns field's value prepared for database lookup."
+        def pk_trace(value):
+            # Value may be a primary key, or an object held in a relation.
+            # If it is an object, then we need to get the primary key value for
+            # that object. In certain conditions (especially one-to-one relations),
+            # the primary key may itself be an object - so we need to keep drilling
+            # down until we hit a value that can be used for a comparison.
+            v, field = value, None
+            try:
+                while True:
+                    v, field = getattr(v, v._meta.pk.name), v._meta.pk
+            except AttributeError:
+                pass
+            if field:
+                if lookup_type in ('range', 'in'):
+                    v = [v]
+                v = field.get_db_prep_lookup(lookup_type, v)
+                if isinstance(v, list):
+                    v = v[0]
+            return v
+
         if hasattr(value, 'as_sql') or hasattr(value, '_as_sql'):
             # If the value has a relabel_aliases method, it will need to
             # be invoked before the final SQL is evaluated
             if hasattr(value, 'relabel_aliases'):
                 return value
+            if lookup_type == 'in':
+                query_uses_limit = value.query.high_mark is not None or \
+                    value.query.low_mark
+                if query_uses_limit and \
+                            not connection.features.allow_limit_in_in_subquery:
+                    ret = map(pk_trace, value)
+                    value.value_annotation = bool(ret)
+                    return ret
             if hasattr(value, 'as_sql'):
                 sql, params = value.as_sql()
             else:
