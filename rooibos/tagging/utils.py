@@ -260,4 +260,6 @@ def calculate_cloud(tags, steps=4, distribution=LOGARITHMIC):
                 if not font_set and tag_weight <= thresholds[i]:
                     tag.font_size = i + 1
                     font_set = True
+            if not font_set:
+                tag.font_size = steps
     return tags
