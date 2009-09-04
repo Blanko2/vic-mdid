@@ -202,7 +202,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     flickr_total = 0
     artstor_total = 0
 
-    if keywords:
+    if keywords and not json:
         search = FlickrSearch()
         results = search.photoSearch(keywords)
         flickr_total = results['total']

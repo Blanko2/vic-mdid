@@ -249,8 +249,8 @@ class Solr(object):
             # Solr 1.3.0 returns dates differently
             return datetime(*strptime(value[:-1] + ' +0000', "%Y-%m-%dT%H:%M:%S %Z")[0:6])
         else:
-	    # this throws away fractions of a second
-	    return datetime(*strptime(value[:value.find('.')], "%Y-%m-%dT%H:%M:%S")[0:6])
+        # this throws away fractions of a second
+        return datetime(*strptime(value[:value.find('.')], "%Y-%m-%dT%H:%M:%S")[0:6])
 
     def float_to_python(self, value):
         """

@@ -8,15 +8,15 @@ from rooibos.ui.views import main
 admin.autodiscover()
 
 
-urlpatterns = patterns('',    
+urlpatterns = patterns('',
     (r'^$', main),
-    
+
     url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}, name='logout'),
     url(r'^admin/(.*)', admin.site.root, name='admin'),
-    
-    (r'^ui/', include('rooibos.ui.urls')),    
-    (r'^acl/', include('rooibos.access.urls')),    
+
+    (r'^ui/', include('rooibos.ui.urls')),
+    (r'^acl/', include('rooibos.access.urls')),
     (r'^explore/', include('rooibos.solr.urls')),
     (r'^media/', include('rooibos.storage.urls')),
     (r'^data/', include('rooibos.data.urls')),
@@ -24,11 +24,12 @@ urlpatterns = patterns('',
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^presentation/', include('rooibos.presentation.urls')),
     (r'^viewers/', include('rooibos.viewers.urls')),
-    
+    (r'^convert/', include('rooibos.converters.urls')),
+
     (r'^api/', include('rooibos.api.urls')),
     (r'^flickr/', include('rooibos.flickr.urls')),
     (r'^artstor/', include('rooibos.artstor.urls')),
-    
+
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
 )
 

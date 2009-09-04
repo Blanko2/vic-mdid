@@ -12,7 +12,7 @@ def viewer(viewer_class):
     """
     Add an instance of the viewer class to the list of available viewer classes
     """
-    
+
     # discard name
     viewer_class = viewer_class[1]
 
@@ -53,7 +53,7 @@ map(viewer, getmembers(viewers, isclass))
 #        for target in viewer.targets:
 #            viewers.setdefault(type, {}).setdefault(target, []).insert(0, viewer)
 
-    
+
 #def generate_view_inline(object):
 #    for iv in viewers.setdefault(object._meta.object_name.lower(), {}).setdefault('inline', []):
 #        result = iv().generate(object)
@@ -67,10 +67,10 @@ map(viewer, getmembers(viewers, isclass))
 
 
 #class DefaultMediaViewInline:
-#    title = "Default inline media viewer"    
+#    title = "Default inline media viewer"
 #    types = ('media',)
 #    targets = ('inline',)
-#    
+#
 #    def generate(self, object):
 #        return "[%s]" % media.mimetype
 
@@ -79,17 +79,17 @@ map(viewer, getmembers(viewers, isclass))
 #    title = "Default inline collection viewer"
 #    types = ('collection',)
 #    targets = ('inline',)
-#    
+#
 #    def generate(self, object):
 #        return "[%s]" % object.title
 
 
 #class JpegMediaViewInline:
-#    title = "JPEG inline media viewer"    
+#    title = "JPEG inline media viewer"
 #    types = ('media',)
 #    targets = ('inline',)
-#    
-#    def generate(self, object):    
+#
+#    def generate(self, object):
 #        if object.mimetype != 'image/jpeg':
 #            return None
 #        return "<div style='max-width: 900px; max-height: 600px; overflow: auto;'><img src='%s' /></div>" % \
@@ -97,14 +97,14 @@ map(viewer, getmembers(viewers, isclass))
 
 
 #class QuickTimeMediaViewInline:
-#    title = "JPEG inline media viewer"    
+#    title = "JPEG inline media viewer"
 #    types = ('media',)
 #    targets = ('inline',)
-#    
-#    def generate(self, object):    
+#
+#    def generate(self, object):
 #        if media.mimetype != 'video/quicktime':
 #            return None
-#        
+#
 #        url = media.get_absolute_url()
 #        if url.startswith('http'):
 #            return '<a href="%s">%s</a>' % (url, 'Download Quicktime Video')
@@ -122,7 +122,7 @@ map(viewer, getmembers(viewers, isclass))
 #'align','absmiddle',
 #'vspace','5',
 #'style','margin-top: 5px; margin-bottom: 5px'
-#);	
+#);
 #</script>""" % (url)
 #
 #
@@ -130,4 +130,3 @@ map(viewer, getmembers(viewers, isclass))
 #register_viewer(DefaultGroupViewInline)
 #register_viewer(QuickTimeMediaViewInline)
 #register_viewer(JpegMediaViewInline)
-

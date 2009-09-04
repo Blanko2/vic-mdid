@@ -26,7 +26,7 @@ def get_media_for_record(record, user=None, passwords={}):
     or indirectly through presentations.
     A user always must have access to the storage where the media is stored.
     """
-    
+
     if hasattr(record, 'id'):
         recordid = record.id
     else:
@@ -34,7 +34,7 @@ def get_media_for_record(record, user=None, passwords={}):
 
     # get available media objects
     # Has access to collection containing record and to storage containing media
-    media = Media.objects.filter(        
+    media = Media.objects.filter(
         Q(record__collection__id__in=accessible_ids(user, Collection)) # record is accessible
         | Q(   # or presentation containing the record is accessible
             Q(record__presentationitem__presentation__password=None) |
@@ -49,21 +49,21 @@ def get_media_for_record(record, user=None, passwords={}):
 
 
 def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}):
-    
+
     media = get_media_for_record(record, user, passwords)
 
-    media = media.filter(                          
+    media = media.filter(
         master=None,  # don't look for derivatives here
         mimetype__startswith='image/'
     )
-    
+
     if not media:
         return None
 
     map(lambda m: m.identify(), (m for m in media if not m.width or not m.height))
-   
+
     media = sorted(media, _imgsizecmp, reverse=True)
-    
+
     # find matching media
     last = None
     for m in media:
@@ -79,17 +79,20 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
             break
 
     # m is now equal or larger to requested size
-    
+
     # check what user size restrictions are
     restrictions = get_effective_permissions_and_restrictions(user, m.storage)[3]
     if restrictions:
         width = min(width, restrictions.get('width', width))
         height = min(height, restrictions.get('height', height))
 
-    # see if image needs resizing  
+    # see if image needs resizing
     if m.width > width or m.height > height or m.mimetype != 'image/jpeg':
-        
+
         def derivative_image(master, width, height):
+            import ImageFile
+            ImageFile.MAXBLOCK = 16 * 1024 * 1024
+
             file = None
             try:
                 file = master.load_file()
@@ -101,17 +104,17 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
             finally:
                 if file:
                     file.close()
-                
+
         # See if a derivative already exists
         d = m.derivatives.filter(Q(width=width, height__lte=height) | Q(width__lte=width, height=height),
                                  mimetype='image/jpeg')
         if d:
-            # use derivative            
+            # use derivative
             d = d[0]
             if not d.file_exists():
                 # file has been removed, recreate
                 output, (w, h) = derivative_image(m, width, height)
-                d.save_file('%s-%sx%s.jpg' % (d.id, w, h), output)            
+                d.save_file('%s-%sx%s.jpg' % (d.id, w, h), output)
             m = d
         else:
             # create new derivative with correct size

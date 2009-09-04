@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
 from rooibos.storage import Storage, Media
-from rooibos.solr.models import SolrIndexUpdates 
+from rooibos.solr.models import SolrIndexUpdates
 from rooibos.solr import SolrIndex
 from rooibos.artstor.models import ArtstorSearch
 from django.utils import simplejson
@@ -43,20 +43,20 @@ def photo_search(request):
     view = request.POST.get("view", "thumb")
     sort = 'relevance'
     if request.POST.get("interesting"):
-    	sort = 'interestingness-desc'
+        sort = 'interestingness-desc'
     results = search.photoSearch(search_string,search_page)
-    
+
     return render_to_response('artstor_photo_search.html',  {'results':results,'search_string':search_string,'search_page':search_page,'sort':sort,'view':view},
                                       context_instance=RequestContext(request))
 
-@json_view    
+@json_view
 def select_artstor(request):
     ids = map(None, request.POST.getlist('id'))
     checked = request.POST.get('checked') == 'true'
     selected = request.session.get('selected_artstors', ())
     if checked:
         selected = set(selected) | set(ids)
-    else:        
+    else:
         selected = set(selected) - set(ids)
 
     result = []

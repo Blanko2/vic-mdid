@@ -113,9 +113,6 @@ def record_thumbnail(request, id, name):
 @json_view
 def create_proxy_url_view(request):
     if request.method == 'POST':
-
-        print request.POST
-
         proxy_url = ProxyUrl.create_proxy_url(request.POST['url'],
                                      request.POST['context'],
                                      request.META['REMOTE_ADDR'],
