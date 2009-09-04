@@ -1,0 +1,15 @@
+{% spaceless %}
+<form action="{% url impersonation-start %}?next={{ request.get_full_path|urlencode }}" method="post">
+Impersonate:
+<select name="username">
+    <option></option>
+{% for user in users %}
+    <option{% ifequal current user %} selected="selected"{% endifequal %}>{{ user }}</option>
+{% endfor %}
+</select>
+<input type="submit" value="Start" />
+</form>
+{% if current %}
+<a href="{% url impersonation-stop %}?next={{ request.get_full_path|urlencode }}">Back to {{ current }}</a>
+{% endif %}
+{% endspaceless %}
