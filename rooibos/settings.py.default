@@ -95,7 +95,7 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.comments',
     'django_extensions',
-    'google_analytics',    
+    'google_analytics',
     'rooibos.data',
     'rooibos.migration',
     'rooibos.util',
@@ -110,6 +110,8 @@ INSTALLED_APPS = (
     'rooibos.presentation',
     'rooibos.statistics',
     'rooibos.flickr',
+    'rooibos.converters',
+    'rooibos.artstor',
     'tagging',
     'pagination',
     'impersonate',
@@ -148,4 +150,7 @@ GOOGLE_ANALYTICS_MODEL = True
 FLICKR_KEY = ''
 FLICKR_SECRET = ''
 
-ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'
+ARTSTOR_GATEWAY = ''           # 'http://sru.artstor.org/SRU/artstor.htm'
+
+STATIC_DIR = 'd:/dev/rooibos/rooibos/static/'
+OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
