@@ -57,7 +57,7 @@ class DocumentConversionException(Exception):
 
 
 class DocumentConverter:
-    
+
     def __init__(self, port=DEFAULT_OPENOFFICE_PORT):
         localContext = uno.getComponentContext()
         resolver = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
@@ -67,22 +67,28 @@ class DocumentConverter:
             raise DocumentConversionException, "failed to connect to OpenOffice.org on port %s" % port
         self.desktop = context.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", context)
 
-    def convert(self, inputFile, outputFile):
+    def convert(self, inputFile, outputFile, filterdata):
 
         inputUrl = self._toFileUrl(inputFile)
         outputUrl = self._toFileUrl(outputFile)
-        
+
         document = self.desktop.loadComponentFromURL(inputUrl, "_blank", 0, self._toProperties(Hidden=True))
         try:
           document.refresh()
         except AttributeError:
           pass
-        
+
         outputExt = self._getFileExt(outputFile)
         filterName = self._filterName(document, outputExt)
 
         try:
-            document.storeToURL(outputUrl, self._toProperties(FilterName=filterName))
+            if filterdata:
+                fdata = self._toProperties(**filterdata)
+                p = self._toProperties(FilterName=filterName,
+                                       FilterData=uno.Any("[]com.sun.star.beans.PropertyValue", fdata))
+            else:
+                p = self._toProperties(FilterName=filterName)
+            document.storeToURL(outputUrl, p)
         finally:
             document.close(True)
 
@@ -96,7 +102,7 @@ class DocumentConverter:
             return filterByFamily[family]
         except KeyError:
             raise DocumentConversionException, "unsupported conversion: from '%s' to '%s'" % (family, outputExt)
-    
+
     def _detectFamily(self, document):
         if document.supportsService("com.sun.star.text.GenericTextDocument"):
             # NOTE: a GenericTextDocument is either a TextDocument, a WebDocument, or a GlobalDocument
@@ -121,16 +127,16 @@ class DocumentConverter:
     def _toProperties(self, **args):
         props = []
         for key in args:
-	    prop = PropertyValue()
-	    prop.Name = key
-	    prop.Value = args[key]
-	    props.append(prop)
+            prop = PropertyValue()
+            prop.Name = key
+            prop.Value = args[key]
+            props.append(prop)
         return tuple(props)
 
 
 if __name__ == "__main__":
     from sys import argv, exit
-    
+
     if len(argv) < 3:
         print "USAGE: python %s <input-file> <output-file>" % argv[0]
         exit(255)
@@ -138,13 +144,21 @@ if __name__ == "__main__":
         print "no such input file: %s" % argv[1]
         exit(1)
 
+    filterdata = dict()
+    for arg in argv[3:]:
+        d = arg.split('=')
+        if len(d) == 2:
+            try:
+                filterdata[d[0]] = int(d[1])
+            except:
+                filterdata[d[0]] = d[1]
+
     try:
-        converter = DocumentConverter()    
-        converter.convert(argv[1], argv[2])
+        converter = DocumentConverter()
+        converter.convert(argv[1], argv[2], filterdata)
     except DocumentConversionException, exception:
         print "ERROR!" + str(exception)
         exit(1)
     except ErrorCodeIOException, exception:
         print "ERROR! ErrorCodeIOException %d" % exception.ErrCode
         exit(1)
-
