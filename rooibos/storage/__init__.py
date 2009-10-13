@@ -99,7 +99,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                 image = Image.open(file)
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
-                image.save(output, 'JPEG', quality=95, optimize=True)
+                image.save(output, 'JPEG', quality=85, optimize=True)
                 return output, image.size
             finally:
                 if file:
