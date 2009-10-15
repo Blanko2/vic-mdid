@@ -54,7 +54,7 @@ $(document).ready(function() {
                 ui.helper.removeClass('alternate-row');
             },
             });
-        $(".autocomplete :input").each(function() { 
+        $(".autocomplete :input").each(function() {
             var f = $('#' + this.id.substring(0, this.id.length - 5) + "field");
             $(this).autocomplete('{% url api-solr-autocomplete %}', {
                 extraParams: {field: function() { return f.val(); }},
@@ -70,16 +70,24 @@ $(document).ready(function() {
 
 <div class="sidebar">
 
-{% if can_edit %}
+{% if can_edit and record.id and not fv_formset %}
 <div class="sidebar-item">
-    <a href="{% url data-record-edit record.id record.name%}">Edit</a>
+    <a href="{% url data-record-edit record.id record.name %}">Edit</a>
+</div>
+{% endif %}
+{% if fv_formset and record.id %}
+<div class="sidebar-item">
+    <a href="{% url data-record record.id record.name %}">Cancel Editing</a>
 </div>
 {% endif %}
 
+{% if record.id %}
 <div class="sidebar-item">
-    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" />
+    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title|default:"Untitled" }}" />
 </div>
+{% endif %}
 
+{% if record.id and not fv_formset %}
 <div class="sidebar-item">
 {% if request.user.is_authenticated %}
     <h2>Your Tags</h2>
@@ -88,10 +96,10 @@ $(document).ready(function() {
         {% tag tag record "True" %}
     {% empty %}
     Not tagged yet.
-    {% endfor %}    
-    
-    {% add_tags_form record %}   
-    
+    {% endfor %}
+
+    {% add_tags_form record %}
+
 {% endif %}
 
     <h2>All Tags</h2>
@@ -100,8 +108,9 @@ $(document).ready(function() {
         {% tag tag record %}
     {% empty %}
     Not tagged yet.
-    {% endfor %}    
+    {% endfor %}
 </div>
+{% endif %}
 
 {% if record.parent %}
 <div class="sidebar-item">
@@ -111,7 +120,7 @@ $(document).ready(function() {
 </div>
 {% endif %}
 
-{% if record.record_set.count %}
+{% if record.id and record.record_set.count %}
 <div class="sidebar-item">
     <h2>Child records</h2>
     <div style="max-height: 400px; overflow: auto; ">
@@ -123,7 +132,7 @@ $(document).ready(function() {
 </div>
 {% endif %}
 
-{% if media %}
+{% if media and not fv_formset %}
 <div class="sidebar-item">
     <h2>Media</h2>
     <ul>
@@ -134,7 +143,7 @@ $(document).ready(function() {
             {% if m.width and m.height %}
                 {{ m.width }}x{{ m.height }}
             {% endif %}
-        </li>    
+        </li>
     {% endfor %}
     </ul>
     {% if can_edit %}
@@ -146,8 +155,10 @@ $(document).ready(function() {
 </div>
 
 <div>
-    <h1>{{ record.title }}</h1>
-    
+    <h1>{{ record.title|default:"Untitled" }}</h1>
+
+{% if not fv_formset %}
+
     <form id="metadata-form" action="." method="GET">
     Display metadata as: <select name="fieldset">
     <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
@@ -158,20 +169,22 @@ $(document).ready(function() {
     </select>
     <input type="submit" value="Change" />
     </form>
-    
+
     <div>
         {% metadata record selected_fieldset %}
     </div>
-    
-{% if fv_formset %}
+
+{% else %}
+
     <div style="clear: both;">
-    <h2>Edit Metadata</h2>    
+    <h2>Edit Record</h2>
     <form method="POST" action="">
         {{ fv_formset.management_form }}
         <div>
             <input type="submit" value="Submit Changes" />
             <div id="fieldvalues">
-        {% for form in fv_formset.forms %}        
+                <h3>Metadata</h3>
+        {% for form in fv_formset.forms %}
             <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
                 {{ form.errors }}
                 {{ form.id }}
@@ -196,19 +209,45 @@ $(document).ready(function() {
                     <span class="row advanced"><label for="{{ form.group.html_name }}">Group:</label> {{ form.group }}</span>
                 </div>
                 <div class="column">
-                    <span class="row advanced"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>                    
+                    <span class="row advanced"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>
                     <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
                     <span class="row advanced-switch" style="display: none;"><label>Advanced:</label> <input type="checkbox" /></span>
                 </div>
             </div>
         {% endfor %}
             </div>
+
+            <div>
+                <h3>Properties</h3>
+
+                {{ metadataform.errors }}
+
+                <div>
+                    Personal image: {{ metadataform.personal }}
+                </div>
+                {% if user.is_superuser %}
+                <div>
+                    Owner: {{ metadataform.owner }}
+                </div>
+                {% endif %}
+                {% if metadataform.collections.field.choices %}
+                <div>
+                    Collections: {{ metadataform.collections }}
+                </div>
+                {% endif %}
+                {% if metadataform.personal_collections.field.choices %}
+                <div>
+                    Collections (available for personal images only): {{ metadataform.personal_collections }}
+                </div>
+                {% endif %}
+            </div>
+
             <input type="submit" value="Submit Changes" />
         </div>
     </form>
     </div>
-{% endif %}    
-    
+{% endif %}
+
 </div>
 
 {% endblock %}

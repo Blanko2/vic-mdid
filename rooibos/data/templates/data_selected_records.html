@@ -11,7 +11,7 @@
 <h1>Selected Records</h1>
 
 
-{% if presentation_form %}
+{% if presentation_form.presentation.field.choices %}
 <form method="POST" action=".">
 <table summary="Add to presentation">
 {{ presentation_form }}

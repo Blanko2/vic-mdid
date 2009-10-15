@@ -38,15 +38,16 @@
 <form method="POST" action="">
 {{ formset.management_form }}
 <table id="items" summary="Included records" class="list">
-    <thead>    
+    <thead>
     <tr>
         <td colspan="2"></td>
-        <td colspan="3"><input type="submit" value="Submit changes" /></td>
+        <td colspan="4"><input type="submit" value="Submit changes" /></td>
     </tr>
     <tr>
         <th></th>
         <th>Title</th>
         <th class="orderinput">Order</th>
+        <th></th>
         <th>Hidden</th>
         <th>Remove</th>
     </tr>
@@ -57,6 +58,7 @@
         <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url }}" alt="{{ form.instance.record.title }}" /></a></td>
         <td>{{ form.instance.record.title }}</td>
         <td class="orderinput">{{ form.order }} {{ form.order.errors }}</td>
+        <td><a href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, 'presentation', presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}">Annotate</a></td>
         <td class="controls">{{ form.hidden }}</td>
         <td class="controls delete">{{ form.DELETE }}</td>
     </tr>
@@ -65,7 +67,7 @@
     <tfoot>
     <tr>
         <td colspan="2"></td>
-        <td colspan="3"><input type="submit" value="Submit changes" /></td>
+        <td colspan="4"><input type="submit" value="Submit changes" /></td>
     </tr>
     </tfoot>
 </table>
