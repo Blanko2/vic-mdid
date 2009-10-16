@@ -70,16 +70,20 @@ $(document).ready(function() {
 
 <div class="sidebar">
 
-{% if can_edit and record.id and not fv_formset %}
+{% if request.user.is_authenticated and record.id %}
 <div class="sidebar-item">
-    <a href="{% url data-record-edit record.id record.name %}">Edit</a>
-</div>
+{% if can_edit and record.id and not fv_formset %}
+    <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
+{% endif %}
+{% if record.id and not fv_formset %}
+    <a href="{% url data-record-edit-personal record.id record.name %}">Customize Record</a><br />
 {% endif %}
 {% if fv_formset and record.id %}
-<div class="sidebar-item">
-    <a href="{% url data-record record.id record.name %}">Cancel Editing</a>
+    <a href="{% url data-record record.id record.name %}">Cancel Editing</a><br />
+{% endif %}
 </div>
 {% endif %}
+
 
 {% if record.id %}
 <div class="sidebar-item">
@@ -217,6 +221,7 @@ $(document).ready(function() {
         {% endfor %}
             </div>
 
+        {% if metadataform %}
             <div>
                 <h3>Properties</h3>
 
@@ -241,6 +246,7 @@ $(document).ready(function() {
                 </div>
                 {% endif %}
             </div>
+        {% endif %}
 
             <input type="submit" value="Submit Changes" />
         </div>

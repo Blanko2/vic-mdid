@@ -75,7 +75,7 @@ def selected_records(request):
                               context_instance=RequestContext(request))
 
 
-def record(request, id, name, contexttype=None, contextid=None, contextname=None, edit=False):
+def record(request, id, name, contexttype=None, contextid=None, contextname=None, edit=False, personal=False):
 
     writable_collections = list(accessible_ids_list(request.user, Collection, write=True))
     readable_collections = list(accessible_ids_list(request.user, Collection))
@@ -89,7 +89,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
             accessible_ids(request.user, record.collection_set, write=True).count() > 0
     else:
         record = Record()
-        can_edit = len(writable_collections) > 0
+        can_edit = len(readable_collections) > 0
 
     media = Media.objects.select_related().filter(record=record,
                                                   storage__id__in=accessible_ids(request.user, Storage),
@@ -99,6 +99,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
     else:
         fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
+        personal = False
 
     selected_fieldset = request.GET.get('fieldset')
     if selected_fieldset == '_all':
@@ -115,7 +116,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     if edit:
 
-        if not can_edit:
+        if not can_edit and not personal:
             return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
         def _get_fields():
@@ -198,29 +199,33 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
 
         fieldvalues_readonly = []
-        fieldvalues = record.get_fieldvalues()
+        if personal:
+            fieldvalues = record.get_fieldvalues(owner=request.user).filter(owner=request.user)
+        else:
+            fieldvalues = record.get_fieldvalues()
 
         FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
                                                  exclude=FieldValueForm.Meta.exclude, can_delete=True, extra=3)
         if request.method == 'POST':
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
-            metadataform = RecordMetadataForm(request.POST)
-            if formset.is_valid() and metadataform.is_valid():
+            metadataform = RecordMetadataForm(request.POST) if not personal else None
+            if formset.is_valid() and (personal or metadataform.is_valid()):
 
-                owner = metadataform.cleaned_data['owner']
-                record.owner = User.objects.get(username=owner) if owner else None
-                record.save()
+                if not personal:
+                    owner = metadataform.cleaned_data['owner']
+                    record.owner = User.objects.get(username=owner) if owner else None
+                    record.save()
 
-                collections = metadataform.cleaned_data['collections'] + metadataform.cleaned_data['personal_collections']
-                toadd = collections
-                for citem in CollectionItem.objects.select_related('collection').filter(
-                    record=record, collection__id__in=writable_collections):
-                    if not citem.collection.id in collections:
-                        citem.delete()
-                    else:
-                        toadd.remove(citem.collection.id)
-                for id in toadd:
-                    CollectionItem.objects.create(record=record, collection_id=id)
+                    collections = metadataform.cleaned_data['collections'] + metadataform.cleaned_data['personal_collections']
+                    toadd = collections
+                    for citem in CollectionItem.objects.select_related('collection').filter(
+                        record=record, collection__id__in=writable_collections):
+                        if not citem.collection.id in collections:
+                            citem.delete()
+                        else:
+                            toadd.remove(citem.collection.id)
+                    for id in toadd:
+                        CollectionItem.objects.create(record=record, collection_id=id)
 
                 instances = formset.save(commit=False)
                 o1 = fieldvalues and max(v.order for v in fieldvalues) or 0
@@ -231,14 +236,19 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     if instance.order == 0:
                         order += 1
                         instance.order = order
+                    if personal:
+                        instance.owner = request.user
                     instance.save()
                 request.user.message_set.create(message="Changes to metadata saved successfully.")
-                return HttpResponseRedirect(reverse('data-record-edit', kwargs=dict(id=record.id, name=record.name)))
+
+
+                url = reverse('data-record-edit-personal' if personal else 'data-record-edit',
+                              kwargs=dict(id=record.id, name=record.name))
+                return HttpResponseRedirect(url)
         else:
             formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv')
-            metadataform = RecordMetadataForm()
-
-            print dir(metadataform['collections'])
+            metadataform = RecordMetadataForm(
+                initial={'personal': len(writable_collections) == 0}) if not personal else None
 
     else:
         fieldvalues_readonly = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
