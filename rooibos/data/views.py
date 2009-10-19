@@ -108,17 +108,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         edit = False
 
     selected_fieldset = request.GET.get('fieldset')
-    if selected_fieldset == '_all':
-        fieldset = None
-    elif selected_fieldset:
-        f = fieldsets.filter(name=selected_fieldset)
-        if f:
-            fieldset = f[0]
-        else:
-            fieldset = record.fieldset
+    fieldset = None
+    if selected_fieldset and selected_fieldset != '_all':
+        try:
+            fieldset = FieldSet.objects.get(name=selected_fieldset)
+        except ObjectDoesNotExist:
             selected_fieldset = None
-    else:
-        fieldset = record.fieldset
 
     if edit:
 

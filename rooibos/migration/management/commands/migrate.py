@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
     def readConfig(self, file):
         connection = None
-        servertype = None        
+        servertype = None
         config = minidom.parse(file)
         for e in config.getElementsByTagName('database')[0].childNodes:
             if e.localName == 'connection':
@@ -81,9 +81,9 @@ class Command(BaseCommand):
         if len(config_files) != 1:
             print "Please specify exactly one configuration file."
             return
-        
+
         servertype, connection = self.readConfig(config_files[0])
-        
+
         conn = None
         if servertype == "MSSQL":
             conn = pyodbc.connect('DRIVER={SQL Server};%s' % connection)
@@ -92,15 +92,15 @@ class Command(BaseCommand):
         else:
             print "Unsupported database type"
             return
-        
+
         cursor = conn.cursor()
         row = cursor.execute("SELECT Version FROM DatabaseVersion").fetchone()
         version = row.Version
-        
+
         if not version in ("00006", "00007", "00008"):
             print "Database version is not supported"
             return
-        
+
         print "Migrating from version %s" % version
 
         # Migrate users
@@ -122,7 +122,7 @@ class Command(BaseCommand):
                 user.last_login = row.LastAuthenticated or datetime(1980, 1, 1)
                 try:
                     user.save()
-                    users[row.ID] = user 
+                    users[row.ID] = user
                 except:
                     print "Warning: possible duplicate login detected: %s" % row.Login
 
@@ -139,18 +139,18 @@ class Command(BaseCommand):
         for row in cursor.execute("SELECT GroupID,Subnet,Mask FROM UserGroupIPRanges"):
             if usergroups.has_key(row.GroupID) and usergroups[row.GroupID].type == IP_BASED_GROUP:
                 usergroups[row.GroupID].subnet_set.create(subnet=str(IP('%s/%s' % (row.Subnet, row.Mask))))
-            
+
         for row in cursor.execute("SELECT GroupID,Attribute,AttributeValue FROM UserGroupAttributes"):
             if usergroups.has_key(row.GroupID) and usergroups[row.GroupID].type == ATTRIBUTE_BASED_GROUP:
                 attr, created = usergroups[row.GroupID].attribute_set.get_or_create(attribute=row.Attribute)
                 attr.attributevalue_set.create(value=row.AttributeValue)
-        
+
         for row in cursor.execute("SELECT UserID,GroupID FROM UserGroupMembers"):
             if users.has_key(row.UserID):
                 users[row.UserID].groups.add(usergroups[row.GroupID])
-        
+
         # Migrate collections and collection groups
-         
+
         print "Migrating collections"
         groups = {}
         groups_medium_dimensions = {}
@@ -167,7 +167,7 @@ class Command(BaseCommand):
                 manager = None
                 if row.Type == 'N':
                     manager = 'nasaimageexchange'
-                groups[row.ID] = Collection.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)            
+                groups[row.ID] = Collection.objects.create(title=row.Title, description=row.Description, agreement=row.UsageAgreement)
                 if collgroups.has_key(row.GroupID):
                     collgroups[row.GroupID].children.add(groups[row.ID])
                 if row.Type in ('I', 'N', 'R'):
@@ -187,15 +187,15 @@ class Command(BaseCommand):
                                                                           system='local',
                                                                           base=os.path.join(base, 'thumb'))
                 fieldsets[row.ID] = FieldSet.objects.create(title='%s fields' % row.Title)
-                
+
                 groups_medium_dimensions[row.ID] = dict(max_height=row.MediumImageHeight, max_width=row.MediumImageWidth)
 
         # Migrate collection permissions
-       
+
         def populate_access_control(ac, row, readmask, writemask, managemask, restrictions_callback=None):
             def tristate(mask):
                 if row.DenyPriv and row.DenyPriv & mask: return False
-                if row.GrantPriv and row.GrantPriv & mask: return True                
+                if row.GrantPriv and row.GrantPriv & mask: return True
                 return None
             ac.read = tristate(readmask)
             ac.write = tristate(writemask)
@@ -209,17 +209,17 @@ class Command(BaseCommand):
             else:
                 return False
             if restrictions_callback:
-                restrictions_callback(ac, row)            
+                restrictions_callback(ac, row)
             return True
-       
+
         # Migrate system permissions
-        
+
         system_permissions = [
             ('CreateSlideshow', SystemAccess.objects.get(name='SLIDESHOW_CREATE')),
             ('PublishSlideshow', SystemAccess.objects.get(name='SLIDESHOW_PUBLISH')),
             ('UserOptions', SystemAccess.objects.get(name='USER_OPTIONS'))
         ]
-        
+
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
                                   "FROM AccessControl WHERE ObjectType='O' AND ObjectID=1"):
             for (perm, obj) in system_permissions:
@@ -228,7 +228,7 @@ class Command(BaseCommand):
                 if populate_access_control(ac, row, P[perm], 0, 0):
                     if ac.read != None:
                         ac.save()
-       
+
         #Privilege.ModifyACL  -> manage
         #Privilege.ManageCollection  -> manage
         #Privilege.DeleteCollection  -> manage
@@ -239,15 +239,15 @@ class Command(BaseCommand):
         #Privilege.ManageControlledLists  -> manage
         #Privilege.PersonalImages  -> n/a
         #Privilege.ShareImages  -> n/a
-        #Privilege.SuggestImages  -> n/a       
-        
+        #Privilege.SuggestImages  -> n/a
+
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
                                   "FROM AccessControl WHERE ObjectType='C' AND ObjectID>0"):
             if not groups.has_key(row.ObjectID):
                 continue
             # Collection
             ac = AccessControl()
-            ac.content_object = groups[row.ObjectID]            
+            ac.content_object = groups[row.ObjectID]
             if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                 ac.save()
             # full storage
@@ -268,14 +268,14 @@ class Command(BaseCommand):
                     if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                         ac.save()
                 # new general storage
-                
+
                 def general_restrictions(ac, row):
                     full_access = row.GrantPriv and row.GrantPriv & P['FullSizedImages']
                     if ac.read and not full_access:
                         ac.restrictions = groups_medium_dimensions[row.ObjectID]
-                
+
                 ac = AccessControl()
-                ac.content_object = storage[row.ObjectID]['general']                
+                ac.content_object = storage[row.ObjectID]['general']
                 if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection'],
                                            general_restrictions):
                     ac.save()
@@ -291,11 +291,11 @@ class Command(BaseCommand):
                         AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
 
         # Migrate fields
-        
+
         print "Migrating fields"
         fields = {}
         standard_fields = dict((str(f), f) for f in Field.objects.all())
-        
+
         for row in cursor.execute("SELECT ID,CollectionID,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
                                   FROM FieldDefinitions ORDER BY DisplayOrder"):
             if groups.has_key(row.CollectionID):
@@ -303,14 +303,14 @@ class Command(BaseCommand):
                 if standard_fields.has_key(dc):
                     fields[row.ID] = standard_fields[dc]
                 else:
-                    fields[row.ID] = Field.objects.create(label=row.Name)            
+                    fields[row.ID] = Field.objects.create(label=row.Name)
                 FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
                                              field=fields[row.ID],
                                              order=fieldsets[row.CollectionID].fields.count() + 1,
                                              importance=(row.ShortView and 4) + (row.MediumView and 2) + (row.LongView and 1))
-     
+
         # Migrate records and media
-        
+
         print "Migrating records"
         images = {}
         count = 0
@@ -323,8 +323,7 @@ class Command(BaseCommand):
                                                        name=row.Resource.rsplit('.', 1)[0],
                                                        modified=row.Modified or datetime.now(),
                                                        source=row.RemoteID,
-                                                       next_update=row.CachedUntil or row.Expires,
-                                                       fieldset=fieldsets[row.CollectionID])
+                                                       next_update=row.CachedUntil or row.Expires)
                 images[row.ID] = image.id
                 CollectionItem.objects.create(record_id=image.id, collection=groups[row.CollectionID])
                 if storage.has_key(row.CollectionID):
@@ -353,9 +352,9 @@ class Command(BaseCommand):
             if options.get('max_records') and count >= options['max_records']:
                 break
         pb.done()
-        
+
         # Migrate favorite images
-        
+
         print "Migrating favorite images"
         image_type = ContentType.objects.get_for_model(Record)
         for row in cursor.execute("SELECT UserID,ImageID FROM FavoriteImages"):
@@ -365,7 +364,7 @@ class Command(BaseCommand):
                                 'favorite')
 
         # Migrate field values
-        
+
         print "Migrating field values"
         count = 0
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM FieldData"))[0].C)
@@ -382,12 +381,12 @@ class Command(BaseCommand):
                 pb.update(count)
                 reset_queries()
         pb.done()
-        
-        # Migrate folders        
+
+        # Migrate folders
         # Nothing to do - folders replaced by tags
-        
+
         # Migrate slideshows
-            
+
         print "Migrating slideshows"
         slideshows = {}
         for row in cursor.execute("SELECT Slideshows.ID,Slideshows.UserID,Slideshows.Title,Description, \
@@ -400,12 +399,12 @@ class Command(BaseCommand):
                                                                  hidden=row.ArchiveFlag,
                                                                  password=row.AccessPassword)
                 slideshows[row.ID].override_dates(created=row.CreationDate,
-                                                  modified=row.ModificationDate)                
+                                                  modified=row.ModificationDate)
                 if row.Folder:
                     Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(
                         user=users[row.UserID], object=slideshows[row.ID]),
                         '"%s"' % row.Folder.replace('"',"'"))
-                
+
         print "Migrating slides"
         count = 0
         pb = ProgressBar(list(cursor.execute("SELECT COUNT(*) AS C FROM Slides"))[0].C)
@@ -426,40 +425,40 @@ class Command(BaseCommand):
             if count % 100 == 0:
                 pb.update(count)
         pb.done()
-        
-        
+
+
         # Migrate slideshow permissions
-        
+
         #Privilege.ModifyACL -> n/a
         #Privilege.ModifySlideshow -> write
         #Privilege.DeleteSlideshow -> manage
         #Privilege.ViewSlideshow -> read
         #Privilege.CopySlideshow -> n/a
-        
+
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
                                   "FROM AccessControl WHERE ObjectType='S' AND ObjectID>0"):
             if slideshows.has_key(row.ObjectID):
                 ac = AccessControl()
-                ac.content_object = slideshows[row.ObjectID]            
+                ac.content_object = slideshows[row.ObjectID]
                 if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
                     ac.save()
 
 
-                    
-            
-            
-        
+
+
+
+
 
     def process_xml_resource(self, record, storage, file):
-        
+
         def node_text(node):
             return ''.join(n.nodeValue for n in node.childNodes).strip()
-        
+
         def child_text(node, tagname):
             for e in node.getElementsByTagName(tagname):
                 return node_text(e)
             return None
-            
+
         def get_media(node):
             return dict(
                 display = e.attributes['display'].nodeValue,
@@ -467,28 +466,28 @@ class Command(BaseCommand):
                 label = child_text(e, 'label'),
                 link = child_text(e, 'link'),
                 data = child_text(e, 'data'), )
-        
+
         def make_html(link, label):
             if not link:
                 return label
             else:
                 return '<a href="%s">%s</a>' % (link, label)
-        
+
         def name_from_url(url):
             return os.path.splitext(os.path.basename(urlparse(url)[2]))[0]
-        
+
         try:
             ovcstorage = Storage.objects.get(name='onlinevideo')
         except Storage.DoesNotExist:
             ovcstorage = Storage.objects.create(title='Online Video Collection', name='onlinevideo', system='online')
-        
+
         try:
             ovcstorage_full = Storage.objects.get(name='onlinevideo')
         except Storage.DoesNotExist:
             ovcstorage_full = Storage.objects.create(title='Online Video Collection (downloadable)', name='onlinevideo-full', system='online')
-        
+
         description_field = Field.objects.get(standard__prefix='dc', name='description')
-        
+
         file = os.path.join(storage.base, file)
         try:
             resource = minidom.parse(file)
@@ -503,14 +502,14 @@ class Command(BaseCommand):
             medium.append(get_media(e))
         for e in resource.getElementsByTagName('full'):
             full.append(get_media(e))
-        
+
         Media.objects.create(
             record=record,
             name='thumb',
             url='thumb/%s' % thumb,
             storage=storage,
             mimetype='image/jpeg')
-        
+
         for m in medium:
             if m['display'] == 'default':
                 record.fieldvalue_set.create(field=description_field, value=make_html(m['link'], m['label']))

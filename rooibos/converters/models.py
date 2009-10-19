@@ -51,7 +51,6 @@ class PowerPointUploader:
             storage = Storage.objects.get(name='personal-images-full')
 
             record = Record()
-            record.fieldset = FieldSet.objects.get(name='dc')
             record.name = source.split('/')[-1].split('.')[0]
             record.save(force_insert=True)
             CollectionItem.objects.create(record=record, collection=collection).save()

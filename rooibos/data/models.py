@@ -86,7 +86,6 @@ class Record(models.Model):
     manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
-    fieldset = models.ForeignKey('FieldSet', null=True)
 
     def __unicode__(self):
         return self.name

@@ -6,7 +6,7 @@ from decimal import Decimal
 def read_core4(file):
     """
     Import from a VRA Core 4 XML file
-    
+
     Unsupported:
     - count and num attributes of stateEdition element
     - any relations except a single imageOf relation to another record of the same batch
@@ -49,7 +49,7 @@ def read_core4(file):
             if value: value = value.strip()
             return value and [FieldValue(field=field, refinement=type, value=value, group=counter)] or []
         return values
-    
+
     def process_element_agent(element, field, counter):
         values = []
         order = 0
@@ -64,10 +64,10 @@ def read_core4(file):
                                              value=value, group=counter, order=order))
                 else:
                     values.append(FieldValue(field=field, refinement=e.localName,
-                                             value=value, group=counter, order=order))                
+                                             value=value, group=counter, order=order))
         return values
-    
-    def process_element_measurement(element, field, counter):        
+
+    def process_element_measurement(element, field, counter):
         value = element.firstChild and element.firstChild.nodeValue or None
         if value:
             try:
@@ -77,7 +77,7 @@ def read_core4(file):
             return [FieldValue(field=field, refinement=element.getAttribute('type'),
                                value=value + element.getAttribute('unit'), numeric_value=numvalue, group=counter)]
         return []
-    
+
     record_relations = []
 
     def process_element_relation(element, field, counter):
@@ -93,11 +93,11 @@ def read_core4(file):
     processors['agent'] = process_element_agent
     processors['measurements'] = process_element_measurement
     processors['relation'] = process_element_relation
-        
+
     def process_element_set(element_set):
         field = fields[element_set.localName[:-3].lower()]
         values = []
-        for counter, element in enumerate(elementNodes(element_set.childNodes)): 
+        for counter, element in enumerate(elementNodes(element_set.childNodes)):
             name = element.localName
             value = element.firstChild and element.firstChild.nodeValue or None
             if name == 'display':
@@ -107,25 +107,24 @@ def read_core4(file):
             else:
                 values.extend(processors[field.name](element, field, counter))
         return values
-    
+
     def get_first_value(values, condition):
         filtered = filter(condition, values)
         return filtered and filtered[0].value or None
-    
-    def process_record(record):        
+
+    def process_record(record):
         id = record.getAttribute('id')
         refid = record.getAttribute('refid')
         source = record.getAttribute('source')
         values = []
         del record_relations[:]
         for child in elementNodes(record.childNodes):
-            values.extend(process_element_set(child))        
+            values.extend(process_element_set(child))
         # TODO: find existing record to replace
         record = Record()
-        record.fieldset = FieldSet.objects.get(name='vra-core-4')
         record.name = get_first_value(values, lambda v: v.field.name == 'source' and
                                       v.refinement.startswith('refid')) \
-                      or get_first_value(values, lambda v: v.field.name == 'title')        
+                      or get_first_value(values, lambda v: v.field.name == 'title')
         record.save(force_insert=True)
         record.fieldvalue_set.add(*values)
         record.fieldvalue_set.create(field=dc_identifier, value=id)
@@ -133,7 +132,7 @@ def read_core4(file):
         record._core4_ids = (id, refid)
         record._core4_parent = record_relations and record_relations[0] or None
         return record
-    
+
     dom = minidom.parse(file)
     if dom.documentElement.namespaceURI <> 'http://www.vraweb.org/vracore4.htm':
         raise Exception("File is not a valid VRA Core 4 file (invalid namespace)")
@@ -141,12 +140,12 @@ def read_core4(file):
                   dom.documentElement.getElementsByTagName('work') + \
                   dom.documentElement.getElementsByTagName('image'))
     for record in filter(lambda r: r._core4_parent, records):
-        parent = filter(lambda r: r._core4_ids[0] == record._core4_parent[0] or 
+        parent = filter(lambda r: r._core4_ids[0] == record._core4_parent[0] or
                                   r._core4_ids[1] == record._core4_parent[1], records)
         if parent:
             record.parent = parent[0]
             record.save()
-    
+
     return records
 
 def test(collection):

@@ -105,7 +105,6 @@ def import_set_photos(request):
             storage = Storage.objects.get(name='personal-images-full')
             for photo in e.find('photoset').findall('photo'):
                 record = Record()
-                record.fieldset = FieldSet.objects.get(name='dc')
                 record.name = photo.attrib['title']
                 record.save(force_insert=True)
                 dc_identifier = Field.objects.get(name='identifier', standard__prefix='dc')
