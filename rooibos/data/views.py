@@ -258,9 +258,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         else:
 
             if selected_fieldset:
-                needed = set(fieldset.fields.all().order_by('fieldsetfield__order')) - \
-                        set(fv.field for fv in fieldvalues)
-                initial = [{}] * len(fieldvalues) + [{'field': f.id} for f in needed]
+                needed = fieldset.fields.filter(~Q(id__in=[fv.field_id for fv in fieldvalues])).order_by('fieldsetfield__order').values_list('id', flat=True)
+                initial = [{}] * len(fieldvalues) + [{'field': id} for id in needed]
                 FieldValueFormSet.extra = len(needed) + 3
             else:
                 initial = []
