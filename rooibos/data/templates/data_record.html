@@ -24,8 +24,8 @@ $(document).ready(function() {
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $("#metadata-form select").change(function () { this.form.submit(); });
-        $("#metadata-form :submit").remove();
+        $(".submit-on-select-change select").change(function () { this.form.submit(); });
+        $(".submit-on-select-change :submit").remove();
 
         function hide_empty(elements) {
             empty = $.grep($(":text", elements), function(a) { return !a.value; });
@@ -163,7 +163,7 @@ $(document).ready(function() {
 
 {% if not fv_formset %}
 
-    <form id="metadata-form" action="." method="GET">
+    <form id="metadata-form" class="submit-on-select-change" action="." method="GET">
     Display metadata as: <select name="fieldset">
     <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
     <option value="">Default</option>
@@ -181,13 +181,37 @@ $(document).ready(function() {
 {% else %}
 
     <div style="clear: both;">
-    <h2>Edit Record</h2>
+
+    <h2>
+        {% if personal %}
+            Annotate Record
+        {% else %}
+            {% if context %}
+                Annotate Record for {{ context.title }}
+            {% else %}
+                Edit Record
+            {% endif %}
+        {% endif %}
+    </h2>
+
+    <form method="GET" action="" class="submit-on-select-change">
+        Edit using fields template: <select name="fieldset">
+        <option value=""></option>
+        {% for fieldset in fieldsets %}
+        <option value="{{ fieldset.name }}">{{ fieldset.title }}</option>
+        {% endfor %}
+        </select>
+        <input type="submit" value="Edit" />
+    </form>
+
+
     <form method="POST" action="">
         {{ fv_formset.management_form }}
         <div>
-            <input type="submit" value="Submit Changes" />
             <div id="fieldvalues">
                 <h3>Metadata</h3>
+                <input type="submit" value="Submit Changes" />
+
         {% for form in fv_formset.forms %}
             <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
                 {{ form.errors }}

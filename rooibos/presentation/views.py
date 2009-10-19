@@ -188,8 +188,11 @@ def items(request, id, name):
     else:
         formset = OrderingFormSet(queryset=presentation.items.all())
 
+    contenttype = ContentType.objects.get_for_model(Presentation)
+
     return render_to_response('presentation_items.html',
                       {'presentation': presentation,
+                       'presentation_contenttype': "%s.%s" % (contenttype.app_label, contenttype.model),
                        'formset': formset,},
                       context_instance=RequestContext(request))
 

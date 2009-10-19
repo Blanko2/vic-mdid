@@ -91,6 +91,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         record = Record()
         can_edit = len(readable_collections) > 0
 
+    context = None
+    if contexttype and contextid:
+        app_label, model = contexttype.split('.')
+        model_class = get_object_or_404(ContentType, app_label=app_label, model=model).model_class()
+        context = get_object_or_404(filter_by_access(request.user, model_class), id=contextid)
+
     media = Media.objects.select_related().filter(record=record,
                                                   storage__id__in=accessible_ids(request.user, Storage),
                                                   master=None)
@@ -99,7 +105,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
     else:
         fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
-        personal = False
+        edit = False
 
     selected_fieldset = request.GET.get('fieldset')
     if selected_fieldset == '_all':
@@ -116,7 +122,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     if edit:
 
-        if not can_edit and not personal:
+        if not can_edit and not personal and not context:
             return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
         def _get_fields():
@@ -140,10 +146,11 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 return self._fields.get(id=data)
 
             def clean(self):
-                cleaned_data = super(forms.ModelForm, self).clean()
+                cleaned_data = self.cleaned_data
                 return cleaned_data
 
             field = forms.ChoiceField(choices=_field_choices())
+            value = forms.CharField(widget=forms.Textarea, required=False)
             context_type = forms.IntegerField(widget=forms.HiddenInput, required=False)
             context_id = forms.IntegerField(widget=forms.HiddenInput, required=False)
 
@@ -197,10 +204,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     cleaned_data['personal_collections'] = []
                 return cleaned_data
 
-
         fieldvalues_readonly = []
-        if personal:
-            fieldvalues = record.get_fieldvalues(owner=request.user).filter(owner=request.user)
+        if personal or context:
+            fieldvalues = record.get_fieldvalues(owner=request.user, context=context).filter(owner=request.user)
         else:
             fieldvalues = record.get_fieldvalues()
 
@@ -208,10 +214,10 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                                  exclude=FieldValueForm.Meta.exclude, can_delete=True, extra=3)
         if request.method == 'POST':
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
-            metadataform = RecordMetadataForm(request.POST) if not personal else None
-            if formset.is_valid() and (personal or metadataform.is_valid()):
+            metadataform = RecordMetadataForm(request.POST) if not (personal or context) else None
+            if formset.is_valid() and (personal or context or metadataform.is_valid()):
 
-                if not personal:
+                if not personal and not context:
                     owner = metadataform.cleaned_data['owner']
                     record.owner = User.objects.get(username=owner) if owner else None
                     record.save()
@@ -232,23 +238,36 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 o2 = instances and max(v.order for v in instances) or 0
                 order = max(o1, o2, 0)
                 for instance in instances:
+                    if not instance.value:
+                        if instance.id:
+                            instance.delete()
+                        continue
                     instance.record = record
                     if instance.order == 0:
                         order += 1
                         instance.order = order
-                    if personal:
+                    if personal or context:
                         instance.owner = request.user
+                    if context:
+                        instance.context = context
                     instance.save()
                 request.user.message_set.create(message="Changes to metadata saved successfully.")
-
-
                 url = reverse('data-record-edit-personal' if personal else 'data-record-edit',
                               kwargs=dict(id=record.id, name=record.name))
                 return HttpResponseRedirect(url)
         else:
-            formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv')
+
+            if selected_fieldset:
+                needed = set(fieldset.fields.all().order_by('fieldsetfield__order')) - \
+                        set(fv.field for fv in fieldvalues)
+                initial = [{}] * len(fieldvalues) + [{'field': f.id} for f in needed]
+                FieldValueFormSet.extra = len(needed) + 3
+            else:
+                initial = []
+
+            formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv', initial=initial)
             metadataform = RecordMetadataForm(
-                initial={'personal': len(writable_collections) == 0}) if not personal else None
+                initial={'personal': len(writable_collections) == 0}) if not (personal or context) else None
 
     else:
         fieldvalues_readonly = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
@@ -261,6 +280,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'fieldsets': fieldsets,
                                'selected_fieldset': fieldset,
                                'fieldvalues': fieldvalues_readonly,
+                               'context': context,
+                               'personal': personal,
                                'fv_formset': formset,
                                'metadataform': metadataform,
                                'can_edit': can_edit,
