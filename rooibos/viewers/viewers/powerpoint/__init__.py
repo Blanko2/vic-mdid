@@ -21,6 +21,9 @@ PROCESS_FILES = {
     'ppt/slides/_rels/slide2.xml.rels': 'record_slide_rels',
     'ppt/slides/slide1.xml': 'title_slide',
     'ppt/slides/slide2.xml': 'record_slide',
+    'ppt/notesSlides/notesSlide1.xml': 'title_slide_notes',
+    'ppt/notesSlides/notesSlide2.xml': 'record_slide_notes',
+    'ppt/notesSlides/_rels/notesSlide2.xml.rels': 'record_slide_notes_rels',
     'ppt/presentation.xml': 'presentation',
     'ppt/_rels/presentation.xml.rels': 'presentation_rels',
     '[Content_Types].xml': 'content_types',   
@@ -34,6 +37,8 @@ class PowerPointGenerator:
         self.items = presentation.items.all()
         self.slide_template = None
         self.slide_rel_template = None
+        self.slide_notes_template = None
+        self.slide_notes_rel_template = None
         self.content_types = None
         self.additional_content_types = {}
         self.placeholder_image = None
@@ -73,7 +78,45 @@ class PowerPointGenerator:
         for n in range(2, len(self.items) + 2):
             x = xml.dom.minidom.parseString(self.slide_template)
             xr = xml.dom.minidom.parseString(self.slide_rel_template)
+            xn = xml.dom.minidom.parseString(self.slide_notes_template)
+            xnr = xml.dom.minidom.parseString(self.slide_notes_rel_template)
             record = self.items[n - 2].record
+
+            # insert notes
+            fields = record.get_fieldvalues(owner=self.user, context=record)
+
+            fieldvalues = list(record.get_fieldvalues())        
+            if fieldvalues:
+                fieldvalues[0]._subitem = False
+            for i in range(1, len(fieldvalues)):
+                fieldvalues[i]._subitem = (fieldvalues[i].field == fieldvalues[i - 1].field and
+                                          fieldvalues[i].group == fieldvalues[i - 1].group)
+                
+            body = xn.getElementsByTagName('p:txBody').item(0)
+            for value in fieldvalues:
+                ap1 = xn.createElement('a:p')
+                ar = xn.createElement('a:r') 
+                arPr = xn.createElement('a:rPr')
+                arPr.setAttribute('dirty','0') 
+                arPr.setAttribute('lang','en-US') 
+                arPr.setAttribute('smtClean','0')
+                at = xn.createElement('a:t')
+                txt = xn.createTextNode('%s%s: %s' % (
+                      value._subitem and 'sub' or '', 
+                      value.resolved_label, 
+                      value.value or ''))
+                at.appendChild(txt) 
+                ar.appendChild(arPr)
+                ar.appendChild(at)
+                ap1.appendChild(ar)
+                body.appendChild(ap1)
+            
+            test = xn.toxml(encoding="UTF-8")
+            
+            # update the slide number in notes
+            e = filter(lambda e: e.getAttribute('type') == 'slidenum', xn.getElementsByTagName('a:fld'))[0]
+            e.getElementsByTagName('a:t').item(0).firstChild.nodeValue = n
+            
             # insert title
             for e in x.getElementsByTagName('a:t'):
                 t = e.firstChild.nodeValue
@@ -127,11 +170,25 @@ class PowerPointGenerator:
                     rel = filter(lambda e: e.getAttribute('Id') == embedId, xr.getElementsByTagName('Relationship'))[0]
                     self.placeholder_image = 'ppt' + rel.getAttribute('Target')[2:]
                     rel.setAttribute('Target', '../media/' + name)
+                    
+                    # add notes to slide relation
+                    rel2 = filter(lambda e: e.getAttribute('Type') == 
+                                  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide", 
+                                  xr.getElementsByTagName('Relationship'))[0]
+                    rel2.setAttribute('Target', '../notesSlides/notesSlide%s.xml' % n)
+                    
+                    # add slide to notes relation
+                    rel3 = filter(lambda e: e.getAttribute('Type') == 
+                                  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide", 
+                                  xnr.getElementsByTagName('Relationship'))[0]
+                    rel3.setAttribute('Target', '../slides/slide%s.xml' % n)
             else:
                 self.remove_placeholder_image = False
             
             outfile.writestr('ppt/slides/slide%s.xml' % n, x.toxml(encoding="UTF-8"))     
             outfile.writestr('ppt/slides/_rels/slide%s.xml.rels' % n, xr.toxml())     
+            outfile.writestr('ppt/notesSlides/notesSlide%s.xml' % n, xn.toxml(encoding="UTF-8"))     
+            outfile.writestr('ppt/notesSlides/_rels/notesSlide%s.xml.rels' % n, xnr.toxml())     
     
     def _process_content_types(self, outfile):
         x = xml.dom.minidom.parseString(self.content_types)
@@ -139,6 +196,10 @@ class PowerPointGenerator:
             e = x.createElement('Override')
             e.setAttribute('PartName', '/ppt/slides/slide%s.xml' % n)
             e.setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml')
+            x.firstChild.appendChild(e)
+            e = x.createElement('Override')
+            e.setAttribute('PartName', '/ppt/notesSlides/notesSlide%s.xml' % n)
+            e.setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml')
             x.firstChild.appendChild(e)
         for e in x.getElementsByTagName('Default'):
             # remove additional content types that already exist
@@ -166,6 +227,16 @@ class PowerPointGenerator:
         
     def _record_slide_rels(self, name, content, outfile):
         self.slide_rel_template = content
+
+    def _record_slide_notes(self, name, content, outfile):
+        self.slide_notes_template = content
+
+    def _title_slide_notes(self, name, content, outfile):
+        x = xml.dom.minidom.parseString(content)
+        outfile.writestr(name, x.toxml())        
+
+    def _record_slide_notes_rels(self, name, content, outfile):
+        self.slide_notes_rel_template = content
 
     def _presentation(self, name, content, outfile):
         x = xml.dom.minidom.parseString(content)
