@@ -29,12 +29,17 @@ class PowerpointTestCase(unittest.TestCase):
         collection = Collection.objects.create(title='Simple Collection', description='Simple collection')
         AccessControl.objects.create(content_object=collection, read=True)
         field = Field.objects.get(name='title', standard__prefix='dc')
+        creatorField = Field.objects.get(name='creator', standard__prefix='dc')
+        sourceField = Field.objects.get(name='source', standard__prefix='dc')
         presentation = Presentation.objects.create(title='Simple Presentation',
                                                    description='This is a PowerPoint presentation created from a template and populated with data.',
                                                    owner_id=1)
         for n in range(1, 11):
             record = Record.objects.create()
             FieldValue.objects.create(record=record, field=field, value='Record %s' % n)
+            FieldValue.objects.create(record=record, field=creatorField, value='RecordCreator %s' % n)
+            FieldValue.objects.create(record=record, field=sourceField, value='RecordSource %s' % n)
+
             CollectionItem.objects.create(collection=collection, record=record)
             PresentationItem.objects.create(presentation=presentation, record=record, order=n)
             media = Media.objects.create(record=record, storage=self.storage, mimetype='image/jpeg')
