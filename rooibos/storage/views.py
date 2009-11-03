@@ -107,6 +107,7 @@ def record_thumbnail(request, id, name):
         else:
             return HttpResponseServerError()
     else:
+        #todo remove static url
         return HttpResponseRedirect('/static/images/nothumbnail.jpg')
 
 

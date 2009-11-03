@@ -13,25 +13,21 @@ class LocalFileSystemStorageSystem(FileSystemStorage):
                                                    'record': media.record.name,
                                                    'mediaid': media.id,
                                                    'media': media.name})
-    
+
     def get_absolute_file_path(self, storage, media):
-        return self.path(media.url)        
-    
+        return self.path(media.url)
+
     def get_available_name(self, name):
         (name, ext) = os.path.splitext(name)
         unique = ""
-        while True:                
+        while True:
             if not self.exists(name + unique + ext):
                 name = name + unique + ext
                 break
-            if not unique:
-                unique = "-1"
-            else:
-                unique = str(int(unique) - 1)
+            unique = "-1" if not unique else str(int(unique) - 1)
         return name
-    
+
     def save(self, name, content):
-        if not name:
-            name = "file" + random.randint(1000000, 9999999)
-            print "generated name " + name
+        #todo need to create unique name, not random
+        name = name or self.get_available_name("file" + random.randint(1000000, 9999999))
         return FileSystemStorage.save(self, name, content)

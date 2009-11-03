@@ -1,29 +1,8 @@
+# DON'T PUT ANY LOCALIZED SETTINGS OR SECRETS IN THIS FILE
+# they should go in settings_local.py instead
+# with a blank setting in settings_local.template.py
+
 import os.path
-
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
-
-ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
-)
-
-MANAGERS = ADMINS
-
-DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'rooibos'             # Or path to database file if using sqlite3.
-DATABASE_USER = 'rooibos'             # Not used with sqlite3.
-DATABASE_PASSWORD = 'rooibos'         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
-
-DEFAULT_CHARSET = 'utf-8'
-
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
-TIME_ZONE = 'America/Chicago'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -33,7 +12,7 @@ SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I18N = False
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -43,14 +22,6 @@ MEDIA_ROOT = ''
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = ''
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
-
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = 'rxn7#8o10k#f^qs1bauc^u4o-f33-ch)hc-gwrz)luvq#15dzm'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -62,28 +33,25 @@ TEMPLATE_LOADERS = (
 TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.auth",
     "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
+#    "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
 )
 
 MIDDLEWARE_CLASSES = (
+    'rooibos.sslredirect.SSLRedirect',
     'django.middleware.common.CommonMiddleware',
+    'rooibos.util.stats_middleware.StatsMiddleware',
     'django.contrib.csrf.middleware.CsrfMiddleware',
+    'rooibos.api.middleware.CookielessSessionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.doc.XViewMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    'rooibos.contrib.pagination.middleware.PaginationMiddleware',
+    'pagination.middleware.PaginationMiddleware',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
-
-TEMPLATE_DIRS = (
-    '/home/andreas/dev/rooibos/rooibos/templates',
-)
-
-#TEMPLATE_STRING_IF_INVALID = '[unknown]'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -113,18 +81,15 @@ INSTALLED_APPS = (
     'rooibos.converters',
     'rooibos.artstor',
     'rooibos.contrib.tagging',
+    'rooibos.workers',
     'pagination',
     'impersonate',
 )
-
-SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
 STORAGE_SYSTEMS = {
     'local': 'rooibos.storage.localfs.LocalFileSystemStorageSystem',
     'online': 'rooibos.storage.online.OnlineStorageSystem',
 }
-
-SCRATCH_DIR = 'd:/dev/rooibos/scratch/'
 
 GROUP_MANAGERS = {
     'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
@@ -132,25 +97,29 @@ GROUP_MANAGERS = {
 
 WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 
-SECURE_LOGIN = False
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
 
-CACHE_BACKEND = 'db://cache'
+additional_settings = [
+    'settings_local',
+]
 
-INTERNAL_IPS = ('127.0.0.1',)
-
-HELP_URL = 'https://wiki.cit.jmu.edu/mdidhelp/index.php/Help_v1:'
-
-DEFAULT_LANGUAGE = 'en-us'
-
-GOOGLE_ANALYTICS_MODEL = True
-
-FLICKR_KEY = ''
-FLICKR_SECRET = ''
-
-ARTSTOR_GATEWAY = ''           # 'http://sru.artstor.org/SRU/artstor.htm'
-
-STATIC_DIR = 'd:/dev/rooibos/rooibos/static/'
-OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
+# Load settings for additional applications
+for settings in additional_settings:
+    print "Loading additional settings from %s" % settings
+    module = __import__(settings, globals(), locals(), 'rooibos')
+    for setting in dir(module):
+        if setting == setting.upper():
+            if locals().has_key(setting):
+                if isinstance(locals()[setting], dict):
+                    locals()[setting].update(getattr(module, setting))
+                elif isinstance(locals()[setting], tuple):
+                    locals()[setting] += (getattr(module, setting))
+                else:
+                    raise TypeError("Can only add to settings of type dict or tuple")
+            else:
+                locals()[setting] = getattr(module, setting)
+        elif setting == 'additional_settings':
+            additional_settings += getattr(module, setting)

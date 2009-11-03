@@ -9,17 +9,18 @@ from rooibos.util import unique_slug
 
 
 class Presentation(models.Model):
-    
+
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50, unique=True)
     owner = models.ForeignKey(User)
     hidden = models.BooleanField(default=False)
+    source = models.CharField(max_length=1024, null=True)
     description = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=32, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     ownedwrapper = generic.GenericRelation('util.OwnedWrapper')
-    
+
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Presentation, self).save(kwargs)
@@ -52,19 +53,19 @@ class Presentation(models.Model):
 
 
 class PresentationItem(models.Model):
-    
+
     presentation = models.ForeignKey('Presentation', related_name='items')
     record = models.ForeignKey(Record)
     hidden = models.BooleanField(default=False)
     type = models.CharField(max_length=16, blank=True)
     order = models.SmallIntegerField()
-    
+
     class Meta:
         ordering = ['order']
 
 
 class PresentationItemInfo(models.Model):
-    
+
     item = models.ForeignKey('PresentationItem', related_name='media')
     media = models.ForeignKey(Media)
     info = models.TextField(blank=True)

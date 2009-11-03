@@ -34,7 +34,8 @@ class Storage(models.Model):
             pass
         return self.name
 
-    def _get_storage_system(self):
+    @property
+    def storage_system(self):
         if settings.STORAGE_SYSTEMS.has_key(self.system):
             (modulename, classname) = settings.STORAGE_SYSTEMS[self.system].rsplit('.', 1)
             module = __import__(modulename)
@@ -46,24 +47,33 @@ class Storage(models.Model):
             return None
 
     def get_absolute_media_url(self, media):
-        storage = self._get_storage_system()
+        storage = self.storage_system
         return storage and storage.get_absolute_media_url(self, media) or None
 
     def get_absolute_file_path(self, media):
-        storage = self._get_storage_system()
+        storage = self.storage_system
         return storage and storage.get_absolute_file_path(self, media) or None
 
     def save_file(self, name, content):
-        storage = self._get_storage_system()
+        storage = self.storage_system
         return storage and storage.save(name, content) or None
 
     def load_file(self, name):
-        storage = self._get_storage_system()
+        storage = self.storage_system
         return storage and storage.open(name) or None
 
+    def delete_file(self, name):
+        storage = self.storage_system
+        if storage:
+            storage.delete(name)
+
     def file_exists(self, name):
-        storage = self._get_storage_system()
+        storage = self.storage_system
         return storage and storage.exists(name) or False
+
+    def size(self, name):
+        storage = self.storage_system
+        return storage and storage.size(name) or None
 
     def get_derivative_storage(self):
         if not self.derivative:
@@ -126,6 +136,13 @@ class Media(models.Model):
 
     def file_exists(self):
         return self.storage and self.storage.file_exists(self.url) or False
+
+    @property
+    def file_size(self):
+        return self.storage and self.storage.size(self.url)
+
+    def delete_file(self):
+        return self.storage and self.storage.storage_system.delete(self.url) or False
 
     def identify(self, save=True):
         type = self.mimetype.split('/')[0]

@@ -52,10 +52,12 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
 
     media = get_media_for_record(record, user, passwords)
 
-    media = media.filter(
-        master=None,  # don't look for derivatives here
-        mimetype__startswith='image/'
-    )
+    q = Q(mimetype__startswith='image/')
+    if settings.FFMPEG_EXECUTABLE:
+        # also support video and audio
+         q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
+
+    media = media.filter(q, master=None) # don't look for derivatives here
 
     if not media:
         return None
@@ -78,7 +80,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
             m = last or m
             break
 
-    # m is now equal or larger to requested size
+    # m is now equal or larger to requested size, or smaller but closest to the requested size
 
     # check what user size restrictions are
     restrictions = get_effective_permissions_and_restrictions(user, m.storage)[3]
@@ -92,18 +94,16 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
         def derivative_image(master, width, height):
             import ImageFile
             ImageFile.MAXBLOCK = 16 * 1024 * 1024
-
-            file = None
+            from multimedia import get_image
             try:
-                file = master.load_file()
+                file = get_image(master)
                 image = Image.open(file)
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
                 image.save(output, 'JPEG', quality=85, optimize=True)
                 return output, image.size
-            finally:
-                if file:
-                    file.close()
+            except:
+                return None, (None, None)
 
         # See if a derivative already exists
         d = m.derivatives.filter(Q(width=width, height__lte=height) | Q(width__lte=width, height=height),
@@ -114,11 +114,15 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
             if not d.file_exists():
                 # file has been removed, recreate
                 output, (w, h) = derivative_image(m, width, height)
+                if not output:
+                    return None
                 d.save_file('%s-%sx%s.jpg' % (d.id, w, h), output)
             m = d
         else:
             # create new derivative with correct size
             output, (w, h) = derivative_image(m, width, height)
+            if not output:
+                return None
             storage = m.storage.get_derivative_storage()
             m = Media.objects.create(record=m.record, storage=storage, mimetype='image/jpeg',
                                      width=w, height=h, master=m)

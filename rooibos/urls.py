@@ -31,9 +31,8 @@ urlpatterns = patterns('',
     (r'^artstor/', include('rooibos.artstor.urls')),
 
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
-)
 
-if settings.DEBUG:
-    urlpatterns += patterns('',
-        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'static'}),
+    url(r'^jmutube/', include('apps.jmutube.urls')),
+
+    url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'static'}, name='static'),
     )
