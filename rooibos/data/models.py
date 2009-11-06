@@ -105,15 +105,16 @@ class Record(models.Model):
         self._clear_cached_items()
         super(Record, self).save(kwargs)
 
-    def get_fieldvalues(self, owner=None, context=None, fieldset=None):
+    def get_fieldvalues(self, owner=None, context=None, fieldset=None, hidden=False):
         qc = Q(context_type=None, context_id=None)
         if context:
             qc = qc | Q(context_type=ContentType.objects.get_for_model(context.__class__), context_id=context.id)
         qo = Q(owner=None)
         if owner and owner.is_authenticated():
             qo = qo | Q(owner=owner)
+        qh = Q() if hidden else Q(hidden=False)
 
-        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo) \
+        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo, qh) \
                     .order_by('order','field','group','refinement')
 
         if fieldset:

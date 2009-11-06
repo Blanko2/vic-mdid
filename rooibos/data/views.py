@@ -201,9 +201,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
         fieldvalues_readonly = []
         if personal or context:
-            fieldvalues = record.get_fieldvalues(owner=request.user, context=context).filter(owner=request.user)
+            fieldvalues = record.get_fieldvalues(owner=request.user, context=context, hidden=True).filter(owner=request.user)
         else:
-            fieldvalues = record.get_fieldvalues()
+            fieldvalues = record.get_fieldvalues(hidden=True)
 
         FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
                                                  exclude=FieldValueForm.Meta.exclude, can_delete=True, extra=3)
