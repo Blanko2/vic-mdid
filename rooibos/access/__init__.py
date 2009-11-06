@@ -13,14 +13,14 @@ def get_effective_permissions_and_restrictions(user, model_instance):
     owner = getattr(model_instance, 'owner', None)
     if owner and owner == user:
         return (True, True, True, None)
-    if user.is_anonymous():
-        q = Q(user=None, usergroup=None)
+    q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
+    if not user.is_anonymous():
+        q = q | Q(usergroup__in=user.groups.all())
     else:
-        q = Q(user=user) | Q(usergroup__in=user.groups.all()) \
-                         | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
+        q = q | Q(user=None, usergroup=None)
     model_type = ContentType.objects.get_for_model(model_instance)
     aclist = AccessControl.objects.filter(q, object_id=model_instance.id, content_type__pk=model_type.id)
-    
+
     def reduce_by_filter(f):
         def combine(a, b):
             if a == False or (a == True and b == None): return a
@@ -36,12 +36,12 @@ def get_effective_permissions_and_restrictions(user, model_instance):
                     if not restrictions.has_key(k) or restrictions[k] > v:
                         restrictions[k] = v;
         return (read, write, manage, restrictions)
-    
+
     (gr, gw, gm, restrictions) = reduce_by_filter(lambda a: a.usergroup)
     (ur, uw, um, urestrictions) = reduce_by_filter(lambda a: a.user)
-    
+
     restrictions.update(urestrictions)
-    
+
     return (ur or (ur == None and gr),
             uw or (uw == None and gw),
             um or (um == None and gm),
@@ -68,7 +68,9 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
     if not (read or write or manage) or user.is_superuser:  # nothing to do
         return queryset
     model_type = ContentType.objects.get_for_model(queryset.model)
-    usergroups_q = Q(usergroup__in=user.groups.all()) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
+    usergroups_q =  Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
+    if not user.is_anonymous():
+        usergroups_q = usergroups_q | Q(usergroup__in=user.groups.all())
     user_q = user.is_anonymous() and Q(user__isnull=True, usergroup__isnull=True) or Q(user=user)
     owner_q =  'owner' in (f.name for f in queryset.model._meta.fields) and Q(owner=user)
 
@@ -80,8 +82,6 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
                                                                **{field: True}).values('object_id'))
         user_denied_q = Q(id__in=AccessControl.objects.filter(user_q, content_type__id=model_type.id,
                                                               **{field: False}).values('object_id'))
-        if user.is_anonymous():
-            return user_allowed_q & ~user_denied_q
         group_allowed_q = Q(id__in=AccessControl.objects.filter(usergroups_q, content_type__id=model_type.id,
                                                                 **{field: True}).values('object_id'))
         group_denied_q = Q(id__in=AccessControl.objects.filter(usergroups_q, content_type__id=model_type.id,
@@ -90,7 +90,7 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
         if owner_q:
             result = owner_q | result
         return result
-    
+
     return queryset.filter(build_query(read=read), build_query(write=write), build_query(manage=manage)).distinct()
 
 
