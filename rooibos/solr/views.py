@@ -202,14 +202,14 @@ def search(request, id=None, name=None, selected=False, json=False):
     flickr_total = 0
     artstor_total = 0
 
-    if keywords and not json:
-        search = FlickrSearch()
-        results = search.photoSearch(keywords)
-        flickr_total = results['total']
-
-        search = ArtstorSearch()
-        results = search.photoSearch(keywords)
-        artstor_total = results['total']
+    #if keywords and not json:
+    #    search = FlickrSearch()
+    #    results = search.photoSearch(keywords)
+    #    flickr_total = results['total']
+    #
+    #    search = ArtstorSearch()
+    #    results = search.photoSearch(keywords)
+    #    artstor_total = results['total']
 
     if request.GET.has_key('action'):
         page = safe_int(request.GET.get('op', '1'), 1)
@@ -490,7 +490,7 @@ def search_form(request):
                             if field == cf or field in cfe:
                                 field = cf
                                 break
-                        query.append('c=%s%s_%s:%s' % (type.isupper() and '-' or '', field.name, type.lower(), urlquote(criteria)))
+                        query.append('c=%s%s_%s:"%s"' % (type.isupper() and '-' or '', field.name, type.lower(), urlquote(criteria)))
                     else:
                         keywords.append('%s"%s"' % (type.isupper() and '-' or '', urlquote(criteria)))
             collections = collectionform.cleaned_data['collections']
