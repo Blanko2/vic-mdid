@@ -13,11 +13,10 @@ def get_effective_permissions_and_restrictions(user, model_instance):
     owner = getattr(model_instance, 'owner', None)
     if owner and owner == user:
         return (True, True, True, None)
-    q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
     if not user.is_anonymous():
-        q = q | Q(usergroup__in=user.groups.all())
+        q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(usergroup__in=user.groups.all())
     else:
-        q = q | Q(user=None, usergroup=None)
+        q = Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(user=None, usergroup=None)
     model_type = ContentType.objects.get_for_model(model_instance)
     aclist = AccessControl.objects.filter(q, object_id=model_instance.id, content_type__pk=model_type.id)
 
@@ -68,11 +67,11 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
     if not (read or write or manage) or user.is_superuser:  # nothing to do
         return queryset
     model_type = ContentType.objects.get_for_model(queryset.model)
-    usergroups_q =  Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
+    usergroups_q = Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user))
     if not user.is_anonymous():
         usergroups_q = usergroups_q | Q(usergroup__in=user.groups.all())
-    user_q = user.is_anonymous() and Q(user__isnull=True, usergroup__isnull=True) or Q(user=user)
-    owner_q =  'owner' in (f.name for f in queryset.model._meta.fields) and Q(owner=user)
+    user_q = Q(user__isnull=True, usergroup__isnull=True) if user.is_anonymous() else Q(user=user)
+    owner_q = Q(owner=user) if 'owner' in (f.name for f in queryset.model._meta.fields) and not user.is_anonymous() else None
 
     def build_query(**kwargs):
         (field, check) = kwargs.popitem()
