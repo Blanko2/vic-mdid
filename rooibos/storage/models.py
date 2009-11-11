@@ -17,6 +17,8 @@ class Storage(models.Model):
     name = models.SlugField(max_length=50)
     system = models.CharField(max_length=50)
     base = models.CharField(max_length=1024, null=True)
+    urlbase = models.CharField(max_length=1024, null=True)
+    serverbase = models.CharField(max_length=1024, null=True)
     derivative = models.OneToOneField('self', null=True, related_name='master')
 
     class Meta:

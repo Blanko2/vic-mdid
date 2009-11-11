@@ -1,4 +1,5 @@
 from django.conf.urls.defaults import *
+from streaming import retrieve_stream
 from views import *
 
 urlpatterns = patterns('',
@@ -9,4 +10,5 @@ urlpatterns = patterns('',
     url(r'^thumb/(?P<id>\d+)/(?P<name>[-\w]+)/$', record_thumbnail, name='storage-thumbnail'),
     url(r'^proxy/create/$', create_proxy_url_view),
     url(r'^proxy/(?P<uuid>[0-9a-f-]+)/$', call_proxy_url, name='storage-proxyurl'),
+    url(r'^stream/(?P<recordid>\d+)/(?P<record>[-\w]+)/(?P<mediaid>\d+)/(?P<media>[-\w]+)/$', retrieve_stream, name='storage-retrieve-stream'),
 )

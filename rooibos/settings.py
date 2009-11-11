@@ -91,6 +91,7 @@ INSTALLED_APPS = (
 STORAGE_SYSTEMS = {
     'local': 'rooibos.storage.localfs.LocalFileSystemStorageSystem',
     'online': 'rooibos.storage.online.OnlineStorageSystem',
+    'streaming': 'rooibos.storage.streaming.StreamingStorageSystem',
 }
 
 GROUP_MANAGERS = {

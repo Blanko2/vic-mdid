@@ -3,12 +3,13 @@ import unittest
 import tempfile
 import os.path
 import Image
+import shutil
 from StringIO import StringIO
 from django.test.client import Client
 from django.core.files import File
 from django.utils import simplejson
 from rooibos.data.models import *
-from rooibos.storage.models import *
+from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
 from rooibos.storage import get_thumbnail_for_record, get_image_for_record
 from rooibos.access.models import AccessControl
@@ -264,3 +265,35 @@ class OnlineStorageSystemTestCase(unittest.TestCase):
         self.assertTrue(thumbnail.height < 100)
 
         media.delete()
+
+
+class StreamingStorageSystemTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.collection = Collection.objects.create(title='Test')
+        self.storage = Storage.objects.create(title='Test',
+                                              name='test',
+                                              system='streaming',
+                                              base=self.tempdir,
+                                              urlbase='file:///' + self.tempdir.replace('\\', '/'))
+        self.record = Record.objects.create(name='record')
+        self.media = Media.objects.create(record=self.record, name='image', storage=self.storage)
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        AccessControl.objects.create(content_object=self.storage, read=True)
+        AccessControl.objects.create(content_object=self.collection, read=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+        self.record.delete()
+        self.storage.delete()
+        self.collection.delete()
+
+    def test_streaming(self):
+        TEST_STRING = 'Hello world'
+        content = StringIO(TEST_STRING)
+        self.media.save_file('test.txt', content)
+        c = Client()
+        response = c.get(self.media.get_absolute_url())
+        self.assertEqual(TEST_STRING, response.content)
+
