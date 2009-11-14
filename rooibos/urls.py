@@ -9,7 +9,7 @@ admin.autodiscover()
 
 
 urlpatterns = patterns('',
-    (r'^$', main),
+    url(r'^$', main, name='main'),
 
     url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}, name='logout'),
@@ -33,6 +33,7 @@ urlpatterns = patterns('',
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
 
     url(r'^jmutube/', include('apps.jmutube.urls')),
+    url(r'^svohp/', include('apps.svohp.urls')),
 
-    url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'static'}, name='static'),
+    url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_DIR}, name='static'),
     )

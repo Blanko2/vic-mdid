@@ -1,0 +1,140 @@
+body {
+    background-color: #e2e2e2;
+}
+
+#banner {
+    background-color: #456584;
+    background-image: url(../images/banner_bg.png);
+    background-repeat: repeat-x;
+    width: 100%;
+    height: 48px;
+}
+
+#logo {
+    text-indent: -9999px;
+    display: block;
+    width: 110px;
+    height: 48px;
+    background-image: url(../images/mdid3_logo.png);
+    background-repeat: no-repeat;
+    margin-left: 22px;
+    float: left;
+}
+
+#search {
+    color: #fff;
+    text-align: right;
+    margin-left: auto;
+    margin-right: 22px;
+}
+
+#search a, #search span {
+    color: #fff;
+    font-size: 10px;
+}
+
+#search input {
+    background-color: white;
+    border: 2px solid #ccc;
+    height: 14px;
+    width: 250px;
+    color: #808080;
+    margin-top: 3px;
+}
+
+#search input#search-button {
+    width: 20px;
+    margin-right: 5px;
+}
+
+.navigation {
+    font-size: 85%;
+}
+
+.navigation li.first {
+    background-image: none;
+    padding-left: 0px;
+}
+
+.navigation li {
+    float: left;
+    height: 21px;
+    list-style: none;
+    margin: 0;
+    padding: 3px 10px 0 10px;
+
+}
+
+.primary_navigation ul {
+    border: 0px;
+
+}
+
+.primary_navigation li.first {
+    margin-left: 20px;
+    padding-left: 10px;
+}
+
+.primary_navigation li.last {
+}
+
+.primary_navigation li {
+    margin-top: 2px;
+}
+
+.secondary_navigation {
+    left: 0px;
+    width: 100%;
+    height: 24px;
+    border-bottom: solid 1px #ccc;
+    clear: both;
+    background-color: #fff;
+}
+
+.secondary_navigation a:hover {
+    text-decoration: underline;
+
+}
+
+.navigation ul {
+    margin: 0 0 0 24px;
+}
+
+.navigation a {
+    color: black;
+    text-decoration: none;
+}
+
+.primary_navigation a {
+    color: white;
+    text-shadow: #000 1px 1px;
+    filter: Shadow(Color=#000000,
+			Direction=135,
+			Strength=2);
+}
+
+.primary_navigation a:link {
+    color: white;
+
+}
+
+.primary_navigation a:visited {
+    color: white;
+
+}
+
+.primary_navigation a:hover {
+    text-decoration: underline;
+}
+
+#main {
+    border: 0px;
+    background-color: #e2e2e2;
+
+}
+
+.main-block {
+    border:  solid 1px grey;
+    background-color: white;
+
+}

@@ -121,7 +121,8 @@ for settings in additional_settings:
                 elif isinstance(locals()[setting], tuple):
                     locals()[setting] += (getattr(module, setting))
                 else:
-                    raise TypeError("Can only add to settings of type dict or tuple")
+                    print "Overriding %s" % setting
+                    locals()[setting] = getattr(module, setting)
             else:
                 locals()[setting] = getattr(module, setting)
         elif setting == 'additional_settings':

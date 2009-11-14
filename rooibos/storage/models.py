@@ -141,7 +141,10 @@ class Media(models.Model):
 
     @property
     def file_size(self):
-        return self.storage and self.storage.size(self.url)
+        if self.file_exists():
+            return self.storage.size(self.url)
+        else:
+            return None
 
     def delete_file(self):
         return self.storage and self.storage.storage_system.delete(self.url) or False
