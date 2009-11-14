@@ -1,0 +1,1124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vra xmlns="http://www.vraweb.org/vracore4.htm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vraweb.org/vracore4.htm http://www.vraweb.org/projects/vracore4/vra-4.0-restricted.xsd">
+    <work id="w_6" source="Archivision VCat Database" refid="6">
+        <agentSet>
+            <display>ACT Architecture (French architectural firm, ca. 1982-present); Gaetana Aulenti (Italian interior designer, born 1927); Victor Alexandre Fr&#233;d&#233;ric Laloux (French architect, 1850-1937)</display>
+            <notes>ACT Architecture (Renaud Bardon, Pierre Colboc and Jean-Paul Philippon)Renaud Bardon, Pierre Colboc and Jean-Paul Philippon</notes>
+            <agent>
+                <name vocab="ULAN" refid="500023967" type="personal">Laloux, Victor Alexandre Fr&#233;d&#233;ric</name>
+                <dates type="life">
+                    <earliestDate>1850</earliestDate>
+                    <latestDate>1937</latestDate>
+                </dates>
+                <culture>French</culture>
+                <role>architect</role>
+            </agent>
+            <agent>
+                <name vocab="LCNAF" refid="nr 95039966" type="personal">ACT Architecture</name>
+                <dates type="activity">
+                    <earliestDate>1982</earliestDate>
+                    <latestDate>2082</latestDate>
+                </dates>
+                <culture>French</culture>
+                <role>architectural firm</role>
+            </agent>
+            <agent>
+                <name vocab="ULAN" refid="500031019" type="personal">Aulenti, Gaetana</name>
+                <dates type="life">
+                    <earliestDate>1927</earliestDate>
+                    <latestDate>9999</latestDate>
+                </dates>
+                <culture>Italian</culture>
+                <role>architect</role>
+            </agent>
+        </agentSet>
+        <dateSet>
+            <display>1898-1900 (creation); 1980-1986 (alteration)</display>
+            <date type="creation">
+                <earliestDate>1898</earliestDate>
+                <latestDate>1900</latestDate>
+            </date>
+            <date type="alteration">
+                <earliestDate>1980</earliestDate>
+                <latestDate>1986</latestDate>
+            </date>
+        </dateSet>
+        <descriptionSet>
+            <description>The Gare d'Orsay was opened in 1900 (to coincide with the Exposition Universelle) but with cessation of rail service in 1939 to the station because of the short platforms, lay abandoned until it was transformed into an art gallery and re-opened as the Mus&#233;e d'Orsay in 1986. [Parts of the building, including the hotel had remained in use until 1973.] The change from steam to non-polluting electric power traction inside allowed the original rail station to be designed in an opulent single integrated space which influenced later large railway stations in the US. ACT Architecture members: Renaud Bardon, Pierre Colboc and Jean-Paul Philippon.</description>
+        </descriptionSet>
+        <locationSet>
+            <display>Mus&#233;e d'Orsay (Paris, &#206;le-de-France, France)</display>
+            <notes>62, rue de Lille</notes>
+            <location type="site">
+                <name type="geographic" vocab="DOA" refid="" extent="building">Mus&#233;e d'Orsay</name>
+                <name type="geographic" vocab="TGN" refid="7008038" extent="inhabited place">Paris</name>
+                <name type="geographic" vocab="TGN" refid="7002883" extent="region">&#206;le-de-France</name>
+                <name type="geographic" vocab="TGN" refid="1000070" extent="nation">France</name>
+                <name type="geographic" vocab="TGN" refid="1000003" extent="continent">Europe</name>
+            </location>
+        </locationSet>
+        <materialSet>
+            <display>glass; stone; cast iron; tile</display>
+            <notes />
+            <material />
+        </materialSet>
+        <measurementsSet>
+            <display>32 x 40 x 138 m (length, Great Hall)</display>
+            <notes />
+            <measurements type="height" unit="m" extent="Great Hall">32</measurements>
+            <measurements type="width" unit="m" extent="Great Hall">40</measurements>
+            <measurements type="length" unit="m" extent="Great Hall">138</measurements>
+        </measurementsSet>
+        <sourceSet>
+            <display>Mus&#233;e d'Orsay [website]; http://www.musee-orsay.fr/en/ (accessed 11/6/2007)</display>
+            <notes />
+            <source />
+        </sourceSet>
+        <stylePeriodSet>
+            <display>Beaux-Arts; Postmodern</display>
+            <stylePeriod vocab="AAT" refid="300021433">Beaux-Arts</stylePeriod>
+            <stylePeriod vocab="AAT" refid="300022208">Postmodern</stylePeriod>
+        </stylePeriodSet>
+        <subjectSet>
+            <display>architectural exteriors; architectural interiors; engineering and industry; manufacturing; Art museums; Transportation; train station; coffered ceiling; arch</display>
+            <notes />
+            <subject>
+                <term type="builtworkPlace" vocab="LCSAF" refid="sh 85008026">Art museums</term>
+            </subject>
+            <subject>
+                <term type="descriptiveTopic" vocab="LCSAF" refid="sh 85137027">Transportation</term>
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>construction (assembling)</display>
+            <notes />
+            <technique vocab="AAT" refid="300054608">construction (assembling)</technique>
+        </techniqueSet>
+        <titleSet>
+            <display>Mus&#233;e d'Orsay</display>
+            <title type="repository" pref="true" xml:lang="fr">Mus&#233;e d'Orsay</title>
+            <title type="former" pref="false" xml:lang="fr">Gare d'Orsay</title>
+        </titleSet>
+        <worktypeSet>
+            <display>buildings; exhibition buildings; museums; art museums; buildings; transportation buildings; railway buildings; railroad stations</display>
+            <worktype vocab="AAT" refid="300007783">railroad station</worktype>
+            <worktype vocab="AAT" refid="300264847">art museum</worktype>
+        </worktypeSet>
+    </work>
+    <image id="i_115" refid="115" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-A1</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-A1</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>Mansard roof</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Contextual view of original train station (by Victor Laloux, 1900), from northeast across Seine</display>
+            <title type="generalView">Contextual view of original train station (by Victor Laloux, 1900), from northeast across Seine</title>
+        </titleSet>
+    </image>
+    <image id="i_116" refid="116" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-A2</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-A2</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>Mansard roof</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Close side view of original train station (by Victor Laloux, 1900), looking along north fa&#231;ade, depicting large arches and canopies</display>
+            <title type="partialView">Close side view of original train station (by Victor Laloux, 1900), looking along north fa&#231;ade, depicting large arches and canopies</title>
+        </titleSet>
+    </image>
+    <image id="i_117" refid="117" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-A3</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-A3</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>Mansard roof; clock</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Close side view of the upper left side of original train station (by Victor Laloux, 1900), from the west</display>
+            <title type="partialView">Close side view of the upper left side of original train station (by Victor Laloux, 1900), from the west</title>
+        </titleSet>
+    </image>
+    <image id="i_118" refid="118" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-A4</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-A4</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>sculpture; allegory; Mansard roof</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Detail view of a cornice statue on original train station (by Victor Laloux, 1900)</display>
+            <title type="partialView">Detail view of a cornice statue on original train station (by Victor Laloux, 1900)</title>
+        </titleSet>
+    </image>
+    <image id="i_119" refid="119" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-B1</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-B1</refid>
+            </source>
+        </sourceSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>General view of steel canopy, west fa&#231;ade of new additions by ACT, depicting new steel and glass enclosure</display>
+            <title type="generalView">General view of steel canopy, west fa&#231;ade of new additions by ACT, depicting new steel and glass enclosure</title>
+        </titleSet>
+    </image>
+    <image id="i_120" refid="120" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-B2</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-B2</refid>
+            </source>
+        </sourceSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Close side view of steel canopy, west fa&#231;ade of new additions by ACT, depicting new steel and glass enclosure</display>
+            <title type="partialView">Close side view of steel canopy, west fa&#231;ade of new additions by ACT, depicting new steel and glass enclosure</title>
+        </titleSet>
+    </image>
+    <image id="i_121" refid="121" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-B3</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-B3</refid>
+            </source>
+        </sourceSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Frontal view of new steel and glass walls, north fa&#231;ade, at base of arches</display>
+            <title type="partialView">Frontal view of new steel and glass walls, north fa&#231;ade, at base of arches</title>
+        </titleSet>
+    </image>
+    <image id="i_122" refid="122" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C1</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C1</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Frontal view into the museum, from main entry at west end, on axis</display>
+            <title type="generalView">Frontal view into the museum, from main entry at west end, on axis</title>
+        </titleSet>
+    </image>
+    <image id="i_123" refid="123" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C2</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C2</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Vertical view into the museum, from the south terrace, west side</display>
+            <title type="partialView">Vertical view into the museum, from the south terrace, west side</title>
+        </titleSet>
+    </image>
+    <image id="i_124" refid="124" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <descriptionSet>
+            <description>In the foreground is the bronze sculpture, Les quatre parties du monde soutenant la sph&#232;re c&#233;leste by Carpeaux (created 1868-1872).</description>
+        </descriptionSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C3</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C3</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>clock; coffered ceiling; skylights; arch; interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Diagonal general view of the interior space, from southeast corner</display>
+            <title type="generalView">Diagonal general view of the interior space, from southeast corner</title>
+        </titleSet>
+    </image>
+    <image id="i_125" refid="125" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C4</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C4</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>clock; coffered ceiling; arch; interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>General view into the museum, from top of northeast tower, depicting lateral terraces</display>
+            <title type="generalView">General view into the museum, from top of northeast tower, depicting lateral terraces</title>
+        </titleSet>
+    </image>
+    <image id="i_126" refid="126" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C5</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C5</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>clock; coffered ceiling; skylights; arch; interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>General view of the north terrace, from top of south tower</display>
+            <title type="generalView">General view of the north terrace, from top of south tower</title>
+        </titleSet>
+    </image>
+    <image id="i_127" refid="127" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C6</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C6</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>View of the north terrace, from top of south tower</display>
+            <title type="partialView">View of the north terrace, from top of south tower</title>
+        </titleSet>
+    </image>
+    <image id="i_128" refid="128" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-C7</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-C7</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Frontal view of the north terrace, on a transverse axis</display>
+            <title type="partialView">Frontal view of the north terrace, on a transverse axis</title>
+        </titleSet>
+    </image>
+    <image id="i_129" refid="129" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-D1</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-D1</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>Timekeeping; clock; coffered ceiling; arch; interior; vault: barrel; clock</display>
+            <notes />
+            <subject>
+                <term type="descriptiveTopic" vocab="LCSAF" refid="sh 85135438">Timekeeping</term>
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>General view of the west area, from the north observation deck tower</display>
+            <title type="generalView">General view of the west area, from the north observation deck tower</title>
+        </titleSet>
+    </image>
+    <image id="i_130" refid="130" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-D2</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-D2</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>Timekeeping; clock; skylights; arch; interior; vault: barrel; clock</display>
+            <notes />
+            <subject>
+                <term type="descriptiveTopic" vocab="LCSAF" refid="sh 85135438">Timekeeping</term>
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>View of the west fa&#231;ade, depicting silhouettes of people as they walk on bridges</display>
+            <title type="partialView">View of the west fa&#231;ade, depicting silhouettes of people as they walk on bridges</title>
+        </titleSet>
+    </image>
+    <image id="i_131" refid="131" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-D3</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-D3</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Frontal view of open web bridge, north side</display>
+            <title type="partialView">Frontal view of open web bridge, north side</title>
+        </titleSet>
+    </image>
+    <image id="i_132" refid="132" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-D4</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-D4</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>View of area under web bridge</display>
+            <title type="partialView">View of area under web bridge</title>
+        </titleSet>
+    </image>
+    <image id="i_133" refid="133" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-D5</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-D5</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>Side view of the tower which leads to the web bridge</display>
+            <title type="partialView">Side view of the tower which leads to the web bridge</title>
+        </titleSet>
+    </image>
+    <image id="i_134" refid="134" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-E1</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-E1</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior; vault: barrel</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>View of the north observation deck tower</display>
+            <title type="partialView">View of the north observation deck tower</title>
+        </titleSet>
+    </image>
+    <image id="i_135" refid="135" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-E2</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-E2</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>View of the north observation deck tower</display>
+            <title type="partialView">View of the north observation deck tower</title>
+        </titleSet>
+    </image>
+    <image id="i_136" refid="136" source="Archivision, Inc., Archivision Base Collection">
+        <agentSet>
+            <display>Gilchrist, Scott</display>
+            <notes />
+            <agent />
+        </agentSet>
+        <dateSet>
+            <display>9/1/1993 (creation)</display>
+            <notes />
+            <date />
+        </dateSet>
+        <measurementsSet>
+            <display>18 MB</display>
+            <notes />
+            <measurements />
+        </measurementsSet>
+        <relationSet>
+            <relation type="imageOf" refid="6" source="Archivision VCat Database" />
+        </relationSet>
+        <rightsSet>
+            <display>&#169; Scott Gilchrist, Archivision, Inc.</display>
+            <rights />
+        </rightsSet>
+        <sourceSet>
+            <display>Archivision, Inc. 1A1-AG-MO-E3</display>
+            <source>
+                <name type="vendor">Archivision, Inc.</name>
+                <refid type="vendor">1A1-AG-MO-E3</refid>
+            </source>
+        </sourceSet>
+        <subjectSet>
+            <display>interior</display>
+            <notes />
+            <subject>
+                <term />
+            </subject>
+        </subjectSet>
+        <techniqueSet>
+            <display>digital imaging</display>
+            <notes />
+            <technique />
+        </techniqueSet>
+        <titleSet>
+            <display>General view of the east end, below the towers, depicting stairs to north terrace</display>
+            <title type="generalView">General view of the east end, below the towers, depicting stairs to north terrace</title>
+        </titleSet>
+    </image>
+</vra>
