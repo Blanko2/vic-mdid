@@ -8,7 +8,7 @@ class LdapAuthenticationBackend(BaseAuthenticationBackend):
         for ldap_auth in settings.LDAP_AUTH:
             try:
                 username = username.strip()
-                l = ldap.open(ldap_auth['server'])
+                l = ldap.initialize(ldap_auth['uri'])
                 l.protocol_version = ldap_auth['version']
                 for option, value in ldap_auth['options'].iteritems():
                     l.set_option(getattr(ldap, option), value)
@@ -26,7 +26,7 @@ class LdapAuthenticationBackend(BaseAuthenticationBackend):
                 try:
                     user = User.objects.get(username=username)
                 except User.DoesNotExist:
-                    self._create_user(username,
+                    user = self._create_user(username,
                                       None,
                                       attributes[ldap_auth['firstname']],
                                       attributes[ldap_auth['lastname']],
