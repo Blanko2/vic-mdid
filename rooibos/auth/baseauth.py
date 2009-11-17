@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from random import Random
 import string
-from models import user_authenticated
 
 
 class BaseAuthenticationBackend:
