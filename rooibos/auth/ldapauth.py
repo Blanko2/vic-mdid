@@ -21,19 +21,18 @@ class LdapAuthenticationBackend(BaseAuthenticationBackend):
                     continue
                 attributes = result[0][1]
                 for attr in ldap_auth['attributes']:
-                    if type(attributes[attr]) in (tuple, list):
-                        attributes[attr] = attributes[attr][0]
+                    if not type(attributes[attr]) in (tuple, list):
+                        attributes[attr] = (attributes[attr],)
                 try:
                     user = User.objects.get(username=username)
                 except User.DoesNotExist:
                     user = self._create_user(username,
                                       None,
-                                      attributes[ldap_auth['firstname']],
-                                      attributes[ldap_auth['lastname']],
-                                      attributes[ldap_auth['email']])
-                if ldap_auth.get('postlogin'):
-                    if not self._post_login_check(ldap_auth['postlogin'], user, attributes):
-                        continue
+                                      ' '.join(attributes[ldap_auth['firstname']]),
+                                      ' '.join(attributes[ldap_auth['lastname']]),
+                                      attributes[ldap_auth['email']][0])
+                if not self._post_login_check(user, attributes):
+                    continue
                 return user
             except ldap.LDAPError, error_message:
                 pass

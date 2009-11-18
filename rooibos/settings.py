@@ -100,10 +100,17 @@ GROUP_MANAGERS = {
 
 WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+# Methods to be called after a user is successfully authenticated
+# using an external backend (LDAP, IMAP, POP).
+# Must take two parameters:
+#   user object
+#   dict of string->list/tuple pairs (may be None or empty)
+# Returns:
+#   True: login continues
+#   False: login rejected, try additional login backends if available
+LOGIN_CHECKS = (
+    'rooibos.access.models.update_membership_by_attributes',
 )
-
 
 additional_settings = [
     'settings_local',

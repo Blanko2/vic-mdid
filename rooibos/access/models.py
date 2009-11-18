@@ -8,12 +8,12 @@ from rooibos.contrib.ipaddr import IP
 
 class SystemAccess(models.Model):
     name = models.CharField(max_length=32)
-    
+
     def __unicode__(self):
         return "SystemAccess (%s)" % self.name
-    
 
-class AccessControl(models.Model):    
+
+class AccessControl(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
@@ -27,7 +27,7 @@ class AccessControl(models.Model):
 
     class Meta:
         unique_together = ('content_type', 'object_id', 'user', 'usergroup')
-        
+
     def save(self, **kwargs):
         if (self.user and self.usergroup):
             raise ValueError("Mutually exclusive fields set")
@@ -53,7 +53,7 @@ class AccessControl(models.Model):
             self.restrictions_repr = repr(value)
         else:
             self.restrictions_repr = ''
-        
+
     restrictions = property(restrictions_get, restrictions_set)
 
 
@@ -63,8 +63,19 @@ IP_BASED_GROUP = 'I'
 ATTRIBUTE_BASED_GROUP = 'P'
 
 
+def update_membership_by_attributes(user, info):
+    for group in ExtendedGroup.objects.filter(type=ATTRIBUTE_BASED_GROUP):
+        group.update_membership_by_attributes(user, info)
+    return True
+
+def update_membership_by_ip(user, ip):
+    for group in ExtendedGroup.objects.filter(type=IP_BASED_GROUP):
+        group.update_membership_by_ip(user, ip)
+    return True
+
+
 class ExtendedGroupManager(models.Manager):
-    
+
     def get_extra_groups(self, user):
         # retrieve membership in special groups such as everyone and authenticated users
         # membership for those types of groups is not stored explicitly
@@ -72,11 +83,7 @@ class ExtendedGroupManager(models.Manager):
         if user.is_authenticated():
             q = q | Q(type=AUTHENTICATED_GROUP)
         return self.filter(q)
-        
-    def update_membership(self, user, info={}):
-        for group in ExtendedGroup.objects.all():
-            group.update_membership(user, info)
-            
+
 
 class ExtendedGroup(Group):
     TYPE_CHOICES = (
@@ -85,34 +92,34 @@ class ExtendedGroup(Group):
         ('P', 'Attribute based'),
         ('E', 'Everybody'),
     )
-    
-    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
-    
-    objects = ExtendedGroupManager()
-    
-    def update_membership(self, user, info={}):
-        # to be called upon a user login        
-        if self.type == IP_BASED_GROUP:
-            # update membership of IP address based groups
-            include = info.has_key('ip') and self._check_subnet(info['ip'])
-        elif self.type == ATTRIBUTE_BASED_GROUP:
-            # update membership of attribute based groups
-            include = info.has_key('attr') and self._check_attributes(info['attr'])
-        else:
-            return
 
-        if include:
-            self.user_set.add(user)
-        else:
-            self.user_set.remove(user)
-    
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
+
+    objects = ExtendedGroupManager()
+
+    # to be called upon a user login
+    def update_membership_by_attributes(self, user, info=None):
+        if self.type == ATTRIBUTE_BASED_GROUP:
+            if info and self._check_attributes(info):
+                self.user_set.add(user)
+            else:
+                self.user_set.remove(user)
+
+    # to be called upon a user login
+    def update_membership_by_ip(self, user, ip=None):
+        if self.type == IP_BASED_GROUP:
+            if ip and self._check_subnet(ip):
+                self.user_set.add(user)
+            else:
+                self.user_set.remove(user)
+
     def _check_subnet(self, address):
         ip = IP(address)
         for subnet in self.subnet_set.values_list('subnet', flat=True):
             if ip in IP(subnet):
                 return True
         return False
-    
+
     def _check_attributes(self, attributes):
         for attribute in Attribute.objects.filter(group=self):
             values = attributes.get(attribute.attribute, [])
@@ -128,24 +135,23 @@ class ExtendedGroup(Group):
 
     def __unicode__(self):
         return '%s (%s)' % (self.name, self._full_type())
-    
+
 class Subnet(models.Model):
     group = models.ForeignKey(ExtendedGroup, limit_choices_to={'type': 'I'})
     subnet = models.CharField(max_length=80)
-    
+
     def __unicode__(self):
         return '%s: %s' % (self.group.name, self.subnet)
-    
-    
+
+
 class Attribute(models.Model):
     group = models.ForeignKey(ExtendedGroup, limit_choices_to={'type': 'P'})
     attribute = models.CharField(max_length=255)
-    
+
     def __unicode__(self):
         return '%s: %s' % (self.group.name, self.attribute)
-    
-    
+
+
 class AttributeValue(models.Model):
     attribute = models.ForeignKey(Attribute)
     value = models.CharField(max_length=255)
-

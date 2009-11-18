@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.conf import settings
 from random import Random
 import string
 
@@ -15,11 +16,15 @@ class BaseAuthenticationBackend:
         user.save()
         return user
 
-    def _post_login_check(self, method, user, *args, **kwargs):
-        module, method = method.rsplit('.', 1)
-        module = __import__(module, globals(), locals(), 'rooibos')
-        method = getattr(module, method)
-        return method(user, *args, **kwargs)
+    def _post_login_check(self, user, info=None):
+        for check in settings.LOGIN_CHECKS:
+            module, method = check.rsplit('.', 1)
+            module = __import__(module, globals(), locals(), 'rooibos')
+            method = getattr(module, method)
+            if not method(user, info):
+                print "%s return false" % check
+                return False
+        return True
 
     def get_user(self, user_id):
         try:

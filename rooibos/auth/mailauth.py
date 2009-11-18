@@ -23,9 +23,8 @@ class ImapAuthenticationBackend(BaseAuthenticationBackend):
                                       None,
                                       username,
                                       '%s@%s' % (username, imap_auth['domain']))
-                if imap_auth.get('postlogin'):
-                    if not self._post_login_check(imap_auth['postlogin'], user):
-                        continue
+                if not self._post_login_check(user):
+                    continue
                 return user
             except Exception, ex:
                 pass
@@ -55,9 +54,8 @@ class PopAuthenticationBackend(BaseAuthenticationBackend):
                                       None,
                                       username,
                                       '%s@%s' % (username, pop_auth['domain']))
-                if pop_auth.get('postlogin'):
-                    if not self._post_login_check(pop_auth['postlogin'], user):
-                        continue
+                if not self._post_login_check(user):
+                    continue
                 return user
             except Exception, ex:
                 pass

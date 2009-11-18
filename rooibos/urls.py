@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.views.generic.simple import direct_to_template
 from rooibos.ui.views import main
+from rooibos.access.views import login, logout
 
 
 admin.autodiscover()
@@ -10,8 +11,8 @@ admin.autodiscover()
 urls = [
     url(r'^$', main, name='main'),
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
-    url(r'^login/$', 'django.contrib.auth.views.login', {'SSL': True}, name='login'),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}, name='logout'),
+    url(r'^login/$', login, {'SSL': True}, name='login'),
+    url(r'^logout/$', logout, {'next_page': '/'}, name='logout'),
     url(r'^admin/(.*)', admin.site.root, {'SSL': True}, name='admin'),
 
     (r'^ui/', include('rooibos.ui.urls')),
@@ -35,5 +36,7 @@ if 'apps.jmutube' in settings.INSTALLED_APPS:
     urls.append(url(r'^jmutube/', include('apps.jmutube.urls')))
 if 'apps.svohp' in settings.INSTALLED_APPS:
     urls.append(url(r'^svohp/', include('apps.svohp.urls')))
+if 'apps.ovc' in settings.INSTALLED_APPS:
+    urls.append(url(r'^ovc/', include('apps.ovc.urls')))
 
 urlpatterns = patterns('', *urls)
