@@ -8,9 +8,14 @@ from rooibos.access.views import login, logout
 
 admin.autodiscover()
 
+apps = filter(lambda a: a.startswith('apps.'), settings.INSTALLED_APPS)
+apps_showcases = list(s[5:].replace('.', '-') + '-showcase.html' for s in apps)
+
 urls = [
     url(r'^$', main, name='main'),
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
+    url(r'^showcases/', direct_to_template, {'template': 'showcases.html',
+                                             'extra_context': {'applications': apps_showcases}}, name='showcases'),
     url(r'^login/$', login, {'SSL': True}, name='login'),
     url(r'^logout/$', logout, {'next_page': '/'}, name='logout'),
     url(r'^admin/(.*)', admin.site.root, {'SSL': True}, name='admin'),
@@ -32,11 +37,11 @@ urls = [
     url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_DIR}, name='static'),
     ]
 
-if 'apps.jmutube' in settings.INSTALLED_APPS:
+if 'apps.jmutube' in apps:
     urls.append(url(r'^jmutube/', include('apps.jmutube.urls')))
-if 'apps.svohp' in settings.INSTALLED_APPS:
+if 'apps.svohp' in apps:
     urls.append(url(r'^svohp/', include('apps.svohp.urls')))
-if 'apps.ovc' in settings.INSTALLED_APPS:
+if 'apps.ovc' in apps:
     urls.append(url(r'^ovc/', include('apps.ovc.urls')))
 
 urlpatterns = patterns('', *urls)

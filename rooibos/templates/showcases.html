@@ -1,0 +1,19 @@
+{% extends "master.html" %}
+
+{% load help %}
+
+{% block help %}
+    {% pagehelp 'Showcases' %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Showcases</h1>
+
+<div>
+    {% for app in applications %}
+        {% include app %}
+    {% endfor %}
+</div>
+
+{% endblock %}
