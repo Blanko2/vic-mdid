@@ -100,9 +100,10 @@ class CollectionSearchFacet(SearchFacet):
         return super(CollectionSearchFacet, self).display_value(value)
 
 
-class ExactValueSearchFacet(SearchFacet):
+_special = re.compile(r'(\+|-|&&|\|\||!|\(|\)|\{|}|\[|\]|\^|"|~|\*|\?|:|\\)')
 
-    _special = re.compile(r'(\+|-|&&|\|\||!|\(|\)|\{|}|\[|\]|\^|"|~|\*|\?|:|\\)')
+
+class ExactValueSearchFacet(SearchFacet):
 
     def __init__(self, name):
         prefix, name = ([None] + name[:-2].split('.'))[-2:]
@@ -113,10 +114,26 @@ class ExactValueSearchFacet(SearchFacet):
         super(ExactValueSearchFacet, self).__init__(name, field.label)
 
     def process_criteria(self, criteria, *args, **kwargs):
-        return '"' + self._special.sub(r'\\\1', criteria) + '"'
+        return '"' + _special.sub(r'\\\1', criteria) + '"'
 
     def or_available(self):
         return False
+
+
+class OwnedTagSearchFacet(SearchFacet):
+
+    def __init__(self):
+        super(OwnedTagSearchFacet, self).__init__('ownedtag', 'Personal Tags')
+
+    def process_criteria(self, criteria, *args, **kwargs):
+        return '"' + _special.sub(r'\\\1', criteria) + '"'
+
+    def or_available(self):
+        return False
+
+    def display_value(self, value):
+        id, value = value.split('-')
+        return super(OwnedTagSearchFacet, self).display_value(value)
 
 
 def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
@@ -133,6 +150,9 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         # create exact match criteria on the fly if needed
         if fname.endswith('_s') and not search_facets.has_key(fname):
             search_facets[fname] = ExactValueSearchFacet(fname)
+        # add owned tag facet
+        search_facets['ownedtag'] = OwnedTagSearchFacet()
+
         o = search_facets[fname].process_criteria(o, user)
         fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
 
