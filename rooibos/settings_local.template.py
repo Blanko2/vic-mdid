@@ -44,7 +44,7 @@ TEMPLATE_DIRS = (
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
-SCRATCH_DIR = 'd:/dev/rooibos/scratch/'
+SCRATCH_DIR = 'd:/dev/rooibos-scratch/'
 
 # Legacy setting for ImageViewer 2 support
 SECURE_LOGIN = False
@@ -72,20 +72,55 @@ ARTSTOR_GATEWAY = None
 
 STATIC_DIR = 'd:/dev/rooibos/rooibos/static/'
 OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
+FFMPEG_EXECUTABLE = 'd:/dev/ffmpeg-15394/ffmpeg.exe'
 
 GEARMAN_SERVERS = ['127.0.0.1']
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-#    'jmutube.jmu_authentication.Jmu_Authentication_Backend',
+    'auth.ldapauth.LdapAuthenticationBackend',
+#    'auth.mailauth.ImapAuthenticationBackend',
+#    'auth.mailauth.PopAuthenticationBackend',
 )
 
-# six hour session timeout
-SESSION_COOKIE_AGE = 6 * 3600
+LDAP_AUTH = (
+    {
+        'uri': 'ldap://ldap.example.edu',
+        'base': 'ou=People,o=example',
+        'cn': 'cn',
+        'version': 2,
+        'scope': 1,
+        'options': {'OPT_X_TLS_TRY': 1},
+        'attributes': ('sn', 'mail', 'givenName', 'eduPersonPrimaryAffiliation'),
+        'firstname': 'givenname',
+        'lastname': 'sn',
+        'email': 'mail',
+    },
+)
 
-#SSL_PORT = ':443'
-SSL_PORT = None
+IMAP_AUTH = (
+    {
+        'server': 'imap.example.edu',
+        'port': 993,
+        'domain': 'example.edu',
+        'secure': True,
+    },
+)
 
-ADDITIONAL_SETTINGS = [
+POP_AUTH = (
+    {
+        'server': 'pop.gmail.com',
+        'port': 995,
+        'domain': 'gmail.com',
+        'secure': True,
+    },
+)
+
+SESSION_COOKIE_AGE = 6 * 3600  # in seconds
+
+SSL_PORT = None  # ':443'
+
+additional_settings = [
 #    'apps.jmutube.settings_local',
+#    'apps.svohp.settings_local',
 ]
