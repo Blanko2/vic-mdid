@@ -2,6 +2,7 @@
 {% load ui %}
 {% load help %}
 {% load humanize %}
+{% load solr %}
 
 {% block help %}
     {% pagehelp 'facet_search' %}
@@ -17,7 +18,7 @@
     }
     $(document).ready(function() {
         $("#submit_record_selections").replaceWith($("<input type='button' value='Select all on page'>").click(selectAllOnPage));
-        
+
         $(".facet-body").each(function(i, facet) {
             function sortByFreq(a, b) {
                 var fa = $(".facet-freq", a).text().replace(/,/, "");
@@ -25,22 +26,22 @@
                 fa = fa ? parseInt(fa) : 0;
                 fb = fb ? parseInt(fb) : 0;
                 return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
-            }            
-            var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);            
+            }
+            var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);
             if (terms.length)
             {
                 $(terms).hide();
                 $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
-            }            
+            }
         });
-        
+
         $("#sort_dropdown, #viewmode_dropdown").change(function() { $("form").submit(); })
         $("#sort_go_button").hide();
-        
+
     });
-</script>    
-{% endblock %}    
-    
+</script>
+{% endblock %}
+
 {% block raw-content %}
 
 <form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
@@ -63,9 +64,10 @@ Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 <a href="{{ reset_url }}">Reset</a>
 {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 <input id="submit_record_selections" type="submit" name="action" value="Select" />
-
+<!--
 Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
 Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
+-->
 </div>
 
 {% for f,v in hiddenfields %}
@@ -77,7 +79,7 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
 {% for c in criteria %}
   | {{ c.1 }}
   {% if c.2 %}<a href="{{ limit_url }}or={{ c.0|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
-  <a href="{{ limit_url }}rem={{ c.0|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>  
+  <a href="{{ limit_url }}rem={{ c.0|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>
 {% endfor %}
     View:
     <select name="v" id="viewmode_dropdown">
@@ -102,7 +104,7 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
         <div class="facet-body">
         {% for term,freq,label in orfacet.facets %}
             <div class="facet-line">
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|quoteterm|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
             </div>
         {% endfor %}
         <a class="facet-more" style="display: none;" href="#{{ orfacet.name|urlencode }}">more...</a>
@@ -116,15 +118,15 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
         <div class="facet-header">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq,label in facet.facets %}
-            <div class="facet-line">            
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
-               href="{{ limit_url }}c=-{{ facet.name }}:{{ term|urlencode }}" rel="nofollow">&times;</a>)
+            <div class="facet-line">
+            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|quoteterm|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
+               href="{{ limit_url }}c=-{{ facet.name }}:{{ term|quoteterm|urlencode }}" rel="nofollow">&times;</a>)
             </div>
         {% endfor %}
         <a class="facet-more" style="display: none;" href="#{{ facet.name|urlencode }}">more...</a>
         </div>
     </div>
-{% endif %}    
+{% endif %}
 {% endfor %}
 </div>
 
