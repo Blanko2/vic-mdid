@@ -22,7 +22,6 @@ class BaseAuthenticationBackend:
             module = __import__(module, globals(), locals(), 'rooibos')
             method = getattr(module, method)
             if not method(user, info):
-                print "%s return false" % check
                 return False
         return True
 
