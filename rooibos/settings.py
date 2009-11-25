@@ -118,7 +118,7 @@ additional_settings = [
 
 # Load settings for additional applications
 for settings in additional_settings:
-    print "Loading additional settings from %s" % settings
+#    print "Loading additional settings from %s" % settings
     module = __import__(settings, globals(), locals(), 'rooibos')
     for setting in dir(module):
         if setting == setting.upper():
@@ -128,7 +128,7 @@ for settings in additional_settings:
                 elif isinstance(locals()[setting], tuple):
                     locals()[setting] += (getattr(module, setting))
                 else:
-                    print "Overriding %s" % setting
+#                    print "Overriding %s" % setting
                     locals()[setting] = getattr(module, setting)
             else:
                 locals()[setting] = getattr(module, setting)

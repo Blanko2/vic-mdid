@@ -1,5 +1,6 @@
 import flickrapi
-import urllib, urllib2, time, subprocess, re, os, sys, shutil, settings
+import urllib, urllib2, time, subprocess, re, os, sys, shutil
+from django.conf import settings
 from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
 from rooibos.storage import Storage, Media
 from rooibos.solr.models import SolrIndexUpdates

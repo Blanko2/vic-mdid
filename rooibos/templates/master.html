@@ -96,7 +96,7 @@
         <form method="GET" action="{% url solr-search %}" id="quicksearch">
             <label id="quicksearchlabel" for="quicksearchkw">Quick search:</label>
             <input type="text" name="kw" id="quicksearchkw" title="Quick search" />
-            <input name="search-button" type="image" id="search-button" src="images/search-button.gif" alt="Search">
+            <input name="search-button" type="image" id="search-button" src="{% url static 'images/search-button.gif' %}" alt="Search">
         </form>
     </div>
 

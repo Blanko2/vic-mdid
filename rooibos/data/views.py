@@ -81,9 +81,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     readable_collections = list(accessible_ids_list(request.user, Collection))
 
     if id and name:
-        q = (Q(owner=request.user) |
-             Q(collection__id__in=readable_collections)
-             if not request.user.is_superuser else Q())
+        q = (Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None) |
+             Q(collection__id__in=readable_collections) if not request.user.is_superuser else Q())
         record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
         can_edit = check_access(request.user, record, write=True) | \
             accessible_ids(request.user, record.collection_set, write=True).count() > 0
