@@ -337,3 +337,12 @@ class SuppressLoggingOnAjaxRequestsMiddleware(object):
             setattr(response, SUPPRESS_OUTPUT_ATTR, True)
 
         return response
+    
+    
+if logging_output_enabled:
+    logpath = os.path.join(settings.SCRATCH_DIR, 'logs')
+    if not os.path.exists(logpath):
+        os.makedirs(logpath)
+    filehandler = logging.FileHandler(os.path.join(logpath, 'rooibos.log'))
+    filehandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s [%(pathname)s:%(funcName)s:%(lineno)d]"))
+    logging.root.addHandler(filehandler)

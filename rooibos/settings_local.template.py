@@ -1,5 +1,6 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+#LOGGING_OUTPUT_ENABLED = True
 
 ADMINS = (
 #    ('Your name', 'your@email.example'),
