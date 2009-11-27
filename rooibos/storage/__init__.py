@@ -1,6 +1,7 @@
 from __future__ import with_statement
 import Image
 import StringIO
+import logging
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q, F
@@ -32,10 +33,16 @@ def get_media_for_record(record, user=None, passwords={}):
     else:
         recordid = record
 
+    if user:
+        ownercheck = Q(record__owner=user) if user.is_authenticated() and not user.is_superuser else Q()
+    else:
+        ownercheck = Q(record__owner=None)
+
     # get available media objects
     # Has access to collection containing record and to storage containing media
     media = Media.objects.filter(
         Q(record__collection__id__in=accessible_ids(user, Collection)) # record is accessible
+        | ownercheck # or record is accessible via owner
         | Q(   # or presentation containing the record is accessible
             Q(record__presentationitem__presentation__password=None) |
             Q(record__presentationitem__presentation__in=Presentation.check_passwords(passwords)),
@@ -102,7 +109,8 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                 output = StringIO.StringIO()
                 image.save(output, 'JPEG', quality=85, optimize=True)
                 return output, image.size
-            except:
+            except Exception, e:
+                logging.error('Could not create derivative image, exception: %s' % e)
                 return None, (None, None)
 
         # See if a derivative already exists
