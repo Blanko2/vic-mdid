@@ -18,7 +18,11 @@ def login(request, *args, **kwargs):
     return response
 
 
-logout = dj_logout
+def logout(request, *args, **kwargs):
+    if request.session.get('unsafe_logout'):
+        return render_to_response('unsafe_logout.html')
+    else:
+        return dj_logout(request, *args, **kwargs)
 
 
 def access_view(request, app_label, model, id, name, foruser=None):

@@ -84,6 +84,10 @@ AUTHENTICATION_BACKENDS = (
 #    'auth.mailauth.PopAuthenticationBackend',
 )
 
+MIDDLEWARE_CLASSES = (
+    'rooibos.auth.middleware.BasicAuthenticationMiddleware',
+)
+
 LDAP_AUTH = (
     {
         'uri': 'ldap://ldap.example.edu',

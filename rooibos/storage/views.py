@@ -20,12 +20,21 @@ import uuid
 from datetime import datetime
 
 
+
 @cache_control(max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):
-    mediaobj = get_object_or_404(Media.objects.filter(id=mediaid,
+
+    # check if media exists    
+    mediaobj = get_object_or_404(Media.objects.filter(id=mediaid, record__id=recordid))
+    
+    # check permissions
+    try:
+        mediaobj = Media.objects.get(id=mediaid,
                                  record__id=recordid,
                                  record__collection__id__in=accessible_ids(request.user, Collection),
-                                 storage__id__in=accessible_ids(request.user, Storage)).distinct())
+                                 storage__id__in=accessible_ids(request.user, Storage))
+    except Media.DoesNotExist:
+        return HttpResponseForbidden()
 
     r, w, m, restrictions = get_effective_permissions_and_restrictions(request.user, mediaobj.storage)
     # if size restrictions exist, no direct download of a media file is allowed
