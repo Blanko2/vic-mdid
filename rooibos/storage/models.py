@@ -11,6 +11,7 @@ from rooibos.contrib.ipaddr import IP
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 from rooibos.data.models import Record
 from rooibos.access import sync_access
+import multimedia
 
 class Storage(models.Model):
     title = models.CharField(max_length=100)
@@ -149,7 +150,9 @@ class Media(models.Model):
     def delete_file(self):
         return self.storage and self.storage.storage_system.delete(self.url) or False
 
-    def identify(self, save=True):
+    def identify(self, save=True, lazy=False):
+        if lazy and (self.width or self.height or self.bitrate):
+            return
         type = self.mimetype.split('/')[0]
         if type == 'image':
             try:
@@ -160,10 +163,13 @@ class Media(models.Model):
                 self.height = None
             if save:
                 self.save()
-        elif type == 'video':
-            pass
-        else:
-            pass
+        elif type in ('video', 'audio'):
+            width, height, bitrate = multimedia.identify(self.get_absolute_file_path())
+            self.width = width
+            self.height = height
+            self.bitrate = bitrate
+            if save:
+                self.save()
 
 
 class TrustedSubnet(models.Model):

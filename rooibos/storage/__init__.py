@@ -55,7 +55,7 @@ def get_media_for_record(record, user=None, passwords={}):
     return media
 
 
-def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}):
+def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
 
     media = get_media_for_record(record, user, passwords)
 
@@ -69,7 +69,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
     if not media:
         return None
 
-    map(lambda m: m.identify(), (m for m in media if not m.width or not m.height))
+    map(lambda m: m.identify(lazy=True), media)
 
     media = sorted(media, _imgsizecmp, reverse=True)
 
@@ -105,6 +105,12 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
             try:
                 file = get_image(master)
                 image = Image.open(file)
+                if crop_to_square:
+                    w, h = image.size
+                    if w > h:
+                        image = image.crop(((w - h) / 2, 0, (w - h) / 2 + h, h))
+                    elif w < h:
+                        image = image.crop((0, (h - w) / 2, w, (h - w) / 2 + w))
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
                 image.save(output, 'JPEG', quality=85, optimize=True)
@@ -115,6 +121,9 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
 
         # See if a derivative already exists
         d = m.derivatives.filter(Q(width=width, height__lte=height) | Q(width__lte=width, height=height),
+                                 # find a square derivative if requested, or if source is square,
+                                 # otherwise look for a non-square (i.e. something matching the original aspect ratio)
+                                 Q(width=F('height')) if crop_to_square or m.width == m.height else ~Q(width=F('height')),
                                  mimetype='image/jpeg')
         if d:
             # use derivative
@@ -140,5 +149,5 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
 
 
 
-def get_thumbnail_for_record(record, user=None):
-    return get_image_for_record(record, user, width=100, height=100)
+def get_thumbnail_for_record(record, user=None, crop_to_square=False):
+    return get_image_for_record(record, user, width=100, height=100, crop_to_square=crop_to_square)

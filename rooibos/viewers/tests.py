@@ -31,11 +31,11 @@ class PowerpointTestCase(unittest.TestCase):
 #        logging.debug('testing simple.pptx')
         self._generate('simple.pptx')
 
-    def testAllTemplates(self):
-        templates = PowerPointGenerator.get_templates()
-        for template in templates:
-#            logging.debug('testing %s' % template)
-            self._generate(template)
+#    def testAllTemplates(self):
+#        templates = PowerPointGenerator.get_templates()
+#        for template in templates:
+##            logging.debug('testing %s' % template)
+#            self._generate(template)
 
     def _generate(self, template):
         file = os.path.join(self.tempdir, 'test-%s' % template)

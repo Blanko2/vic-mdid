@@ -8,6 +8,7 @@ from StringIO import StringIO
 from django.test.client import Client
 from django.core.files import File
 from django.utils import simplejson
+from django.conf import settings
 from rooibos.data.models import *
 from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
@@ -28,14 +29,10 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         AccessControl.objects.create(content_object=self.collection, read=True)
 
     def tearDown(self):
-        for root, dirs, files in os.walk(self.tempdir, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
         self.record.delete()
         self.storage.delete()
         self.collection.delete()
+        shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def test_save_and_retrieve_file(self):
         Media.objects.filter(record=self.record).delete()
@@ -61,6 +58,21 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         self.assertTrue(thumbnail.height < 100)
 
         media.delete()
+
+
+    def test_crop_to_square(self):
+        
+        Media.objects.filter(record=self.record).delete()
+        media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)
+        with open(os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif'), 'rb') as f:
+            media.save_file('dcmetro.tif', f)
+
+        thumbnail = get_thumbnail_for_record(self.record, crop_to_square=True)
+        self.assertTrue(thumbnail.width == 100)
+        self.assertTrue(thumbnail.height == 100)
+
+        media.delete()
+
 
     def test_derivative_permissions(self):
         Media.objects.filter(record=self.record).delete()
@@ -185,16 +197,11 @@ class ProxyUrlTest(unittest.TestCase):
             media.save_file('dcmetro.tif', f)
 
     def tearDown(self):
-        for root, dirs, files in os.walk(self.tempdir, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
         self.record.delete()
         self.storage.delete()
         self.collection.delete()
         self.user.delete()
-
+        shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def test_proxy_url(self):
 
@@ -284,7 +291,7 @@ class StreamingStorageSystemTestCase(unittest.TestCase):
         AccessControl.objects.create(content_object=self.collection, read=True)
 
     def tearDown(self):
-        shutil.rmtree(self.tempdir)
+        shutil.rmtree(self.tempdir, ignore_errors=True)
         self.record.delete()
         self.storage.delete()
         self.collection.delete()
@@ -297,3 +304,47 @@ class StreamingStorageSystemTestCase(unittest.TestCase):
         response = c.get(self.media.get_absolute_url())
         self.assertEqual(TEST_STRING, response.content)
 
+
+class ProtectedContentDownloadTestCase(unittest.TestCase):
+    
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.collection = Collection.objects.create(title='ProtectedTest')
+        self.storage = Storage.objects.create(title='ProtectedTest', name='protectedtest', system='local', base=self.tempdir)
+        self.record = Record.objects.create(name='protected')
+        self.user = User.objects.create_user('protectedtest', 'test@example.com', 'test')
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        AccessControl.objects.create(content_object=self.storage, user=self.user, read=True)
+        AccessControl.objects.create(content_object=self.collection, user=self.user, read=True)
+        Media.objects.filter(record=self.record).delete()
+        self.media = Media.objects.create(record=self.record, name='protectedimage', storage=self.storage)
+        content = StringIO('hello world')
+        self.media.save_file('test.txt', content)
+
+    def tearDown(self):
+        self.media.delete()
+        self.record.delete()
+        self.storage.delete()
+        self.collection.delete()
+        self.user.delete()
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def test_save_and_retrieve_file(self):
+        
+        if not any(map(lambda c: c.endswith('.auth.middleware.BasicAuthenticationMiddleware'), settings.MIDDLEWARE_CLASSES)):
+            return
+        
+        c = Client()
+        # not logged in
+        response = c.get(self.media.get_absolute_url())
+        self.assertEqual(401, response.status_code)
+
+        # with basic auth
+        response = c.get(self.media.get_absolute_url(), HTTP_AUTHORIZATION='basic %s' % 'protectedtest:test'.encode('base64').strip())
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('hello world', response.content)
+        
+        # now logged in
+        response = c.get(self.media.get_absolute_url())
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('hello world', response.content)

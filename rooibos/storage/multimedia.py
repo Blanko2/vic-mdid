@@ -4,6 +4,7 @@ import tempfile
 import wave
 import struct
 import re
+import logging
 from django.utils import simplejson
 from StringIO import StringIO
 from subprocess import Popen, PIPE
@@ -27,18 +28,37 @@ def _run_ffmpeg(parameters, infile, outfile_ext):
         file = open(filename, 'rb')
         result = StringIO(file.read())
         file.close()
-        return result
+        return result, output, errors
     except:
-        return None
+        return None, None, None
     finally:
         os.remove(filename)
 
+
+def identify(file):
+    try:
+        cmd = 'ffmpeg -i "%s"' % (file)
+        ffmpeg = Popen(cmd, executable=settings.FFMPEG_EXECUTABLE, stdout=PIPE, stderr=PIPE)
+        (output, errors) = ffmpeg.communicate()
+        match = re.search(r'bitrate: (\d+) kb/s', errors)
+        bitrate = int(match.group(1)) if match else None
+        match = re.search(r'Video: .+ (\d+)x(\d+) ', errors)
+        width = int(match.group(1)) if match else None
+        height = int(match.group(2)) if match else None
+        logging.debug('Identified %s: %dx%d %d' % (file, width, height, bitrate))
+        return width, height, bitrate
+    except Exception, e:
+        logging.debug(e)
+        return None, None, None
+    
+
 def capture_video_frame(videofile, offset=5):
     params = '-r 1 -ss %s -t 00:00:01 -vframes 1 -f image2' % _seconds_to_timestamp(offset)
-    return _run_ffmpeg(params, videofile, '.jpg')
+    frame, output, errors = _run_ffmpeg(params, videofile, '.jpg')
+    return frame
 
 def render_audio_waveform(audiofile, basecolor, background, left, top, height, width, max_only):
-    wave_file = _run_ffmpeg('-t 00:00:30 -ar 8192 -ac 1', audiofile, '.wav')
+    wave_file, output, errors = _run_ffmpeg('-t 00:00:30 -ar 8192 -ac 1', audiofile, '.wav')
     if not wave_file:
         return None
     file = wave.open(wave_file, 'rb')
