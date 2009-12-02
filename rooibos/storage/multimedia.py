@@ -93,11 +93,11 @@ def render_audio_waveform(audiofile, basecolor, background, left, top, height, w
     return output
 
 def render_audio_waveform_by_mimetype(audiofile, mimetype):
-    path = os.path.join(settings.STATIC_DIR, 'images', 'audiothumbs')
+    path = getattr(settings, 'AUDIO_THUMBNAILS', os.path.join(settings.STATIC_DIR, 'images', 'audiothumbs'))
     mimetype = mimetype.split('/')[1]
     formatfile = os.path.join(path, mimetype + '.json')
     if not os.path.isfile(formatfile):
-        formatfile = os.path.join(path, 'general.json')
+        formatfile = os.path.join(path, 'generic.json')
     format = simplejson.load(open(formatfile, 'r'))
     return render_audio_waveform(audiofile, format['color'], os.path.join(path, format['background']),
                                  format['left'], format['top'], format['height'], format['width'],
