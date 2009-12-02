@@ -274,14 +274,14 @@ class OnlineStorageSystemTestCase(unittest.TestCase):
         media.delete()
 
 
-class StreamingStorageSystemTestCase(unittest.TestCase):
+class PseudoStreamingStorageSystemTestCase(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.collection = Collection.objects.create(title='Test')
         self.storage = Storage.objects.create(title='Test',
                                               name='test',
-                                              system='streaming',
+                                              system='pseudostreaming',
                                               base=self.tempdir,
                                               urlbase='file:///' + self.tempdir.replace('\\', '/'))
         self.record = Record.objects.create(name='record')
@@ -296,7 +296,7 @@ class StreamingStorageSystemTestCase(unittest.TestCase):
         self.storage.delete()
         self.collection.delete()
 
-    def test_streaming(self):
+    def test_pseudostreaming(self):
         TEST_STRING = 'Hello world'
         content = StringIO(TEST_STRING)
         self.media.save_file('test.txt', content)

@@ -11,13 +11,13 @@ from rooibos.access import accessible_ids
 from rooibos.data.models import Collection
 
 
-class StreamingStorageSystem(LocalFileSystemStorageSystem):
+class PseudoStreamingStorageSystem(LocalFileSystemStorageSystem):
 
     def __init__(self, base=None):
         LocalFileSystemStorageSystem.__init__(self, base)
 
     def get_absolute_media_url(self, storage, media):
-        return reverse('storage-retrieve-stream', kwargs={'recordid': media.record.id,
+        return reverse('storage-retrieve-pseudostream', kwargs={'recordid': media.record.id,
                                                    'record': media.record.name,
                                                    'mediaid': media.id,
                                                    'media': media.name})
@@ -30,7 +30,7 @@ class StreamingStorageSystem(LocalFileSystemStorageSystem):
         return None
 
 
-def retrieve_stream(request, recordid, record, mediaid, media):
+def retrieve_pseudostream(request, recordid, record, mediaid, media):
 
     mediaobj = get_object_or_404(Media.objects.filter(id=mediaid,
                                  record__id=recordid,
