@@ -7,6 +7,8 @@ from django.forms.models import modelformset_factory
 from django.db.models.aggregates import Count
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.db import backend
 from django import forms
 from rooibos.contrib.tagging.models import Tag, TaggedItem
 from rooibos.contrib.tagging.forms import TagField
@@ -199,5 +201,85 @@ def items(request, id, name):
 
 
 def view(request, id, name):
+
+    pass
+
+
+
+def browse(request):
+
+    tags = request.GET.getlist('tag')
+    querystring = request.GET.urlencode()
+
+    if request.user.is_authenticated():
+        existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
+                        filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
+    else:
+        existing_tags = ()
+
+    class ManagePresentationsForm(forms.Form):
+       tags = SplitTaggingField(label='Tags',
+                                choices=[(t, t) for t in existing_tags],
+                                required=False,
+                                add_label='Additional tags')
+       mode = forms.ChoiceField(label='Action',
+                                required=True,
+                                choices=[('add', 'Add to existing tags'), ('replace', 'Replace existing tags')],
+                                initial='add')
+
+    if request.method == "POST":
+        ids = map(int, request.POST.getlist('h'))
+        form = ManagePresentationsForm(request.POST)
+        if form.is_valid():
+            replace = form.cleaned_data['mode'] == 'replace'
+            for presentation in Presentation.objects.filter(id__in=ids):
+                if replace:
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            form.cleaned_data['tags'])
+                else:
+                    for tag in parse_tag_input(form.cleaned_data['tags']):
+                        Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            '"%s"' % tag)
+            return HttpResponseRedirect(reverse('presentation-browse') + '?' + querystring)
+    else:
+        form = ManagePresentationsForm()
+
+    if tags:
+        qs = OwnedWrapper.objects.filter(user=request.user, content_type=OwnedWrapper.t(Presentation))
+        ids = list(TaggedItem.objects.get_by_model(qs, tags).values_list('object_id', flat=True))
+        q = Q(id__in=ids)
+    else:
+        q = Q()
+        
+    presentations = Presentation.objects.filter(
+        q,
+        id__in=accessible_ids(request.user, Presentation)).order_by('title')
+
+    tag_filter = " and ".join(tags)
+
+
+
+    def col(model, field):
+        qn = backend.DatabaseOperations().quote_name
+        return '%s.%s' % (qn(model._meta.db_table), qn(model._meta.get_field(field).column))
+
+    q = OwnedWrapper.objects.extra(
+        tables=(Presentation._meta.db_table,),
+        where=('%s=%s' % (col(OwnedWrapper, 'object_id'), col(Presentation, 'id')),
+               '%s=%s' % (col(OwnedWrapper, 'user'), col(Presentation, 'owner')))).filter(
+        object_id__in=accessible_ids(request.user, Presentation),
+        content_type=OwnedWrapper.t(Presentation))
+
+    tags = Tag.objects.cloud_for_queryset(q, steps=5)
+
+    return render_to_response('presentation_browse.html',
+                          {'tags': tags,
+                           'tagobjects': Tag.objects,
+                           'presentations': presentations,
+                           'querystring': querystring,
+                           'tag_filter': tag_filter,
+                           'form': form,
+                           },
+                          context_instance=RequestContext(request))
 
     pass

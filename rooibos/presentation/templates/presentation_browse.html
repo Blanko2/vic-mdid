@@ -1,0 +1,76 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load humanize %}
+{% load pagination_tags %}
+{% load viewers %}
+
+
+{% block content %}
+
+{% autopaginate presentations 25 %}
+
+<h1>Browse Presentations</h1>
+
+<div class="tagcloud">
+{% for tag in tags %}
+    <span style="font-size: {{ tag.font_size|scale:"1 5 1 1.8" }}em;">
+        [<a href="{% url presentation-manage %}?tag={{ tag|urlencode }}">{{ tag }}</a>]
+    </span>
+{% endfor %}
+{% if tags %}
+    [<a href="{% url presentation-manage %}">All</a>]
+{% endif %}
+</div>
+
+<h2>Presentations{% if tag_filter %} filed under {{ tag_filter }}{% endif %}</h2>
+
+
+{% paginate %}
+
+{% if presentations %}
+<form action="{% url presentation-browse %}?{{ querystring }}" method="POST" class="vertical">
+<table summary="List of Presentations" class="list">
+    <tr>
+        <th></th>
+        <th>Title</th>
+        <th>Tags</th>
+        <th>Items</th>
+        <th></th>
+    </tr>
+{% for presentation in presentations %}
+    {% owned_tags_for_object presentation for request.user as ptags %}
+    <tr class="{% cycle "" "altrow" %}">
+        <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
+        <td><a href="{% url presentation-view presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
+        <td>{% for ptag in ptags %}
+                {% tag ptag presentation "True" %}
+            {% endfor %}
+        </td>
+        <td>{{ presentation.items.count }}</td>
+        <td>{% list_viewers presentation %}</td>
+    </tr>
+{% endfor %}
+</table>
+
+<label>With selected</label>
+
+{{ form.tags.label_tag }}
+{{ form.tags }}
+{{ form.tags.errors }}
+
+{{ form.mode.label_tag }}
+{{ form.mode }}
+{{ form.mode.errors }}
+
+<div class="row">
+    <input type="submit" value="Update" />
+</div>
+
+</form>
+
+{% else %}
+No presentations available.
+{% endif %}
+
+
+{% endblock %}
