@@ -168,6 +168,9 @@ class TagManager(models.Manager):
             extra_criteria = 'AND %s' % where
         else:
             extra_criteria = ''
+        extra_where = queryset.query.extra_where
+        if extra_where:
+            extra_criteria = extra_criteria + ' AND ' + ' AND '.join(extra_where)
         return self._get_usage(queryset.model, counts, min_count, extra_joins, extra_criteria, params)
 
     def related_for_model(self, tags, model, counts=False, min_count=None):
