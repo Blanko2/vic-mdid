@@ -1,5 +1,6 @@
-from django.core.files.uploadhandler import FileUploadHandler
+from django.core.files.uploadhandler import FileUploadHandler, StopUpload
 from django.core.cache import cache
+import logging
 
 
 def update_record_selection(request):
@@ -30,10 +31,12 @@ class UploadProgressCachedHandler(FileUploadHandler):
     which should contain a unique string to identify the upload to be tracked.
     """
 
-    def __init__(self, request=None):
+    def __init__(self, request=None, max_length=None):
         super(UploadProgressCachedHandler, self).__init__(request)
         self.progress_id = None
         self.cache_key = None
+        self.max_length = max_length
+        self.file_too_big = False
 
     def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):
         self.content_length = content_length
@@ -49,7 +52,9 @@ class UploadProgressCachedHandler(FileUploadHandler):
             })
 
     def new_file(self, field_name, file_name, content_type, content_length, charset=None):
-        pass
+        if self.max_length and self.content_length > self.max_length:
+            logging.debug("File '%s' too big (%s>%s), upload aborted" % (file_name, self.content_length, self.max_length))
+            raise StopUpload(connection_reset=True)
 
     def receive_data_chunk(self, raw_data, start):
         if self.cache_key:
