@@ -42,13 +42,13 @@ def identify(file):
         (output, errors) = ffmpeg.communicate()
         match = re.search(r'bitrate: (\d+) kb/s', errors)
         bitrate = int(match.group(1)) if match else None
-        match = re.search(r'Video: .+ (\d+)x(\d+) ', errors)
+        match = re.search(r'Video: .+ (\d+)x(\d+)', errors)
         width = int(match.group(1)) if match else None
         height = int(match.group(2)) if match else None
-        logging.debug('Identified %s: %dx%d %d' % (file, width, height, bitrate))
+        logging.debug('Identified %s: %dx%d %d' % (file, width or 0, height or 0, bitrate or 0))
         return width, height, bitrate
     except Exception, e:
-        logging.debug(e)
+        logging.debug('Error identifying %s: %s' % (file, e))
         return None, None, None
     
 
