@@ -343,6 +343,7 @@ if logging_output_enabled:
     logpath = os.path.join(settings.SCRATCH_DIR, 'logs')
     if not os.path.exists(logpath):
         os.makedirs(logpath)
-    filehandler = logging.FileHandler(os.path.join(logpath, 'rooibos.log'))
+    from logging.handlers import TimedRotatingFileHandler
+    filehandler = TimedRotatingFileHandler(os.path.join(logpath, '%s.log' % getattr(settings, 'LOGFILENAME', 'rooibos')), 'midnight', 1, 14)
     filehandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s [%(pathname)s:%(funcName)s:%(lineno)d]"))
     logging.root.addHandler(filehandler)
