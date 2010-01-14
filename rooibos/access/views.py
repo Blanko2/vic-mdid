@@ -12,7 +12,7 @@ from . import check_access, get_effective_permissions
 
 def login(request, *args, **kwargs):
     response = dj_login(request, *args, **kwargs)
-    if response is HttpResponseRedirect:
+    if type(response) == HttpResponseRedirect:
         # Successful login, add user to IP based groups
         update_membership_by_ip(request.user, request.META['REMOTE_ADDR'])
     return response

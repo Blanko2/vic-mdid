@@ -5,6 +5,7 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.cache import cache
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.access import accessible_ids
