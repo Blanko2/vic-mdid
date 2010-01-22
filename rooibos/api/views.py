@@ -130,3 +130,8 @@ def presentation_detail(request, id):
                                          context=p,
                                          process_url=lambda url:create_proxy_url_if_needed(url, request))
             )
+
+@json_view
+def keep_alive(request):
+    return dict(user=request.user.username if request.user else '')
+    
