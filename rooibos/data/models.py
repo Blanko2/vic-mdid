@@ -8,6 +8,7 @@ from django.contrib.contenttypes import generic
 from datetime import datetime
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import random
+import logging
 
 
 class Collection(models.Model):
@@ -151,11 +152,11 @@ class Record(models.Model):
 
     @property
     def title(self):
-        def query():
+        if not getattr(self, "_cached_title", None):
             titlefield = Field.objects.get(standard__prefix='dc', name='title')
             titles = self.fieldvalue_set.filter(Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields()))
-            return None if not titles else titles[0].value
-        return query()   # cached_property(self, 'title', query)
+            self._cached_title = None if not titles else titles[0].value
+        return self._cached_title
 
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')

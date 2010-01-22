@@ -107,8 +107,7 @@ def record_thumbnail(request, id, name):
     record = get_object_or_404(Record.objects.filter(id=id,
         collection__id__in=accessible_ids(request.user, Collection)).distinct())
 
-    media = get_thumbnail_for_record(record, request.user)
-
+    media = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
     if media:
         content = media.load_file()
         if content:

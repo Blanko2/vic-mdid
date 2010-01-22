@@ -13,14 +13,29 @@ from rooibos.ui.templatetags.ui import session_status_rendered
 from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
+from rooibos.solr.views import run_search
+import random 
 
 
 def main(request):
 
     form = AuthenticationForm()
+    
+    (hits, records, search_facets, orfacet, query, fields) = run_search(
+        request.user,
+        criteria=['mimetype:image/jpeg'],
+        sort='random_%d asc' % random.randint(100000, 999999),
+        page=1,
+        pagesize=8,
+        produce_facets=False)
+
+    order = range(1, 8)
+    random.shuffle(order)
 
     return render_to_response('main.html',
-                              {'form': form,},
+                              {'form': form,
+                               'records': records,
+                               'order': [0] + order},
                               context_instance=RequestContext(request))
 
 

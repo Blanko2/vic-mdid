@@ -19,68 +19,68 @@
     $(document).ready(function() {
         $("#submit_record_selections").replaceWith($("<input type='button' value='Select all on page'>").click(selectAllOnPage));
 
-        $(".facet-body").each(function(i, facet) {
-            function sortByFreq(a, b) {
-                var fa = $(".facet-freq", a).text().replace(/,/, "");
-                var fb = $(".facet-freq", b).text().replace(/,/, "");
-                fa = fa ? parseInt(fa) : 0;
-                fb = fb ? parseInt(fb) : 0;
-                return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
-            }
-            var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);
-            if (terms.length)
-            {
-                $(terms).hide();
-                $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
-            }
-        });
-
         $("#sort_dropdown, #viewmode_dropdown").change(function() { $("form").submit(); })
         $("#sort_go_button").hide();
+        
+        $("#facets").html("<div style='text-align: center;'>Loading facets...</div>");
+    });
+    
+    $(window).load(function() {
+
+        function process_facets() {
+            $(".facet-body").each(function(i, facet) {
+                function sortByFreq(a, b) {
+                    var fa = $(".facet-freq", a).text().replace(/,/, "");
+                    var fb = $(".facet-freq", b).text().replace(/,/, "");
+                    fa = fa ? parseInt(fa) : 0;
+                    fb = fb ? parseInt(fb) : 0;
+                    return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
+                }
+                var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);
+                if (terms.length)
+                {
+                    $(terms).hide();
+                    $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
+                }
+            });
+            
+            $(".facet-header.collapsed").click(function() {
+                $(this).next().toggle('fast');
+                return false;
+            }).css('cursor', 'pointer').next().hide();
+        }
+
+        ajaxManager.add({
+                type: 'GET',
+                url: '{{ facets_url|escapejs }}',
+                dataType: 'json',
+                success: function(r) {
+                    $("#facets").hide().html(r.html);
+                    process_facets();
+                    $("#facets").slideDown(500);
+                }
+            });
 
     });
 </script>
 {% endblock %}
 
-{% block raw-content %}
+{% block content %}
 
+<!--
 <form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
     <input name="search_string" type="hidden" value="{{ keywords }}" />
 </form>
 <form id="artstor_form" name="artstor_form" method="POST" action="{% url artstor-photo-search %}">
     <input name="search_string" type="hidden" value="{{ keywords }}" />
 </form>
-
-<form method="GET" action="{{ form_url }}">
-
-<div class="horizontal-block">
-Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
-{% if pages %}
-    Page {{ page|intcomma }} of {{ pages|intcomma }}.
-    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
-    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
-{% endif %}
-
-<a href="{{ reset_url }}">Reset</a>
-{% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
-<input id="submit_record_selections" type="submit" name="action" value="Select" />
-<!--
-Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
-Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
 -->
-</div>
-
+<form method="GET" action="{{ form_url }}">
 {% for f,v in hiddenfields %}
 <input type="hidden" name="{{ f }}" value="{{ v }}" />
 {% endfor %}
-<div class="horizontal-block">
-    Keywords: <input type="text" name="kw" value="{{ keywords }}"/>
-    <input type="submit" value="Go" />
-{% for c in criteria %}
-  | {{ c.1 }}
-  {% if c.2 %}<a href="{{ limit_url }}or={{ c.0|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
-  <a href="{{ limit_url }}rem={{ c.0|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>
-{% endfor %}
+
+<div style="float: right;">
     View:
     <select name="v" id="viewmode_dropdown">
         <option value="thumb"{% ifequal viewmode "thumb" %} selected="selected"{% endifequal %}>Thumbnails</option>
@@ -94,10 +94,50 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
         <option value="{{ f.name }}_sort"{% ifequal sort f.name %} selected="selected"{% endifequal %}>{{ f.label }}</option>
 {% endfor %}
     </select>
-    <input type="submit" value="Go" id="sort_go_button" />
+    <input type="submit" value="Go" id="sort_go_button" />    
 </div>
 
-<div class="facets">
+<div style="float: left;">
+    Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
+    <input id="submit_record_selections" type="submit" name="action" value="Select" />
+</div>
+
+{% if pages %}
+<div style="text-align: center;">
+    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
+    <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
+    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
+</div>
+{% endif %}
+
+<!--
+Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
+Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
+-->
+
+<div id="sidebar">
+
+  <a href="{{ reset_url }}">Reset Search</a>
+  {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
+
+  <div class="facet active-facet">
+    <div class="facet-header">Keywords</div>
+    <div class="facet-body"><input type="text" name="kw" value="{{ keywords }}"/>
+    <input type="submit" value="Go" />
+    </div>
+  </div>
+    
+{% for c in criteria %}
+  <div class="facet active-facet">
+    <div class="facet-header">{{ c.label }}</div>
+    <div class="facet-body">{% if c.negated %}not {% endif %}{{ c.term }}
+        {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
+        <a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>
+    </div>
+  </div>
+    
+{% endfor %}
+
 {% if orfacet.facets %}
     <div class="facet">
         <div class="facet-header">{{ orfacet.label }}</div>
@@ -115,7 +155,7 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
 {% for facet in facets %}
 {% if facet.facets %}
     <div class="facet">
-        <div class="facet-header">{{ facet.label }}</div>
+        <div class="facet-header collapsed">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq,label in facet.facets %}
             <div class="facet-line">
@@ -128,15 +168,29 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
     </div>
 {% endif %}
 {% endfor %}
+
+
+<div id="facets">
+</div>
+
 </div>
 
 {% if records %}
-<div class="resultlist">
+<div id="resultlist" class="resultlist-{{ viewmode }}">
 {% for r in records %}
     {% record r 'selectable' viewmode %}
 {% endfor %}
 </div>
 {% endif %}
 
+{% if pages %}
+<div style="text-align: center; clear: both;">
+    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
+    <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
+    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
+</div>
+{% endif %}
+
 </form>
+
 {% endblock %}

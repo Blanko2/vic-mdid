@@ -7,6 +7,7 @@ from django.core.mail import mail_admins
 from django.utils.translation import ugettext as _
 import sys
 import mimetypes
+import logging
 
 
 def json_view(func):
@@ -36,6 +37,7 @@ def json_view(func):
                 request_repr,
                 )
             mail_admins(subject, message, fail_silently=True)
+            logging.error(message)
 
             # Come what may, we're returning JSON.
             if hasattr(e, 'message'):

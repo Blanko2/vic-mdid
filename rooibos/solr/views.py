@@ -19,6 +19,7 @@ from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
 import copy
 import random
+import logging
 from rooibos.flickr.models import FlickrSearch
 from rooibos.artstor.models import ArtstorSearch
 
@@ -41,7 +42,7 @@ class SearchFacet(object):
 
     def clean_result(self, hits):
         # sort facet items and remove the ones that match all hits
-        self.facets = filter(lambda f: f[1] < hits, self.facets)
+        self.facets = filter(lambda f: f[1] < hits, getattr(self, 'facets', []))
         self.facets = sorted(self.facets, key=lambda f: len(f) > 2 and f[2] or f[0])
 
     def or_available(self):
@@ -179,8 +180,8 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         query = '*:*'
     if collection:
         query = 'collections:%s AND %s' % (collection.id, query)
-    if selected:
-        query = 'id:(%s) AND %s' % (' '.join(map(str, selected)), query)
+    if hasattr(selected, '__len__'):
+        query = 'id:(%s) AND %s' % (' '.join(map(str, selected or [-1])), query)
 
     if not user.is_superuser:
         groups = ' '.join(map(str, accessible_ids_list(user, Collection)))
@@ -195,16 +196,73 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
     return query
 
 
-def selected(request):
-    return search(request, selected=True)
-
 templates = dict(l='list', im='images')
+
+def run_search(user,
+               collection=None,
+               criteria=[],
+               keywords='',
+               sort='score desc',
+               page=1,
+               pagesize=25,
+               orquery=None,
+               selected=False,
+               remove=None,
+               produce_facets=False):
+
+    available_storage = accessible_ids_list(user, Storage)
+    exclude_facets = ['identifier']
+    fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
+
+    search_facets = [SearchFacet('tag', 'Tags')] + [SearchFacet(field.name + '_t', field.label) for field in fields]
+    search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
+    search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
+    search_facets.append(CollectionSearchFacet('collections', 'Collection'))
+    search_facets.append(OwnerSearchFacet('owner', 'Owner'))
+    # convert to dictionary
+    search_facets = dict((f.name, f) for f in search_facets)
+
+    query = _generate_query(search_facets, user, collection, criteria, keywords, selected, remove)
+
+    s = SolrIndex()
+
+    return_facets = search_facets.keys() if produce_facets else []
+
+    (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
+                                       facets=return_facets, facet_mincount=1, facet_limit=100)
+
+    if produce_facets:
+        for f in search_facets:
+            search_facets[f].set_result(facets.get(f))
+    
+    if orquery:
+        (f, v) = orquery.split(':', 1)
+        orfacets = s.search(_generate_query(search_facets, user, collection, criteria, keywords, selected,
+                                            remove, orquery),
+                            rows=0, facets=[f], facet_mincount=1, facet_limit=100)[2]
+        orfacet = copy.copy(search_facets[f])
+        orfacet.label = '%s in %s or...' % (v.replace("|", " or "), orfacet.label)
+        orfacet.set_result(orfacets[f])
+    else:
+        orfacet = None
+
+    return (hits, records, search_facets, orfacet, query, fields)
+
+
 
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
 
     update_record_selection(request)
 
+    # get parameters relevant for search
+    criteria = request.GET.getlist('c')
+    remove = request.GET.get('rem', None)
+    if remove: criteria.remove(remove)
+    keywords = request.GET.get('kw', '')
+    
+    # get parameters relevant for view
+    
     viewmode = request.GET.get('v', 'thumb')
     if viewmode == 'l':
         pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
@@ -213,11 +271,15 @@ def search(request, id=None, name=None, selected=False, json=False):
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'score desc').lower()
     if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
-    criteria = request.GET.getlist('c')
+    
     orquery = request.GET.get('or', None)
-    remove = request.GET.get('rem', None)
-    if remove: criteria.remove(remove)
-    keywords = request.GET.get('kw', '')
+    user = request.user
+
+    if request.GET.has_key('action'):
+        page = safe_int(request.GET.get('op', '1'), 1)
+
+    if selected:
+        selected = request.session.get('selected_records', ())
 
     flickr_total = 0
     artstor_total = 0
@@ -231,60 +293,21 @@ def search(request, id=None, name=None, selected=False, json=False):
     #    results = search.photoSearch(keywords)
     #    artstor_total = results['total']
 
-    if request.GET.has_key('action'):
-        page = safe_int(request.GET.get('op', '1'), 1)
-
-    if selected:
-        selected = request.session.get('selected_records', ())
-
-    available_storage = accessible_ids_list(request.user, Storage)
-
-    exclude_facets = ['identifier']
-
-    fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
-
-    search_facets = [SearchFacet('tag', 'Tags')] + [SearchFacet(field.name + '_t', field.label) for field in fields]
-    search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
-    search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
-    search_facets.append(CollectionSearchFacet('collections', 'Collection'))
-    search_facets.append(OwnerSearchFacet('owner', 'Owner'))
-    # convert to dictionary
-    search_facets = dict((f.name, f) for f in search_facets)
-
-    query = _generate_query(search_facets, request.user, collection, criteria, keywords, selected, remove)
-
-    s = SolrIndex()
-
-    if json:
-        return_facets = []
-    else:
-        return_facets = search_facets.keys()
-
-    (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=return_facets, facet_mincount=1, facet_limit=100)
+    (hits, records, search_facets, orfacet, query, fields) = run_search(user, collection, criteria, keywords, sort, page, pagesize,
+                                                         orquery, selected, remove, produce_facets=False)
 
     if json:
         return (hits, records, viewmode)
 
-    for f in search_facets:
-        search_facets[f].set_result(facets.get(f))
-
-    orfacet = None
-    if orquery:
-        (f, v) = orquery.split(':', 1)
-        orfacets = s.search(_generate_query(search_facets, request.user, collection, criteria, keywords, selected,
-                                            remove, orquery),
-                            rows=0, facets=[f], facet_mincount=1, facet_limit=100)[2]
-        orfacet = copy.copy(search_facets[f])
-        orfacet.label = '%s in %s or...' % (v.replace("|", " or "), orfacet.label)
-        orfacet.set_result(orfacets[f])
-
     if collection:
         url = reverse('solr-search-collection', kwargs={'id': collection.id, 'name': collection.name})
-    elif selected:
+        furl = reverse('solr-search-collection-facets', kwargs={'id': collection.id, 'name': collection.name})
+    elif hasattr(selected, '__len__'):
         url = reverse('solr-selected')
+        furl = reverse('solr-selected-facets')
     else:
         url = reverse('solr-search')
+        furl = reverse('solr-search-facets')
 
     q = request.GET.copy()
     q = clean_record_selection_vars(q)
@@ -304,6 +327,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     qurl_orquery = q.urlencode()
     limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
     limit_url_orquery = "%s?%s%s" % (url, qurl_orquery, qurl_orquery and '&' or '')
+    facets_url = "%s?%s%s" % (furl, qurl, qurl and '&' or '')
     prev_page_url = None
     next_page_url = None
 
@@ -319,14 +343,13 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     def readable_criteria(c):
         (f, o) = c.split(':', 1)
-        if f.startswith('-'):
-            return (c, '%s not in %s' % (search_facets[f[1:]].display_value(o),
-                                         search_facets[f[1:]].label), False)
-        else:
-            return (c, '%s in %s' % (search_facets[f].display_value(o),
-                                     search_facets[f].label), search_facets[f].or_available())
-
-
+        negated = f.startswith('-')
+        return dict(facet=c,
+                    term=search_facets[f[1 if negated else 0:]].display_value(o),
+                    label=search_facets[f[1 if negated else 0:]].label,
+                    negated=negated,
+                    or_available=not negated and search_facets[f].or_available())
+        
     # sort facets by label
     facets = sorted(search_facets.values(), key=lambda f: f.label)
 
@@ -341,30 +364,86 @@ def search(request, id=None, name=None, selected=False, json=False):
     sort = sort.endswith('_sort') and sort[:-5] or sort
 
     return render_to_response('results.html',
-                              {'criteria': map(readable_criteria, criteria),
-                               'query': query,
-                               'keywords': keywords,
-                               'hiddenfields': hiddenfields,
-                               'records': records,
-                               'hits': hits,
-                               'page': page,
-                               'pages': (hits - 1) / pagesize + 1,
-                               'prev_page': prev_page_url,
-                               'next_page': next_page_url,
-                               'reset_url': url,
-                               'form_url': form_url,
-                               'limit_url': limit_url,
-                               'limit_url_orquery': limit_url_orquery,
-                               'facets': facets,
-                               'orfacet': orfacet,
-                               'orquery': orquery,
-                               'sort': sort,
-                               'sortfields': fields,
-                               'random': random.random(),
-                               'viewmode': viewmode,
-                               'flickr_total': flickr_total,
-                               'artstor_total': artstor_total,},
-                              context_instance=RequestContext(request))
+                          {'criteria': map(readable_criteria, criteria),
+                           'query': query,
+                           'keywords': keywords,
+                           'hiddenfields': hiddenfields,
+                           'records': records,
+                           'hits': hits,
+                           'page': page,
+                           'pages': (hits - 1) / pagesize + 1,
+                           'prev_page': prev_page_url,
+                           'next_page': next_page_url,
+                           'reset_url': url,
+                           'form_url': form_url,
+                           'limit_url': limit_url,
+                           'limit_url_orquery': limit_url_orquery,
+                           'facets': facets,
+                           'facets_url': facets_url,
+                           'orfacet': orfacet,
+                           'orquery': orquery,
+                           'sort': sort,
+                           'sortfields': fields,
+                           'random': random.random(),
+                           'viewmode': viewmode,
+                           'flickr_total': flickr_total,
+                           'artstor_total': artstor_total,},
+                          context_instance=RequestContext(request))
+
+
+@json_view
+def search_facets(request, id=None, name=None, selected=False):
+
+    collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
+
+    # get parameters relevant for search
+    criteria = request.GET.getlist('c')
+    remove = request.GET.get('rem', None)
+    if remove: criteria.remove(remove)
+    keywords = request.GET.get('kw', '')
+    
+    user = request.user
+
+    if selected:
+        selected = request.session.get('selected_records', ())
+
+    (hits, records, search_facets, orfacet, query, fields) = run_search(user, collection, criteria, keywords,
+                                                         selected=selected, remove=remove, produce_facets=True)
+
+    if collection:
+        url = reverse('solr-search-collection', kwargs={'id': collection.id, 'name': collection.name})
+    elif selected:
+        url = reverse('solr-selected')
+    else:
+        url = reverse('solr-search')
+
+    q = request.GET.copy()
+    q = clean_record_selection_vars(q)
+    q.pop('or', None)
+    q.pop('rem', None)
+    q.pop('action', None)
+    q.pop('p', None)
+    q.pop('op', None)
+    q.setlist('c', criteria)
+    qurl = q.urlencode()
+    limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
+        
+    # sort facets by label
+    facets = sorted(search_facets.values(), key=lambda f: f.label)
+
+    # clean facet items
+    for f in facets:
+        f.clean_result(hits)
+
+    # remove facets with only no filter options
+    facets = filter(lambda f: len(f.facets) > 0, facets)
+
+    return dict(html=render_to_string('results_facets.html',
+                          {
+                           'limit_url': limit_url,
+                           'facets': facets
+                           },
+                          context_instance=RequestContext(request)))
 
 
 @json_view
