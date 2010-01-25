@@ -11,6 +11,11 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
+
+    // preload facet loading image
+    var img = new Image();
+    img.src = '{% url static 'images/loading.gif' %}';
+
     function selectAllOnPage() {
         ids = Array();
         $(".record-select").each(function (i) { ids[i] = this.value; }).val(ids);
@@ -21,8 +26,9 @@
 
         $("#sort_dropdown, #viewmode_dropdown").change(function() { $("form").submit(); })
         $("#sort_go_button").hide();
-        
-        $("#facets").html("<div style='text-align: center;'>Loading facets...</div>");
+    {% if not facets %}
+        $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
+    {% endif %}
     });
     
     $(window).load(function() {
@@ -48,8 +54,15 @@
                 $(this).next().toggle('fast');
                 return false;
             }).css('cursor', 'pointer').next().hide();
-        }
+            
+            $(".facet-line").hover(function() { $(this).find(".facet-exclude").show(); },
+                                   function() { $(this).find(".facet-exclude").hide(); }).
+                             find(".facet-exclude").hide();
+        };
 
+    {% if facets %}
+        process_facets();
+    {% else %}
         ajaxManager.add({
                 type: 'GET',
                 url: '{{ facets_url|escapejs }}',
@@ -60,7 +73,8 @@
                     $("#facets").slideDown(500);
                 }
             });
-
+    {% endif %}
+    
     });
 </script>
 {% endblock %}
@@ -81,11 +95,32 @@
 {% endfor %}
 
 <div style="float: right;">
+<!--    
+    <span class="imagebar">
+    {% spaceless %}
+    {% ifequal viewmode "thumb" %}
+    <input type="image" name="v" value="list" src="{% url static 'images/listview_off.png' %}"
+           alt="List view" title="List view"/>
+    <img src="{% url static 'images/thumbnailview_on.png' %}"
+           alt="Thumbnail view" title="Thumbnail view" />
+    {% endifequal %}
+    {% ifequal viewmode "list" %}
+    <img src="{% url static 'images/listview_on.png' %}"
+           alt="List view" title="List view"/>
+    <input type="image" name="v" value="thumb" src="{% url static 'images/thumbnailview_off.png' %}"
+           alt="Thumbnail view" title="Thumbnail view" />    
+    {% endifequal %}
+    {% endspaceless %}
+    </span>
+    
+-->    
     View:
     <select name="v" id="viewmode_dropdown">
         <option value="thumb"{% ifequal viewmode "thumb" %} selected="selected"{% endifequal %}>Thumbnails</option>
         <option value="list"{% ifequal viewmode "list" %} selected="selected"{% endifequal %}>List</option>
     </select>
+
+
     Sort by:
     <select name="s" id="sort_dropdown">
         <option value="score desc"{% ifequal sort "score" %} selected="selected"{% endifequal %}>Score</option>
@@ -117,22 +152,18 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
 
 <div id="sidebar">
 
-  <a href="{{ reset_url }}">Reset Search</a>
-  {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
-
   <div class="facet active-facet">
     <div class="facet-header">Keywords</div>
-    <div class="facet-body"><input type="text" name="kw" value="{{ keywords }}"/>
-    <input type="submit" value="Go" />
+    <div class="facet-body">
+        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
     </div>
   </div>
     
 {% for c in criteria %}
   <div class="facet active-facet">
-    <div class="facet-header">{{ c.label }}</div>
+    <div class="facet-header"><a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>{{ c.label }}</div>
     <div class="facet-body">{% if c.negated %}not {% endif %}{{ c.term }}
-        {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><span>(or ...)</span></a>{% endif %}
-        <a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><span>(remove)</span></a>
+        {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><img src="{% url static 'images/or_icon.png' %}" alt="Or" title="Or" /></a>{% endif %}        
     </div>
   </div>
     
@@ -152,25 +183,13 @@ Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a
     </div>
 {% endif %}
 
-{% for facet in facets %}
-{% if facet.facets %}
-    <div class="facet">
-        <div class="facet-header collapsed">{{ facet.label }}</div>
-        <div class="facet-body">
-        {% for term,freq,label in facet.facets %}
-            <div class="facet-line">
-            <a href="{{ limit_url }}c={{ facet.name }}:{{ term|quoteterm|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;<span class="facet-freq">{{ freq|intcomma  }}</span>{% endif %}&nbsp;(<a
-               href="{{ limit_url }}c=-{{ facet.name }}:{{ term|quoteterm|urlencode }}" rel="nofollow">&times;</a>)
-            </div>
-        {% endfor %}
-        <a class="facet-more" style="display: none;" href="#{{ facet.name|urlencode }}">more...</a>
-        </div>
-    </div>
-{% endif %}
-{% endfor %}
-
-
 <div id="facets">
+{% include "results_facets.html" %}
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+    <a href="{{ reset_url }}">Reset Search</a>
+    {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
 </div>
 
 </div>

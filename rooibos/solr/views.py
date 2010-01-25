@@ -316,6 +316,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     q.pop('action', None)
     q.pop('p', None)
     q.pop('op', None)
+    q.pop('v.x', None)
+    q.pop('v.y', None)
+    q['s'] = q.get('s', None)
+    q['v'] = q.get('v', None)
     q.setlist('c', criteria)
     hiddenfields = [('op', page)]
     for f in q:

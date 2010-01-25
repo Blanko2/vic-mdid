@@ -201,17 +201,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #basket-tab {
-    background-color: white;
+    background: white url(../images/open_basket_icon.png) no-repeat 5px 3px;
     border: solid 5px rgb(152, 189, 198);
     color: rgb(152, 189, 198);
     font-weight: bolder;
     font-size: smaller;
     border-bottom: none;
-    width: 150px;
+    width: 140px;
     position: fixed;
     bottom: 60px;
     left: 50px;
-    text-align: center;
+    text-align: right;
+    padding-right: 10px;
 }
 
 #basket-content {
@@ -233,6 +234,24 @@ h1, h2, h3, h4, h5, h6 {
     margin-top: 20px;
 }
 
+#sidebar img, #sidebar .image {
+    margin: 0;
+    vertical-align: bottom;
+}
+
+#keywords {
+    width: 135px;
+    height: 16px;
+}
+
+.imagebar {
+    margin: 0 20px;
+}
+
+.imagebar img {
+    margin: 0;
+}
+
 .facet {
     border: thin lightgrey solid;
     margin: 5px;
@@ -243,13 +262,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .facet-header {
-    font-weight: bold;
     background-color: lightgrey;
     padding: 2px;
 }
 
+.facet-header img {
+    float: right;
+}
+
 .active-facet .facet-header {
     background-color: rgb(152, 189, 198);
+    color: white;
 }
 
 .facet-body {
@@ -263,7 +286,9 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
 }
 
-
+.altrow {
+    background-color: #F7F7F7;
+}
 
 #resultlist {
     padding-right: 12em;
