@@ -4,6 +4,15 @@
 {% load pagination_tags %}
 {% load viewers %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+    $(document).ready(function() {
+        process_facets();
+    });
+</script>
+{% endblock %}
+
 
 {% block content %}
 
@@ -11,21 +20,91 @@
 
 <h1>Browse Presentations</h1>
 
-<div class="tagcloud">
-{% for tag in tags %}
-    <span style="font-size: {{ tag.font_size|scale:"1 5 1 1.8" }}em;">
-        [<a href="{% url presentation-manage %}?tag={{ tag|urlencode }}">{{ tag }}</a>]
-    </span>
-{% endfor %}
-{% if tags %}
-    [<a href="{% url presentation-manage %}">All</a>]
+{% paginate %}
+
+
+<div id="sidebar">
+
+  <form method="GET" action="{{ form_url }}">
+  <input type="hidden" name="presenter" value="{{ active_presenter.username }}" />
+  {% for tag in active_tags %}
+  <input type="hidden" name="tag" value="{{ tag }}" />
+  {% endfor %}
+    
+  <div class="facet active-facet">
+    <div class="facet-header">Keywords</div>
+    <div class="facet-body">
+        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
+    </div>
+  </div>
+  
+  </form>
+  
+{% if active_presenter %}
+  <div class="facet active-facet">
+    <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
+    <div class="facet-body">{% if active_presenter.last_name %}{{ active_presenter.last_name }}, {{ active_presenter.first_name }}{% else %}{{ active_presenter.username }}{% endif %}</div>
+  </div>
 {% endif %}
+
+{% for tag in active_tags %}
+  <div class="facet active-facet">
+    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&rt={{ tag|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
+    <div class="facet-body">{{ tag }}</div>
+  </div>
+{% endfor %}
+
+{% if presenters %}
+  <div class="facet">
+    <div class="facet-header">Presenters</div>
+    <div class="facet-body">
+    {% for presenter in presenters %}
+        <div class="facet-line">            
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
+            &nbsp;<span class="facet-freq">{{ presenter.presentations|intcomma  }}</span>
+        </div>
+    {% endfor %}
+    <a class="facet-more" style="display: none;" href="#presenters">more...</a>
+    </div>
+  </div>
+{% endif %}
+
+{% if tags %}
+  <div class="facet">
+    <div class="facet-header">Tags</div>
+    <div class="facet-body">
+    {% for tag in tags %}
+        <div class="facet-line">            
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&tag={{ tag|urlencode }}">{{ tag }}</a>
+            {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
+        </div>
+    {% endfor %}
+    <a class="facet-more" style="display: none;" href="#tags">more...</a>
+    </div>
+  </div>
+{% endif %}
+
+{% if usertags %}
+  <div class="facet">
+    <div class="facet-header">Your Tags</div>
+    <div class="facet-body">
+    {% for tag in usertags %}
+        <div class="facet-line">            
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&tag={{ tag|urlencode }}">{{ tag }}</a>
+            {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
+        </div>
+    {% endfor %}
+    <a class="facet-more" style="display: none;" href="#tags">more...</a>
+    </div>
+  </div>
+{% endif %}
+
+<div style="text-align: center; margin-top: 20px;">
+    <a href="{% url presentation-browse %}">Reset Search</a>
 </div>
 
-<h2>Presentations{% if tag_filter %} filed under {{ tag_filter }}{% endif %}</h2>
+</div>
 
-
-{% paginate %}
 
 {% if presentations %}
 <form action="{% url presentation-browse %}?{{ querystring }}" method="POST" class="vertical">
@@ -33,17 +112,23 @@
     <tr>
         <th></th>
         <th>Title</th>
+        <th>Presenter</th>
         <th>Tags</th>
         <th>Items</th>
         <th></th>
     </tr>
 {% for presentation in presentations %}
     {% owned_tags_for_object presentation for request.user as ptags %}
+    {% owned_tags_for_object presentation for presentation.owner as otags %}
     <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td><a href="{% url presentation-view presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
+        <td>{% if presentation.owner.last_name %}{{ presentation.owner.last_name }}, {{ presentation.owner.first_name }}{% else %}{{ presentation.owner.username }}{% endif %}</td>
         <td>{% for ptag in ptags %}
                 {% tag ptag presentation "True" %}
+            {% endfor %}
+            {% for otag in otags %}
+                {% tag otag presentation 0 'secondary' %}
             {% endfor %}
         </td>
         <td>{{ presentation.items.count }}</td>
@@ -52,7 +137,10 @@
 {% endfor %}
 </table>
 
-<label>With selected</label>
+
+<h2>Update Tags</h2>
+
+<p>Add or remove tags on selected presentations</p>
 
 {{ form.tags.label_tag }}
 {{ form.tags }}
@@ -67,6 +155,8 @@
 </div>
 
 </form>
+
+{% paginate %}
 
 {% else %}
 No presentations available.

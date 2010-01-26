@@ -33,33 +33,6 @@
     
     $(window).load(function() {
 
-        function process_facets() {
-            $(".facet-body").each(function(i, facet) {
-                function sortByFreq(a, b) {
-                    var fa = $(".facet-freq", a).text().replace(/,/, "");
-                    var fb = $(".facet-freq", b).text().replace(/,/, "");
-                    fa = fa ? parseInt(fa) : 0;
-                    fb = fb ? parseInt(fb) : 0;
-                    return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
-                }
-                var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);
-                if (terms.length)
-                {
-                    $(terms).hide();
-                    $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
-                }
-            });
-            
-            $(".facet-header.collapsed").click(function() {
-                $(this).next().toggle('fast');
-                return false;
-            }).css('cursor', 'pointer').next().hide();
-            
-            $(".facet-line").hover(function() { $(this).find(".facet-exclude").show(); },
-                                   function() { $(this).find(".facet-exclude").hide(); }).
-                             find(".facet-exclude").hide();
-        };
-
     {% if facets %}
         process_facets();
     {% else %}

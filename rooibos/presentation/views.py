@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
 from django.db.models.aggregates import Count
@@ -19,6 +20,7 @@ from rooibos.ui.forms import SplitTaggingField
 from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
 from models import Presentation, PresentationItem
+import logging
 
 
 @login_required
@@ -208,7 +210,12 @@ def view(request, id, name):
 
 def browse(request):
 
-    tags = request.GET.getlist('tag')
+    presenter = request.GET.get('presenter')
+    tags = request.GET.getlist('tag') + filter(None, request.GET.get('t', '').split('||'))
+    remove_tag = request.GET.get('rt')
+    if remove_tag and remove_tag in tags:
+        tags.remove(remove_tag)
+    keywords = request.GET.get('kw', '')
     querystring = request.GET.urlencode()
 
     if request.user.is_authenticated():
@@ -217,47 +224,64 @@ def browse(request):
     else:
         existing_tags = ()
 
-    class ManagePresentationsForm(forms.Form):
-       tags = SplitTaggingField(label='Tags',
-                                choices=[(t, t) for t in existing_tags],
-                                required=False,
-                                add_label='Additional tags')
-       mode = forms.ChoiceField(label='Action',
-                                required=True,
-                                choices=[('add', 'Add to existing tags'), ('replace', 'Replace existing tags')],
-                                initial='add')
-
-    if request.method == "POST":
-        ids = map(int, request.POST.getlist('h'))
-        form = ManagePresentationsForm(request.POST)
-        if form.is_valid():
-            replace = form.cleaned_data['mode'] == 'replace'
-            for presentation in Presentation.objects.filter(id__in=ids):
-                if replace:
-                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                            form.cleaned_data['tags'])
-                else:
-                    for tag in parse_tag_input(form.cleaned_data['tags']):
-                        Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                            '"%s"' % tag)
-            return HttpResponseRedirect(reverse('presentation-browse') + '?' + querystring)
-    else:
-        form = ManagePresentationsForm()
-
     if tags:
-        qs = OwnedWrapper.objects.filter(user=request.user, content_type=OwnedWrapper.t(Presentation))
+        qs = OwnedWrapper.objects.filter(content_type=OwnedWrapper.t(Presentation))
         ids = list(TaggedItem.objects.get_by_model(qs, tags).values_list('object_id', flat=True))
         q = Q(id__in=ids)
     else:
         q = Q()
         
-    presentations = Presentation.objects.filter(
-        q,
-        id__in=accessible_ids(request.user, Presentation)).order_by('title')
+    if presenter:
+        presenter = User.objects.get(username=presenter)
+        qp = Q(owner=presenter)
+    else:
+        qp = Q()
+        
+    if keywords:
+        qk = Q(*(Q(title__icontains=kw) | Q(description__icontains=kw) |
+                 Q(owner__last_name__icontains=kw) | Q(owner__first_name__icontains=kw) |
+                 Q(owner__username__icontains=kw) for kw in keywords.split()))
+    else:
+        qk = Q()
+        
+    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, id__in=accessible_ids(request.user, Presentation)).order_by('title')
 
-    tag_filter = " and ".join(tags)
+    class ManagePresentationsForm(forms.Form):
+       tags = SplitTaggingField(label='Existing Tags',
+                                choices=[(t, t) for t in existing_tags],
+                                required=False,
+                                add_label='Additional tags')
+       mode = forms.ChoiceField(label='Action',
+                                required=True,
+                                choices=[('add', 'Add to existing tags'),
+                                         ('replace', 'Replace existing tags'),
+                                         ('remove', 'Remove existing tags')],
+                                initial='add',
+                                widget=forms.RadioSelect)
+
+    if request.method == "POST":
+        ids = map(int, request.POST.getlist('h'))
+        form = ManagePresentationsForm(request.POST)
+        if form.is_valid():
+            action = form.cleaned_data['mode']
+            for presentation in presentations.filter(id__in=ids):
+                if action == 'replace':
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            form.cleaned_data['tags'])
+                elif action == 'add':
+                    for tag in parse_tag_input(form.cleaned_data['tags']):
+                        Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                            '"%s"' % tag)
+                elif action == 'remove':
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')                    
+            return HttpResponseRedirect(reverse('presentation-browse') + '?' + querystring)
+    else:
+        form = ManagePresentationsForm()
 
 
+
+    active_tags = tags
+    active_presenter = presenter
 
     def col(model, field):
         qn = backend.DatabaseOperations().quote_name
@@ -267,17 +291,27 @@ def browse(request):
         tables=(Presentation._meta.db_table,),
         where=('%s=%s' % (col(OwnedWrapper, 'object_id'), col(Presentation, 'id')),
                '%s=%s' % (col(OwnedWrapper, 'user'), col(Presentation, 'owner')))).filter(
-        object_id__in=accessible_ids(request.user, Presentation),
+        object_id__in=presentations.values('id'),
         content_type=OwnedWrapper.t(Presentation))
 
-    tags = Tag.objects.cloud_for_queryset(q, steps=5)
+    tags = Tag.objects.usage_for_queryset(q, counts=True)
+    usertags = Tag.objects.usage_for_queryset(OwnedWrapper.objects.filter(
+                    user=request.user,
+                    object_id__in=presentations.values('id'),
+                    content_type=OwnedWrapper.t(Presentation)), counts=True)
+    
+    presenters = User.objects.filter(presentation__in=presentations) \
+                     .annotate(presentations=Count('presentation')).order_by('last_name', 'first_name')
 
     return render_to_response('presentation_browse.html',
-                          {'tags': tags,
-                           'tagobjects': Tag.objects,
+                          {'tags': tags if len(tags) > 0 else None,
+                           'usertags': usertags if len(usertags) > 0 else None,
+                           'active_tags': active_tags,
+                           'active_presenter': presenter,
                            'presentations': presentations,
+                           'presenters': presenters if len(presenters) > 1 else None,
+                           'keywords': keywords,
                            'querystring': querystring,
-                           'tag_filter': tag_filter,
                            'form': form,
                            },
                           context_instance=RequestContext(request))

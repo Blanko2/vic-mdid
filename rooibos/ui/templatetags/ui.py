@@ -79,10 +79,11 @@ def add_tags_form(context, object):
 
 
 @register.inclusion_tag('ui_tag.html', takes_context=True)
-def tag(context, tag, object=None, removable=False):
+def tag(context, tag, object=None, removable=False, styles=None):
     return {'object_id': object and object.id or None,
             'object_type': object and ContentType.objects.get_for_model(object.__class__).id or None,
             'tag': tag,
             'removable': removable,
+            'styles': styles,
             'request': context['request'],
             }
