@@ -42,14 +42,14 @@
   
 {% if active_presenter %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
+    <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
     <div class="facet-body">{% if active_presenter.last_name %}{{ active_presenter.last_name }}, {{ active_presenter.first_name }}{% else %}{{ active_presenter.username }}{% endif %}</div>
   </div>
 {% endif %}
 
 {% for tag in active_tags %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&rt={{ tag|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
+    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;rt={{ tag|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
     <div class="facet-body">{{ tag }}</div>
   </div>
 {% endfor %}
@@ -60,7 +60,7 @@
     <div class="facet-body">
     {% for presenter in presenters %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
             &nbsp;<span class="facet-freq">{{ presenter.presentations|intcomma  }}</span>
         </div>
     {% endfor %}
@@ -75,7 +75,7 @@
     <div class="facet-body">
     {% for tag in tags %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&tag={{ tag|urlencode }}">{{ tag }}</a>
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;tag={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
     {% endfor %}
@@ -90,7 +90,7 @@
     <div class="facet-body">
     {% for tag in usertags %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&kw={{ keywords|urlencode }}&t={{ active_tags|join:"||"|urlencode }}&tag={{ tag|urlencode }}">{{ tag }}</a>
+            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;tag={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
     {% endfor %}
@@ -122,7 +122,7 @@
     {% owned_tags_for_object presentation for presentation.owner as otags %}
     <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
-        <td><a href="{% url presentation-view presentation.id, presentation.name %}">{{ presentation.title }}</a></td>
+        <td><a href="{% url presentation-view presentation.id, presentation.name %}?next={% url presentation-browse %}%3F{{ querystring|urlencode }}">{{ presentation.title }}</a></td>
         <td>{% if presentation.owner.last_name %}{{ presentation.owner.last_name }}, {{ presentation.owner.first_name }}{% else %}{{ presentation.owner.username }}{% endif %}</td>
         <td>{% for ptag in ptags %}
                 {% tag ptag presentation "True" %}

@@ -204,7 +204,16 @@ def items(request, id, name):
 
 def view(request, id, name):
 
-    pass
+    presentation = get_object_or_404(Presentation.objects.filter(
+        id=id, id__in=accessible_ids(request.user, Presentation)))
+
+    return_url = request.GET.get('next', reverse('presentation-browse'))
+    
+    return render_to_response('presentation_mediaviewer.html',
+                              {'presentation': presentation,
+                               'return_url': return_url,
+                            },
+                        context_instance=RequestContext(request))
 
 
 
@@ -295,10 +304,14 @@ def browse(request):
         content_type=OwnedWrapper.t(Presentation))
 
     tags = Tag.objects.usage_for_queryset(q, counts=True)
-    usertags = Tag.objects.usage_for_queryset(OwnedWrapper.objects.filter(
-                    user=request.user,
-                    object_id__in=presentations.values('id'),
-                    content_type=OwnedWrapper.t(Presentation)), counts=True)
+    
+    if request.user.is_authenticated():
+        usertags = Tag.objects.usage_for_queryset(OwnedWrapper.objects.filter(
+                        user=request.user,
+                        object_id__in=presentations.values('id'),
+                        content_type=OwnedWrapper.t(Presentation)), counts=True)
+    else:
+        usertags = ()
     
     presenters = User.objects.filter(presentation__in=presentations) \
                      .annotate(presentations=Count('presentation')).order_by('last_name', 'first_name')

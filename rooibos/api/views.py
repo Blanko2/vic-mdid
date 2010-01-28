@@ -116,8 +116,9 @@ def presentations_for_current_user(request):
 
 
 @json_view
-def presentation_detail(request, id):
-    p = get_object_or_404(Presentation.objects.filter(owner=request.user), id=id)
+def presentation_detail(request, id):    
+    p = get_object_or_404(Presentation.objects.filter(
+        id=id, id__in=accessible_ids(request.user, Presentation)))
     return dict(id=p.id,
                 name=p.name,
                 title=p.title,
@@ -126,7 +127,7 @@ def presentation_detail(request, id):
                 created=p.created.isoformat(),
                 modified=p.modified.isoformat(),
                 content=_records_as_json(map(lambda i: i.record, p.items.select_related('record').filter(hidden=False)),
-                                         owner=request.user,
+                                         owner=request.user if request.user.is_authenticated() else None,
                                          context=p,
                                          process_url=lambda url:create_proxy_url_if_needed(url, request))
             )
