@@ -1,12 +1,10 @@
-import copy
 import datetime
+import decimal
 import os
 import re
 import time
-try:
-    import decimal
-except ImportError:
-    from django.utils import _decimal as decimal    # for Python 2.3
+
+import django.utils.copycompat as copy
 
 from django.db import connection
 from django.db.models import signals
@@ -58,6 +56,13 @@ class Field(object):
     # creates, creation_counter is used for all user-specified fields.
     creation_counter = 0
     auto_creation_counter = -1
+
+    # Generic field type description, usually overriden by subclasses
+    def _description(self):
+        return _(u'Field of type: %(field_type)s') % {
+            'field_type': self.__class__.__name__
+        }
+    description = property(_description)
 
     def __init__(self, verbose_name=None, name=None, primary_key=False,
             max_length=None, unique=False, blank=False, null=False,
@@ -193,39 +198,11 @@ class Field(object):
 
     def get_db_prep_lookup(self, lookup_type, value):
         "Returns field's value prepared for database lookup."
-        def pk_trace(value):
-            # Value may be a primary key, or an object held in a relation.
-            # If it is an object, then we need to get the primary key value for
-            # that object. In certain conditions (especially one-to-one relations),
-            # the primary key may itself be an object - so we need to keep drilling
-            # down until we hit a value that can be used for a comparison.
-            v, field = value, None
-            try:
-                while True:
-                    v, field = getattr(v, v._meta.pk.name), v._meta.pk
-            except AttributeError:
-                pass
-            if field:
-                if lookup_type in ('range', 'in'):
-                    v = [v]
-                v = field.get_db_prep_lookup(lookup_type, v)
-                if isinstance(v, list):
-                    v = v[0]
-            return v
-
         if hasattr(value, 'as_sql') or hasattr(value, '_as_sql'):
             # If the value has a relabel_aliases method, it will need to
             # be invoked before the final SQL is evaluated
             if hasattr(value, 'relabel_aliases'):
                 return value
-            if lookup_type == 'in':
-                query_uses_limit = value.query.high_mark is not None or \
-                    value.query.low_mark
-                if query_uses_limit and \
-                            not connection.features.allow_limit_in_in_subquery:
-                    ret = map(pk_trace, value)
-                    value.value_annotation = bool(ret)
-                    return ret
             if hasattr(value, 'as_sql'):
                 sql, params = value.as_sql()
             else:
@@ -368,6 +345,7 @@ class Field(object):
         return getattr(obj, self.attname)
 
 class AutoField(Field):
+    description = ugettext_lazy("Integer")
     empty_strings_allowed = False
     def __init__(self, *args, **kwargs):
         assert kwargs.get('primary_key', False) is True, "%ss must have primary_key=True." % self.__class__.__name__
@@ -399,6 +377,7 @@ class AutoField(Field):
 
 class BooleanField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Boolean (Either True or False)")
     def __init__(self, *args, **kwargs):
         kwargs['blank'] = True
         if 'default' not in kwargs and not kwargs.get('null'):
@@ -441,6 +420,7 @@ class BooleanField(Field):
         return super(BooleanField, self).formfield(**defaults)
 
 class CharField(Field):
+    description = ugettext_lazy("String (up to %(max_length)s)")
     def get_internal_type(self):
         return "CharField"
 
@@ -455,6 +435,9 @@ class CharField(Field):
                     ugettext_lazy("This field cannot be null."))
         return smart_unicode(value)
 
+    def get_db_prep_value(self, value):
+        return self.to_python(value)
+    
     def formfield(self, **kwargs):
         defaults = {'max_length': self.max_length}
         defaults.update(kwargs)
@@ -462,6 +445,7 @@ class CharField(Field):
 
 # TODO: Maybe move this into contrib, because it's specialized.
 class CommaSeparatedIntegerField(CharField):
+    description = ugettext_lazy("Comma-separated integers")
     def formfield(self, **kwargs):
         defaults = {
             'form_class': forms.RegexField,
@@ -477,6 +461,7 @@ class CommaSeparatedIntegerField(CharField):
 ansi_date_re = re.compile(r'^\d{4}-\d{1,2}-\d{1,2}$')
 
 class DateField(Field):
+    description = ugettext_lazy("Date (without time)")
     empty_strings_allowed = False
     def __init__(self, verbose_name=None, name=None, auto_now=False, auto_now_add=False, **kwargs):
         self.auto_now, self.auto_now_add = auto_now, auto_now_add
@@ -552,6 +537,7 @@ class DateField(Field):
         return super(DateField, self).formfield(**defaults)
 
 class DateTimeField(DateField):
+    description = ugettext_lazy("Date (with time)")
     def get_internal_type(self):
         return "DateTimeField"
 
@@ -612,6 +598,7 @@ class DateTimeField(DateField):
 
 class DecimalField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Decimal number")
     def __init__(self, verbose_name=None, name=None, max_digits=None, decimal_places=None, **kwargs):
         self.max_digits, self.decimal_places = max_digits, decimal_places
         Field.__init__(self, verbose_name, name, **kwargs)
@@ -665,6 +652,7 @@ class DecimalField(Field):
         return super(DecimalField, self).formfield(**defaults)
 
 class EmailField(CharField):
+    description = ugettext_lazy("E-mail address")
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = kwargs.get('max_length', 75)
         CharField.__init__(self, *args, **kwargs)
@@ -675,6 +663,7 @@ class EmailField(CharField):
         return super(EmailField, self).formfield(**defaults)
 
 class FilePathField(Field):
+    description = ugettext_lazy("File path")
     def __init__(self, verbose_name=None, name=None, path='', match=None, recursive=False, **kwargs):
         self.path, self.match, self.recursive = path, match, recursive
         kwargs['max_length'] = kwargs.get('max_length', 100)
@@ -695,6 +684,7 @@ class FilePathField(Field):
 
 class FloatField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Floating point number")
 
     def get_db_prep_value(self, value):
         if value is None:
@@ -720,6 +710,7 @@ class FloatField(Field):
 
 class IntegerField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Integer")
     def get_db_prep_value(self, value):
         if value is None:
             return None
@@ -744,6 +735,7 @@ class IntegerField(Field):
 
 class IPAddressField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("IP address")
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 15
         Field.__init__(self, *args, **kwargs)
@@ -758,6 +750,7 @@ class IPAddressField(Field):
 
 class NullBooleanField(Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Boolean (Either True, False or None)")
     def __init__(self, *args, **kwargs):
         kwargs['null'] = True
         Field.__init__(self, *args, **kwargs)
@@ -797,6 +790,7 @@ class NullBooleanField(Field):
         return super(NullBooleanField, self).formfield(**defaults)
 
 class PositiveIntegerField(IntegerField):
+    description = ugettext_lazy("Integer")
     def get_internal_type(self):
         return "PositiveIntegerField"
 
@@ -806,6 +800,7 @@ class PositiveIntegerField(IntegerField):
         return super(PositiveIntegerField, self).formfield(**defaults)
 
 class PositiveSmallIntegerField(IntegerField):
+    description = ugettext_lazy("Integer")
     def get_internal_type(self):
         return "PositiveSmallIntegerField"
 
@@ -815,6 +810,7 @@ class PositiveSmallIntegerField(IntegerField):
         return super(PositiveSmallIntegerField, self).formfield(**defaults)
 
 class SlugField(CharField):
+    description = ugettext_lazy("String (up to %(max_length)s)")
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = kwargs.get('max_length', 50)
         # Set db_index=True unless it's been set manually.
@@ -831,12 +827,19 @@ class SlugField(CharField):
         return super(SlugField, self).formfield(**defaults)
 
 class SmallIntegerField(IntegerField):
+    description = ugettext_lazy("Integer")
     def get_internal_type(self):
         return "SmallIntegerField"
 
 class TextField(Field):
+    description = ugettext_lazy("Text")
     def get_internal_type(self):
         return "TextField"
+
+    def get_db_prep_value(self, value):
+        if isinstance(value, basestring) or value is None:
+            return value
+        return smart_unicode(value)
 
     def formfield(self, **kwargs):
         defaults = {'widget': forms.Textarea}
@@ -844,6 +847,7 @@ class TextField(Field):
         return super(TextField, self).formfield(**defaults)
 
 class TimeField(Field):
+    description = ugettext_lazy("Time")
     empty_strings_allowed = False
     def __init__(self, verbose_name=None, name=None, auto_now=False, auto_now_add=False, **kwargs):
         self.auto_now, self.auto_now_add = auto_now, auto_now_add
@@ -863,7 +867,7 @@ class TimeField(Field):
             # Not usually a good idea to pass in a datetime here (it loses
             # information), but this can be a side-effect of interacting with a
             # database backend (e.g. Oracle), so we'll be accommodating.
-            return value.time
+            return value.time()
 
         # Attempt to parse a datetime:
         value = smart_str(value)
@@ -916,6 +920,7 @@ class TimeField(Field):
         return super(TimeField, self).formfield(**defaults)
 
 class URLField(CharField):
+    description = ugettext_lazy("URL")
     def __init__(self, verbose_name=None, name=None, verify_exists=True, **kwargs):
         kwargs['max_length'] = kwargs.get('max_length', 200)
         self.verify_exists = verify_exists
@@ -927,6 +932,7 @@ class URLField(CharField):
         return super(URLField, self).formfield(**defaults)
 
 class XMLField(TextField):
+    description = ugettext_lazy("XML text")
     def __init__(self, verbose_name=None, name=None, schema_path=None, **kwargs):
         self.schema_path = schema_path
         Field.__init__(self, verbose_name, name, **kwargs)

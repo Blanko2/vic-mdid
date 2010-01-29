@@ -102,7 +102,6 @@ class BaseDatabaseFeatures(object):
     # If True, don't use integer foreign keys referring to, e.g., positive
     # integer primary keys.
     related_fields_match_type = False
-    allow_limit_in_in_subquery = True
 
 class BaseDatabaseOperations(object):
     """
@@ -471,6 +470,14 @@ class BaseDatabaseIntrospection(object):
     def __init__(self, connection):
         self.connection = connection
 
+    def get_field_type(self, data_type, description):
+        """Hook for a database backend to use the cursor description to
+        match a Django field type to a database column.
+
+        For Oracle, the column data_type on its own is insufficient to
+        distinguish between a FloatField and IntegerField, for example."""
+        return self.data_types_reverse[data_type]
+
     def table_name_converter(self, name):
         """Apply a conversion to the name for the purposes of comparison.
 
@@ -561,4 +568,3 @@ class BaseDatabaseValidation(object):
     def validate_field(self, errors, opts, f):
         "By default, there is no backend-specific validation"
         pass
-

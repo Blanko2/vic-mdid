@@ -146,14 +146,6 @@ class RelatedField(object):
             # be invoked before the final SQL is evaluated
             if hasattr(value, 'relabel_aliases'):
                 return value
-            if lookup_type == 'in':
-                query_uses_limit = value.query.high_mark is not None or \
-                    value.query.low_mark
-                if query_uses_limit and \
-                            not connection.features.allow_limit_in_in_subquery:
-                    ret = map(pk_trace, value)
-                    value.value_annotation = bool(ret)
-                    return ret
             if hasattr(value, 'as_sql'):
                 sql, params = value.as_sql()
             else:
@@ -691,6 +683,7 @@ class ManyToManyRel(object):
 
 class ForeignKey(RelatedField, Field):
     empty_strings_allowed = False
+    description = ugettext_lazy("Foreign Key (type determined by related field)")
     def __init__(self, to, to_field=None, rel_class=ManyToOneRel, **kwargs):
         try:
             to_name = to._meta.object_name.lower()
@@ -785,6 +778,7 @@ class OneToOneField(ForeignKey):
     always returns the object pointed to (since there will only ever be one),
     rather than returning a list.
     """
+    description = ugettext_lazy("One-to-one relationship")
     def __init__(self, to, to_field=None, **kwargs):
         kwargs['unique'] = True
         super(OneToOneField, self).__init__(to, to_field, OneToOneRel, **kwargs)
@@ -799,6 +793,7 @@ class OneToOneField(ForeignKey):
         return super(OneToOneField, self).formfield(**kwargs)
 
 class ManyToManyField(RelatedField, Field):
+    description = ugettext_lazy("Many-to-many relationship")
     def __init__(self, to, **kwargs):
         try:
             assert not to._meta.abstract, "%s cannot define a relation with abstract class %s" % (self.__class__.__name__, to._meta.object_name)

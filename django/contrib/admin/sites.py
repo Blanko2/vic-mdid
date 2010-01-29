@@ -191,6 +191,9 @@ class AdminSite(object):
     def get_urls(self):
         from django.conf.urls.defaults import patterns, url, include
 
+        if settings.DEBUG:
+            self.check_dependencies()
+
         def wrap(view, cacheable=False):
             def wrapper(*args, **kwargs):
                 return self.admin_view(view, cacheable)(*args, **kwargs)
@@ -300,7 +303,7 @@ class AdminSite(object):
         user = authenticate(username=username, password=password)
         if user is None:
             message = ERROR_MESSAGE
-            if u'@' in username:
+            if username is not None and u'@' in username:
                 # Mistakenly entered e-mail address instead of username? Look it up.
                 try:
                     user = User.objects.get(email=username)

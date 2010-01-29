@@ -2,8 +2,7 @@
 Form classes
 """
 
-from copy import deepcopy
-
+from django.utils.copycompat import deepcopy
 from django.utils.datastructures import SortedDict
 from django.utils.html import conditional_escape
 from django.utils.encoding import StrAndUnicode, smart_unicode, force_unicode
@@ -243,13 +242,13 @@ class BaseForm(StrAndUnicode):
                     value = getattr(self, 'clean_%s' % name)()
                     self.cleaned_data[name] = value
             except ValidationError, e:
-                self._errors[name] = e.messages
+                self._errors[name] = self.error_class(e.messages)
                 if name in self.cleaned_data:
                     del self.cleaned_data[name]
         try:
             self.cleaned_data = self.clean()
         except ValidationError, e:
-            self._errors[NON_FIELD_ERRORS] = e.messages
+            self._errors[NON_FIELD_ERRORS] = self.error_class(e.messages)
         if self._errors:
             delattr(self, 'cleaned_data')
 
@@ -343,6 +342,7 @@ class BoundField(StrAndUnicode):
         self.name = name
         self.html_name = form.add_prefix(name)
         self.html_initial_name = form.add_initial_prefix(name)
+        self.html_initial_id = form.add_initial_prefix(self.auto_id)
         if self.field.label is None:
             self.label = pretty_name(name)
         else:
@@ -374,7 +374,10 @@ class BoundField(StrAndUnicode):
         attrs = attrs or {}
         auto_id = self.auto_id
         if auto_id and 'id' not in attrs and 'id' not in widget.attrs:
-            attrs['id'] = auto_id
+            if not only_initial:
+                attrs['id'] = auto_id
+            else:
+                attrs['id'] = self.html_initial_id
         if not self.form.is_bound:
             data = self.form.initial.get(self.name, self.field.initial)
             if callable(data):

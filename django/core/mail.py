@@ -13,7 +13,7 @@ from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
 from email.Header import Header
-from email.Utils import formatdate, parseaddr, formataddr
+from email.Utils import formatdate, getaddresses, formataddr
 
 from django.conf import settings
 from django.utils.encoding import smart_str, force_unicode
@@ -79,8 +79,7 @@ def forbid_multi_line_headers(name, val):
     except UnicodeEncodeError:
         if name.lower() in ('to', 'from', 'cc'):
             result = []
-            for item in val.split(', '):
-                nm, addr = parseaddr(item)
+            for nm, addr in getaddresses((val,)):
                 nm = str(Header(nm, settings.DEFAULT_CHARSET))
                 result.append(formataddr((nm, str(addr))))
             val = ', '.join(result)
@@ -112,7 +111,10 @@ class SMTPConnection(object):
         self.port = port or settings.EMAIL_PORT
         self.username = username or settings.EMAIL_HOST_USER
         self.password = password or settings.EMAIL_HOST_PASSWORD
-        self.use_tls = (use_tls is not None) and use_tls or settings.EMAIL_USE_TLS
+        if use_tls is None:
+            self.use_tls = settings.EMAIL_USE_TLS
+        else:
+            self.use_tls = use_tls
         self.fail_silently = fail_silently
         self.connection = None
 

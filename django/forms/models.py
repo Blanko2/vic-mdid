@@ -706,10 +706,10 @@ def modelformset_factory(model, form=ModelForm, formfield_callback=lambda f: f.f
 class BaseInlineFormSet(BaseModelFormSet):
     """A formset for child objects related to a parent."""
     def __init__(self, data=None, files=None, instance=None,
-                 save_as_new=False, prefix=None):
+                 save_as_new=False, prefix=None, queryset=None):
         from django.db.models.fields.related import RelatedObject
         if instance is None:
-            self.instance = self.model()
+            self.instance = self.fk.rel.to()
         else:
             self.instance = instance
         self.save_as_new = save_as_new
@@ -719,7 +719,9 @@ class BaseInlineFormSet(BaseModelFormSet):
             backlink_value = self.instance
         else:
             backlink_value = getattr(self.instance, self.fk.rel.field_name)
-        qs = self.model._default_manager.filter(**{self.fk.name: backlink_value})
+        if queryset is None:
+            queryset = self.model._default_manager
+        qs = queryset.filter(**{self.fk.name: backlink_value})
         super(BaseInlineFormSet, self).__init__(data, files, prefix=prefix,
                                                 queryset=qs)
 

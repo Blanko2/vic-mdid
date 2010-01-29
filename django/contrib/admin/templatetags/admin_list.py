@@ -22,7 +22,7 @@ def paginator_number(cl,i):
     elif i == cl.page_num:
         return mark_safe(u'<span class="this-page">%d</span> ' % (i+1))
     else:
-        return mark_safe(u'<a href="%s"%s>%d</a> ' % (cl.get_query_string({PAGE_VAR: i}), (i == cl.paginator.num_pages-1 and ' class="end"' or ''), i+1))
+        return mark_safe(u'<a href="%s"%s>%d</a> ' % (escape(cl.get_query_string({PAGE_VAR: i})), (i == cl.paginator.num_pages-1 and ' class="end"' or ''), i+1))
 paginator_number = register.simple_tag(paginator_number)
 
 def pagination(cl):
@@ -106,6 +106,11 @@ def result_headers(cl):
                     else:
                         header = field_name
                     header = header.replace('_', ' ')
+            # if the field is the action checkbox: no sorting and special class
+            if field_name == 'action_checkbox':
+                yield {"text": header,
+                       "class_attrib": mark_safe(' class="action-checkbox-column"')}
+                continue
 
             # It is a non-field, but perhaps one that is sortable
             admin_order_field = getattr(attr, "admin_order_field", None)
@@ -265,7 +270,7 @@ def date_hierarchy(cl):
         day_lookup = cl.params.get(day_field)
         year_month_format, month_day_format = get_partial_date_formats()
 
-        link = lambda d: mark_safe(cl.get_query_string(d, [field_generic]))
+        link = lambda d: cl.get_query_string(d, [field_generic])
 
         if year_lookup and month_lookup and day_lookup:
             day = datetime.date(int(year_lookup), int(month_lookup), int(day_lookup))

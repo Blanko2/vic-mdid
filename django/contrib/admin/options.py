@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin import widgets
 from django.contrib.admin import helpers
 from django.contrib.admin.util import unquote, flatten_fieldsets, get_deleted_objects, model_ngettext, model_format_dict
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
 from django.db.models.fields import BLANK_CHOICE_DASH
 from django.http import Http404, HttpResponse, HttpResponseRedirect
@@ -347,6 +347,20 @@ class ModelAdmin(BaseModelAdmin):
         defaults.update(kwargs)
         return modelform_factory(self.model, **defaults)
 
+    def get_object(self, request, object_id):
+        """
+        Returns an instance matching the primary key provided. ``None``  is
+        returned if no match is found (or the object_id failed validation
+        against the primary key field).
+        """
+        queryset = self.queryset(request)
+        model = queryset.model
+        try:
+            object_id = model._meta.pk.to_python(object_id)
+            return queryset.get(pk=object_id)
+        except (model.DoesNotExist, ValidationError):
+            return None
+
     def get_changelist_form(self, request, **kwargs):
         """
         Returns a Form class for use in the Formset on the changelist page.
@@ -482,7 +496,7 @@ class ModelAdmin(BaseModelAdmin):
 
     def get_action(self, action):
         """
-        Return a given action from a parameter, which can either be a calable,
+        Return a given action from a parameter, which can either be a callable,
         or the name of a method on the ModelAdmin.  Return is a tuple of
         (callable, name, description).
         """
@@ -689,6 +703,9 @@ class ModelAdmin(BaseModelAdmin):
             # perform an action on it, so bail.
             selected = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
             if not selected:
+                # Reminder that something needs to be selected or nothing will happen
+                msg = _("Items must be selected in order to perform actions on them. No items have been changed.")
+                self.message_user(request, msg)
                 return None
 
             response = func(self, request, queryset.filter(pk__in=selected))
@@ -700,6 +717,9 @@ class ModelAdmin(BaseModelAdmin):
                 return response
             else:
                 return HttpResponseRedirect(".")
+        else:
+            msg = _("No action selected.")
+            self.message_user(request, msg)
 
     def add_view(self, request, form_url='', extra_context=None):
         "The 'add' admin view for this model."
@@ -789,13 +809,7 @@ class ModelAdmin(BaseModelAdmin):
         model = self.model
         opts = model._meta
 
-        try:
-            obj = self.queryset(request).get(pk=unquote(object_id))
-        except model.DoesNotExist:
-            # Don't raise Http404 just yet, because we haven't checked
-            # permissions yet. We don't want an unauthenticated user to be able
-            # to determine whether a given object exists.
-            obj = None
+        obj = self.get_object(request, unquote(object_id))
 
         if not self.has_change_permission(request, obj):
             raise PermissionDenied
@@ -990,13 +1004,7 @@ class ModelAdmin(BaseModelAdmin):
         opts = self.model._meta
         app_label = opts.app_label
 
-        try:
-            obj = self.queryset(request).get(pk=unquote(object_id))
-        except self.model.DoesNotExist:
-            # Don't raise Http404 just yet, because we haven't checked
-            # permissions yet. We don't want an unauthenticated user to be able
-            # to determine whether a given object exists.
-            obj = None
+        obj = self.get_object(request, unquote(object_id))
 
         if not self.has_delete_permission(request, obj):
             raise PermissionDenied
@@ -1052,7 +1060,7 @@ class ModelAdmin(BaseModelAdmin):
             content_type__id__exact = ContentType.objects.get_for_model(model).id
         ).select_related().order_by('action_time')
         # If no history was found, see whether this object even exists.
-        obj = get_object_or_404(model, pk=object_id)
+        obj = get_object_or_404(model, pk=unquote(object_id))
         context = {
             'title': _('Change history: %s') % force_unicode(obj),
             'action_list': action_list,

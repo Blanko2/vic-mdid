@@ -162,7 +162,7 @@ def floatformat(text, arg=-1):
 
     try:
         m = int(d) - d
-    except (OverflowError, InvalidOperation):
+    except (ValueError, OverflowError, InvalidOperation):
         return input_val
 
     if not m and p < 0:
@@ -249,7 +249,8 @@ stringformat.is_safe = True
 
 def title(value):
     """Converts a string into titlecase."""
-    return re.sub("([a-z])'([A-Z])", lambda m: m.group(0).lower(), value.title())
+    t = re.sub("([a-z])'([A-Z])", lambda m: m.group(0).lower(), value.title())
+    return re.sub("\d([A-Z])", lambda m: m.group(0).lower(), t)
 title.is_safe = True
 title = stringfilter(title)
 
