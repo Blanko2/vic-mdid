@@ -264,7 +264,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     # get parameters relevant for view
     
     viewmode = request.GET.get('v', 'thumb')
-    if viewmode == 'l':
+    if viewmode == 'list':
         pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
     else:
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
@@ -318,8 +318,8 @@ def search(request, id=None, name=None, selected=False, json=False):
     q.pop('op', None)
     q.pop('v.x', None)
     q.pop('v.y', None)
-    q['s'] = q.get('s', None)
-    q['v'] = q.get('v', None)
+    q['s'] = q.get('s', 'score desc')
+    q['v'] = q.get('v', 'thumb')
     q.setlist('c', criteria)
     hiddenfields = [('op', page)]
     for f in q:

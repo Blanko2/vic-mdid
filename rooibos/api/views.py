@@ -17,6 +17,7 @@ from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.views.decorators.cache import cache_control
 import django.contrib.auth
 
 
@@ -115,6 +116,7 @@ def presentations_for_current_user(request):
     }
 
 
+@cache_control(no_cache=True)
 @json_view
 def presentation_detail(request, id):    
     p = get_object_or_404(Presentation.objects.filter(
@@ -132,6 +134,8 @@ def presentation_detail(request, id):
                                          process_url=lambda url:create_proxy_url_if_needed(url, request))
             )
 
+
+@cache_control(no_cache=True)
 @json_view
 def keep_alive(request):
     return dict(user=request.user.username if request.user else '')
