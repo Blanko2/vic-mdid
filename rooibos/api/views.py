@@ -121,6 +121,18 @@ def presentations_for_current_user(request):
 def presentation_detail(request, id):    
     p = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation)))
+    flash = request.GET.get('flash') == '1'
+    
+    # Propagate the flash URL paramater into all image URLs to control the "Vary: cookie" header
+    # that breaks caching in Flash/Firefox.  Also add the username from the request to make sure
+    # different users don't use each other's cached images.
+    def add_flash_parameter(url, request):
+        u = create_proxy_url_if_needed(url, request)
+        if flash:
+            u = u + ('&' if u.find('?') > -1 else '?') \
+                  + ('flash=1&user=%s' % (request.user.id if request.user.is_authenticated() else -1))
+        return u
+    
     return dict(id=p.id,
                 name=p.name,
                 title=p.title,
@@ -131,7 +143,7 @@ def presentation_detail(request, id):
                 content=_records_as_json(map(lambda i: i.record, p.items.select_related('record').filter(hidden=False)),
                                          owner=request.user if request.user.is_authenticated() else None,
                                          context=p,
-                                         process_url=lambda url:create_proxy_url_if_needed(url, request))
+                                         process_url=lambda url:add_flash_parameter(url, request))
             )
 
 

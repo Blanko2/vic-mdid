@@ -17,11 +17,24 @@ from rooibos.util import json_view
 from models import Media, Storage, TrustedSubnet, ProxyUrl
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
+#def expire_header(seconds=3600):
+#    return (datetime.utcnow() + timedelta(0, seconds)).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
-@cache_control(max_age=3600)
+
+def add_content_length(func):
+    def _add_header(request, *args, **kwargs):
+        response = func(request, *args, **kwargs)
+        if type(response) == HttpResponse:
+            response['Content-Length'] = len(response.content)
+        return response
+    return _add_header
+
+
+@add_content_length
+@cache_control(private=True, max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):
 
     # check if media exists    
@@ -43,11 +56,13 @@ def retrieve(request, recordid, record, mediaid, media):
 
     content = mediaobj.load_file()
     if content:
-        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
+        return HttpResponse(content=content, mimetype=str(media.mimetype))
     else:
         return HttpResponseRedirect(mediaobj.get_absolute_url())
 
 
+@add_content_length
+@cache_control(private=True, max_age=3600)
 def retrieve_image(request, recordid, record, width=None, height=None):
 
     width = int(width or '100000')
@@ -102,7 +117,8 @@ def media_upload(request, recordid, record):
                               context_instance=RequestContext(request))
 
 
-
+@add_content_length
+@cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
     record = get_object_or_404(Record.objects.filter(id=id,
         collection__id__in=accessible_ids(request.user, Collection)).distinct())
@@ -115,8 +131,7 @@ def record_thumbnail(request, id, name):
         else:
             return HttpResponseServerError()
     else:
-        #todo remove static url
-        return HttpResponseRedirect('/static/images/nothumbnail.jpg')
+        raise Http404
 
 
 @json_view

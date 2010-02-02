@@ -14,6 +14,8 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = False
 
+USE_ETAGS = False
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
@@ -39,6 +41,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'rooibos.middleware.Middleware',
     'rooibos.sslredirect.SSLRedirect',
     'django.middleware.common.CommonMiddleware',
     'rooibos.util.stats_middleware.StatsMiddleware',

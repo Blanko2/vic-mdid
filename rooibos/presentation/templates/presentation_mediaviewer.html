@@ -72,7 +72,7 @@ if ( hasProductInstall && !hasRequestedVersion ) {
 	// embed the Flash Content SWF when all tests are passed
 	AC_FL_RunContent(
 			"src", "{% url static 'mediaviewer/WebMediaViewer' %}",
-			"FlashVars", "version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}",
+			"FlashVars", "version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}%3Fflash=1&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}",
 			"width", "100%",
 			"height", "100%",
 			"align", "middle",
@@ -101,7 +101,7 @@ if ( hasProductInstall && !hasRequestedVersion ) {
 			<param name="quality" value="high" />
 			<param name="bgcolor" value="#000000" />
 			<param name="allowFullScreen" value="true" />
-			<param name="flashVars" value="version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}"/>
+			<param name="flashVars" value="version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}%3Fflash=1&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}"/>
 			<param name="allowScriptAccess" value="sameDomain" />
 			<embed src="{% url static 'mediaviewer/WebMediaViewer.swf' %}" quality="high" bgcolor="#000000"
 				width="100%" height="100%" name="WebMediaViewer" align="middle"
@@ -112,7 +112,7 @@ if ( hasProductInstall && !hasRequestedVersion ) {
 				allowScriptAccess="sameDomain"
 				type="application/x-shockwave-flash"
 				pluginspage="http://www.adobe.com/go/getflashplayer"
-				flashVars="version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}">
+				flashVars="version=mdid3&amp;presentationUrl={% url api-presentation-detail presentation.id %}%3Fflash=1&amp;keepAliveUrl={% url api-keepalive %}&amp;returnToUrl={{ return_url|urlencode }}">
 			</embed>
 	</object>
 </noscript>
