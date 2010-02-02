@@ -42,6 +42,9 @@ class Presentation(models.Model):
 
     def records(self):
         return [i.record for i in self.items.all()]
+        
+    def visible_item_count(self):
+        return self.items.filter(hidden=False).count()
 
     @staticmethod
     def check_passwords(passwords):

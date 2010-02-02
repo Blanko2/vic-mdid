@@ -131,7 +131,7 @@
                 {% tag otag presentation 0 'secondary' %}
             {% endfor %}
         </td>
-        <td>{{ presentation.items.count }}</td>
+        <td>{{ presentation.visible_item_count }}</td>
         <td>{% list_viewers presentation %}</td>
     </tr>
 {% endfor %}
