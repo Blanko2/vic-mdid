@@ -48,6 +48,9 @@ class Storage(models.Model):
             return classobj(base=self.base)
         else:
             return None
+        
+    def get_absolute_url(self):
+        return reverse('storage-manage-storage', args=(self.id, self.name))
 
     def get_absolute_media_url(self, media):
         storage = self.storage_system

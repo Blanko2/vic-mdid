@@ -11,4 +11,6 @@ urlpatterns = patterns('',
     url(r'^proxy/create/$', create_proxy_url_view),
     url(r'^proxy/(?P<uuid>[0-9a-f-]+)/$', call_proxy_url, name='storage-proxyurl'),
     url(r'^pseudostream/(?P<recordid>\d+)/(?P<record>[-\w]+)/(?P<mediaid>\d+)/(?P<media>[-\w]+)/$', retrieve_pseudostream, name='storage-retrieve-pseudostream'),
+    url(r'^manage/$', manage_storages, name='storage-manage'),
+    url(r'^storage/(?P<storageid>\d+)/(?P<storagename>[-\w]+)/$', manage_storage, name='storage-manage-storage'),
 )

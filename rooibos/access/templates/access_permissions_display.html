@@ -1,0 +1,10 @@
+<div class="permission-list">
+{% for ac in permissions %}
+<span class="{{ ac.read|yesno:"a,d,u" }}">R</span>
+<span class="{{ ac.write|yesno:"a,d,u" }}">W</span>
+<span class="{{ ac.manage|yesno:"a,d,u" }}">M</span>
+{% if ac.user %}
+<a href="{% url access-effective-permissions contenttype.app_label, contenttype.model, object.id, object.name %}?user={{ ac.user.username|urlencode }}">{{ ac.user.username }}</a>
+{% else %}{% if ac.usergroup %}(Group) {{ ac.usergroup.name }}{% else %}Anonymous Users{% endif %}{% endif %}<br />
+{% endfor %}
+</div>

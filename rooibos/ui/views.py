@@ -8,7 +8,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.cache import cache
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
-from rooibos.access import accessible_ids
+from rooibos.storage.models import Storage
+from rooibos.access import accessible_ids, filter_by_access
 from rooibos.ui.templatetags.ui import session_status_rendered
 from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
@@ -109,3 +110,12 @@ def upload_progress(request):
         return {}
 
 
+@login_required
+def manage(request):
+    
+    storage = filter_by_access(request.user, Storage, manage=True).count() > 0
+    
+    return render_to_response('ui_management.html',
+                              {'storage': storage,
+                              },
+                              context_instance=RequestContext(request))

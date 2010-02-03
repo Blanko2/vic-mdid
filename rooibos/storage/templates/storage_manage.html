@@ -1,0 +1,44 @@
+{% extends "master.html" %}
+{% load pagination_tags %}
+
+
+{% block content %}
+
+{% autopaginate storages 50 %}
+
+<h1>Storage Management</h1>
+
+{% if storages %}
+
+{% paginate %}
+
+<table class="list" summary="Storages">
+    <tr>
+        <th>Title</th>
+        <th>System</th>
+        <th>Base</th>
+        <th>Derivatives for</th>
+    </tr>
+
+{% for storage in storages %}
+{% with storage.master as master %}
+<tr class="{% cycle "" "altrow" %}"{% if master %} style="color: gray;"{% endif %}>
+    <td><a href="{% url storage-manage-storage storage.id, storage.name %}">{{ storage.title }}</a></td>
+    <td>{{ storage.system }}</td>
+    <td>{{ storage.base }}</td>
+    <td>{% if master %}<a href="{% url storage-manage-storage master.id, master.name %}">{{ master.title }}</a>{% endif %}</td>
+</tr>
+{% endwith %}
+{% endfor %}
+
+</table>
+
+{% paginate %}
+
+{% else %}
+
+<div>You do not have permission to manage any storage.</div>
+
+{% endif %}
+
+{% endblock %}

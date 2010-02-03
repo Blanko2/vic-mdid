@@ -1,0 +1,89 @@
+{% extends "master.html" %}
+{% load help %}
+{% load access_control %}
+{% load ui %}
+
+{% block help %}
+    {% pagehelp 'access_view' %}
+{% endblock %}
+
+
+{% block stylesheets %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
+<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
+
+<script type="text/javascript">
+    $(window).load(function() {
+        process_facets();
+    });
+    $(document).ready(function() {
+        $("#access_effective_permissions_user").autocomplete('{% url api-autocomplete-user %}', {});
+    });
+</script>
+{% endblock %}
+
+{% block sidebar %}
+
+{% var as related_pages %}
+{"pages": [
+{% include "ui_related_pages_for_object.html" %}
+]}
+{% endvar %}
+{{ block.super }}
+
+<div class="facet active-facet">
+  <div class="facet-header">Permissions (<a href="{% permissions_modify_url object %}">Modify</a>)</div>
+  <div class="facet-body">
+      {% permissions_display object %}
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>{% if object.get_absolute_url %}<a href="{{ object.get_absolute_url }}">{{ object.title }}</a>{% else %}{{ object.title }}{% endif %}</h1>
+
+<form style="margin-bottom: 20px;" method="GET" action="{% url access-effective-permissions contenttype.app_label, contenttype.model, object.id, object.name %}">
+<label for="access_effective_permissions_user">Calculate effective permissions on this object for user:</label>
+<input type="text" name="user" id="access_effective_permissions_user" value="{{ qsuser }}" />
+<input type="submit" value="Calculate" />
+</form>
+
+{% if acluser %}
+
+<h2>Effective permissions for {{ acluser }}{% if acluser.last_name %} ({{ acluser.last_name }}{% if acluser.first_name %}, {{ acluser.first_name }}{% endif %}){% endif %}</h2>
+
+<ul>
+    <li>Read: {{ acl.0|yesno:"Allowed,Denied,Unspecified" }}</li>
+    <li>Write: {{ acl.1|yesno:"Allowed,Denied,Unspecified" }}</li>
+    <li>Manage: {{ acl.2|yesno:"Allowed,Denied,Unspecified" }}</li>
+</ul>
+
+<h3>Group membership</h3>
+
+{{ acluser }} is currently a member of the following groups:
+<ul>
+{% for group in user.groups.all %}
+<li>{{ group.name }}</li>
+{% empty %}
+<li>No group memberships found.</li>
+{% endfor %}
+</ul>
+
+<h3>Administrator status</h3>
+
+{{ acluser }} is {{ acluser.is_superuser|yesno:",not" }} an administrator.
+
+{% endif %}
+
+
+
+{% endblock %}

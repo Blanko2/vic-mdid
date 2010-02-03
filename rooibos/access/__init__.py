@@ -5,6 +5,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import _get_queryset
 
 
+def get_accesscontrols_for_object(model_instance):
+    from models import AccessControl
+    model_type = ContentType.objects.get_for_model(model_instance)
+    aclist = AccessControl.objects.filter(object_id=model_instance.id, content_type__pk=model_type.id).order_by('usergroup__name', 'user__username')
+    return aclist
+
+
 def get_effective_permissions_and_restrictions(user, model_instance):
     from models import AccessControl, ExtendedGroup
     user = user or AnonymousUser()

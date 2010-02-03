@@ -4,6 +4,7 @@ from django.template import RequestContext
 from django.http import HttpResponse, HttpRequest, HttpResponseNotAllowed
 from django.utils import simplejson
 from django.core import serializers
+from django.db.models import Q
 from rooibos.ui import update_record_selection
 from rooibos.util import safe_int, json_view
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
@@ -152,3 +153,19 @@ def presentation_detail(request, id):
 def keep_alive(request):
     return dict(user=request.user.username if request.user else '')
     
+    
+@cache_control(no_cache=True)        
+def autocomplete_user(request):
+    query = request.GET.get('q', '').lower()
+    try:
+        limit = max(10, min(25, int(request.GET.get('limit', '10'))))
+    except ValueError:
+        limit = 10
+    if not query or not request.user.is_authenticated():
+        return ''
+    users = list(User.objects.filter(username__istartswith=query).order_by('username').values_list('username', flat=True)[:limit])
+    if len(users) < limit:
+        users.extend(User.objects.filter(~Q(username__istartswith=query), username__icontains=query)
+                     .order_by('username').values_list('username', flat=True)[:limit-len(users)])
+    print users
+    return HttpResponse(content='\n'.join(users))

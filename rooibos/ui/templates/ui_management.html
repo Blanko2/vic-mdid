@@ -1,0 +1,29 @@
+{% extends "master.html" %}
+{% load ui %}
+
+
+{% block sidebar %}
+
+{% var as related_pages %}
+{"pages": [
+{% if user.is_staff %}
+    {"url": "{% url admin "" %}", "title": "Administration"}
+{% endif %}
+]}
+{% endvar %}
+
+{{ block.super }}
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Management</h1>
+
+Depending on your permissions, you may see different management options below.
+
+<ul>
+{% if storage %}<li><a href="{% url storage-manage %}">Storage Management</a></li>{% endif %}
+</ul>
+
+{% endblock %}

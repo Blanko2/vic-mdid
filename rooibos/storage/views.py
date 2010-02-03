@@ -7,9 +7,11 @@ from django.shortcuts import _get_queryset
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import resolve
 from django.conf import settings
-from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions
+from django.db.models import Count
+from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
 from rooibos.data.models import Collection, Record
 from rooibos.storage import get_image_for_record, get_thumbnail_for_record
 from rooibos.contrib.ipaddr import IP
@@ -177,3 +179,33 @@ def call_proxy_url(request, uuid):
     kwargs['request'] = request
 
     return view(*args, **kwargs)
+
+
+
+def manage_storages(request):
+    
+    storages = get_list_or_404(filter_by_access(request.user, Storage, manage=True).order_by('title'))
+    
+    return render_to_response('storage_manage.html',
+                          {'storages': storages,
+                           },
+                          context_instance=RequestContext(request))
+
+
+def manage_storage(request, storageid, storagename):
+    
+    storage = get_object_or_404(filter_by_access(request.user, Storage, manage=True), id=storageid)
+    
+    class StorageForm(forms.ModelForm):
+        system = forms.CharField(widget=forms.Select(choices=[(s,s) for s in settings.STORAGE_SYSTEMS.keys()]))
+        class Meta:
+            model = Storage
+            exclude = ('derivative',)
+    
+    form = StorageForm(instance=storage)
+    
+    return render_to_response('storage_edit.html',
+                          {'storage': storage,
+                           'form': form,
+                           },
+                          context_instance=RequestContext(request))

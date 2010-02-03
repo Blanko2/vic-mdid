@@ -25,22 +25,48 @@ def logout(request, *args, **kwargs):
         return dj_logout(request, *args, **kwargs)
 
 
-def access_view(request, app_label, model, id, name, foruser=None):
+def effective_permissions(request, app_label, model, id, name):
     try:
-        model = ContentType.objects.get(app_label=app_label, model=model)
-        object = model.get_object_for_this_type(id=id)
+        contenttype = ContentType.objects.get(app_label=app_label, model=model)
+        object = contenttype.get_object_for_this_type(id=id)
     except ObjectDoesNotExist:
         raise Http404
     check_access(request.user, object, manage=True, fail_if_denied=True)
-    rules = AccessControl.objects.filter(content_type__id=model.id, object_id=object.id)
-    if foruser:
-        foruser = get_object_or_404(User, username=foruser)
-        foruser_acl = get_effective_permissions(foruser, object)
+    
+    username = request.GET.get('user')
+    if username:
+        acluser = User.objects.filter(username=username)
+        if acluser:
+            acluser = acluser[0]
+            acl = get_effective_permissions(acluser, object)
+        else:
+            request.user.message_set.create(message="No user with username '%s' exists." % username)
+            acl = None
     else:
-        foruser_acl = None
-    return render_to_response('access_view.html',
+        acluser = None
+        acl = None
+        
+    return render_to_response('access_effective_permissions.html',
                               {'object': object,
-                               'rules': rules,
-                               'foruser': foruser,
-                               'foruser_acl': foruser_acl,},
+                               'contenttype': contenttype,
+                               'acluser': acluser,
+                               'acl': acl,
+                               'qsuser': username,
+                               },
+                              context_instance=RequestContext(request))
+
+
+def modify_permissions(request, app_label, model, id, name):
+
+    try:
+        contenttype = ContentType.objects.get(app_label=app_label, model=model)
+        object = contenttype.get_object_for_this_type(id=id)
+    except ObjectDoesNotExist:
+        raise Http404
+    check_access(request.user, object, manage=True, fail_if_denied=True)
+    
+    return render_to_response('access_modify_permissions.html',
+                              {'object': object,
+                               'contenttype': contenttype,
+                               },
                               context_instance=RequestContext(request))

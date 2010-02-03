@@ -1,0 +1,94 @@
+{% extends "master.html" %}
+{% load humanize %}
+{% load access_control %}
+{% load ui %}
+
+{% block stylesheets %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
+<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
+
+<script type="text/javascript">
+    $(window).load(function() {
+        process_facets();
+    });
+    $(document).ready(function() {
+        $("#access_effective_permissions_user").autocomplete('{% url api-autocomplete-user %}', {});
+    });
+</script>
+
+{% endblock %}
+
+
+{% block sidebar %}
+{% var as related_pages %}
+{"pages": [
+    {"url": "{% url ui-management %}", "title": "Management"},
+    {"url": "{% url storage-manage %}", "title": "Storage Management"}
+]}
+{% endvar %}
+
+{{ block.super }}
+
+  <div class="facet active-facet">
+    <div class="facet-header">Statistics</div>
+    <div class="facet-body">
+        {{ storage.media_set.count|intcomma }} media entries
+    </div>
+  </div>
+
+{% if storage.derivative %}
+  <div class="facet active-facet">
+    <div class="facet-header">Derivative Storage</div>
+    <div class="facet-body">
+        <a href="{% url storage-manage-storage storage.derivative.id, storage.derivative.name %}">{{ storage.derivative.title }}</a>
+    </div>
+  </div>
+{% endif %}
+
+{% if storage.master %}
+  <div class="facet active-facet">
+    <div class="facet-header">Master Storage</div>
+    <div class="facet-body">
+        <a href="{% url storage-manage-storage storage.master.id, storage.master.name %}">{{ storage.master.title }}</a>
+    </div>
+  </div>
+{% endif %}
+
+  <div class="facet active-facet">
+    <div class="facet-header">Permissions (<a href="{% permissions_modify_url storage %}">Modify</a>)</div>
+    <div class="facet-body">
+        {% permissions_display storage %}
+    </div>
+  </div>
+  
+  <div class="facet active-facet">
+    <div class="facet-header">Effective Permissions</div>
+    <div class="facet-body">
+        {% effective_permissions_form storage %}
+    </div>
+  </div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>Edit Storage</h1>
+
+<h2>{{ storage.title }}</h2>
+
+<form action="." method="POST">
+    
+<table>
+    {{ form }}
+</table>
+    
+</form>
+
+{% endblock %}
