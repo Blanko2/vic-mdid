@@ -14,16 +14,9 @@
 {% endblock %}
 
 
-{% block content %}
 
-{% autopaginate presentations 25 %}
-
-<h1>Browse Presentations</h1>
-
-{% paginate %}
-
-
-<div id="sidebar">
+{% block sidebar %}
+{{ block.super }}
 
   <form method="GET" action="{{ form_url }}">
   <input type="hidden" name="presenter" value="{{ active_presenter.username }}" />
@@ -42,14 +35,14 @@
   
 {% if active_presenter %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
+    <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
     <div class="facet-body">{% if active_presenter.last_name %}{{ active_presenter.last_name }}, {{ active_presenter.first_name }}{% else %}{{ active_presenter.username }}{% endif %}</div>
   </div>
 {% endif %}
 
 {% for tag in active_tags %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;rt={{ tag|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
+    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;rt={{ tag|urlencode }}"  title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
     <div class="facet-body">{{ tag }}</div>
   </div>
 {% endfor %}
@@ -103,8 +96,16 @@
     <a href="{% url presentation-browse %}">Reset Search</a>
 </div>
 
-</div>
+{% endblock %}
 
+
+{% block content %}
+
+{% autopaginate presentations 25 %}
+
+<h1>Browse Presentations</h1>
+
+{% paginate %}
 
 {% if presentations %}
 <form action="{% url presentation-browse %}?{{ querystring }}" method="POST" class="vertical">

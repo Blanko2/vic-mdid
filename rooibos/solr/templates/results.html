@@ -52,7 +52,55 @@
 </script>
 {% endblock %}
 
-{% block content %}
+
+
+{% block sidebar %}
+{{ block.super }}
+
+  <div class="facet active-facet">
+    <div class="facet-header">Keywords</div>
+    <div class="facet-body">
+        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
+    </div>
+  </div>
+    
+{% for c in criteria %}
+  <div class="facet active-facet">
+    <div class="facet-header"><a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>{{ c.label }}</div>
+    <div class="facet-body">{% if c.negated %}not {% endif %}{{ c.term }}
+        {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><img src="{% url static 'images/or_icon.png' %}" alt="Or" title="Or" /></a>{% endif %}        
+    </div>
+  </div>
+    
+{% endfor %}
+
+{% if orfacet.facets %}
+    <div class="facet">
+        <div class="facet-header">{{ orfacet.label }}</div>
+        <div class="facet-body">
+        {% for term,freq,label in orfacet.facets %}
+            <div class="facet-line">
+            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|quoteterm|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
+            </div>
+        {% endfor %}
+        <a class="facet-more" style="display: none;" href="#{{ orfacet.name|urlencode }}">more...</a>
+        </div>
+    </div>
+{% endif %}
+
+<div id="facets">
+{% include "results_facets.html" %}
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+    <a href="{{ reset_url }}">Reset Search</a>
+    {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
+</div>
+
+{% endblock %}
+
+
+{% block content-top %}
 
 <!--
 <form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
@@ -118,54 +166,14 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+
+{% block content %}
 <!--
 Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
 Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
 -->
-
-<div id="sidebar">
-
-  <div class="facet active-facet">
-    <div class="facet-header">Keywords</div>
-    <div class="facet-body">
-        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
-    </div>
-  </div>
-    
-{% for c in criteria %}
-  <div class="facet active-facet">
-    <div class="facet-header"><a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>{{ c.label }}</div>
-    <div class="facet-body">{% if c.negated %}not {% endif %}{{ c.term }}
-        {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><img src="{% url static 'images/or_icon.png' %}" alt="Or" title="Or" /></a>{% endif %}        
-    </div>
-  </div>
-    
-{% endfor %}
-
-{% if orfacet.facets %}
-    <div class="facet">
-        <div class="facet-header">{{ orfacet.label }}</div>
-        <div class="facet-body">
-        {% for term,freq,label in orfacet.facets %}
-            <div class="facet-line">
-            <a href="{{ limit_url_orquery }}c={{ orquery }}|{{ term|quoteterm|urlencode }}" rel="nofollow">{{ label|default:term }}</a>{% if freq %}&nbsp;{{ freq|intcomma  }}{% endif %}
-            </div>
-        {% endfor %}
-        <a class="facet-more" style="display: none;" href="#{{ orfacet.name|urlencode }}">more...</a>
-        </div>
-    </div>
-{% endif %}
-
-<div id="facets">
-{% include "results_facets.html" %}
-</div>
-
-<div style="text-align: center; margin-top: 20px;">
-    <a href="{{ reset_url }}">Reset Search</a>
-    {% if debug %}<span title="{{query}}">[raw]</span>{% endif %}
-</div>
-
-</div>
 
 {% if records %}
 <div id="resultlist" class="resultlist-{{ viewmode }}">
