@@ -1,6 +1,13 @@
-@import url("reset.css");
-@import url("typography.css");
-@import url("../jquery/jquery-ui-themeroller.css");
+{% load ui %}
+{% var as colors %}
+{
+    "background": "rgb(229, 225, 214)",
+    "headers": "rgb(152, 189, 198)",
+    "background_top": "rgb(83, 82, 78)"
+    
+}
+{% endvar %}
+<style type='text/css'>
 
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
         z-index: 1000; position: absolute; right: 32px; top: 83px;
@@ -8,7 +15,7 @@
 
 
 body.master {
-    background-color: rgb(229, 225, 214);
+    background-color: {{ colors.background }};
     min-width: 970px;
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
     padding-bottom: 80px;
@@ -27,13 +34,13 @@ h3 {
 }
 
 h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-    color: #98bdc6;
+    color: {{ colors.headers }};
     text-decoration: none;
 }
 
 #topmenu {
     margin: 0;
-    background-color: rgb(83, 82, 78);
+    background-color: {{ colors.background_top }};
     height: 16px;
     color: white;
     padding: 3px 20px;
@@ -81,7 +88,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 #logo {
-    background: url(../images/mdid_logo.png) no-repeat bottom left;
+    background: url({% url static 'images/mdid_logo.png' %}) no-repeat bottom left;
     width: 180px;
     height: 50px;
     display: block;
@@ -90,7 +97,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 
 #branding {
     float: right;
-    background: url(../images/jmu_logo.png) no-repeat bottom right;
+    background: url({% url static 'images/jmu_logo.png' %}) no-repeat bottom right;
     width: 107px;
     height: 50px;
 }
@@ -202,7 +209,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 #basket-tab {
-    background: white url(../images/open_basket_icon.png) no-repeat 5px 3px;
+    background: white url({% url static 'images/open_basket_icon.png' %}) no-repeat 5px 3px;
     border: solid 5px rgb(152, 189, 198);
     color: rgb(152, 189, 198);
     font-weight: bolder;
@@ -860,3 +867,5 @@ img.thumbnail {
 }
 
 */
+
+</style>

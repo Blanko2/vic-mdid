@@ -4,16 +4,6 @@
 {% load pagination_tags %}
 {% load viewers %}
 
-{% block javascript %}
-{{ block.super }}
-<script type="text/javascript">
-    $(document).ready(function() {
-        process_facets();
-    });
-</script>
-{% endblock %}
-
-
 
 {% block sidebar %}
 {{ block.super }}

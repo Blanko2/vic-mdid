@@ -2,6 +2,8 @@ from django.conf.urls.defaults import *
 from django.contrib import admin
 from django.conf import settings
 from django.views.generic.simple import direct_to_template
+from django.views.static import serve
+from django.views.decorators.cache import cache_control
 from rooibos.ui.views import main
 from rooibos.access.views import login, logout
 
@@ -10,6 +12,10 @@ admin.autodiscover()
 
 apps = filter(lambda a: a.startswith('apps.'), settings.INSTALLED_APPS)
 apps_showcases = list(s[5:].replace('.', '-') + '-showcase.html' for s in apps)
+
+# Cache static files
+serve = cache_control(max_age=365 * 24 * 3600)(serve)
+
 
 urls = [
     url(r'^$', main, name='main'),
@@ -34,7 +40,7 @@ urls = [
     (r'^flickr/', include('rooibos.flickr.urls')),
     (r'^artstor/', include('rooibos.artstor.urls')),
 
-    url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_DIR}, name='static'),
+    url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_DIR}, name='static'),
     ]
 
 if 'apps.jmutube' in apps:

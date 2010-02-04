@@ -3,15 +3,8 @@
 {% load help %}
 {% load humanize %}
 
-{% block stylesheets %}
-{{ block.super }}
-<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
-{% endblock %}
-
 {% block javascript %}
 {{ block.super }}
-<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
-<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
 
 <script type="text/javascript">
 $(document).ready(function() {

@@ -32,9 +32,7 @@
     });
     
     $(window).load(function() {
-
     {% if facets %}
-        process_facets();
     {% else %}
         ajaxManager.add({
                 type: 'GET',
@@ -47,7 +45,6 @@
                 }
             });
     {% endif %}
-    
     });
 </script>
 {% endblock %}

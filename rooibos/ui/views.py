@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.cache import cache
+from django.views.decorators.cache import cache_control
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
@@ -16,6 +17,15 @@ from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
 from rooibos.solr.views import run_search
 import random 
+
+
+@cache_control(max_age=24 * 3600)
+def css(request, stylesheet):
+    
+    return render_to_response(stylesheet + '.css',
+                              {},
+                              context_instance=RequestContext(request),
+                              mimetype='text/css')
 
 
 def main(request):

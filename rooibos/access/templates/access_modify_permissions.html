@@ -7,28 +7,6 @@
     {% pagehelp 'access_view' %}
 {% endblock %}
 
-
-{% block stylesheets %}
-{{ block.super }}
-<link rel="stylesheet" type="text/css" href="/static/jquery/jquery.autocomplete.css" />
-{% endblock %}
-
-{% block javascript %}
-{{ block.super }}
-<script type='text/javascript' src='/static/jquery/jquery.bgiframe.min.js'></script>
-<script type='text/javascript' src='/static/jquery/jquery.autocomplete.pack.js'></script>
-
-<script type="text/javascript">
-    $(window).load(function() {
-        process_facets();
-    });
-    $(document).ready(function() {
-        $("#access_effective_permissions_user").autocomplete('{% url api-autocomplete-user %}', {});
-    });
-</script>
-{% endblock %}
-
-
 {% block sidebar %}
 {% var as related_pages %}
 {"pages": [
