@@ -1,5 +1,5 @@
 import os
-from BeautifulSoup import BeautifulSoup
+from rooibos.util.BeautifulSoup import BeautifulSoup
 
 from django import template
 from django.conf import settings as django_settings
