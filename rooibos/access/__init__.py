@@ -8,7 +8,7 @@ from django.shortcuts import _get_queryset
 def get_accesscontrols_for_object(model_instance):
     from models import AccessControl
     model_type = ContentType.objects.get_for_model(model_instance)
-    aclist = AccessControl.objects.filter(object_id=model_instance.id, content_type__pk=model_type.id).order_by('usergroup__name', 'user__username')
+    aclist = AccessControl.objects.select_related('user', 'usergroup').filter(object_id=model_instance.id, content_type__pk=model_type.id).order_by('usergroup__name', 'user__username')
     return aclist
 
 
