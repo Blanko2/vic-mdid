@@ -6,7 +6,7 @@
 
 
 {% block raw-content %}
-<form action="{% url presentation-browse %}?{{ querystring }}" method="POST">
+<form action="{{ request.get_full_url }}" method="POST">
 {{ block.super }}
 </form>
 {% endblock %}
@@ -130,7 +130,7 @@
     {% owned_tags_for_object presentation for presentation.owner as otags %}
     <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
-        <td><a href="{% url presentation-view presentation.id, presentation.name %}?next={% url presentation-browse %}%3F{{ querystring|urlencode }}">{{ presentation.title }}</a></td>
+        <td>{{ presentation.title }}</td>
         <td>{% if presentation.owner.last_name %}{{ presentation.owner.last_name }}, {{ presentation.owner.first_name }}{% else %}{{ presentation.owner.username }}{% endif %}</td>
         <td>{% for ptag in ptags %}
                 {% tag ptag presentation "True" %}
@@ -140,7 +140,7 @@
             {% endfor %}
         </td>
         <td>{{ presentation.visible_item_count }}</td>
-        <td>{% list_viewers presentation %}</td>
+        <td>{% list_viewers presentation request.get_full_path %}</td>
     </tr>
 {% endfor %}
 </table>

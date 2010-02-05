@@ -201,22 +201,6 @@ def items(request, id, name):
                       context_instance=RequestContext(request))
 
 
-
-def view(request, id, name):
-
-    presentation = get_object_or_404(Presentation.objects.filter(
-        id=id, id__in=accessible_ids(request.user, Presentation)))
-
-    return_url = request.GET.get('next', reverse('presentation-browse'))
-    
-    return render_to_response('presentation_mediaviewer.html',
-                              {'presentation': presentation,
-                               'return_url': return_url,
-                            },
-                        context_instance=RequestContext(request))
-
-
-
 def browse(request):
 
     presenter = request.GET.get('presenter')
@@ -333,7 +317,6 @@ def browse(request):
                            'presentations': presentations,
                            'presenters': presenters if len(presenters) > 1 else None,
                            'keywords': keywords,
-                           'querystring': get.urlencode(),
                            'form': form,
                            },
                           context_instance=RequestContext(request))

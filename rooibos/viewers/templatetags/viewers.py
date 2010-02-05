@@ -14,11 +14,13 @@ def view_inline(obj):
 
 
 @register.inclusion_tag('viewers_list.html')
-def list_viewers(obj):
+def list_viewers(obj, next_url=None):
     viewers = []
     for viewer in get_viewers_for_object(obj):
         viewers.append((viewer, hasattr(viewer, 'url_for_obj') and viewer.url_for_obj(obj) or None))
+    viewers = sorted(viewers, key=lambda v: getattr(v[0], 'weight', 0), reverse=True)
         
     return {'obj': obj,
             'viewers': viewers,
+            'next': next_url,
             }

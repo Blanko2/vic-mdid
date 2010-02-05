@@ -267,6 +267,7 @@ class PowerPointGenerator:
 class PowerPointPresentation(object):
 
     title = "PowerPoint"
+    weight = 20
     
     def __init__(self):
         pass

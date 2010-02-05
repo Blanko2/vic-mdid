@@ -8,6 +8,7 @@ from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
 class PackagePresentation(object):
 
     title = "Package"
+    weight = 10
     
     def __init__(self):
         pass
