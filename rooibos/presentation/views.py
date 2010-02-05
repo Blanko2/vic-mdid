@@ -220,12 +220,15 @@ def view(request, id, name):
 def browse(request):
 
     presenter = request.GET.get('presenter')
-    tags = request.GET.getlist('tag') + filter(None, request.GET.get('t', '').split('||'))
+    tags = request.GET.getlist('t')
     remove_tag = request.GET.get('rt')
     if remove_tag and remove_tag in tags:
         tags.remove(remove_tag)
     keywords = request.GET.get('kw', '')
-    querystring = request.GET.urlencode()
+    get = request.GET.copy()
+    get.setlist('t', tags)
+    if get.has_key('rt'):
+        del get['rt']    
 
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
@@ -235,8 +238,9 @@ def browse(request):
 
     if tags:
         qs = OwnedWrapper.objects.filter(content_type=OwnedWrapper.t(Presentation))
-        ids = list(TaggedItem.objects.get_by_model(qs, tags).values_list('object_id', flat=True))
-        q = Q(id__in=ids)
+        # get list of matching IDs for each individual tag, since tags may be attached by different owners
+        ids = [list(TaggedItem.objects.get_by_model(qs, '"%s"' % tag).values_list('object_id', flat=True)) for tag in tags]
+        q = Q(*(Q(id__in=x) for x in ids))
     else:
         q = Q()
         
@@ -256,34 +260,37 @@ def browse(request):
     presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, id__in=accessible_ids(request.user, Presentation)).order_by('title')
 
     class ManagePresentationsForm(forms.Form):
-       tags = SplitTaggingField(label='Existing Tags',
+       tags = SplitTaggingField(label='Select existing tags:',
                                 choices=[(t, t) for t in existing_tags],
                                 required=False,
-                                add_label='Additional tags')
+                                add_label='Enter additional tags:')
        mode = forms.ChoiceField(label='Action',
                                 required=True,
                                 choices=[('add', 'Add to existing tags'),
                                          ('replace', 'Replace existing tags'),
                                          ('remove', 'Remove existing tags')],
-                                initial='add',
-                                widget=forms.RadioSelect)
+                                initial='add')
 
     if request.method == "POST":
-        ids = map(int, request.POST.getlist('h'))
-        form = ManagePresentationsForm(request.POST)
-        if form.is_valid():
-            action = form.cleaned_data['mode']
-            for presentation in presentations.filter(id__in=ids):
-                if action == 'replace':
-                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                            form.cleaned_data['tags'])
-                elif action == 'add':
-                    for tag in parse_tag_input(form.cleaned_data['tags']):
-                        Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                            '"%s"' % tag)
-                elif action == 'remove':
-                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')                    
-            return HttpResponseRedirect(reverse('presentation-browse') + '?' + querystring)
+        if request.POST.get('keywords_go'):
+            get['kw'] = request.POST.get('kw')
+            return HttpResponseRedirect(reverse('presentation-browse') + '?' + get.urlencode())
+        if request.POST.get('update_tags'):
+            ids = map(int, request.POST.getlist('h'))
+            form = ManagePresentationsForm(request.POST)
+            if form.is_valid():
+                action = form.cleaned_data['mode']
+                for presentation in presentations.filter(id__in=ids):
+                    if action == 'replace':
+                        Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                                form.cleaned_data['tags'])
+                    elif action == 'add':
+                        for tag in parse_tag_input(form.cleaned_data['tags']):
+                            Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+                                                '"%s"' % tag)
+                    elif action == 'remove':
+                        Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')                    
+        return HttpResponseRedirect(reverse('presentation-browse') + '?' + get.urlencode())
     else:
         form = ManagePresentationsForm()
 
@@ -296,16 +303,18 @@ def browse(request):
         qn = backend.DatabaseOperations().quote_name
         return '%s.%s' % (qn(model._meta.db_table), qn(model._meta.get_field(field).column))
 
-    q = OwnedWrapper.objects.extra(
-        tables=(Presentation._meta.db_table,),
-        where=('%s=%s' % (col(OwnedWrapper, 'object_id'), col(Presentation, 'id')),
-               '%s=%s' % (col(OwnedWrapper, 'user'), col(Presentation, 'owner')))).filter(
-        object_id__in=presentations.values('id'),
-        content_type=OwnedWrapper.t(Presentation))
-
-    tags = Tag.objects.usage_for_queryset(q, counts=True)
+    if presentations:
+        q = OwnedWrapper.objects.extra(
+            tables=(Presentation._meta.db_table,),
+            where=('%s=%s' % (col(OwnedWrapper, 'object_id'), col(Presentation, 'id')),
+                   '%s=%s' % (col(OwnedWrapper, 'user'), col(Presentation, 'owner')))).filter(
+            object_id__in=presentations.values('id'),
+            content_type=OwnedWrapper.t(Presentation))    
+        tags = Tag.objects.usage_for_queryset(q, counts=True)
+    else:
+        tags = ()
     
-    if request.user.is_authenticated():
+    if presentations and request.user.is_authenticated():
         usertags = Tag.objects.usage_for_queryset(OwnedWrapper.objects.filter(
                         user=request.user,
                         object_id__in=presentations.values('id'),
@@ -324,7 +333,7 @@ def browse(request):
                            'presentations': presentations,
                            'presenters': presenters if len(presenters) > 1 else None,
                            'keywords': keywords,
-                           'querystring': querystring,
+                           'querystring': get.urlencode(),
                            'form': form,
                            },
                           context_instance=RequestContext(request))

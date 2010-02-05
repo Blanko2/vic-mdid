@@ -5,23 +5,40 @@
 {% load viewers %}
 
 
+{% block raw-content %}
+<form action="{% url presentation-browse %}?{{ querystring }}" method="POST">
+{{ block.super }}
+</form>
+{% endblock %}
+
+
 {% block sidebar %}
 {{ block.super }}
 
-  <form method="GET" action="{{ form_url }}">
-  <input type="hidden" name="presenter" value="{{ active_presenter.username }}" />
-  {% for tag in active_tags %}
-  <input type="hidden" name="tag" value="{{ tag }}" />
-  {% endfor %}
+  <div class="facet active-facet">
+    <div class="facet-header">Update Tags</div>
+    <div class="facet-body">Add or remove tags on selected presentations<br />
+        {{ form.tags.label_tag }}
+        {{ form.tags }}
+        {{ form.tags.errors }}
+        
+        {{ form.mode.label_tag }}
+        {{ form.mode }}
+        {{ form.mode.errors }}
+        <input type="submit" value="Update" name="update_tags" />
+    </div>
+  </div>
     
   <div class="facet active-facet">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
-        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
+        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" name="keywords_go" />
     </div>
   </div>
-  
-  </form>
+
+{% var as refine %}
+{ "url": "{% url presentation-browse %}?{% if active_presenter %}presenter={{ active_presenter|urlencode }}&{% endif %}kw={{ keywords|urlencode }}&{% for t in active_tags %}t={{ t|urlencode }}&{% endfor %}" }
+{% endvar %}
   
 {% if active_presenter %}
   <div class="facet active-facet">
@@ -32,7 +49,7 @@
 
 {% for tag in active_tags %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{% url presentation-browse %}?presenter={{ active_presenter|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;rt={{ tag|urlencode }}"  title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
+    <div class="facet-header"><a href="{{ refine.url }}rt={{ tag|urlencode }}"  title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Tag</div>
     <div class="facet-body">{{ tag }}</div>
   </div>
 {% endfor %}
@@ -43,7 +60,7 @@
     <div class="facet-body">
     {% for presenter in presenters %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
+            <a href="{{ refine.url }}presenter={{ presenter.username|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
             &nbsp;<span class="facet-freq">{{ presenter.presentations|intcomma  }}</span>
         </div>
     {% endfor %}
@@ -58,7 +75,7 @@
     <div class="facet-body">
     {% for tag in tags %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;tag={{ tag|urlencode }}">{{ tag }}</a>
+            <a href="{{ refine.url }}t={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
     {% endfor %}
@@ -73,7 +90,7 @@
     <div class="facet-body">
     {% for tag in usertags %}
         <div class="facet-line">            
-            <a href="{% url presentation-browse %}?presenter={{ presenter.username|urlencode }}&amp;kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}&amp;tag={{ tag|urlencode }}">{{ tag }}</a>
+            <a href="{{ refine.url }}t={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
     {% endfor %}
@@ -98,7 +115,7 @@
 {% paginate %}
 
 {% if presentations %}
-<form action="{% url presentation-browse %}?{{ querystring }}" method="POST" class="vertical">
+
 <table summary="List of Presentations" class="list">
     <tr>
         <th></th>
@@ -127,25 +144,6 @@
     </tr>
 {% endfor %}
 </table>
-
-
-<h2>Update Tags</h2>
-
-<p>Add or remove tags on selected presentations</p>
-
-{{ form.tags.label_tag }}
-{{ form.tags }}
-{{ form.tags.errors }}
-
-{{ form.mode.label_tag }}
-{{ form.mode }}
-{{ form.mode.errors }}
-
-<div class="row">
-    <input type="submit" value="Update" />
-</div>
-
-</form>
 
 {% paginate %}
 
