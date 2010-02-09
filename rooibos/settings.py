@@ -90,6 +90,7 @@ INSTALLED_APPS = (
     'rooibos.artstor',
     'rooibos.contrib.tagging',
     'rooibos.workers',
+    'rooibos.userprofile',
     'pagination',
     'impersonate',
     'compressor',
@@ -104,6 +105,8 @@ STORAGE_SYSTEMS = {
 GROUP_MANAGERS = {
     'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
 }
+
+AUTH_PROFILE_MODULE = 'userprofile.UserProfile'
 
 WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 

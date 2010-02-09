@@ -37,6 +37,7 @@ urls = [
     (r'^viewers/', include('rooibos.viewers.urls')),
     (r'^convert/', include('rooibos.converters.urls')),
     (r'^api/', include('rooibos.api.urls')),
+    (r'^profile/', include('rooibos.userprofile.urls')),
     (r'^flickr/', include('rooibos.flickr.urls')),
     (r'^artstor/', include('rooibos.artstor.urls')),
 

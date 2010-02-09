@@ -15,7 +15,9 @@
 {% block sidebar %}
 {{ block.super }}
 
-  <div class="facet active-facet">
+{% if presentations %}
+
+  <div class="facet active-facet" id="presentations_sidebar_update_tags">
     <div class="facet-header">Update Tags</div>
     <div class="facet-body">Add or remove tags on selected presentations<br />
         {{ form.tags.label_tag }}
@@ -29,12 +31,14 @@
     </div>
   </div>
     
-  <div class="facet active-facet">
+  <div class="facet active-facet" id="presentations_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
         <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" name="keywords_go" />
     </div>
   </div>
+
+{% endif %}
 
 {% var as refine %}
 { "url": "{% url presentation-browse %}?{% if active_presenter %}presenter={{ active_presenter|urlencode }}&{% endif %}kw={{ keywords|urlencode }}&{% for t in active_tags %}t={{ t|urlencode }}&{% endfor %}" }
@@ -55,7 +59,7 @@
 {% endfor %}
 
 {% if presenters %}
-  <div class="facet">
+  <div class="facet" id="presentations_sidebar_presenters">
     <div class="facet-header">Presenters</div>
     <div class="facet-body">
     {% for presenter in presenters %}
@@ -70,7 +74,7 @@
 {% endif %}
 
 {% if tags %}
-  <div class="facet">
+  <div class="facet" id="presentations_sidebar_tags">
     <div class="facet-header">Tags</div>
     <div class="facet-body">
     {% for tag in tags %}
@@ -85,7 +89,7 @@
 {% endif %}
 
 {% if usertags %}
-  <div class="facet">
+  <div class="facet" id="presentations_sidebar_your_tags">
     <div class="facet-header">Your Tags</div>
     <div class="facet-body">
     {% for tag in usertags %}

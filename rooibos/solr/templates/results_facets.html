@@ -4,7 +4,7 @@
 
 {% for facet in facets %}
 {% if facet.facets %}
-    <div class="facet">
+    <div class="facet" id="results_sidebar_facet_{{ facet.name }}">
         <div class="facet-header collapsed">{{ facet.label }}</div>
         <div class="facet-body">
         {% for term,freq,label in facet.facets %}

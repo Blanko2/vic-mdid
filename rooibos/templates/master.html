@@ -3,6 +3,7 @@
 {% load analytics %}
 {% load humanize %}
 {% load compress %}
+{% load userprofile %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -152,6 +153,10 @@
 <div id="stats"><!-- STATS: Total: %(totTime).2fs <br/>Python: %(pyTime).2fs <br/>DB: %(dbTime).2fs <br/>Queries: %(queries)d --></div>
 {% endif %}
 
+<script type="text/javascript">
+    var profile_settings = {% profile_settings %};
+    var custom_process_facets = false;
+</script>
 {% block javascript %}
 {% compress js %}
     <script type="text/javascript" src="{% url static 'jquery/jquery-1.3.2.min.js' %}"></script>
@@ -164,6 +169,7 @@
         var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
     </script>
     <script type="text/javascript" src="{% url static 'scripts/ui-scripts.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'scripts/json2.js' %}"></script>
     <!--<script type="text/javascript" src="{% url static 'scripts/related-images-bar.js' %}"></script>-->
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
     <script type="text/javascript">
@@ -172,7 +178,7 @@
             if (!ids.length) ids = [ids];
             ajaxManager.add({
                 type: method,
-                url: '/ui/api/select-record/',
+                url: '/ui/api/select-record/', // TODO: replace with dynamic URL
                 data: {'id': ids, 'checked': checked},
                 dataType: 'json',
                 success: function(r) { $("#session-status").html(r.status); }
@@ -184,6 +190,9 @@
         }
 
         function process_facets() {
+            
+            console.log(profile_settings);
+            
             $(".facet-body").each(function(i, facet) {
                 function sortByFreq(a, b) {
                     var fa = $(".facet-freq", a).text().replace(/,/, "");
@@ -200,11 +209,31 @@
                 }
             });
             
-            $(".facet-header").click(function() {
+            $(".facet-header.collapsed").next().hide();
+            
+            $(".facet-header").each(function() {
+                var id = $(this).parent().attr('id');
+                if (id) {
+                    var s = profile_settings['ui_' + id];
+                    if (s == "true")
+                        $(this).next().show();
+                    else if (s == "false")
+                        $(this).next().hide();
+                }
+            }).click(function() {
+                var id = $(this).parent().attr('id');
+                if (id) {
+                    var visible = $(this).next().is(':hidden');
+                    ajaxManager.add({
+                        type: 'POST',
+                        url: '{% url userprofile-store %}',
+                        data: {'key': 'ui_' + id, 'value': visible},
+                        dataType: 'json'
+                    });
+                }
                 $(this).next().toggle('fast');
                 return false;
             }).css('cursor', 'pointer').children().click(function(event) { event.stopPropagation(); /* to keep links in facet header working */});            
-            $(".facet-header.collapsed").next().hide();
             
             $(".facet-line").hover(function() { $(this).find(".facet-exclude").show(); },
                                    function() { $(this).find(".facet-exclude").hide(); }).
@@ -249,7 +278,7 @@
             }
             $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
             hideBasket();
-            process_facets();
+            if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
         });
     </script>
