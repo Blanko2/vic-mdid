@@ -178,7 +178,7 @@
             if (!ids.length) ids = [ids];
             ajaxManager.add({
                 type: method,
-                url: '/ui/api/select-record/', // TODO: replace with dynamic URL
+                url: '{% url ui-api-select-record %}',
                 data: {'id': ids, 'checked': checked},
                 dataType: 'json',
                 success: function(r) { $("#session-status").html(r.status); }
@@ -188,10 +188,18 @@
         function bindSelectRecordCheckboxes() {
             $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
         }
+        
+        function store_profile_setting(key, value) {
+            ajaxManager.add({
+                type: 'POST',
+                url: '{% url userprofile-store %}',
+                data: {'key': key, 'value': value},
+                dataType: 'json'
+            });
+        }
 
         function process_facets() {
-            
-            console.log(profile_settings);
+            {% if debug %}console.log(profile_settings);{% endif %}
             
             $(".facet-body").each(function(i, facet) {
                 function sortByFreq(a, b) {
@@ -222,15 +230,7 @@
                 }
             }).click(function() {
                 var id = $(this).parent().attr('id');
-                if (id) {
-                    var visible = $(this).next().is(':hidden');
-                    ajaxManager.add({
-                        type: 'POST',
-                        url: '{% url userprofile-store %}',
-                        data: {'key': 'ui_' + id, 'value': visible},
-                        dataType: 'json'
-                    });
-                }
+                if (id) store_profile_setting('ui_' + id, $(this).next().is(':hidden'));
                 $(this).next().toggle('fast');
                 return false;
             }).css('cursor', 'pointer').children().click(function(event) { event.stopPropagation(); /* to keep links in facet header working */});            
@@ -263,8 +263,11 @@
                 $("#header .search form").show();
             });
 
+            // Basket features
+            var basket_open = profile_settings['ui_basket_open'] == 'true';
             var baskettimeout;            
             function hideBasket() {
+                if (basket_open) return;
                 clearTimeout(baskettimeout);
                 baskettimeout = setTimeout(function() {
                     $("#basket-content").animate({ bottom: -60 },500);
@@ -277,7 +280,20 @@
                 $("#basket-tab").animate({ bottom: 60 }, 500);
             }
             $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
-            hideBasket();
+            $("#basket-tab").hover(function() {
+                if (!basket_open) $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
+            }, function() {
+                if (!basket_open) $("#basket-tab").css('background-image', 'url({% url static 'images/closed_basket_icon.png' %})');
+            }).click(function() {
+                basket_open = !basket_open;
+                store_profile_setting('ui_basket_open', basket_open);
+            });
+            if (basket_open)
+                $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
+            else
+                hideBasket();
+            
+            
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
         });

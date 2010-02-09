@@ -209,7 +209,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 #basket-tab {
-    background: white url({% url static 'images/open_basket_icon.png' %}) no-repeat 5px 3px;
+    background: white url({% url static 'images/closed_basket_icon.png' %}) no-repeat 5px 3px;
     border: solid 5px rgb(152, 189, 198);
     color: rgb(152, 189, 198);
     font-weight: bolder;
