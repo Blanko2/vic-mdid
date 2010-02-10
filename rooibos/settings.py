@@ -39,6 +39,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.media",
     "django.core.context_processors.request",
     "rooibos.context_processors.settings",
+    "rooibos.context_processors.selected_records",
 )
 
 MIDDLEWARE_CLASSES = (

@@ -221,6 +221,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     left: 50px;
     text-align: right;
     padding-right: 10px;
+    cursor: pointer;
 }
 
 #basket-content {
@@ -232,6 +233,18 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     width: 100%;
     opacity: 0.9;
     filter: alpha(opacity=90);
+    overflow: hidden;
+}
+
+#basket-thumbs img {
+    width: 50px;
+    height: 50px;
+    margin: 5px 3px 0 3px;
+}
+
+#basket-menu {
+    float: right;
+    padding-right: 10px;
 }
 
 

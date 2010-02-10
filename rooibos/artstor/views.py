@@ -12,7 +12,6 @@ from rooibos.solr import SolrIndex
 from rooibos.artstor.models import ArtstorSearch
 from django.utils import simplejson
 from rooibos.util import json_view
-from rooibos.ui.templatetags.ui import session_status_rendered
 
 def _save_file(targeturl, base, filename):
     try:
@@ -51,18 +50,19 @@ def photo_search(request):
 
 @json_view
 def select_artstor(request):
-    ids = map(None, request.POST.getlist('id'))
-    checked = request.POST.get('checked') == 'true'
-    selected = request.session.get('selected_artstors', ())
-    if checked:
-        selected = set(selected) | set(ids)
-    else:
-        selected = set(selected) - set(ids)
-
-    result = []
-    for artstor in selected:
-        info = artstor.split('|')
-        result.append(dict(id=int(info[0]), title=info[1]))
-
-    request.session['selected_artstor'] = selected
-    return dict(status=session_status_rendered(RequestContext(request)), artstors=result, num_selected=len(result))
+    pass
+    #ids = map(None, request.POST.getlist('id'))
+    #checked = request.POST.get('checked') == 'true'
+    #selected = request.session.get('selected_artstors', ())
+    #if checked:
+    #    selected = set(selected) | set(ids)
+    #else:
+    #    selected = set(selected) - set(ids)
+    #
+    #result = []
+    #for artstor in selected:
+    #    info = artstor.split('|')
+    #    result.append(dict(id=int(info[0]), title=info[1]))
+    #
+    #request.session['selected_artstor'] = selected
+    #return dict(status=session_status_rendered(RequestContext(request)), artstors=result, num_selected=len(result))

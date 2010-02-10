@@ -19,13 +19,6 @@ def record(context, record, selectable=False, viewmode="thumb"):
             'viewmode': viewmode,
             }
 
-
-def session_status_rendered(context):    
-    t = Template('{% load humanize %}{{ selected|intcomma }} record{{ selected|pluralize }} selected')
-    c = Context(dict(selected = len(context['request'].session.get('selected_records', ()))))
-    return t.render(c)
-
-
 @register.simple_tag
 def dir2(var):
     return dir(var)

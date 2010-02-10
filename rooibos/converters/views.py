@@ -13,7 +13,6 @@ from forms import UploadFileForm
 from rooibos.solr.models import SolrIndexUpdates
 from rooibos.solr import SolrIndex
 from rooibos.converters.models import PowerPointUploader, ImageConverter
-from rooibos.ui.templatetags.ui import session_status_rendered
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 

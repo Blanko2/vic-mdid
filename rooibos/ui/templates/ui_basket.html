@@ -1,0 +1,5 @@
+{% spaceless %}
+{% for record in selected_records %}
+<a href="{{ record.get_absolute_url }}"><img class="thumbnail" src="{{ record.get_thumbnail_url }}?square" alt="{{ record.title }}" title="{{ record.title }}" /></a>
+{% endfor %}
+{% endspaceless %}

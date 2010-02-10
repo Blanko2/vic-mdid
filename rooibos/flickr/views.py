@@ -15,7 +15,6 @@ from rooibos.solr import SolrIndex
 from rooibos.flickr.models import FlickrUploadr, FlickrSearch, FlickrImportr, FlickrSetPhotos
 from django.utils import simplejson
 from rooibos.util import json_view
-from rooibos.ui.templatetags.ui import session_status_rendered
 
 flickr = flickrapi.FlickrAPI(FLICKR_KEY, FLICKR_SECRET, cache=True)
 
@@ -309,21 +308,22 @@ def public_photo_search(request):
 
 @json_view
 def select_flickr(request):
-    ids = map(None, request.POST.getlist('id'))
-    checked = request.POST.get('checked') == 'true'
-    selected = request.session.get('selected_flickrs', ())
-    if checked:
-        selected = set(selected) | set(ids)
-    else:
-        selected = set(selected) - set(ids)
-
-    result = []
-    for flickr in selected:
-        info = flickr.split('|')
-        result.append(dict(id=int(info[0]), title=info[1]))
-
-    request.session['selected_flickrs'] = selected
-    return dict(status=session_status_rendered(RequestContext(request)), flickrs=result, num_selected=len(result))
+    pass
+    #ids = map(None, request.POST.getlist('id'))
+    #checked = request.POST.get('checked') == 'true'
+    #selected = request.session.get('selected_flickrs', ())
+    #if checked:
+    #    selected = set(selected) | set(ids)
+    #else:
+    #    selected = set(selected) - set(ids)
+    #
+    #result = []
+    #for flickr in selected:
+    #    info = flickr.split('|')
+    #    result.append(dict(id=int(info[0]), title=info[1]))
+    #
+    #request.session['selected_flickrs'] = selected
+    #return dict(status=session_status_rendered(RequestContext(request)), flickrs=result, num_selected=len(result))
 
 def import_photos(request):
     importr = FlickrImportr()

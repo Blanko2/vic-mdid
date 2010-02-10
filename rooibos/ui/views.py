@@ -2,6 +2,7 @@ from django.utils import simplejson
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -11,7 +12,6 @@ from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
 from rooibos.access import accessible_ids, filter_by_access
-from rooibos.ui.templatetags.ui import session_status_rendered
 from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
@@ -60,17 +60,13 @@ def select_record(request):
             selected = set(selected) | set(ids)
         else:
             selected = set(selected) - set(ids)
-
-    result = []
-    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
-    for record in records:
-        result.append(dict(id=record.id,
-                           title=record.title,
-                           record_url=record.get_absolute_url(),
-                           img_url=record.get_thumbnail_url()))
-
     request.session['selected_records'] = selected
-    return dict(status=session_status_rendered(RequestContext(request)), records=result)
+
+    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+    return dict(
+        basket=render_to_string('ui_basket.html', {'selected_records': records}),
+        header=render_to_string('ui_basket_header.html', {'selected_records_count': len(selected)})
+        )
 
 
 @login_required

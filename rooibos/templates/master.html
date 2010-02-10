@@ -119,8 +119,11 @@
 {% endblock %}
 
 {% block basket %}
-<div id="basket-content"></div>
-<div id="basket-tab">0 Items Selected</div>
+<div id="basket-content">
+    <div id="basket-menu">See all</div>
+    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
+</div>
+<div id="basket-tab" title="Click to keep open or automatically hide">{% include "ui_basket_header.html" %}</div>
 {% endblock %}
 
 <!--
@@ -181,7 +184,10 @@
                 url: '{% url ui-api-select-record %}',
                 data: {'id': ids, 'checked': checked},
                 dataType: 'json',
-                success: function(r) { $("#session-status").html(r.status); }
+                success: function(r) {
+                    $("#basket-thumbs").html(r.basket);
+                    $("#basket-tab").html(r.header);
+                }
             });
         }
 
@@ -265,19 +271,20 @@
 
             // Basket features
             var basket_open = profile_settings['ui_basket_open'] == 'true';
-            var baskettimeout;            
+            var baskettimeout;
+            var basket_height = $("#basket-content").css('height');
             function hideBasket() {
                 if (basket_open) return;
                 clearTimeout(baskettimeout);
                 baskettimeout = setTimeout(function() {
-                    $("#basket-content").animate({ bottom: -60 },500);
+                    $("#basket-content").animate({ bottom: "-" + basket_height },500);
                     $("#basket-tab").animate({ bottom: 0 }, 500);
                     }, 500);
             }
             function showBasket() {
                 clearTimeout(baskettimeout);
                 $("#basket-content").animate({ bottom: 0 }, 500);
-                $("#basket-tab").animate({ bottom: 60 }, 500);
+                $("#basket-tab").animate({ bottom: basket_height }, 500);
             }
             $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
             $("#basket-tab").hover(function() {
