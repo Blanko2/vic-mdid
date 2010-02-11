@@ -14,8 +14,8 @@
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
-    {% include "master.css" %}
 {% endcompress %}
+    {% include "master.css" %}
 <!--[if IE]>
 {% compress css %}
     {% include "master-ie.css" %}
@@ -121,6 +121,8 @@
 {% block basket %}
 <div id="basket-content">
     <div id="basket-menu">See all</div>
+    <div id="basket-scroll-right"></div>
+    <div id="basket-scroll-left"></div>
     <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
 </div>
 <div id="basket-tab" title="Click to keep open or automatically hide">{% include "ui_basket_header.html" %}</div>
@@ -162,7 +164,7 @@
 </script>
 {% block javascript %}
 {% compress js %}
-    <script type="text/javascript" src="{% url static 'jquery/jquery-1.3.2.min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.1.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.7.2.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.hoverIntent.minified.js' %}"></script>
@@ -175,6 +177,7 @@
     <script type="text/javascript" src="{% url static 'scripts/json2.js' %}"></script>
     <!--<script type="text/javascript" src="{% url static 'scripts/related-images-bar.js' %}"></script>-->
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
+{% endcompress %}    
     <script type="text/javascript">
         function recordSelection(ids, checked) {
             var method = ids == 0 ? 'GET' : 'POST';
@@ -299,13 +302,38 @@
                 $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
             else
                 hideBasket();
-            
+            function basket_scroll_arrows() {
+                $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
+                $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) ? "visible" : "hidden");
+            }
+            $("#basket-scroll-right").click(function() {
+                if ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) {
+                    var last = 0;
+                    $("#basket-thumbs img").filter(function() { return ($(this).position().top == 0); }).each(
+                        function(i) { $(this).delay(20 * i).hide(0); last = i; });
+                    setTimeout(basket_scroll_arrows, (last + 1) * 20);
+                }
+            });
+            $("#basket-scroll-left").click(function() {
+                if ($("#basket-thumbs img:hidden").length > 0) {
+                    var first = $("#basket-thumbs img:visible:first");
+                    function scroll_left() {
+                        if (first.position().top == 0 && $("#basket-thumbs img:hidden:last").show().length == 1)
+                            setTimeout(scroll_left, 20);
+                        else
+                            basket_scroll_arrows();
+                    }
+                    scroll_left();
+                }
+            });
+            $("#basket-content").css('overflow', 'hidden');
+            basket_scroll_arrows();
             
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
         });
     </script>
-{% endcompress %}
+
 {% endblock %}
 </body>
 

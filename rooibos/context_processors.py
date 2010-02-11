@@ -18,7 +18,7 @@ def selected_records(request):
     if selected:
         records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
     else:
-        return
+        records = None
     
     return {
         'selected_records_count': len(selected),
