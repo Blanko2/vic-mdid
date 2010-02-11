@@ -41,13 +41,17 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 #topmenu {
     margin: 0;
     background-color: {{ colors.background_top }};
-    height: 16px;
+    height: 22px;
     color: white;
-    padding: 3px 20px;
     font-size: 8pt;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 }
 
 #topmenu ul {
+    padding: 3px 20px;
     float: right;
     margin: 0;
 }
@@ -69,12 +73,18 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 #header-bar {
-    background-color: rgb(83, 82, 78);
-    padding: 0 21px;
+    position: absolute;
+    top: 22px;
+    width: 100%;
+}
+
+#header-bar.js-enabled {
+    background-color: {{ colors.background_top }};
 }
 
 #header-bar div.spacer {
     background-color: white;
+    margin: 0 21px;
     padding: 10px 10px 0 10px;
     border: solid thin rgb(127, 127, 127);
     border-bottom: none;
@@ -160,8 +170,13 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     border: solid 5px rgb(118, 147, 154);
     border-top: none;
     z-index: 9999;
+    margin-top: 10px;
 }
 
+#header ul.menu.js-enabled {
+    margin-top: 0;
+}
+    
 #header ul.js-enabled {
     position: absolute;
 }
@@ -188,10 +203,14 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 #content {
-    padding: 15px 10px;
+    padding: 200px 10px 15px 10px;
     border: solid thin #aeaba3;
     border-top: none;
     clear: both;
+}
+
+#content.js-enabled {
+    padding-top: 98px;
 }
 
 #footer {

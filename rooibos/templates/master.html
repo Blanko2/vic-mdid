@@ -25,8 +25,52 @@
 </head>
 
 <body class="ui-reset master">
-{% block header %}
 
+{% block raw-content %}
+    <div id="content-wrapper">        
+        <div id="content">
+
+{% if messages %}
+<div id="messages">
+    {% for message in messages %}
+    <span>{{ message }}</span><br />
+    {% endfor %}
+</div>
+{% endif %}
+
+{% block content-top %}
+{% endblock %}
+
+<div id="sidebar">
+{% block sidebar %}
+{% include "ui_related_pages.html" %}
+{% endblock %}
+</div>
+
+{% block content %}
+{% endblock %}
+
+{% block footer %}
+            <div id="footer">
+                Copyright 1997-2010 James Madison University
+            </div>
+{% endblock %}
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block basket %}
+<div id="basket-content">
+    <div id="basket-menu">See all</div>
+    <div id="basket-scroll-right"></div>
+    <div id="basket-scroll-left"></div>
+    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
+</div>
+<div id="basket-tab" title="Click to keep open or automatically hide">{% include "ui_basket_header.html" %}</div>
+{% endblock %}
+
+{% block header %}
     <div id="topmenu">
         <ul>
             {% if user.is_authenticated %}
@@ -83,59 +127,7 @@
     </div>
 {% endblock %}
 
-
-{% block raw-content %}
-    <div id="content-wrapper">        
-        <div id="content">
-
-{% if messages %}
-<div id="messages">
-    {% for message in messages %}
-    <span>{{ message }}</span><br />
-    {% endfor %}
-</div>
-{% endif %}
-
-{% block content-top %}
-{% endblock %}
-
-<div id="sidebar">
-{% block sidebar %}
-{% include "ui_related_pages.html" %}
-{% endblock %}
-</div>
-
-{% block content %}
-{% endblock %}
-
-{% block footer %}
-            <div id="footer">
-                Copyright 1997-2010 James Madison University
-            </div>
-{% endblock %}
-
-        </div>
-    </div>
-{% endblock %}
-
-{% block basket %}
-<div id="basket-content">
-    <div id="basket-menu">See all</div>
-    <div id="basket-scroll-right"></div>
-    <div id="basket-scroll-left"></div>
-    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
-</div>
-<div id="basket-tab" title="Click to keep open or automatically hide">{% include "ui_basket_header.html" %}</div>
-{% endblock %}
-
 <!--
-<div style="display: none;">
-    <div id="selected-records" class="menu">
-        <div><input type="button" id="selected-records-deselect-all" value="Deselect all records" /></div>
-        <div><input type="button" id="selected-records-export-flickr" value="Export to Flickr" /></div>
-    </div>
-</div>
-
 <div id="related-images-bar" style="display: none;">
     <div id="related-images-bar-toggle">
         <div id="related-images-bar-hide" style="float: right;"></div>
@@ -208,8 +200,6 @@
         }
 
         function process_facets() {
-            {% if debug %}console.log(profile_settings);{% endif %}
-            
             $(".facet-body").each(function(i, facet) {
                 function sortByFreq(a, b) {
                     var fa = $(".facet-freq", a).text().replace(/,/, "");
@@ -250,13 +240,10 @@
         };
 
         $(document).ready(function() {
-            bindSelectRecordCheckboxes();
-            $("#quicksearch").hint();
-//            recordSelection(0, false);
             $("#javascriptwarning").hide();
+            $("#header-bar,#header ul li,#content").addClass("js-enabled");
             var timeouts = Object();
             var resetwidth = function() { $(this).width($(this).parent().width() + 30); };
-            $("#header ul li").addClass("js-enabled");
             $("#header ul.menu").addClass("js-enabled").each(resetwidth).hide();
             $("#header>ul>li:has(ul)").mouseenter(function() {
                 clearTimeout(timeouts[$(this)]);
@@ -268,9 +255,10 @@
             });
             $("#header .search form").hide();
             $("#header .search span").show().mouseenter(function() {
-                $("#header .search span").hide();
-                $("#header .search form").show();
+                $("#header .search span,#header .search form").toggle();
             });
+
+            $("#quicksearch").hint();
 
             // Basket features
             var basket_open = profile_settings['ui_basket_open'] == 'true';
@@ -328,6 +316,8 @@
             });
             $("#basket-content").css('overflow', 'hidden');
             basket_scroll_arrows();
+            
+            bindSelectRecordCheckboxes();
             
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
