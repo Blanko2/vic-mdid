@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
+from django.utils import simplejson
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
@@ -54,7 +55,7 @@ def main(request):
 def select_record(request):
     selected = request.session.get('selected_records', ())
     if request.method == "POST":
-        ids = map(int, request.POST.getlist('id'))
+        ids = simplejson.loads(request.POST.get('id', '[]'))
         checked = request.POST.get('checked') == 'true'
         if checked:
             selected = set(selected) | set(ids)
@@ -123,5 +124,14 @@ def manage(request):
     
     return render_to_response('ui_management.html',
                               {'storage': storage,
+                              },
+                              context_instance=RequestContext(request))
+    
+
+@login_required
+def options(request):
+    
+    return render_to_response('ui_options.html',
+                              {
                               },
                               context_instance=RequestContext(request))

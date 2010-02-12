@@ -258,7 +258,8 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 #basket-thumbs img {
     width: 50px;
     height: 50px;
-    margin: 5px 3px 0 3px;
+    margin: 4px 2px 0 2px;
+    border: solid lightgrey thin;
 }
 
 #basket-menu {
@@ -554,117 +555,10 @@ form ul {
     margin: 0px;
 }
 
-#header {
-    height: 1.6em;
-    background-color: #2D678E;
-    color: white;
-    padding: 0.3em;
-    margin-bottom: 5px;
-    border-bottom: 2px solid black;
-}
-
-#header h1 {
-    font-family: sans-serif;
-    font-weight: bold;
-    font-size: 1.2em;
-    display: block;
-    float: left;
-    margin: 0.05em;
-}
-
-#header a {
-    color: white;
-    text-decoration: none;
-}
-
-#main-menu {
-    background-color: #2D678E;
-    color: white;
-    display: none;
-    position: absolute;
-    top: 2.2em;
-    border-right: 2px solid black;
-    border-bottom: 2px solid black;
-    padding: 10px;
-    z-index: 1000;
-}
-
-#main-menu span, #main-menu a
-{
-    font-size: larger;
-    line-height: 120%;
-    float: left;
-    clear: left;
-    padding-left: 1em;
-}
-
-#main-menu span
-{
-    padding-left: 0;
-    margin-top: 0.5em;
-}
-
-#content {
-    margin: 10px;
-}
-
-#quicksearch {
-    float: right;
-}
-
-#menu {
-    display: block;
-    float: right;
-    margin: 0.1em;
-}
-
-#menu li {
-    display: block;
-    float: left;
-    position: relative;
-    padding: 0 0.4em 0 0.4em;
-}
-
-#menu li + li {
-    border-left: 2px solid white;
-}
-
-#menu a, #menu .nolink {
-    padding: 0.3em;
-    border: 1px solid #2D678E; 
-}
-
-#menu a:hover {
-    border: 1px dotted white;
-}
-
-#footer {
-    margin-top: 60px;
-    padding: 4px;
-    border-top: solid thin lightgrey;
-    font-size: smaller;
-    font-family: sans-serif;
-    clear: both;
-}
-
 .horizontal-block {
     border: thin grey solid;
     background-color: lightgrey;
     padding: 3px;
-}
-
-.resultlist {
-    width: 80%;    
-}
-
-
-
-
-
-#sessionstatus {
-    float: right;
-    border: thin #BBBB00 solid;
-    background-color: #CCCC00;
 }
 
 .alternate-row {
@@ -730,45 +624,6 @@ div.fieldvalue-edit div.narrow input {
     padding: 0px;
     float: left;
     margin: 0 0 10px 20px;
-}
-
-.main-block {
-    float: left;
-    width: 28%;
-    min-height: 25em;
-    -moz-border-radius: 5px;
-    border: 1px solid black;
-    background-color: #f9f9f9;
-    margin: 1%;
-    padding: 1%;
-}
-
-.main-block h2 {
-    margin-top: 0px;
-}
-
-.main-block a {
-    float: left;
-    clear: both;
-    font-size: x-large;
-    text-decoration: none;
-    line-height: 140%;
-}
-
-#randomimages {
-    height: 100px;
-    padding: 0px;
-    float: right;
-    margin: 0 40px 0 10px;
-    width: 60%;
-    text-align: right;
-}
-
-#randomimages img {
-    margin: 0 5px;
-    max-height: 100px;
-    max-width: 100px;
-    border: thin solid grey;
 }
 
 #comments p {
@@ -843,24 +698,6 @@ div.fieldvalue-edit div.narrow input {
     font-size: 12px;
     border-bottom: thin solid grey;
 }
-
-.sidebar {
-    float: right;
-    width: 200px;
-}
-
-.sidebar-item {
-    border: 1px solid grey;
-    margin: 5px;
-    padding: 2px;
-    -moz-border-radius: 5px;
-}
-
-.sidebar-item h2 {
-    margin: 5px;
-}
-
-
 
 div.metadata {
     font-size: smaller;

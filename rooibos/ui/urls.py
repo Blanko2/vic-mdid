@@ -8,4 +8,5 @@ urlpatterns = patterns('',
     url(r'^tag/(?P<type>\d+)/(?P<id>\d+)/', add_tags, name='ui-add-tags'),
     url(r'^tag/remove/(?P<type>\d+)/(?P<id>\d+)/', remove_tag, name='ui-remove-tag'),
     url(r'^manage/$', manage, name='ui-management'),
+    url(r'^options/$', options, name='ui-options'),
 )

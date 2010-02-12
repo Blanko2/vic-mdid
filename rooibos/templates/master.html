@@ -76,7 +76,7 @@
             {% if user.is_authenticated %}
             <li>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}</li>
             <li><a href="{% url logout %}">Log out</a></li>
-            <li><a href=".">Options</a></li>
+            <li><a href="{% url ui-options %}">Options</a></li>
             <li><a href="{% url ui-management %}">Management</a></li>
             {% else %}
             <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
@@ -171,17 +171,24 @@
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
 {% endcompress %}    
     <script type="text/javascript">
+        function basket_scroll_arrows() {
+            $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
+            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) ? "visible" : "hidden");
+        }
+        
         function recordSelection(ids, checked) {
             var method = ids == 0 ? 'GET' : 'POST';
             if (!ids.length) ids = [ids];
+            ids = $.map(ids, function(e) { return parseInt(e); });
             ajaxManager.add({
                 type: method,
                 url: '{% url ui-api-select-record %}',
-                data: {'id': ids, 'checked': checked},
+                data: {'id': JSON.stringify(ids), 'checked': checked},
                 dataType: 'json',
                 success: function(r) {
                     $("#basket-thumbs").html(r.basket);
                     $("#basket-tab").html(r.header);
+                    basket_scroll_arrows();
                 }
             });
         }
@@ -289,11 +296,7 @@
             if (basket_open)
                 $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
             else
-                hideBasket();
-            function basket_scroll_arrows() {
-                $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
-                $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) ? "visible" : "hidden");
-            }
+                hideBasket();            
             $("#basket-scroll-right").click(function() {
                 if ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) {
                     var last = 0;
