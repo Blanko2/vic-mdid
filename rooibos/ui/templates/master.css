@@ -535,6 +535,38 @@ form.vertical ul.errorlist li {
     padding: 3px 10px;
 }
 
+
+#upload-queue {
+    margin: 20px 0;
+}
+
+#upload-queue .file {
+    float: left;
+    clear: left;
+    margin-right: 10px;
+}
+
+#upload-queue .upload-complete {    
+    color: green;
+}
+
+#upload-queue .upload-failed {
+    color: red;
+}
+
+#upload-progress {
+    float: left;
+    border: solid thin black;
+    padding: 2px;
+    height: 10px;
+    margin-top: 2px;
+}
+
+#upload-progress div {
+    background-color: blue;
+    height: 10px;
+}
+
 /*
  
  

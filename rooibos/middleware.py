@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 
 class Middleware:
@@ -6,7 +7,12 @@ class Middleware:
         return None
     
     def process_request(self, request):
-        return
+        # To support SWFUpload, copy the provided session key from POST into COOKIES
+        # since Flash does not send browser cookies with its requests
+        if (request.method == 'POST' and
+            request.POST.get('swfupload') == 'true' and
+            request.POST.has_key(settings.SESSION_COOKIE_NAME)):
+            request.COOKIES[settings.SESSION_COOKIE_NAME] = request.POST[settings.SESSION_COOKIE_NAME]
     
     def process_response(self, request, response):
         # Remove the Vary header for content loaded into Flash, otherwise caching is broken

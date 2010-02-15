@@ -19,6 +19,7 @@ from rooibos.util import json_view
 from models import Media, Storage, TrustedSubnet, ProxyUrl
 import os
 import uuid
+import logging
 from datetime import datetime, timedelta
 
 
@@ -56,9 +57,13 @@ def retrieve(request, recordid, record, mediaid, media):
     if restrictions and (restrictions.has_key('width') or restrictions.has_key('height')):
         raise Http404()
 
-    content = mediaobj.load_file()
+    try:
+        content = mediaobj.load_file()
+    except IOError:
+        raise Http404()
+    
     if content:
-        return HttpResponse(content=content, mimetype=str(media.mimetype))
+        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
     else:
         return HttpResponseRedirect(mediaobj.get_absolute_url())
 
@@ -96,8 +101,10 @@ def media_upload(request, recordid, record):
         file = forms.FileField()
 
     if request.method == 'POST':
+        
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
+            
             storage = Storage.objects.get(name=form.cleaned_data['storage'])
             file = request.FILES['file']
 
@@ -106,6 +113,9 @@ def media_upload(request, recordid, record):
                                          storage=storage,
                                          mimetype=file.content_type)
             media.save_file(file.name, file)
+
+            if request.POST.get('swfupload') == 'true':
+                return HttpResponse(content='ok', mimetype='text/plain')
 
             next = request.GET.get('next')
             return HttpResponseRedirect(next or '.')
