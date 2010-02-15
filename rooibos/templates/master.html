@@ -178,7 +178,7 @@
         
         function recordSelection(ids, checked) {
             var method = ids == 0 ? 'GET' : 'POST';
-            if (!ids.length) ids = [ids];
+            if (ids.constructor != Array) ids = [ids];
             ids = $.map(ids, function(e) { return parseInt(e); });
             ajaxManager.add({
                 type: method,
