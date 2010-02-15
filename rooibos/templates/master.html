@@ -173,7 +173,7 @@
     <script type="text/javascript">
         function basket_scroll_arrows() {
             $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
-            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) ? "visible" : "hidden");
+            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 50); }).length > 0) ? "visible" : "hidden");
         }
         
         function recordSelection(ids, checked) {
@@ -298,9 +298,9 @@
             else
                 hideBasket();            
             $("#basket-scroll-right").click(function() {
-                if ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 0); }).length > 0) {
+                if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > 50); }).length > 0) {
                     var last = 0;
-                    $("#basket-thumbs img").filter(function() { return ($(this).position().top == 0); }).each(
+                    $("#basket-thumbs img:visible").filter(function() { return ($(this).position().top < 50); }).each(
                         function(i) { $(this).delay(20 * i).hide(0); last = i; });
                     setTimeout(basket_scroll_arrows, (last + 1) * 20);
                 }
@@ -309,7 +309,7 @@
                 if ($("#basket-thumbs img:hidden").length > 0) {
                     var first = $("#basket-thumbs img:visible:first");
                     function scroll_left() {
-                        if (first.position().top == 0 && $("#basket-thumbs img:hidden:last").show().length == 1)
+                        if (first.position().top < 50 && $("#basket-thumbs img:hidden:last").show().length == 1)
                             setTimeout(scroll_left, 20);
                         else
                             basket_scroll_arrows();

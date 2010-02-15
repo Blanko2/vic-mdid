@@ -17,6 +17,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
 from rooibos.solr.views import run_search
+from rooibos.context_processors import selected_records
 import random 
 
 
@@ -63,10 +64,11 @@ def select_record(request):
             selected = set(selected) - set(ids)
     request.session['selected_records'] = selected
 
-    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+    context = selected_records(request)
+
     return dict(
-        basket=render_to_string('ui_basket.html', {'selected_records': records}),
-        header=render_to_string('ui_basket_header.html', {'selected_records_count': len(selected)})
+        basket=render_to_string('ui_basket.html', context),
+        header=render_to_string('ui_basket_header.html', context),
         )
 
 

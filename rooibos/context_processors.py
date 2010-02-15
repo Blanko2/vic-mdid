@@ -16,7 +16,7 @@ def selected_records(request):
     
     selected = request.session.get('selected_records', ())
     if selected:
-        records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+        records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))[:200]
     else:
         records = None
     
