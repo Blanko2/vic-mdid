@@ -207,15 +207,22 @@
         }
 
         function process_facets() {
-            $(".facet-body").each(function(i, facet) {
-                function sortByFreq(a, b) {
-                    var fa = $(".facet-freq", a).text().replace(/,/, "");
-                    var fb = $(".facet-freq", b).text().replace(/,/, "");
-                    fa = fa ? parseInt(fa) : 0;
-                    fb = fb ? parseInt(fb) : 0;
-                    return ((fa < fb) ? -1 : ((fa > fb) ? 1 : 0));
-                }
-                var terms = jQuery.makeArray($(".facet-line", facet)).sort(sortByFreq).reverse().slice(10);
+            var freqs = Object();
+            function sortByFreq(a, b) {
+                var fa = freqs[a.id];
+                var fb = freqs[b.id];
+                return ((fa > fb) ? -1 : ((fa < fb) ? 1 : 0));
+            }
+            $(".facet .facet-body .facet-line").each(function(i, facetline) {
+                var f = $(facetline).contents().eq(2).text().replace(/,/, "");
+                freqs[facetline.id] = f ? parseInt(f) : 0;
+            }).hover(
+                function() { $(this).find(".facet-exclude").css('visibility', 'visible'); },
+                function() { $(this).find(".facet-exclude").css('visibility', 'hidden'); }
+            );
+
+            $(".facet .facet-body").each(function(i, facet) {
+                var terms = $.makeArray($(".facet-line", facet)).sort(sortByFreq).slice(10);
                 if (terms.length)
                 {
                     $(terms).hide();
@@ -241,9 +248,7 @@
                 return false;
             }).css('cursor', 'pointer').children().click(function(event) { event.stopPropagation(); /* to keep links in facet header working */});            
             
-            $(".facet-line").hover(function() { $(this).find(".facet-exclude").show(); },
-                                   function() { $(this).find(".facet-exclude").hide(); }).
-                             find(".facet-exclude").hide();
+            $(".facet .facet-body .facet-line .facet-exclude").css('visibility', 'hidden');
         };
 
         $(document).ready(function() {
