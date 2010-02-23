@@ -9,10 +9,15 @@
 {% endvar %}
 <style type='text/css'>
 
+{% if debug %}
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
         z-index: 1000; position: absolute; right: 32px; top: 83px;
         -moz-opacity: .7; opacity: .7;}
+{% endif %}
 
+html.js-enabled #javascriptwarning {
+    display: none;
+}
 
 body.master {
     background-color: {{ colors.background }};
@@ -79,7 +84,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     min-width: 970px;
 }
 
-#header-bar.js-enabled {
+html.js-enabled #header-bar {
     background-color: {{ colors.background_top }};
 }
 
@@ -125,7 +130,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     border-top: solid 5px rgb(152, 189, 198);
 }
 
-#header ul li.js-enabled {
+html.js-enabled #header ul li {
     height: 37px;    
 }
 
@@ -133,9 +138,22 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     border-top: solid 5px rgb(118, 147, 154);
 }
 
-#header ul li.search form{
+#header ul li.search form {
     padding: 5px 0;
 }
+
+html.js-enabled #header .search form {
+    display: none;
+}
+
+#header .search span {
+    display: none;
+}
+
+html.js-enabled #header .search span {
+    display: inline;    
+}
+
 
 #header ul li.search input {
     padding: 0;
@@ -174,11 +192,11 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     margin-top: 10px;
 }
 
-#header ul.menu.js-enabled {
+html.js-enabled #header ul.menu {
     margin-top: 0;
 }
     
-#header ul.js-enabled {
+html.js-enabled #header ul ul {
     position: absolute;
 }
 
@@ -210,7 +228,7 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     clear: both;
 }
 
-#content.js-enabled {
+html.js-enabled #content {
     padding-top: 98px;
 }
 

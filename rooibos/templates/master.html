@@ -7,6 +7,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+    <script type="text/javascript">
+        document.documentElement.className = 'js-enabled';
+    </script>
     <title>{% block title %}MDID 3 {% block titledetail %}{% endblock %}{% endblock %}</title>
 {% block stylesheets %}
 {% compress css %}
@@ -116,7 +119,7 @@
                             <li><a href="{% url about %}">About</a></li>
                         </ul>
                     </li>
-                    <li class="search"><span style="display: none;">Search</span>
+                    <li class="search"><span>Search</span>
                         <form method="GET" action="{% url solr-search %}">
                             <input id="quicksearch" name="kw" type="text" title="Search" /><input type="image" src="{% url static 'images/go.png' %}" />
                         </form>
@@ -252,11 +255,9 @@
         };
 
         $(document).ready(function() {
-            $("#javascriptwarning").hide();
-            $("#header-bar,#header ul li,#content").addClass("js-enabled");
             var timeouts = Object();
             var resetwidth = function() { $(this).width($(this).parent().width() + 30); };
-            $("#header ul.menu").addClass("js-enabled").each(resetwidth).hide();
+            $("#header ul.menu").each(resetwidth).hide();
             $("#header>ul>li:has(ul)").mouseenter(function() {
                 clearTimeout(timeouts[$(this)]);
                 $("#header>ul>li").not($(this)).removeClass("selected").children("ul").stop().attr("style", "").hide().each(resetwidth);
@@ -265,8 +266,7 @@
                 var lthis = $(this);
                 timeouts[lthis] = setTimeout(function() { lthis.removeClass("selected").children("ul").hide(); }, 1000);
             });
-            $("#header .search form").hide();
-            $("#header .search span").show().mouseenter(function() {
+            $("#header .search span").mouseenter(function() {
                 $("#header .search span,#header .search form").toggle();
             });
 

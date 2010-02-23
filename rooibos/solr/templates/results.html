@@ -42,9 +42,13 @@
                 url: '{{ facets_url|escapejs }}',
                 dataType: 'json',
                 success: function(r) {
-                    $("#facets").hide().html(r.html);
+//                    var t=new Date().getTime();
+                    var facets = $("#facets");
+                    facets.hide();
+                    facets[0].innerHTML = r.html;
                     process_facets();
-                    $("#facets").slideDown(500);
+//                    alert(new Date().getTime()-t);
+                    facets.slideDown(500);
                 }
             });
     {% endif %}
