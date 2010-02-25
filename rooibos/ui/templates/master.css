@@ -571,6 +571,11 @@ ul.errorlist li {
   color: lightgray;
 }
 
+.permission-list img {
+     vertical-align: baseline !important;
+     height: 12px;
+}
+
 
 #messages {
     margin: 0px auto 20px auto;
