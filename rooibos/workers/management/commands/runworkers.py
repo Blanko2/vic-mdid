@@ -5,6 +5,8 @@ from django.conf import settings
 from rooibos.workers.registration import create_worker
 from gearman.server import GearmanServer
 from optparse import make_option
+import rooibos.contrib.djangologging.middleware # does not get loaded otherwise
+import logging
 
 
 class Server(Thread):
@@ -15,7 +17,7 @@ class Server(Thread):
 
     def run(self):
         if self.verbosity > 0:
-            print "Starting server"
+            logging.info("Starting server")
         self.server = GearmanServer(settings.GEARMAN_SERVERS[0])
         self.server.start()
 
@@ -34,7 +36,7 @@ class Command(BaseCommand):
         server = options.get('server', False)
 
         if not settings.GEARMAN_SERVERS:
-            print "No gearman servers configured"
+            logging.error("No gearman servers configured")
             return
 
         if server:
@@ -42,5 +44,5 @@ class Command(BaseCommand):
 
         worker = create_worker()
         if verbosity > 0:
-            print "Starting workers: " + ', '.join(worker.abilities.keys())
+            logging.info("Starting workers: " + ', '.join(worker.abilities.keys()))
         worker.work()

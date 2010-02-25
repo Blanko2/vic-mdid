@@ -1,6 +1,7 @@
 import sys
 from django.conf import settings
 from gearman import Task, GearmanWorker, GearmanClient
+from gearman.task import Taskset
 
 workers = dict()
 
@@ -35,7 +36,12 @@ def run_worker(worker, arg, **kwargs):
     discover_workers()
     task = Task(worker, arg, **kwargs)
     if client:
-        return client.do_task(task)
+        if task.background:
+            taskset = Taskset([task])
+            client.do_taskset(taskset)
+            return task.handle
+        else:
+            return client.do_task(task)
     else:
         if workers.has_key(worker):
             return workers[worker](task)

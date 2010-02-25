@@ -1,0 +1,76 @@
+{% extends "master.html" %}
+{% load pagination_tags %}
+{% load humanize %}
+{% load ui %}
+
+{% block sidebar %}
+{% var as related_pages %}
+{"pages": [
+    {"url": "{% url ui-management %}", "title": "Management"}
+]}
+{% endvar %}
+
+{{ block.super }}
+
+{% endblock %}
+
+
+{% block content %}
+
+{% autopaginate jobs 25 %}
+
+<h1>Jobs</h1>
+
+{% paginate %}
+
+{% if jobs %}
+<form action="." method="POST">
+<table>
+<tr>
+{% if owner %}{% else %}
+    <th>ID</th>
+    <th>Owner</th>
+{% endif %}    
+    <th>Function</th>
+{% if owner %}{% else %}
+    <th>Arguments</th>
+{% endif %}
+    <th>Status</th>
+    <th>Created</th>
+    <th>Last updated</th>
+    <th>Completed</th>
+    <th>Result</th>
+    <th>Remove</th>
+</tr>
+{% for job in jobs %}
+<tr class="{% cycle '' 'alternate-row' %}">
+{% if owner %}{% else %}
+    <td>{{ job.id }}</td>
+    <td>{{ job.owner.username }}</td>
+{% endif %}        
+    <td>{{ job.func }}</td>
+{% if owner %}{% else %}
+    <td>{{ job.arg }}</td>
+{% endif %}        
+    <td>{{ job.status }}</td>
+    <td>{{ job.created_time|naturalday }} {{ job.created_time|time }}</td>
+    <td>{{ job.status_time|naturalday }} {{ job.status_time|time }} ({{ job.status_time|timesince }})</td>
+    <td>{% if job.completed %}completed{% else %}{% if job.stalled %}Stalled{% else %}In Progress{% endif %}{% endif %}</td>
+    <td>{{ job.result }}</td>
+    <td style="text-align: center;">{% if job.completed %}<input type="checkbox" value="{{ job.id }}" name="r" />{% endif %}</td>
+</tr>
+{% endfor %}
+<tr>
+    <td colspan="{% if owner %}6{% else %}9{% endif %}"></td>
+    <td><input type="submit" name="remove" value="Remove" /></td>
+</tr>
+</table>
+</form>
+{% else %}
+
+You do not currently have any past or present jobs.
+
+{% endif %}
+
+{% endblock %}
+
