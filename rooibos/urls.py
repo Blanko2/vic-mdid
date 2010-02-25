@@ -35,6 +35,7 @@ urls = [
     (r'^nasa/', include('rooibos.nasa.urls')),
     (r'^presentation/', include('rooibos.presentation.urls')),
     (r'^viewers/', include('rooibos.viewers.urls')),
+    (r'^workers/', include('rooibos.workers.urls')),
     (r'^convert/', include('rooibos.converters.urls')),
     (r'^api/', include('rooibos.api.urls')),
     (r'^profile/', include('rooibos.userprofile.urls')),

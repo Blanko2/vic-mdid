@@ -43,6 +43,10 @@ h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     text-decoration: none;
 }
 
+th {
+    vertical-align: top;
+}
+
 #topmenu {
     margin: 0;
     background-color: {{ colors.background_top }};
@@ -378,7 +382,7 @@ html.js-enabled #content {
 .facet-exclude {
     width: 15px;
     height: 15px;
-    background-image: url({% url static 'images/not_icon.png' %});
+    background-image: url({% url static 'images/minus_icon.png' %});
     display: block;
     float: right;
 }
@@ -516,12 +520,34 @@ form.vertical div.row {
     margin: 3px 3px 3px 124px;
 }
 
-form.vertical ul.errorlist li {
+ul.errorlist {
+    margin: 0;
+}
+
+ul.errorlist li {
     display: block;
     float: left;
+    clear: both;
     color: red;
     list-style: none;
     margin: 3px;
+    padding: 0;
+}
+
+.multi-checkbox-list {
+    max-height: 200px;
+    width: 120%;
+    overflow: auto;
+    border: thin solid lightgrey;
+}
+
+.multi-checkbox-list ul {
+    margin: 0;
+}
+
+.multi-checkbox-list li {
+    list-style: none;
+    white-space: nowrap;
 }
 
 
@@ -594,6 +620,10 @@ form.vertical ul.errorlist li {
 }
 
 
+.alternate-row {
+    background-color: #F7F7F7;    
+}
+
 
 /*
  
@@ -621,10 +651,6 @@ form ul {
     border: thin grey solid;
     background-color: lightgrey;
     padding: 3px;
-}
-
-.alternate-row {
-    background-color: #F7F7F7;    
 }
 
 div.fieldvalue-edit:first-child {
