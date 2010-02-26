@@ -18,7 +18,13 @@ class JobInfo(models.Model):
         ordering = ['completed', '-created_time']
         
     def run(self):
-        return run_worker(self.func, self.id, background=True)
+        try:
+            self.status = 'Starting'
+            self.save()
+            return run_worker(self.func, self.id, background=True)
+        except Exception, ex:
+            self.status = 'Start failed. %s' % ex
+            self.save()
         
     def update_status(self, status):
         self.status = status
@@ -31,5 +37,5 @@ class JobInfo(models.Model):
         self.update_status(status)
 
     def stalled(self):
-        return not self.completed and self.status_time and (datetime.now() - self.status_time > timedelta(0, 3600))
+        return not self.completed and self.status_time and (datetime.now() - self.status_time > timedelta(0, 60))
     
