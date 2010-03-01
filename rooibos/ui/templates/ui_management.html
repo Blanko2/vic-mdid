@@ -24,6 +24,8 @@ Depending on your permissions, you may see different management options below.
 
 <ul>
 {% if storage %}<li><a href="{% url storage-manage %}">Storage Management</a></li>{% endif %}
+<li><a href="{% url data-import %}">Import data</a></li>
+<li><a href="{% url workers-jobs %}">Jobs</a></li>
 </ul>
 
 {% endblock %}

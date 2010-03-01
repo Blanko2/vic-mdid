@@ -31,8 +31,8 @@
         $("#fieldvalues").css("cursor", "move").sortable({
             axis: 'y',
             stop: function(event, ui) {
-                $("#fieldvalues .fieldvalue-edit:even").removeClass('alternate-row');
-                $("#fieldvalues .fieldvalue-edit:odd").addClass('alternate-row');
+                $("#fieldvalues .fieldvalue-edit:even").removeClass('altrow');
+                $("#fieldvalues .fieldvalue-edit:odd").addClass('altrow');
                 $(".orderinput input").each(function(i) {
                     // only set order if a field is selected
                     if ($('#' + this.id.substring(0, this.id.length - 5) + "field").val())
@@ -40,7 +40,7 @@
                 });
             },
             start: function(event, ui) {
-                ui.helper.removeClass('alternate-row');
+                ui.helper.removeClass('altrow');
             },
             });
         $(".autocomplete :input").each(function() {
@@ -202,7 +202,7 @@
                 <input type="submit" value="Submit Changes" />
 
         {% for form in fv_formset.forms %}
-            <div class="fieldvalue-edit{% cycle '' ' alternate-row' %}">
+            <div class="fieldvalue-edit{% cycle '' ' altrow' %}">
                 {{ form.errors }}
                 {{ form.id }}
                 {{ form.context_type }}

@@ -17,15 +17,23 @@ def joblist(request):
     if request.method == "POST":
         if request.POST.get('remove'):
             ids = request.POST.getlist('r')
-            jobs.filter(id__in=ids, completed=True).delete()
+            if not request.user.is_superuser:
+                jobs = jobs.filter(completed=True)
+            jobs.filter(id__in=ids).delete()
         else:
             for k, v in request.POST.iteritems():
                 if k.startswith('run-'):
                     JobInfo.objects.get(id=k[4:]).run()
         
-        return HttpResponseRedirect(reverse('workers-jobs'))
+        return HttpResponseRedirect(request.get_full_path())
+    
+    try:
+        highlight = int(request.GET.get('highlight'))
+    except (ValueError, TypeError):
+        highlight = None
     
     return render_to_response("workers_jobs.html",
                               {'jobs': jobs,
+                               'highlight': highlight,
                                },
                               context_instance=RequestContext(request))

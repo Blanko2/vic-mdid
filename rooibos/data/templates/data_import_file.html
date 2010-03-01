@@ -1,0 +1,61 @@
+{% extends "master.html" %}
+{% load ui %}
+
+{% block content %}
+
+<h1>Import Data</h1>
+
+<h2>Settings</h2>
+
+<form method="post" action=".">
+    <table>
+        <tr><th>{{ form.collections.label }}: {{ form.collections.errors }}</th>
+            <td><div class="multi-checkbox-list">
+                {{ form.collections }}
+            </div></td>
+        </tr>
+        <tr><th>{{ form.fieldset.label }}: {{ form.fieldset.errors }}</th><td>{{ form.fieldset }}</td></tr>
+        <tr><th>{{ form.separator.label }}: {{ form.separator.errors }}</th><td>{{ form.separator }}</td></tr>
+        <tr><th>{{ form.update.label }}: {{ form.update.errors }}</th><td>{{ form.update }}</td></tr>
+        <tr><th>{{ form.add.label }}: {{ form.add.errors }}</th><td>{{ form.add }}</td></tr>
+        <tr><th>{{ form.test.label }}: {{ form.test.errors }}</th><td>{{ form.test }}</td></tr>
+    </table>
+    {{ mapping_formset.management_form }}
+    {{ mapping_formset.non_form_errors }}
+    <table>
+        <tr>
+            <th>Source field</th>
+            <th>Map to</th>
+            <th>Separate values</th>
+        </tr>
+    {% for mapping_form in mapping_formset.forms %}
+        <tr>
+            <td>{{ mapping_form.fieldname }}</td>
+            <td>{{ mapping_form.mapping }}</td>
+            <td>{{ mapping_form.separate }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    
+    <input type="submit" name="import_button" value="Import File" />
+    <input type="submit" name="preview_button" value="Update Preview" />
+</form>
+
+
+{% if preview_rows %}
+
+<h2>Preview</h2>
+
+{% for row in preview_rows %}
+<ul>
+{% for key,values in row.iteritems %}
+{% for value in values %}
+<li>{{ key }}: {{ value }}</li>
+{% endfor %}
+{% endfor %}
+</ul>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

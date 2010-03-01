@@ -100,9 +100,9 @@ class Record(models.Model):
     def get_image_url(self):
         return reverse('storage-retrieve-image-nosize', kwargs={'recordid': self.id, 'record': self.name})
 
-    def save(self, **kwargs):
+    def save(self, force_update_name=False, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),
-                    slug_field='name', check_current_slug=kwargs.get('force_insert'))
+                    slug_field='name', check_current_slug=kwargs.get('force_insert') or force_update_name)
         self._clear_cached_items()
         super(Record, self).save(kwargs)
 
@@ -265,6 +265,9 @@ class FieldValue(models.Model):
 
     def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
+        
+    class Meta:
+        ordering = ['order']
 
 
 class DisplayFieldValue(FieldValue):

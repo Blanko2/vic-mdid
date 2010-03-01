@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.conf import settings
@@ -6,13 +7,22 @@ from django.template import RequestContext
 from django.db.models import Q
 from django import forms
 from django.forms.models import modelformset_factory
+from django.forms.formsets import formset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.utils.safestring import mark_safe
+from django.utils import simplejson
 from models import *
 from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list, check_access
 #from rooibos.viewers import get_viewers
 from rooibos.storage.models import Media, Storage
+from rooibos.workers.models import JobInfo
+from spreadsheetimport import SpreadsheetImport
+import os
+import string
+import random
+
 
 def collections(request):
     collections = filter_by_access(request.user, Collection)
@@ -283,3 +293,153 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'can_edit': can_edit,
                                },
                               context_instance=RequestContext(request))
+
+
+def _get_scratch_dir():
+    path = os.path.join(settings.SCRATCH_DIR, 'data-import')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path    
+
+def _get_filename(request, file):
+    return request.COOKIES[settings.SESSION_COOKIE_NAME] + '-' + file
+
+@login_required
+def data_import(request):
+    
+    class UploadFileForm(forms.Form):
+        file = forms.FileField()
+        
+        def clean_file(self):
+            file = self.cleaned_data['file']
+            if os.path.splitext(file.name)[1] != '.csv':
+                raise forms.ValidationError("Please upload a CSV file with a .csv file extension")
+            return file
+
+    if request.method == 'POST':        
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            
+            filename = "".join(random.sample(string.letters + string.digits, 32))
+            dest = open(os.path.join(_get_scratch_dir(), _get_filename(request, filename)), 'wb+')
+            for chunk in file.chunks():
+                dest.write(chunk)
+            dest.close()
+            
+            return HttpResponseRedirect(reverse('data-import-file', args=(filename,)))
+    else:
+        form = UploadFileForm()
+    
+    return render_to_response('data_import.html',
+                              {'form': form,
+                              },
+                              context_instance=RequestContext(request))
+    
+
+class DisplayOnlyTextWidget(forms.HiddenInput):
+    def render(self, name, value, attrs):
+        return super(DisplayOnlyTextWidget, self).render(name, value, attrs) + \
+            mark_safe(self.initial if hasattr(self, 'initial') else (value or u''))
+    
+
+@login_required
+def data_import_file(request, file):
+    
+    available_collections = filter_by_access(request.user, Collection, write=True)
+    if not available_collections:
+        raise Http404
+    available_fieldsets = FieldSet.objects.filter(Q(owner=None) | Q(owner=request.user))
+    
+    def _get_fields():
+        return Field.objects.select_related('standard').all().order_by('standard', 'name')
+    
+    def _field_choices():
+        grouped = {}
+        for f in _get_fields():
+            grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
+        return [('0', '[do not import]'), ('-1', '[new field]')] + \
+               [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
+    
+    class ImportOptionsForm(forms.Form):
+        separator = forms.CharField(required=False)
+        collections = forms.MultipleChoiceField(choices=((c.id, c.title) for c in available_collections),
+                                                widget=forms.CheckboxSelectMultiple)
+        fieldset = forms.ChoiceField(choices=[(0, 'any')] + [(f.id, f.title) for f in available_fieldsets], required=False)
+        update = forms.BooleanField(label='Update existing records', initial=True, required=False)
+        add = forms.BooleanField(label='Add new records', initial=True, required=False)
+        test = forms.BooleanField(label='Test import only', initial=False, required=False)
+        
+    class MappingForm(forms.Form):
+        fieldname = forms.CharField(widget=DisplayOnlyTextWidget)
+        mapping = forms.ChoiceField(choices=_field_choices(), required=False)
+        separate = forms.BooleanField()
+
+    class BaseMappingFormSet(forms.formsets.BaseFormSet):
+        def clean(self):
+            if any(self.errors):
+                return
+            _dcidentifier = Field.objects.get(name='identifier', standard__prefix='dc')
+            _identifier_ids = list(_dcidentifier.get_equivalent_fields().values_list('id', flat=True)) + [_dcidentifier.id]
+            for i in range(self.total_form_count()):
+                if int(self.forms[i].cleaned_data['mapping']) in _identifier_ids:
+                    return
+            raise forms.ValidationError, "At least one field must be mapped to an identifier field."
+
+
+    MappingFormSet = formset_factory(MappingForm, extra=0, formset=BaseMappingFormSet)
+
+    def analyze(collections, separator, fieldset):
+        try:
+            with open(os.path.join(_get_scratch_dir(), _get_filename(request, file)), 'rb') as csvfile:        
+                imp = SpreadsheetImport(csvfile, collections, separator=separator, preferred_fieldset=fieldset)
+                return imp, imp.analyze()
+        except IOError:
+            raise Http404()
+
+    if request.method == 'POST':        
+        form = ImportOptionsForm(request.POST)
+        mapping_formset = MappingFormSet(request.POST, prefix='m')
+        if form.is_valid() and mapping_formset.is_valid():
+            if request.POST.get('import_button'):
+                j = JobInfo.objects.create(owner=request.user,
+                                       func='csvimport',
+                                       arg=simplejson.dumps(dict(
+                                                file=_get_filename(request, file),
+                                                separator=form.cleaned_data['separator'],
+                                                collections=map(int, form.cleaned_data['collections']),
+                                                update=form.cleaned_data['update'],
+                                                add=form.cleaned_data['add'],
+                                                test=form.cleaned_data['test'],
+                                                fieldset=form.cleaned_data['fieldset'],
+                                                mapping=dict((f.cleaned_data['fieldname'], int(f.cleaned_data['mapping']))
+                                                             for f in mapping_formset.forms),
+                                                separate_fields=dict((f.cleaned_data['fieldname'], f.cleaned_data['separate'])
+                                                                     for f in mapping_formset.forms),
+                                                )
+                                       ))
+                request.user.message_set.create(message='Import job has been submitted.')
+                return HttpResponseRedirect("%s?highlight=%s" % (reverse('workers-jobs'), j.id))
+            elif request.POST.get('preview_button'):
+                imp, preview_rows = analyze(available_collections.filter(id__in=form.cleaned_data['collections']),
+                                       form.cleaned_data['separator'],
+                                       available_fieldsets.get(id=form.cleaned_data['fieldset']) if int(form.cleaned_data['fieldset']) else None)
+                separator = form.cleaned_data['separator']
+        else:
+            imp, preview_rows = analyze(None, None, None)
+    else:
+        imp, preview_rows = analyze(None, None, None)
+        mapping_formset = MappingFormSet(initial=[dict(fieldname=f, mapping=v.id if v else 0, separate=True) for f, v in imp.mapping.iteritems()],
+                                         prefix='m')
+        form = ImportOptionsForm()
+
+    
+        
+    
+    return render_to_response('data_import_file.html',
+                              {'form': form,
+                               'preview_rows': preview_rows,
+                               'mapping_formset': mapping_formset,
+                              },
+                              context_instance=RequestContext(request))
+    
