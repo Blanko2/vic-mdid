@@ -48,15 +48,20 @@ def csvimport(job):
         
         if not skip_rows:
             outwriter.writerow(['Identifier', 'Action'])
+
+        class Counter(object):
+            def __init__(self):
+                self.counter = 0
     
-        def create_handler(event, id):
+        def create_handler(event, counter):
             def handler(id):
-                csvimport.counter = getattr(csvimport, 'counter', 0) + 1
-                jobinfo.update_status('processing row %s' % csvimport.counter)
+                counter.counter += 1
+                jobinfo.update_status('processing row %s' % counter.counter)
                 outwriter.writerow([';'.join(id) if id else '', event])
             return handler
     
-        handlers = dict((e, create_handler(e, id)) for e in SpreadsheetImport.events)
+        counter = Counter()
+        handlers = dict((e, create_handler(e, counter)) for e in SpreadsheetImport.events)
     
         fieldset = FieldSet.objects.filter(id=arg['fieldset']) if arg['fieldset'] else None
 
@@ -74,7 +79,7 @@ def csvimport(job):
                 arg['collections'],
                 skip_rows=skip_rows)
 
-        jobinfo.complete('Complete', '%s rows processed' % getattr(csvimport, 'counter', 0))
+        jobinfo.complete('Complete', '%s rows processed' % counter.counter)
         
     except Exception, ex:
         

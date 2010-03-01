@@ -418,6 +418,7 @@ def data_import_file(request, file):
                                                                      for f in mapping_formset.forms),
                                                 )
                                        ))
+                j.run()
                 request.user.message_set.create(message='Import job has been submitted.')
                 return HttpResponseRedirect("%s?highlight=%s" % (reverse('workers-jobs'), j.id))
             elif request.POST.get('preview_button'):
