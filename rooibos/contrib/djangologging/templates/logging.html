@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% get_current_language as LANGUAGE_CODE %}
-
+{% if records %}
 <div id="django_log" lang="{{ LANGUAGE_CODE|escape }}">
 
 	<hr />
@@ -82,7 +82,7 @@
 	</div>
 
 </div>
-
+{% endif %}
 {% if records %}
 <script type="text/javascript">
 <!--

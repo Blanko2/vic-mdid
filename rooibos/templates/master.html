@@ -70,7 +70,9 @@
     <div id="basket-scroll-left"></div>
     <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
 </div>
-<div id="basket-tab" title="Click to keep open or automatically hide">{% include "ui_basket_header.html" %}</div>
+<div id="basket-tab">
+    {% include "ui_basket_header.html" %}
+</div>
 {% endblock %}
 
 {% block header %}
@@ -275,10 +277,10 @@
             // Basket features
             var basket_open = profile_settings['ui_basket_open'] == 'true';
             var baskettimeout;
-            var basket_height = $("#basket-content").css('height');
             function hideBasket() {
                 if (basket_open) return;
                 clearTimeout(baskettimeout);
+                var basket_height = $("#basket-content").css('height');
                 baskettimeout = setTimeout(function() {
                     $("#basket-content").animate({ bottom: "-" + basket_height },500);
                     $("#basket-tab").animate({ bottom: 0 }, 500);
@@ -286,22 +288,25 @@
             }
             function showBasket() {
                 clearTimeout(baskettimeout);
+                var basket_height = $("#basket-content").css('height');
                 $("#basket-content").animate({ bottom: 0 }, 500);
                 $("#basket-tab").animate({ bottom: basket_height }, 500);
             }
             $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
-            $("#basket-tab").hover(function() {
-                if (!basket_open) $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
-            }, function() {
-                if (!basket_open) $("#basket-tab").css('background-image', 'url({% url static 'images/closed_basket_icon.png' %})');
-            }).click(function() {
+            $("#basket-tab-pin").click(function() {
                 basket_open = !basket_open;
                 store_profile_setting('ui_basket_open', basket_open);
+                $("#basket-tab-pin").attr("src", basket_open ? "{% url static 'images/pin_up.png' %}" : "{% url static 'images/pin_down.png' %}");
             });
             if (basket_open)
-                $("#basket-tab").css('background-image', 'url({% url static 'images/open_basket_icon.png' %})');
-            else
-                hideBasket();            
+                $("#basket-tab-pin").attr("src", "{% url static 'images/pin_up.png' %}");
+            else {
+                if (jQuery.browser.safari)
+                    // need to do this in load event, otherwise Safari does not have CSS info for basket height yet
+                    $(window).load(function() { hideBasket(); });
+                else
+                    hideBasket();
+            }
             $("#basket-scroll-right").click(function() {
                 if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > 50); }).length > 0) {
                     var last = 0;

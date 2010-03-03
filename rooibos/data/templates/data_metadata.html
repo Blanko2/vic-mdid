@@ -1,0 +1,13 @@
+{% cycle '' ' altrow' ' altrow' '' as rowcolor %}
+<div class='metadata'>
+{% for value in values %}
+    <div class='metadata-{% if value.subitem %}sub{% endif %}item'>
+        <div class='label{% cycle rowcolor %}'>{{ value.resolved_label }}:</div>
+        <div class='value{% cycle rowcolor %}'>{{ value.value|default:"&nbsp;" }}
+{% if value.owner %}
+        <img src="{% url static 'images/user.png' %}" title="{{ value.owner.username }}" />
+{% endif %}
+        </div>
+    </div>
+{% endfor %}
+</div>

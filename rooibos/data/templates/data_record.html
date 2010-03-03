@@ -16,15 +16,13 @@
         $(".submit-on-select-change select").change(function () { this.form.submit(); });
         $(".submit-on-select-change :submit").remove();
 
-        function hide_empty(elements) {
-            empty = $.grep($(":text", elements), function(a) { return !a.value; });
-            empty = empty.concat($.grep($(":checkbox", elements), function(a) { return !a.checked; }));
-            $(empty).closest("span.row").hide("fast");
+        function hide_empty(elements, speed) {
+            $(":checkbox:not(:checked),:text[value=]", elements).closest("span.row").hide(speed);
         }
-        hide_empty($(".advanced"));
+        hide_empty(".advanced");
         $(".advanced-switch input").attr("checked", false).click(function(e) {
             e = $(this).closest(".fieldvalue-edit").find(".advanced");
-            if (this.checked) e.show("fast"); else hide_empty(e);
+            if (this.checked) e.show("fast"); else hide_empty(e, "fast");
             });
         $(".advanced-switch").show();
         $(".orderinput").hide();
@@ -55,79 +53,89 @@
 </script>
 {% endblock %}
 
-{% block content %}
 
-<div class="sidebar">
-
-{% if request.user.is_authenticated and record.id %}
-<div class="sidebar-item">
-{% if can_edit and record.id and not fv_formset %}
-    <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
-{% endif %}
-{% if record.id and not fv_formset %}
-    <a href="{% url data-record-edit-personal record.id record.name %}">Customize Record</a><br />
-{% endif %}
-{% if fv_formset and record.id %}
-    <a href="{% url data-record record.id record.name %}">Cancel Editing</a><br />
-{% endif %}
-</div>
-{% endif %}
-
+{% block sidebar %}
+{{ block.super }}
 
 {% if record.id %}
-<div class="sidebar-item">
-    <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title|default:"Untitled" }}" />
+<div class="facet active-facet" id="data_record_thumbnail">
+    <div class="facet-header">Thumbnail</div>
+    <div class="facet-body" style="text-align: center;">
+        <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title|default:"Untitled" }}" />
+    </div>
+</div>
+{% endif %}
+
+{% if request.user.is_authenticated and record.id %}
+<div class="facet active-facet" id="data_record_editing">
+    <div class="facet-header">Editing</div>
+    <div class="facet-body">
+{% if can_edit and record.id and not fv_formset %}
+        <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
+{% endif %}
+{% if record.id and not fv_formset %}
+        <a href="{% url data-record-edit-personal record.id record.name %}">Customize Record</a><br />
+{% endif %}
+{% if fv_formset and record.id %}
+        <a href="{% url data-record record.id record.name %}">Cancel Editing</a><br />
+{% endif %}
+    </div>
 </div>
 {% endif %}
 
 {% if record.id and not fv_formset %}
-<div class="sidebar-item">
 {% if request.user.is_authenticated %}
-    <h2>Your Tags</h2>
+<div class="facet active-facet" id="data_record_your_tags">
+    <div class="facet-header">Your Tags</div>
+    <div class="facet-body">
     {% owned_tags_for_object record for request.user as tags %}
     {% for tag in tags %}
         {% tag tag record "True" %}
     {% empty %}
-    Not tagged yet.
+        Not tagged yet.
     {% endfor %}
-
     {% add_tags_form record %}
-
+    </div>
+</div>
 {% endif %}
 
-    <h2>All Tags</h2>
+<div class="facet active-facet" id="data_record_all_tags">
+    <div class="facet-header">All Tags</div>
+    <div class="facet-body">
     {% owned_tags_for_object record except request.user as tags %}
     {% for tag in tags %}
         {% tag tag record %}
     {% empty %}
-    Not tagged yet.
+        Not tagged yet.
     {% endfor %}
+    </div>
 </div>
 {% endif %}
 
 {% if record.parent %}
-<div class="sidebar-item">
-    <h2>Parent record</h2>
+<div class="facet active-facet" id="data_record_parent">
+    <div class="facet-header">Parent record</div>
+    <div class="facet-body">
     {% record record.parent 'selectable' %}
-    <br style="clear: both" />
+    </div>
 </div>
 {% endif %}
 
 {% if record.id and record.record_set.count %}
-<div class="sidebar-item">
-    <h2>Child records</h2>
-    <div style="max-height: 400px; overflow: auto; ">
+<div class="facet active-facet" id="data_record_children">
+    <div class="facet-header">Child records</div>
+    <div class="facet-body" style="max-height: 400px; overflow: auto;">
         {% for child in record.record_set.all %}
             {% record child 'selectable' %}
         {% endfor %}
-        <br style="clear: both" />
     </div>
 </div>
 {% endif %}
 
 {% if media and not fv_formset %}
-<div class="sidebar-item">
-    <h2>Media</h2>
+<div class="facet active-facet" id="data_record_media">
+    <div class="facet-header">Media</div>
+    <div class="facet-body">
     <ul>
     {% for m in media %}
         <li>
@@ -142,131 +150,129 @@
     {% if can_edit %}
         <a href="{% url storage-upload record.id, record.name %}?next={{ request.get_full_path|urlencode }}">Upload media</a>
     {% endif %}
+    </div>
 </div>
 {% endif %}
 
-</div>
+{% endblock %}
 
-<div>
-    <h1>{{ record.title|default:"Untitled" }}</h1>
+
+{% block content %}
+
+<h1>{{ record.title|default:"Untitled" }}</h1>
 
 {% if not fv_formset %}
 
-    <form id="metadata-form" class="submit-on-select-change" action="." method="GET">
-    Display metadata as: <select name="fieldset">
-    <option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
-    <option value="">Default</option>
-    {% for fieldset in fieldsets %}
-    <option value="{{ fieldset.name }}"{% ifequal selected_fieldset.name fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
-    {% endfor %}
-    </select>
-    <input type="submit" value="Change" />
-    </form>
+<form id="metadata-form" class="submit-on-select-change" action="." method="GET">
+Display metadata as: <select name="fieldset">
+<option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
+<option value="">Default</option>
+{% for fieldset in fieldsets %}
+<option value="{{ fieldset.name }}"{% ifequal selected_fieldset.name fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
+{% endfor %}
+</select>
+<input type="submit" value="Change" />
+</form>
 
-    <div>
-        {% metadata record selected_fieldset %}
-    </div>
+<div>
+    {% metadata record selected_fieldset %}
+</div>
 
 {% else %}
 
-    <div style="clear: both;">
-
-    <h2>
-        {% if personal %}
-            Annotate Record
+<h2>
+    {% if personal %}
+        Annotate Record
+    {% else %}
+        {% if context %}
+            Annotate Record for {{ context.title }}
         {% else %}
-            {% if context %}
-                Annotate Record for {{ context.title }}
-            {% else %}
-                Edit Record
-            {% endif %}
+            Edit Record
         {% endif %}
-    </h2>
+    {% endif %}
+</h2>
 
-    <form method="GET" action="" class="submit-on-select-change">
-        Edit using fields template: <select name="fieldset">
-        <option value=""></option>
-        {% for fieldset in fieldsets %}
-        <option value="{{ fieldset.name }}">{{ fieldset.title }}</option>
-        {% endfor %}
-        </select>
-        <input type="submit" value="Edit" />
-    </form>
+<form method="GET" action="" class="submit-on-select-change">
+    Edit using fields template: <select name="fieldset">
+    <option value="">&nbsp;</option>
+    {% for fieldset in fieldsets %}
+    <option value="{{ fieldset.name }}">{{ fieldset.title }}</option>
+    {% endfor %}
+    </select>
+    <input type="submit" value="Edit" />
+</form>
 
 
-    <form method="POST" action="">
-        {{ fv_formset.management_form }}
-        <div>
-            <div id="fieldvalues">
-                <h3>Metadata</h3>
-                <input type="submit" value="Submit Changes" />
-
-        {% for form in fv_formset.forms %}
-            <div class="fieldvalue-edit{% cycle '' ' altrow' %}">
-                {{ form.errors }}
-                {{ form.id }}
-                {{ form.context_type }}
-                {{ form.context_id }}
-                <div class="column">
-                    <span class="row"><label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}</span>
-                    <span class="row advanced"><label for="{{ form.refinement.html_name }}">Refinement:</label> {{ form.refinement }}</span>
-                    <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
-                </div>
-                <div class="column">
-                    <span class="row autocomplete">{{ form.value }}</span>
-                </div>
-                <div class="column narrow">
-                    <span class="row advanced"><label for="{{ form.date_start.html_name }}">Start year:</label> {{ form.date_start }}</span>
-                    <span class="row advanced"><label for="{{ form.date_end.html_name }}">End year:</label> {{ form.date_end }}</span>
-                    <span class="row advanced"><label for="{{ form.numeric.html_name }}">Numeric:</label> {{ form.numeric_value }}</span>
-                </div>
-                <div class="column narrow">
-                    <span class="row advanced"><label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}</span>
-                    <span class="row orderinput"><label for="{{ form.order.html_name }}">Order:</label> {{ form.order }}</span>
-                    <span class="row advanced"><label for="{{ form.group.html_name }}">Group:</label> {{ form.group }}</span>
-                </div>
-                <div class="column">
-                    <span class="row advanced"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>
-                    <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
-                    <span class="row advanced-switch" style="display: none;"><label>Advanced:</label> <input type="checkbox" /></span>
-                </div>
-            </div>
-        {% endfor %}
-            </div>
-
-        {% if metadataform %}
-            <div>
-                <h3>Properties</h3>
-
-                {{ metadataform.errors }}
-
-                <div>
-                    Personal image: {{ metadataform.personal }}
-                </div>
-                {% if user.is_superuser %}
-                <div>
-                    Owner: {{ metadataform.owner }}
-                </div>
-                {% endif %}
-                {% if metadataform.collections.field.choices %}
-                <div>
-                    Collections: {{ metadataform.collections }}
-                </div>
-                {% endif %}
-                {% if metadataform.personal_collections.field.choices %}
-                <div>
-                    Collections (available for personal images only): {{ metadataform.personal_collections }}
-                </div>
-                {% endif %}
-            </div>
-        {% endif %}
-
+<form method="POST" action="">
+    {{ fv_formset.management_form }}
+    <div style="margin-top: 20px;">
+        <div id="fieldvalues">
             <input type="submit" value="Submit Changes" />
-        </div>
-    </form>
-    </div>
-{% endif %}
 
-</div>
+    {% for form in fv_formset.forms %}
+        <div class="fieldvalue-edit{% cycle '' ' altrow' %}">
+            {{ form.errors }}
+            {{ form.id }}
+            {{ form.context_type }}
+            {{ form.context_id }}
+            <div class="fvcol">
+                <span class="row"><label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}</span>
+                <span class="row advanced"><label for="{{ form.refinement.html_name }}">Refine:</label> {{ form.refinement }}</span>
+                <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
+            </div>
+            <div class="fvcol">
+                <span class="row autocomplete">{{ form.value }}</span>
+            </div>
+            <div class="fvcol narrow">
+                <span class="row advanced"><label for="{{ form.date_start.html_name }}">Start year:</label> {{ form.date_start }}</span>
+                <span class="row advanced"><label for="{{ form.date_end.html_name }}">End year:</label> {{ form.date_end }}</span>
+                <span class="row advanced"><label for="{{ form.numeric.html_name }}">Numeric:</label> {{ form.numeric_value }}</span>
+            </div>
+            <div class="fvcol narrow">
+                <span class="row advanced"><label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}</span>
+                <span class="row orderinput"><label for="{{ form.order.html_name }}">Order:</label> {{ form.order }}</span>
+                <span class="row advanced"><label for="{{ form.group.html_name }}">Group:</label> {{ form.group }}</span>
+            </div>
+            <div class="fvcol">
+                <span class="row advanced"><label for="{{ form.hidden.html_name }}">Hide:</label> {{ form.hidden }}</span>
+                <span class="row"><label for="{{ form.DELETE.html_name }}">Delete:</label> {{ form.DELETE }}</span>
+                <span class="row advanced-switch" style="display: none;"><label>Advanced:</label> <input type="checkbox" /></span>
+            </div>
+        </div>
+    {% endfor %}
+        </div>
+
+    {% if metadataform %}
+        <div>
+            <h3>Properties</h3>
+
+            {{ metadataform.errors }}
+
+            <div>
+                Personal image: {{ metadataform.personal }}
+            </div>
+            {% if user.is_superuser %}
+            <div>
+                Owner: {{ metadataform.owner }}
+            </div>
+            {% endif %}
+            {% if metadataform.collections.field.choices %}
+            Collections: 
+            <div class="multi-checkbox-list">
+                {{ metadataform.collections }}
+            </div>
+            {% endif %}
+            {% if metadataform.personal_collections.field.choices %}
+            <div>
+                Collections (available for personal images only): {{ metadataform.personal_collections }}
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+        <input type="submit" value="Submit Changes" />
+    </div>
+</form>
+{% endif %}
 
 {% endblock %}
