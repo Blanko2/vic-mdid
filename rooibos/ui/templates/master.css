@@ -110,6 +110,14 @@ table.wide-table, table.wide-table input {
     font-size: smaller;
 }
 
+a.help, #pagehelp {
+    cursor: help;
+}
+
+a.help {
+    font-size: smaller;
+}
+
 #topmenu {
     margin: 0;
     background-color: {{ colors.background_top }};

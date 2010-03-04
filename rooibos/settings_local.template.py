@@ -58,7 +58,7 @@ CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
 
 INTERNAL_IPS = ('127.0.0.1',)
 
-HELP_URL = 'https://wiki.cit.jmu.edu/mdidhelp/index.php/Help_v1:'
+HELP_URL = 'http://mdid.org/help/'
 
 DEFAULT_LANGUAGE = 'en-us'
 
