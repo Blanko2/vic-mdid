@@ -94,7 +94,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         if request.user.is_superuser:
             q = Q()
         else:
-            q = (Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None) |
+            q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
                  Q(collection__id__in=readable_collections))
         record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
         can_edit = check_access(request.user, record, write=True) | \
