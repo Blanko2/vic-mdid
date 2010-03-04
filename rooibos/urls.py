@@ -18,12 +18,13 @@ serve = cache_control(max_age=365 * 24 * 3600)(serve)
 
 
 urls = [
-    url(r'^$', main, name='main'),
+    url(r'^$', main, {'HELP': 'frontpage'}, name='main'),
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
-    url(r'^showcases/', direct_to_template, {'template': 'showcases.html',
+    url(r'^showcases/', direct_to_template, {'HELP': 'showcases',
+                                             'template': 'showcases.html',
                                              'extra_context': {'applications': apps_showcases}}, name='showcases'),
-    url(r'^login/$', login, {'SSL': True}, name='login'),
-    url(r'^logout/$', logout, {'next_page': '/'}, name='logout'),
+    url(r'^login/$', login, {'HELP': 'logging-in', 'SSL': True}, name='login'),
+    url(r'^logout/$', logout, {'HELP': 'logging-out', 'next_page': '/'}, name='logout'),
     url(r'^admin/(.*)', admin.site.root, {'SSL': True}, name='admin'),
 
     (r'^ui/', include('rooibos.ui.urls')),

@@ -86,7 +86,7 @@
             {% else %}
             <li><a href="{% url login %}?next={{ request.get_full_path }}">Log in</a></li>
             {% endif %}
-            <li>{% block help %}{% pagehelp 'main' %}{% endblock %}</li>
+            <li>{% with request.pagehelp|default:"" as help %}{% pagehelp help %}{% endwith %}</li>
         </ul>
         <span id="javascriptwarning">You have JavaScript disabled.  MDID works better with JavaScript enabled.</span>
     </div>    
