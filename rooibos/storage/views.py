@@ -219,3 +219,8 @@ def manage_storage(request, storageid, storagename):
                            'form': form,
                            },
                           context_instance=RequestContext(request))
+
+
+@login_required
+def import_files(request):
+    pass

@@ -882,6 +882,30 @@ div.fieldvalue-edit optgroup {
 div.fieldvalue-edit div.narrow input {
     width: 50px;
 }
+
+
+#management li {
+    list-style: none;
+    margin: 10px 0;
+    width: 300px;
+    float: left;
+}
+
+#management a {
+    text-decoration: none;
+    font-size: large;
+}
+
+#management li:hover {
+    background-color: #f7f7f7;
+}
+
+#management img {
+    width: 48px;
+    height: 48px;
+    vertical-align: middle;
+}
+
 /*
 .browsecolumn {
     float: left;
