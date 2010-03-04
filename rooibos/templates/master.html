@@ -10,7 +10,7 @@
     <script type="text/javascript">
         document.documentElement.className = 'js-enabled';
     </script>
-    <title>{% block title %}MDID 3 {% block titledetail %}{% endblock %}{% endblock %}</title>
+    <title>MDID{% block title %}{% endblock %}</title>
 {% block stylesheets %}
 {% compress css %}
     <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
