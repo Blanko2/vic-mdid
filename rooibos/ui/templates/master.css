@@ -837,6 +837,19 @@ div.metadata-subitem div.label {
     visibility: hidden;
 }
 
+.record-preview div.metadata {
+    font-size: x-small;
+    margin: 10px 0;
+}
+
+.record-preview div.metadata div.label {
+    width: 100px;
+}
+
+.record-preview div.metadata div.value{
+    width: 230px;
+}
+
 div.fieldvalue-edit {
     padding: 4px;
     margin: 0px;
@@ -905,6 +918,29 @@ div.fieldvalue-edit div.narrow input {
     height: 48px;
     vertical-align: middle;
 }
+
+
+#metadatabubble {
+    position: absolute;
+    width: 340px;
+    height: 390px;
+    background-color: #FFFFDF;
+    display: none;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border: solid 1px lightgrey;
+    overflow: hidden;
+    padding: 5px;
+}
+
+#metadatabubble-arrow {
+    position: absolute;
+    width: 11px;
+    height: 22px;
+    display: none;
+    background: transparent;
+}
+
 
 /*
 .browsecolumn {

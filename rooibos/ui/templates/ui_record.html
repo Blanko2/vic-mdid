@@ -1,4 +1,4 @@
-<div class="record">
+<div class="record record-anchor" id="record-id-{{ record.id }}">
     <a href="{{ record.get_absolute_url }}"><img class="thumbnail" src="{{ record.get_thumbnail_url }}" alt="{{ record.title }}" /></a>
     <div class="record-title"><a href="{{ record.get_absolute_url }}">{{ record.title }}</a></div>
     {% if selectable %}

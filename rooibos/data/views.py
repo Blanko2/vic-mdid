@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.db.models import Q
 from django import forms
 from django.forms.models import modelformset_factory
@@ -12,6 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils.safestring import mark_safe
 from django.utils import simplejson
+from rooibos.util import json_view
 from models import *
 from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list, check_access
@@ -443,4 +445,22 @@ def data_import_file(request, file):
                                'mapping_formset': mapping_formset,
                               },
                               context_instance=RequestContext(request))
+
     
+@json_view
+def record_preview(request, id):
+
+    readable_collections = list(accessible_ids_list(request.user, Collection))
+
+    if request.user.is_superuser:
+        q = Q()
+    else:
+        q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
+             Q(collection__id__in=readable_collections))
+    record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
+
+    return dict(html=render_to_string('data_previewrecord.html',
+                              {'record': record,
+                               'none': None,
+                               },
+                              context_instance=RequestContext(request)))

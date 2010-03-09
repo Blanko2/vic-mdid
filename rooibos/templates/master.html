@@ -73,6 +73,10 @@
 <div id="basket-tab">
     {% include "ui_basket_header.html" %}
 </div>
+
+<div id="metadatabubble"></div>
+<div id="metadatabubble-arrow"></div>
+
 {% endblock %}
 
 {% block header %}
@@ -201,6 +205,71 @@
         function bindSelectRecordCheckboxes() {
             $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
         }
+        
+        
+        // metadata bubble code
+        var showMetadataBubbleTimeout;
+        var hideMetadataBubbleTimeout;
+        var metadataBubbleCache = Object();
+        function showMetadataBubble(anchor, id) {
+            clearTimeout(hideMetadataBubbleTimeout);
+            var w = $(window);
+            var left = anchor.offset().left + anchor.outerWidth() + 10;
+            var top = Math.max(anchor.offset().top, w.scrollTop() + 5);
+            var aleft = left - 10;
+            var atop = top + 10;
+            var bg = '{% url static "images/bubblearrow-left.png" %}';
+            if (top + 405 > w.height() + w.scrollTop())
+                top = Math.max(w.height() + w.scrollTop() - 405, w.scrollTop() + 5);
+            if (left + 355 > w.width() + w.scrollLeft() && anchor.offset().left - 367 >= w.scrollLeft()) {
+                left = anchor.offset().left - 362;
+                aleft = left + 351;
+                bg = '{% url static "images/bubblearrow-right.png" %}';
+            }
+            var html = metadataBubbleCache[id] ?
+                metadataBubbleCache[id] :
+                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 162px;' />";                
+            $("#metadatabubble").html(html).css('left', left).css('top', top).show('fast');
+            $("#metadatabubble-arrow").css('background-image', 'url(' + bg + ')').css('left', aleft).css('top', atop).show('fast');
+            if (!metadataBubbleCache[id])
+                ajaxManager.add({
+                    type: 'GET',
+                    url: '{% url data-record-preview 0 %}'.replace('/0/', '/' + id + '/'),
+                    dataType: 'json',
+                    success: function(r) {
+                        metadataBubbleCache[id] = r.html;
+                        $("#metadatabubble").html(r.html);
+                    }
+                });
+        }
+        
+        function hideMetadataBubble() {
+            $("#metadatabubble,#metadatabubble-arrow").hide('fast');
+        }
+        
+        function metadataBubbleTimeout(anchor, show) {
+            var id = anchor.attr("id");
+            id = id.substring(id.lastIndexOf('-') + 1);
+            clearTimeout(hideMetadataBubbleTimeout);
+            clearTimeout(showMetadataBubbleTimeout);
+            if (show)
+                showMetadataBubbleTimeout = setTimeout(function() { showMetadataBubble(anchor, id); }, 500);
+            else
+                hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
+        }
+        
+        $(".record-anchor[id^=record-id-]").hover(function() {
+            metadataBubbleTimeout($(this), true);
+        }, function() {
+            metadataBubbleTimeout($(this), false);            
+        });
+        
+        $("#metadatabubble").hover(function() {
+            clearTimeout(hideMetadataBubbleTimeout);
+        }, function() {
+            hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
+        });
+        
         
         function store_profile_setting(key, value) {
             ajaxManager.add({

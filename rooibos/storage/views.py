@@ -191,7 +191,7 @@ def call_proxy_url(request, uuid):
     return view(*args, **kwargs)
 
 
-
+@login_required
 def manage_storages(request):
     
     storages = get_list_or_404(filter_by_access(request.user, Storage, manage=True).order_by('title'))
@@ -202,6 +202,7 @@ def manage_storages(request):
                           context_instance=RequestContext(request))
 
 
+@login_required
 def manage_storage(request, storageid, storagename):
     
     storage = get_object_or_404(filter_by_access(request.user, Storage, manage=True), id=storageid)
