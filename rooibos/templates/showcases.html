@@ -5,10 +5,8 @@
 
 <h1>Showcases</h1>
 
-<div>
-    {% for app in applications %}
-        {% include app %}
-    {% endfor %}
-</div>
+{% for app in applications %}
+{% include app %}
+{% endfor %}
 
 {% endblock %}
