@@ -945,8 +945,6 @@ div.fieldvalue-edit div.narrow input {
     width: 300px;
 }
 
-
-/*
 .browsecolumn {
     float: left;
     margin: 10px;
@@ -962,6 +960,16 @@ div.fieldvalue-edit div.narrow input {
     width: 3em;
 }
 
-*/
+#collection-overview h2 {
+    margin: 20px 0 10px 0;
+}
+
+#collection-overview .usage-agreement {
+    border: thin solid {{ colors.borders }};
+    font-size: smaller;
+    width: 80%;
+    margin: 10px 0;
+    padding: 5px;
+}
 
 </style>

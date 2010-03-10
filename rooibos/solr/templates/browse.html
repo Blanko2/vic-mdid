@@ -8,10 +8,8 @@
 {{ block.super }}
 <script type="text/javascript">
 $(document).ready(function() {
-    enableRelatedImages("Hover over a browsable term to see selected matching images");
     $("#browse-forms select").change(function () { this.form.submit(); });
-    $("#browse-forms :submit").remove();
-    
+    $("#browse-forms :submit").remove();    
 });
 </script>
 {% endblock %}
@@ -20,27 +18,34 @@ $(document).ready(function() {
 
 <h1>Browse collections</h1>
 
-<div id="browse-forms">
-<form method="GET" action=".">
-    <label for="c">Collection:</label>
-    <select name="c">
-        {% for collection in collections %}
-        <option value="{{ collection.name }}"{% ifequal selected_collection.id collection.id %} selected="selected"{% endifequal %}>{{ collection.title }}</option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="Browse" />
-</form>
-
-<form method="GET" action=".">
-    <label for="f">Fields:</label>
-    <select name="f">
-        {% for field in fields %}
-        <option value="{{ field.name }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="Browse" />
-</form>
-</div>
+<table id="browse-forms">
+<tr>
+    <td><label for="c">Collection:</label></td>
+    <td>
+        <form method="GET" action=".">
+            <select name="c">
+{% for collection in collections %}
+<option value="{{ collection.name }}"{% ifequal selected_collection.id collection.id %} selected="selected"{% endifequal %}>{{ collection.title }}</option>
+{% endfor %}
+            </select>
+            <input type="submit" value="Browse" />
+        </form>
+    </td>
+</tr>
+<tr>
+    <td><label for="f">Fields:</label></td>
+    <td>
+        <form method="GET" action=".">
+            <select name="f">
+{% for field in fields %}
+<option value="{{ field.name }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
+{% endfor %}
+            </select>
+            <input type="submit" value="Browse" />
+        </form>
+    </td>
+</tr>
+</table>
 
 Jump to:
 {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
