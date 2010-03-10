@@ -41,10 +41,10 @@
 {% endif %}
 
 {% var as refine %}
-{ "url": "{% url presentation-browse %}?{% if active_presenter %}presenter={{ active_presenter|urlencode }}&{% endif %}kw={{ keywords|urlencode }}&{% for t in active_tags %}t={{ t|urlencode }}&{% endfor %}" }
+{ "url": "{{ request.path }}?{% if active_presenter %}presenter={{ active_presenter|urlencode }}&{% endif %}kw={{ keywords|urlencode }}&{% for t in active_tags %}t={{ t|urlencode }}&{% endfor %}" }
 {% endvar %}
   
-{% if active_presenter %}
+{% if active_presenter and not manage %}
   <div class="facet active-facet">
     <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>Presenter</div>
     <div class="facet-body">{% if active_presenter.last_name %}{{ active_presenter.last_name }}, {{ active_presenter.first_name }}{% else %}{{ active_presenter.username }}{% endif %}</div>
@@ -104,7 +104,7 @@
 {% endif %}
 
 <div style="text-align: center; margin-top: 20px;">
-    <a href="{% url presentation-browse %}">Reset Search</a>
+    <a href="{{ request.path }}">Reset Search</a>
 </div>
 
 {% endblock %}
@@ -114,7 +114,11 @@
 
 {% autopaginate presentations 25 %}
 
-<h1>Browse Presentations</h1>
+<h1>{{ manage|yesno:"Manage,Browse" }} Presentations</h1>
+
+{% if manage %}
+<a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a><br /><br />
+{% endif %}
 
 {% paginate %}
 
@@ -124,7 +128,13 @@
     <tr>
         <th></th>
         <th>Title</th>
+        {% if manage %}
+        <th>Hidden</th>
+        <th>Created</th>
+        <th>Modified</th>
+        {% else %}
         <th>Presenter</th>
+        {% endif %}
         <th>Tags</th>
         <th>Items</th>
         <th></th>
@@ -134,14 +144,28 @@
     {% owned_tags_for_object presentation for presentation.owner as otags %}
     <tr class="{% cycle "" "altrow" %}">
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
-        <td>{{ presentation.title }}</td>
+        <td>
+            {% if manage %}
+            <a href="{% url presentation-edit presentation.id, presentation.name %}">{{ presentation.title }}</a>
+            {% else %}
+            {{ presentation.title }}
+            {% endif %}
+        </td>
+        {% if manage %}
+        <td>{{ presentation.hidden|yesno:"hidden,-" }}</td>
+        <td>{{ presentation.created|naturalday:"M j, Y" }}</td>
+        <td>{{ presentation.modified|naturalday:"M j, Y" }}</td>
+        {% else %}
         <td>{% if presentation.owner.last_name %}{{ presentation.owner.last_name }}, {{ presentation.owner.first_name }}{% else %}{{ presentation.owner.username }}{% endif %}</td>
+        {% endif %}
         <td>{% for ptag in ptags %}
                 {% tag ptag presentation "True" %}
             {% endfor %}
+            {% if not manage %}
             {% for otag in otags %}
                 {% tag otag presentation 0 'secondary' %}
             {% endfor %}
+            {% endif %}
         </td>
         <td>{{ presentation.visible_item_count }}</td>
         <td>{% list_viewers presentation request.get_full_path %}</td>
@@ -150,6 +174,13 @@
 </table>
 
 {% paginate %}
+
+{% if manage %}
+<label>With selected</label>
+<input type="submit" name="hide" value="Hide" />
+<input type="submit" name="unhide" value="Show" />
+<input type="submit" id="delete" name="delete" value="Delete" />
+{% endif %}
 
 {% else %}
 No presentations available.
