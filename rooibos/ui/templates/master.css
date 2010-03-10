@@ -923,7 +923,7 @@ div.fieldvalue-edit div.narrow input {
 #metadatabubble {
     position: absolute;
     width: 340px;
-    height: 390px;
+    height: 250px;
     background-color: #FFFFDF;
     display: none;
     -moz-border-radius: 5px;
@@ -939,6 +939,10 @@ div.fieldvalue-edit div.narrow input {
     height: 22px;
     display: none;
     background: transparent;
+}
+
+#criteria input {
+    width: 300px;
 }
 
 

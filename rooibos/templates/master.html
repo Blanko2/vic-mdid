@@ -213,23 +213,31 @@
         var metadataBubbleCache = Object();
         function showMetadataBubble(anchor, id) {
             clearTimeout(hideMetadataBubbleTimeout);
+            var bubble = $("#metadatabubble");
+            var height = 250;
+            var width = 340;
             var w = $(window);
             var left = anchor.offset().left + anchor.outerWidth() + 10;
-            var top = Math.max(anchor.offset().top, w.scrollTop() + 5);
+            var top = Math.max(anchor.offset().top - 10, w.scrollTop() + 5);
             var aleft = left - 10;
             var atop = top + 10;
             var bg = '{% url static "images/bubblearrow-left.png" %}';
-            if (top + 405 > w.height() + w.scrollTop())
-                top = Math.max(w.height() + w.scrollTop() - 405, w.scrollTop() + 5);
-            if (left + 355 > w.width() + w.scrollLeft() && anchor.offset().left - 367 >= w.scrollLeft()) {
-                left = anchor.offset().left - 362;
-                aleft = left + 351;
-                bg = '{% url static "images/bubblearrow-right.png" %}';
+            if (top + height + 15 > w.height() + w.scrollTop())
+                top = Math.max(w.height() + w.scrollTop() - height - 15, w.scrollTop() + 5);
+            if (left + width + 15 > w.width() + w.scrollLeft()) {
+                if (anchor.offset().left - width - 27 >= w.scrollLeft()) {
+                    left = anchor.offset().left - width - 22;
+                    aleft = left + width + 11;
+                    bg = '{% url static "images/bubblearrow-right.png" %}';
+                } else {
+                    left = w.width() - w.scrollLeft() - width - 20;
+                    aleft = left - 10;
+                }
             }
             var html = metadataBubbleCache[id] ?
                 metadataBubbleCache[id] :
                 "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 162px;' />";                
-            $("#metadatabubble").html(html).css('left', left).css('top', top).show('fast');
+            bubble.html(html).css('left', left).css('top', top).show('fast');
             $("#metadatabubble-arrow").css('background-image', 'url(' + bg + ')').css('left', aleft).css('top', atop).show('fast');
             if (!metadataBubbleCache[id])
                 ajaxManager.add({

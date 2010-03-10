@@ -34,14 +34,14 @@ $(document).ready(function() {
 {{ formset.management_form }}
 
 Collections: <br />
-<div id="collections" style="overflow: auto; max-height: 8em; float: left; border: solid grey thin; white-space: nowrap; padding-right: 50px;">
+<div id="collections" class="multi-checkbox-list">
 {{ collectionform.collections }}
 </div>
 
 <div id="criteria" style="clear: left; padding: 20px 0;">
 {% for form in formset.forms %}
     <div>
-    {{ form }}
+    Criteria: {{ form.criteria }} {{ form.type }} {{ form.field }}
     </div>
 {% endfor %}
 </div>
