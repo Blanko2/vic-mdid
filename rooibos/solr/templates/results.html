@@ -61,13 +61,13 @@
   <div class="facet active-facet">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
-        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" />
+        <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
     </div>
   </div>
     
 {% for c in criteria %}
   <div class="facet active-facet">
-    <div class="facet-header"><a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" /></a>{{ c.label }}</div>
+    <div class="facet-header"><a href="{{ limit_url }}rem={{ c.facet|urlencode }}" class="icon remove-icon" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" class="facet-button" /></a>{{ c.label }}</div>
     <div class="facet-body">{% if c.negated %}not {% endif %}{{ c.term }}
         {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><img src="{% url static 'images/or_icon.png' %}" alt="Or" title="Or" /></a>{% endif %}        
     </div>

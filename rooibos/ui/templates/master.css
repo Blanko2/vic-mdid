@@ -30,6 +30,7 @@
     "tag_secondary":                "lightgrey",
     "tag_secondary_text":           "black",
     "links":                        "{{ SECONDARY_COLOR }}",
+    "user_icons":                   "{{ PRIMARY_COLOR }}",
 
     "js_warning_text":              "white",
     "js_warning_background":        "red",
@@ -81,7 +82,15 @@ img {
     margin: 0;
 }
 
-a, a:hover, a:visited {
+a, a:link, a:visited {
+    color: {{ colors.links }};
+}
+
+a:hover {
+    color: {{ colors.links }};
+}
+
+a:active {
     color: {{ colors.links }};
 }
 
@@ -228,8 +237,12 @@ html.js-enabled #header .search span {
     color: {{ colors.headings }};
     width: 120px;
     height: 23px;
-    border: solid {{ colors.dropdownmenu_text }} 2px;
+    border: solid {{ colors.links }} 2px;
     border-right-width: 1px;
+}
+
+#search-go {
+    background-color: {{ colors.links }};
 }
 
 #header ul li a {
@@ -332,6 +345,9 @@ html.js-enabled #content {
 #basket-tab-pin {
     display: none;
     cursor: pointer;
+    background-color: {{ colors.basket_text }};
+    width: 11px;
+    height: 11px;
 }
 
 html.js-enabled #basket-tab-pin {
@@ -981,6 +997,14 @@ div.fieldvalue-edit div.narrow input {
     margin: 10px 10px 10px 0px;;
     border: solid thin lightgrey;
     padding: 5px;
+}
+
+#keywords-go, img.facet-button {
+    background-color: {{ colors.links }};
+}
+
+.user-icon {
+    background-color: {{ colors.user_icons }};
 }
 
 </style>

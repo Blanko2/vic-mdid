@@ -4,7 +4,7 @@
         <div class='label{% cycle '' ' altrow' %}'>{{ value.resolved_label }}:</div>
         <div class='value{% cycle '' ' altrow' %}'>{{ value.value|default:"&nbsp;" }}
 {% if value.owner %}
-        <img src="{% url static 'images/user.png' %}" style="vertical-align: middle;" title="{{ value.owner.username }}" />
+        <img src="{% url static 'images/user.png' %}" class="user-icon" style="vertical-align: middle;" title="{{ value.owner.username }}" />
 {% endif %}
         </div>
     </div>

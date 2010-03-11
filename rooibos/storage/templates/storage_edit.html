@@ -40,7 +40,7 @@
 {% endif %}
 
   <div class="facet active-facet" id="storage_sidebar_permissions">
-    <div class="facet-header">Permissions <a href="{% permissions_modify_url storage %}"><img src="{% url static 'images/edit.png' %}" /></a></div>
+    <div class="facet-header">Permissions <a href="{% permissions_modify_url storage %}"><img src="{% url static 'images/edit.png' %}" class="facet-button" /></a></div>
     <div class="facet-body">
         {% permissions_display storage %}
     </div>
