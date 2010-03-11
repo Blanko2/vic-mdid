@@ -122,10 +122,14 @@ def upload_progress(request):
 @login_required
 def manage(request):
     
-    storage = filter_by_access(request.user, Storage, manage=True).count() > 0
+    storage_manage = filter_by_access(request.user, Storage, manage=True).count() > 0
+    storage_write = filter_by_access(request.user, Storage, write=True).count() > 0
+    collection_write = filter_by_access(request.user, Collection, write=True).count() > 0
     
     return render_to_response('ui_management.html',
-                              {'storage': storage,
+                              {'storage_manage': storage_manage,
+                               'storage_write': storage_write,
+                               'collection_write': collection_write,
                               },
                               context_instance=RequestContext(request))
     
