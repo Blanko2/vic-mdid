@@ -146,6 +146,14 @@ class RelatedField(object):
             # be invoked before the final SQL is evaluated
             if hasattr(value, 'relabel_aliases'):
                 return value
+            if lookup_type == 'in':
+                query_uses_limit = value.query.high_mark is not None or \
+                    value.query.low_mark
+                if query_uses_limit and \
+                            not connection.features.allow_limit_in_in_subquery:
+                    ret = map(pk_trace, value)
+                    value.value_annotation = bool(ret)
+                    return ret
             if hasattr(value, 'as_sql'):
                 sql, params = value.as_sql()
             else:
