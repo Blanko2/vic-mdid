@@ -32,7 +32,7 @@ def convert_ppt(owner, title, collection, storage, tempdir, filename):
         logging.error(line)
     p.wait()
 
-    images = sorted(filter(lambda f: f.endswith('.jpg'), os.listdir(tempdir)))
+    images = sorted(filter(lambda f: f.endswith('.jpg'), os.listdir(tempdir)), key=lambda i: int(i[3:-4]))
     if not images:
         return None
 
