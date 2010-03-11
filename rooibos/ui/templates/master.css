@@ -37,7 +37,8 @@
     "permissions_denied":           "red",
     "permissions_unset":            "lightgrey",
     "success":                      "green",
-    "fail":                         "red"
+    "fail":                         "red",
+    "drop_shadow":                  "grey"
 }
 {% endvar %}
 <style type='text/css'>
@@ -931,6 +932,9 @@ div.fieldvalue-edit div.narrow input {
     border: solid 1px lightgrey;
     overflow: hidden;
     padding: 5px;
+    -moz-box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
+    -webkit-box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
+    box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
 }
 
 #metadatabubble-arrow {
@@ -969,6 +973,13 @@ div.fieldvalue-edit div.narrow input {
     font-size: smaller;
     width: 80%;
     margin: 10px 0;
+    padding: 5px;
+}
+
+.powerpoint-theme {
+    float: left;
+    margin: 10px 10px 10px 0px;;
+    border: solid thin lightgrey;
     padding: 5px;
 }
 

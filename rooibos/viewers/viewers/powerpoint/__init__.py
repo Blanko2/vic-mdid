@@ -286,20 +286,25 @@ class PowerPointPresentation(object):
     
     def url(self):
         return [url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.options, name='viewers-powerpoint'),
-                url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/(?P<template>[^/]+)/$', self.generate, name='viewers-powerpoint-download')]
+                url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/(?P<template>[^/]+)/$', self.generate, name='viewers-powerpoint-download'),
+                url(r'^powerpoint/(?P<template>[^/]+)/thumb/$', self.thumbnail, name='viewers-powerpoint-thumbnail')]
     
     def url_for_obj(self, obj):
         return reverse('viewers-powerpoint', kwargs={'id': obj.id, 'name': obj.name})
     
     def options(self, request, id, name):
         presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)
-        template_urls = [reverse('viewers-powerpoint-download', kwargs={'id': presentation.id,
+        templates = [(reverse('viewers-powerpoint-download', kwargs={'id': presentation.id,
                                                                         'name': presentation.name,
-                                                                        'template': t})
+                                                                        'template': t}),
+                      reverse('viewers-powerpoint-thumbnail', kwargs={'template': t}),
+                      t[:-5].capitalize())
                          for t in PowerPointGenerator.get_templates()]
         return render_to_response('presentations/powerpoint/options.html',
-                                  {'template_urls': template_urls,
-                                   'presentation': presentation,},
+                                  {'templates': templates,
+                                   'presentation': presentation,
+                                   'next': request.GET.get('next'),
+                                   },
                                   context_instance=RequestContext(request))
     
     def generate(self, request, id, name, template):
@@ -318,4 +323,10 @@ class PowerPointPresentation(object):
                 os.unlink(filename)
             except:
                 pass
-            
+    
+    def thumbnail(self, request, template):
+        filename = os.path.join(os.path.dirname(__file__), 'pptx_templates', template)
+        if not os.path.isfile(filename):
+            raise Http404()
+        template = ZipFile(filename, mode='r')
+        return HttpResponse(content=template.read('docProps/thumbnail.jpeg'), mimetype='image/jpg')

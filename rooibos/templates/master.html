@@ -236,7 +236,7 @@
             }
             var html = metadataBubbleCache[id] ?
                 metadataBubbleCache[id] :
-                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 162px;' />";                
+                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 122px;' />";                
             bubble.html(html).css('left', left).css('top', top).show('fast');
             $("#metadatabubble-arrow").css('background-image', 'url(' + bg + ')').css('left', aleft).css('top', atop).show('fast');
             if (!metadataBubbleCache[id])
