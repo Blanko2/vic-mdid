@@ -1007,4 +1007,8 @@ div.fieldvalue-edit div.narrow input {
     background-color: {{ colors.user_icons }};
 }
 
+#external-results {
+    display: none;
+}
+
 </style>

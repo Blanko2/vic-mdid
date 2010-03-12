@@ -82,15 +82,16 @@ INSTALLED_APPS = (
     'rooibos.solr',
     'rooibos.storage',
     'rooibos.legacy',
-    'rooibos.nasa',
     'rooibos.ui',
     'rooibos.viewers',
     'rooibos.help',
     'rooibos.presentation',
     'rooibos.statistics',
-    'rooibos.flickr',
+    'rooibos.federatedsearch',
+    'rooibos.federatedsearch.artstor',
+    'rooibos.federatedsearch.flickr',
+    'rooibos.federatedsearch.nasa',
     'rooibos.converters',
-    'rooibos.artstor',
     'rooibos.contrib.tagging',
     'rooibos.workers',
     'rooibos.userprofile',
@@ -106,7 +107,7 @@ STORAGE_SYSTEMS = {
 }
 
 GROUP_MANAGERS = {
-    'nasaimageexchange': 'rooibos.nasa.nix.NasaImageExchange',
+    'nasaimageexchange': 'rooibos.federatedsearch.nasa.nix.NasaImageExchange',
 }
 
 AUTH_PROFILE_MODULE = 'userprofile.UserProfile'

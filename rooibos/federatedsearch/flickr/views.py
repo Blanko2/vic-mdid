@@ -12,7 +12,7 @@ from rooibos.settings import FLICKR_KEY, FLICKR_SECRET
 from forms import PeopleSearchForm
 from rooibos.solr.models import SolrIndexUpdates
 from rooibos.solr import SolrIndex
-from rooibos.flickr.models import FlickrUploadr, FlickrSearch, FlickrImportr, FlickrSetPhotos
+from models import FlickrUploadr, FlickrSearch, FlickrImportr, FlickrSetPhotos
 from django.utils import simplejson
 from rooibos.util import json_view
 

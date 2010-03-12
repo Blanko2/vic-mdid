@@ -26,39 +26,53 @@
 
         $("#sort_dropdown, #viewmode_dropdown").change(function() { $("#explore-form").submit(); })
         $("#sort_go_button").hide();
+        $("#external-results").show().html("<div style='text-align: center;'>Loading <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
     {% if not facets %}
         $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
     {% endif %}
     });
     
     $(window).load(function() {
-    {% if facets %}
-    {% else %}
+        {% if not facets %}
         ajaxManager.add({
                 type: 'GET',
                 url: '{{ facets_url|escapejs }}',
                 dataType: 'json',
                 success: function(r) {
-//                    var t=new Date().getTime();
                     var facets = $("#facets");
                     facets.hide();
                     facets[0].innerHTML = r.html;
                     process_facets();
-//                    alert(new Date().getTime()-t);
                     facets.slideDown(500);
                 }
             });
-    {% endif %}
+        {% endif %}
+        ajaxManager.add({
+            type: 'GET',
+            url: '{% url federatedsearch-sidebar-api %}',
+            dataType: 'json',
+            success: function(r) {
+                $("#external-results").html(r.html);
+                if (r.hits == 0)
+                    setTimeout(function() { $("#results_sidebar_external").hide(500); }, 3000);
+            }
+        });
     });
 </script>
 {% endblock %}
 
 
-
 {% block sidebar %}
 {{ block.super }}
 
-  <div class="facet active-facet">
+  <div class="facet active-facet" id="results_sidebar_external">
+    <div class="facet-header">Additional Content</div>
+    <div class="facet-body" id="external-results">
+        
+    </div>
+  </div>
+
+  <div class="facet active-facet" id="results_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
         <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
@@ -72,7 +86,6 @@
         {% if c.or_available %}<a href="{{ limit_url }}or={{ c.facet|urlencode }}" class="icon or-icon" title="Add additional term"><img src="{% url static 'images/or_icon.png' %}" alt="Or" title="Or" /></a>{% endif %}        
     </div>
   </div>
-    
 {% endfor %}
 
 {% if orfacet.facets %}
@@ -103,39 +116,13 @@
 
 {% block content-top %}
 
-<!--
-<form id="flickr_form" name="flickr_form" method="POST" action="{% url flickr-photo-search %}">
-    <input name="search_string" type="hidden" value="{{ keywords }}" />
-</form>
-<form id="artstor_form" name="artstor_form" method="POST" action="{% url artstor-photo-search %}">
-    <input name="search_string" type="hidden" value="{{ keywords }}" />
-</form>
--->
 <form method="GET" action="{{ form_url }}" id="explore-form">
 {% for f,v in hiddenfields %}
 <input type="hidden" name="{{ f }}" value="{{ v }}" />
 {% endfor %}
 
 <div style="float: right;">
-<!--    
-    <span class="imagebar">
-    {% spaceless %}
-    {% ifequal viewmode "thumb" %}
-    <input type="image" name="v" value="list" src="{% url static 'images/listview_off.png' %}"
-           alt="List view" title="List view"/>
-    <img src="{% url static 'images/thumbnailview_on.png' %}"
-           alt="Thumbnail view" title="Thumbnail view" />
-    {% endifequal %}
-    {% ifequal viewmode "list" %}
-    <img src="{% url static 'images/listview_on.png' %}"
-           alt="List view" title="List view"/>
-    <input type="image" name="v" value="thumb" src="{% url static 'images/thumbnailview_off.png' %}"
-           alt="Thumbnail view" title="Thumbnail view" />    
-    {% endifequal %}
-    {% endspaceless %}
-    </span>
-    
--->    
+
     View:
     <select name="v" id="viewmode_dropdown">
         <option value="thumb"{% ifequal viewmode "thumb" %} selected="selected"{% endifequal %}>Thumbnails</option>
@@ -171,10 +158,6 @@
 
 
 {% block content %}
-<!--
-Found <a href="javascript:document.flickr_form.submit()">{{ flickr_total }}</a> results from Flickr.
-Found <a href="javascript:document.artstor_form.submit()">{{ artstor_total }}</a> results from ARTstor.
--->
 
 {% if records %}
 <div id="resultlist" class="resultlist-{{ viewmode }}">

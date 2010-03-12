@@ -20,8 +20,6 @@ import re
 import copy
 import random
 import logging
-from rooibos.flickr.models import FlickrSearch
-from rooibos.artstor.models import ArtstorSearch
 
 
 class SearchFacet(object):
@@ -281,18 +279,6 @@ def search(request, id=None, name=None, selected=False, json=False):
     if selected:
         selected = request.session.get('selected_records', ())
 
-    flickr_total = 0
-    artstor_total = 0
-
-    #if keywords and not json:
-    #    search = FlickrSearch()
-    #    results = search.photoSearch(keywords)
-    #    flickr_total = results['total']
-    #
-    #    search = ArtstorSearch()
-    #    results = search.photoSearch(keywords)
-    #    artstor_total = results['total']
-
     (hits, records, search_facets, orfacet, query, fields) = run_search(user, collection, criteria, keywords, sort, page, pagesize,
                                                          orquery, selected, remove, produce_facets=False)
 
@@ -389,9 +375,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'sort': sort,
                            'sortfields': fields,
                            'random': random.random(),
-                           'viewmode': viewmode,
-                           'flickr_total': flickr_total,
-                           'artstor_total': artstor_total,},
+                           'viewmode': viewmode,},
                           context_instance=RequestContext(request))
 
 

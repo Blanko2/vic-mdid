@@ -2,7 +2,7 @@ import urllib, urllib2, time
 import cookielib
 from xml.etree.ElementTree import ElementTree
 from rooibos.settings import ARTSTOR_GATEWAY
-from rooibos.artstor.models import SmartRedirectHandler
+from models import SmartRedirectHandler
 import unittest
 
 # TODO: rework test since it depends on a working ARTstor connection

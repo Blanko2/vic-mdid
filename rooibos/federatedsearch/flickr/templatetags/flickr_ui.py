@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from django.template import Context, Variable
 from django.contrib.contenttypes.models import ContentType
 from rooibos.contrib.tagging.models import Tag
-from rooibos.flickr.models import FlickrSearch
+from models import FlickrSearch
 from rooibos.util.models import OwnedWrapper
 
 register = template.Library()
