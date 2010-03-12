@@ -1,5 +1,5 @@
 {% spaceless %}
 {% for record in selected_records %}
-<a href="{{ record.get_absolute_url }}"><img class="thumbnail" src="{{ record.get_thumbnail_url }}?square" alt="Thumbnail" title="{{ record.title }}" /></a>
+<a href="{{ record.get_absolute_url }}"><img id="basket-record-id-{{ record.id }}" class="thumbnail record-anchor" src="{{ record.get_thumbnail_url }}?square" alt="{{ record.title }}" /></a>
 {% endfor %}
 {% endspaceless %}

@@ -65,7 +65,10 @@
 
 {% block basket %}
 <div id="basket-content">
-    <div id="basket-menu">See all</div>
+    <div id="basket-menu">
+        <a href="{% url solr-selected %}">See all</a><br />
+        <a href="{% url data-selected %}">Apply</a><br />
+    </div>
     <div id="basket-scroll-right"></div>
     <div id="basket-scroll-left"></div>
     <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
@@ -266,10 +269,8 @@
                 hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
         }
         
-        $(".record-anchor[id^=record-id-]").hover(function() {
-            metadataBubbleTimeout($(this), true);
-        }, function() {
-            metadataBubbleTimeout($(this), false);            
+        $(".record-anchor[id*=record-id-]").live('mouseenter mouseleave', function(event) {
+                metadataBubbleTimeout($(this), event.type == 'mouseenter');
         });
         
         $("#metadatabubble").hover(function() {

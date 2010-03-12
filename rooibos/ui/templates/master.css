@@ -377,6 +377,12 @@ html.js-enabled #basket-tab-pin {
     padding-right: 10px;
 }
 
+#basket-menu a {
+    float: right;
+    padding-right: 10px;
+    text-decoration: none;
+}
+
 #basket-scroll-left {
     float: left;
     height: 60px;
