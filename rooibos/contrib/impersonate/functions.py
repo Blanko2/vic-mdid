@@ -37,12 +37,15 @@ def get_real_user(request):
 
 
 def can_impersonate(realusername, username):
-    return Impersonation.objects.filter(
+    return User.objects.get(username=realusername).is_superuser or Impersonation.objects.filter(
         Q(users__username=username) | Q(groups__user__username=username),
         group__user__username=realusername).count() > 0
    
     
 def get_available_users(realusername):
-    return User.objects.filter(
-        Q(impersonated_set__group__user__username=realusername) | Q(groups__impersonated_set__group__user__username=realusername)
-        ).distinct().order_by('username').values_list('username', flat=True)
+    if User.objects.get(username=realusername).is_superuser:
+        return User.objects.exclude(username=realusername).order_by('username').values_list('username', flat=True)
+    else:
+        return User.objects.filter(
+            Q(impersonated_set__group__user__username=realusername) | Q(groups__impersonated_set__group__user__username=realusername)
+            ).distinct().order_by('username').values_list('username', flat=True)
