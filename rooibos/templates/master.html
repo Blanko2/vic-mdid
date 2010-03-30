@@ -226,8 +226,8 @@
             var aleft = left - 10;
             var atop = top + 10;
             var bg = '{% url static "images/bubblearrow-left.png" %}';
-            if (top + height + 15 > w.height() + w.scrollTop())
-                top = Math.max(w.height() + w.scrollTop() - height - 15, w.scrollTop() + 5);
+            if (top + height + 25 > w.height() + w.scrollTop())
+                top = Math.max(w.height() + w.scrollTop() - height - 25, w.scrollTop() + 5);
             if (left + width + 15 > w.width() + w.scrollLeft()) {
                 if (anchor.offset().left - width - 27 >= w.scrollLeft()) {
                     left = anchor.offset().left - width - 22;
