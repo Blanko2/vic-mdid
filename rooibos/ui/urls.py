@@ -9,4 +9,6 @@ urlpatterns = patterns('',
     url(r'^tag/remove/(?P<type>\d+)/(?P<id>\d+)/', remove_tag, name='ui-remove-tag'),
     url(r'^manage/$', manage, name='ui-management'),
     url(r'^options/$', options, name='ui-options'),
+    url(r'^selected/$', selected_records, name='ui-selected'),
+    url(r'^clear-selected/$', clear_selected_records, name='ui-clear-selected'),
 )

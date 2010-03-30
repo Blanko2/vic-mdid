@@ -23,11 +23,15 @@
 
 <a href="{% url solr-selected %}">Explore {{ selected|length|intcomma }} selected record{{ selected|pluralize }}</a>
 
+<h2>{{ selected|length|intcomma }} record{{ selected|pluralize }} selected</h2>
+
+<div id="selected-records">
+{% for record in records %}
+<a href="{{ record.get_absolute_url }}"><img id="record-id-{{ record.id }}" class="thumbnail record-anchor" src="{{ record.get_thumbnail_url }}?square" alt="{{ record.title }}" /></a>
+{% endfor %}
+</div>
+
 <a href="{% url flickr-export-photo-list %}">Export to Flickr</a>
 
-
-{% with False as selectable %}
-{% include "results_bare_icons.html" %}
-{% endwith %}
 
 {% endblock %}

@@ -1017,4 +1017,10 @@ div.fieldvalue-edit div.narrow input {
     display: none;
 }
 
+#selected-records img {
+    margin: 5px;
+    padding: 1px;
+    border: solid thin {{ colors.borders }};
+}
+
 </style>

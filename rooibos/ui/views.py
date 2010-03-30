@@ -1,3 +1,4 @@
+from django import forms
 from django.utils import simplejson
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed
@@ -17,7 +18,8 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
 from rooibos.solr.views import run_search
-from rooibos.context_processors import selected_records
+from rooibos.context_processors import selected_records as ctx_selected_records
+from rooibos.presentation.models import Presentation
 import random 
 
 
@@ -64,7 +66,7 @@ def select_record(request):
             selected = set(selected) - set(ids)
     request.session['selected_records'] = selected
 
-    context = selected_records(request)
+    context = ctx_selected_records(request)
 
     return dict(
         basket=render_to_string('ui_basket.html', context),
@@ -139,5 +141,57 @@ def options(request):
     
     return render_to_response('ui_options.html',
                               {
+                              },
+                              context_instance=RequestContext(request))
+    
+
+def clear_selected_records(request):
+    request.session['selected_records'] = ()
+    
+    return HttpResponseRedirect(request.GET.get('next', reverse('ui-selected')))
+    
+    
+
+def selected_records(request):
+
+    selected = request.session.get('selected_records', ())
+    records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))
+
+    class AddToPresentationForm(forms.Form):
+        def available_presentations():
+            presentations = list(filter_by_access(request.user, Presentation, write=True).values_list('id', 'title'))
+            if request.user.has_perm('presentation.add_presentation'):
+                presentations.insert(0, ('new', 'New Presentation'))
+            return presentations
+        def clean(self):
+            if self.cleaned_data.get("presentation") == 'new' and not self.cleaned_data.get("title"):
+                raise forms.ValidationError("Please select an existing presentation or specify a new presentation title")
+            return self.cleaned_data
+        presentation = forms.ChoiceField(label='Add to presentation', choices=available_presentations())
+        title = forms.CharField(label='Presentation title', max_length=Presentation._meta.get_field('title').max_length, required=False)
+
+    if request.method == "POST":
+        presentation_form = AddToPresentationForm(request.POST)
+        if presentation_form.is_valid():
+            presentation = presentation_form.cleaned_data['presentation']
+            title = presentation_form.cleaned_data['title']
+            if presentation == 'new':
+                if not request.user.has_perm('presentation.add_presentation'):
+                    return HttpResponseForbidden("You are not allowed to create new presentations")
+                presentation = Presentation.objects.create(title=title, owner=request.user, hidden=True)
+            else:
+                presentation = get_object_or_404(filter_by_access(request.user, Presentation, write=True), id=presentation)
+            c = presentation.items.count()
+            for record in records:
+                c += 1
+                presentation.items.create(record=record, order=c)
+            return HttpResponseRedirect(presentation.get_absolute_url(edit=True))
+    else:
+        presentation_form = AddToPresentationForm()
+
+    return render_to_response('ui_selected_records.html',
+                              {'selected': selected,
+                               'records': records,
+                               'presentation_form': presentation_form,
                               },
                               context_instance=RequestContext(request))
