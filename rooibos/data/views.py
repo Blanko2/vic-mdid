@@ -48,6 +48,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     writable_collections = list(accessible_ids_list(request.user, Collection, write=True))
     readable_collections = list(accessible_ids_list(request.user, Collection))
 
+    next = request.GET.get('next')
+
     if id and name:
         if request.user.is_superuser:
             q = Q()
@@ -109,6 +111,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     self._fields = _get_fields()
                 data = self.cleaned_data.get('field')
                 return self._fields.get(id=data)
+                
+            def clean_context_type(self):
+                context = self.cleaned_data.get('context_type')
+                if context:
+                    context = ContentType.objects.get(id=context)
+                return context
 
             def clean(self):
                 cleaned_data = self.cleaned_data
@@ -217,8 +225,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                         instance.context = context
                     instance.save()
                 request.user.message_set.create(message="Changes to metadata saved successfully.")
-                url = reverse('data-record-edit-personal' if personal else 'data-record-edit',
-                              kwargs=dict(id=record.id, name=record.name))
+                url = next or reverse('data-record-edit-personal' if personal else 'data-record-edit',
+                                      kwargs=dict(id=record.id, name=record.name))
                 return HttpResponseRedirect(url)
         else:
 
@@ -249,6 +257,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'fv_formset': formset,
                                'metadataform': metadataform,
                                'can_edit': can_edit,
+                               'next': next,
                                },
                               context_instance=RequestContext(request))
 

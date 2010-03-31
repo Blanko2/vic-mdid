@@ -9,7 +9,7 @@
 <h1>Selected Records</h1>
 
 
-<div id="selected-records">
+<div class="framed-thumbnails">
 {% for record in records %}
 <a href="{{ record.get_absolute_url }}"><img id="record-id-{{ record.id }}" class="thumbnail record-anchor" src="{{ record.get_thumbnail_url }}?square" alt="{{ record.title }}" /></a>
 {% endfor %}

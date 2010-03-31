@@ -34,19 +34,36 @@
 
 </form>
 
+<br style="clear: both;" />
 
 {% with presentation.items.all as items %}
 {% if items %}
 
-<h2>Included records</h2>
+<h2>{{ items|length }} Record{{ items|pluralize }} in Presentation</h2>
 
-<a href="{% url presentation-items presentation.id, presentation.name %}">Sort and annotate records</a>
-
+<div class="framed-thumbnails">
 {% for item in items %}
-    {% record item.record %}
+    <a href="{{ item.record.get_absolute_url }}"><img id="record-id-{{ item.record.id }}" class="thumbnail record-anchor" src="{{ item.record.get_thumbnail_url }}?square" alt="{{ item.record.title }}" /></a>
 {% endfor %}
+</div>
 
 {% endif %}
 {% endwith %}
+
+{% endblock %}
+
+
+{% block sidebar %}
+
+{% var as related_pages %}
+{"pages": [
+{% if presentation.items.count %}
+    {"url": "{% url presentation-items presentation.id, presentation.name %}", "title": "Sort and annotate records"},
+{% endif %}
+    {"url": "{% url presentation-manage %}", "title": "Presentations"}
+]}
+{% endvar %}
+
+{{ block.super }}
 
 {% endblock %}

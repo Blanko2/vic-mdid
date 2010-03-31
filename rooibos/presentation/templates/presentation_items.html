@@ -9,7 +9,7 @@
             $(".orderinput").hide();
             $("#items tbody").sortable({
                 axis: 'y',
-                handle: 'img',
+                containment: '#items',
                 update: function(event, ui) {
                     $("#items tbody tr:even").removeClass('altrow');
                     $("#items tbody tr:odd").addClass('altrow');
@@ -19,7 +19,10 @@
                     $(".controls", ui.helper).hide();
                     ui.helper.removeClass('altrow');
                 },
-                });
+                stop: function(event, ui) {
+                    $(".controls", ui.helper).show();
+                }
+                }).css('cursor', 'move');
             $(".delete input").click(function() {
                 $(".thumbnail", $(this).parent().parent()).toggle();
             });
@@ -31,7 +34,6 @@
 {% block content %}
 
 <h1>{{ presentation.title }}</h1>
-<a href="{% url presentation-edit presentation.id, presentation.name %}">Presentation properties</a>
 
 <div id="dragdropnote" style="display: none;">Drag and drop thumbnails into desired order.</div>
 
@@ -40,13 +42,13 @@
 <table id="items" summary="Included records" class="list">
     <thead>
     <tr>
-        <td colspan="2"></td>
-        <td colspan="4"><input type="submit" value="Submit changes" /></td>
+        <td colspan="4"></td>
+        <td colspan="2"><input type="submit" value="Submit changes" /></td>
     </tr>
     <tr>
         <th></th>
         <th>Title</th>
-        <th class="orderinput">Order</th>
+        <th><span class="orderinput">Order</span></th>
         <th></th>
         <th>Hidden</th>
         <th>Remove</th>
@@ -54,11 +56,11 @@
     </thead>
     <tbody>
 {% for form in formset.forms %}
-    <tr class="sortable{% cycle "" " altrow" %}">
-        <td>{{ form.id }}<a href="{{ form.instance.record.get_absolute_url }}"><img class="thumbnail" src="{{ form.instance.record.get_thumbnail_url }}" alt="{{ form.instance.record.title }}" /></a></td>
+    <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
+        <td>{{ form.id }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" /></a></td>
         <td>{{ form.instance.record.title }}</td>
-        <td class="orderinput">{{ form.order }} {{ form.order.errors }}</td>
-        <td><a href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, presentation_contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}">Annotate</a></td>
+        <td><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
+        <td><a href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, presentation_contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Annotate</a></td>
         <td class="controls">{{ form.hidden }}</td>
         <td class="controls delete">{{ form.DELETE }}</td>
     </tr>
@@ -66,11 +68,27 @@
     </tbody>
     <tfoot>
     <tr>
-        <td colspan="2"></td>
-        <td colspan="4"><input type="submit" value="Submit changes" /></td>
+        <td colspan="4"></td>
+        <td colspan="2"><input type="submit" value="Submit changes" /></td>
     </tr>
     </tfoot>
 </table>
 </form>
+
+{% endblock %}
+
+
+{% block sidebar %}
+
+{% var as related_pages %}
+{"pages": [
+{% if presentation.items.count %}
+    {"url": "{% url presentation-edit presentation.id, presentation.name %}", "title": "Presentation properties"},
+{% endif %}
+    {"url": "{% url presentation-manage %}", "title": "Presentations"}
+]}
+{% endvar %}
+
+{{ block.super }}
 
 {% endblock %}

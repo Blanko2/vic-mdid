@@ -72,7 +72,7 @@
         <a href="{% url data-record-edit-personal record.id record.name %}">Customize Record</a><br />
 {% endif %}
 {% if fv_formset and record.id %}
-        <a href="{% url data-record record.id record.name %}">Cancel Editing</a><br />
+        <a href="{% if next %}{{ next }}{% else %}{% url data-record record.id record.name %}{% endif %}">Cancel Editing</a><br />
 {% endif %}
     </div>
 </div>
