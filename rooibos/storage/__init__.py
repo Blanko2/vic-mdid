@@ -2,6 +2,8 @@ from __future__ import with_statement
 import Image
 import StringIO
 import logging
+import mimetypes
+import os
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q, F
@@ -9,6 +11,10 @@ from rooibos.access import accessible_ids, get_effective_permissions_and_restric
 from rooibos.data.models import Collection
 from rooibos.presentation.models import Presentation
 from models import Media, Storage
+
+
+mimetypes.init(os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'mime.types')))
+
 
 # sort images by area
 def _imgsizecmp(x, y):

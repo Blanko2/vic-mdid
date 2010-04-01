@@ -59,6 +59,7 @@ MIDDLEWARE_CLASSES = (
     'djangologging.middleware.LoggingMiddleware',
     'djangologging.middleware.SuppressLoggingOnAjaxRequestsMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
@@ -98,6 +99,7 @@ INSTALLED_APPS = (
     'pagination',
     'impersonate',
     'compressor',
+    'south',
 )
 
 STORAGE_SYSTEMS = {

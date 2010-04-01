@@ -47,6 +47,23 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
 
         media.delete()
 
+    def test_save_over_existing_file(self):
+        Media.objects.filter(record=self.record).delete()
+        media = Media.objects.create(record=self.record, name='image', storage=self.storage)
+        content = StringIO('hello world')
+        media.save_file('test.txt', content)
+        
+        media2 = Media.objects.create(record=self.record, name='image', storage=self.storage)
+        self.assertNotEqual('image', media2.name)
+        
+        content2 = StringIO('hallo welt')
+        media2.save_file('test.txt', content2)
+        self.assertNotEqual('test.txt', media2.url)
+        
+        self.assertEqual('hello world', media.load_file().read())
+        self.assertEqual('hallo welt', media2.load_file().read())
+        
+
     def test_thumbnail(self):
         Media.objects.filter(record=self.record).delete()
         media = Media.objects.create(record=self.record, name='tiff', mimetype='image/tiff', storage=self.storage)

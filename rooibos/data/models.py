@@ -88,6 +88,16 @@ class Record(models.Model):
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
 
+    @staticmethod
+    def by_fieldvalue(fields, value):
+        try:
+            fields = iter(fields)
+        except TypeError:
+            fields = [fields]
+        return Record.objects.filter(fieldvalue__index_value=value[:32],
+                                     fieldvalue__value__iexact=value,
+                                     fieldvalue__field__in=fields)
+
     def __unicode__(self):
         return self.name
 
@@ -161,6 +171,7 @@ class Record(models.Model):
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')
 
+    
 
 class MetadataStandard(models.Model):
     title = models.CharField(max_length=100)
@@ -248,6 +259,7 @@ class FieldValue(models.Model):
     order = models.IntegerField(default=0)
     group = models.IntegerField(null=True, blank=True)
     value = models.TextField()
+    index_value = models.CharField(max_length=32, db_index=True)
     date_start = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     date_end = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     numeric_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
@@ -256,6 +268,10 @@ class FieldValue(models.Model):
     context_id = models.PositiveIntegerField(null=True, blank=True)
     context = generic.GenericForeignKey('context_type', 'context_id')
 
+    def save(self, **kwargs):
+        self.index_value = self.value[:32] if self.value else None
+        super(FieldValue, self).save(kwargs)
+        
     def __unicode__(self):
         return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
 
@@ -295,6 +311,7 @@ class DisplayFieldValue(FieldValue):
                                  order=value.order,
                                  group=value.group,
                                  value=value.value,
+                                 index_value=value.index_value,
                                  date_start=value.date_start,
                                  date_end=value.date_end,
                                  numeric_value=value.numeric_value,
@@ -303,3 +320,11 @@ class DisplayFieldValue(FieldValue):
                                  context_id=value.context_id)
         dfv._original_field_name = value.field.name
         return dfv
+
+
+def standardfield(field, standard='dc', equiv=False):
+    f = Field.objects.get(standard__prefix=standard, name=field)
+    if equiv:
+        return Field.objects.filter(Q(id=f.id) | Q(id__in=f.get_equivalent_fields()))
+    else:
+        return f

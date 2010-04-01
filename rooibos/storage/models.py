@@ -151,6 +151,7 @@ class Media(models.Model):
             return None
 
     def delete_file(self):
+        self.clear_derivatives()
         return self.storage and self.storage.storage_system.delete(self.url) or False
 
     def identify(self, save=True, lazy=False):
@@ -173,6 +174,11 @@ class Media(models.Model):
             self.bitrate = bitrate
             if save:
                 self.save()
+                
+    def clear_derivatives(self):
+        for m in self.derivatives.all():
+            m.delete_file()
+        self.derivatives.all().delete()
 
 
 class TrustedSubnet(models.Model):

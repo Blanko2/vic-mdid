@@ -1,27 +1,27 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, \
-    HttpResponseServerError, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
-from django.views.decorators.cache import cache_control
-from django.template import RequestContext
-from django.shortcuts import _get_queryset
+from datetime import datetime, timedelta
 from django import forms
-from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import resolve
-from django.conf import settings
-from django.db.models import Count
-from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
-from rooibos.data.models import Collection, Record
-from rooibos.storage import get_image_for_record, get_thumbnail_for_record
-from rooibos.contrib.ipaddr import IP
-from rooibos.util import json_view
+from django.db.models import Count, Q
+from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError, HttpResponseForbidden
+from django.shortcuts import _get_queryset, get_object_or_404, get_list_or_404, render_to_response
+from django.template import RequestContext
+from django.template.loader import render_to_string
+from django.utils import simplejson
+from django.views.decorators.cache import cache_control
 from models import Media, Storage, TrustedSubnet, ProxyUrl
+from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
+from rooibos.contrib.ipaddr import IP
+from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
+from rooibos.storage import get_image_for_record, get_thumbnail_for_record
+from rooibos.util import json_view
+import logging
 import os
 import uuid
-import logging
-from datetime import datetime, timedelta
-
+import mimetypes
 
 #def expire_header(seconds=3600):
 #    return (datetime.utcnow() + timedelta(0, seconds)).strftime('%a, %d %b %Y %H:%M:%S GMT')
@@ -107,11 +107,12 @@ def media_upload(request, recordid, record):
             
             storage = Storage.objects.get(name=form.cleaned_data['storage'])
             file = request.FILES['file']
+            mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
 
             media = Media.objects.create(record=record,
                                          name=os.path.splitext(file.name)[0],
                                          storage=storage,
-                                         mimetype=file.content_type)
+                                         mimetype=mimetype)
             media.save_file(file.name, file)
 
             if request.POST.get('swfupload') == 'true':
@@ -224,4 +225,107 @@ def manage_storage(request, storageid, storagename):
 
 @login_required
 def import_files(request):
-    pass
+
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True).order_by('title').values_list('id', 'title'))
+    available_collections = get_list_or_404(filter_by_access(request.user, Collection, write=True).order_by('title').values_list('id', 'title'))
+    
+    class UploadFileForm(forms.Form):
+        collection = forms.ChoiceField(choices=available_collections)
+        storage = forms.ChoiceField(choices=available_storage)
+        file = forms.FileField()
+        create_records = forms.BooleanField(required=False)
+        replace_files = forms.BooleanField(required=False, label='Replace files of same type')
+        personal_records = forms.BooleanField(required=False)
+        
+
+    if request.method == 'POST':
+        
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            
+            collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True))
+            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage']), write=True))
+            create_records = form.cleaned_data['create_records']
+            replace_files = form.cleaned_data['replace_files']
+            personal_records = form.cleaned_data['personal_records']
+            file = request.FILES['file']
+
+            mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
+
+            owner = request.user if personal_records else None
+            id = os.path.splitext(file.name)[0]
+
+            # find record by identifier
+            titlefield = standardfield('title')
+            idfield = standardfield('identifier')
+            idfields = standardfield('identifier', equiv=True)
+
+            records = Record.by_fieldvalue(idfields, id).filter(collection=collection, owner=owner)
+            result = "File skipped."
+            record = None
+            
+            x = records.query.as_sql()
+            print x[0] % x[1]
+            
+            if len(records) == 1:
+                # Matching record found
+                record = records[0]
+                media = record.media_set.filter(storage=storage, mimetype=mimetype)
+                if len(media) == 0:
+                    # No media yet
+                    media = Media.objects.create(record=record,
+                                                 name=id,
+                                                 storage=storage,
+                                                 mimetype=mimetype)
+                    media.save_file(file.name, file)
+                    result = "File added (Identifier '%s')." % id
+                elif replace_files:
+                    # Replace existing media
+                    media = media[0]
+                    media.delete_file()
+                    media.save_file(file.name, file)
+                    result = "File replaced (Identifier '%s')." % id
+                else:
+                    result = "File skipped, media files already attached."
+            elif len(records) == 0:
+                # No matching record found
+                if create_records:
+                    # Create a record
+                    record = Record.objects.create(name=id, owner=owner)
+                    CollectionItem.objects.create(collection=collection, record=record)
+                    FieldValue.objects.create(record=record, field=idfield, value=id, order=0)
+                    FieldValue.objects.create(record=record, field=titlefield, value=id, order=1)
+                    media = Media.objects.create(record=record,
+                                                 name=id,
+                                                 storage=storage,
+                                                 mimetype=mimetype)
+                    media.save_file(file.name, file)
+                    result = "File added to new record (Identifier '%s')." % id
+                else:
+                    result = "File skipped, no matching record found (Identifier '%s')." % id
+            else:
+                result = "File skipped, multiple matching records found (Identifier '%s')." % id
+                # Multiple matching records found
+                pass
+
+            if request.POST.get('swfupload') == 'true':
+                
+                html = render_to_string('storage_import_file_response.html',
+                                 {'result': result,
+                                  'record': record,},
+                                 context_instance=RequestContext(request)
+                                 )
+                
+                return HttpResponse(content=simplejson.dumps(dict(status='ok', html=html)),
+                                    mimetype='application/json')
+
+            request.user.message_set.create(message=result)
+            next = request.GET.get('next', request.get_full_path())
+            return HttpResponseRedirect(next)
+    else:
+        form = UploadFileForm()
+
+    return render_to_response('storage_import_files.html',
+                              {'form': form,
+                               },
+                              context_instance=RequestContext(request))
