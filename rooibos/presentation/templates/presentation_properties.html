@@ -15,9 +15,11 @@
 {{ form.tags }}
 {{ form.tags.errors }}
 
+{% if perms.presentation.publish_presentations %}
 {{ form.hidden.label_tag }}
 {{ form.hidden }}
 {{ form.hidden.errors }}
+{% endif %}
 
 {{ form.description.label_tag }}
 {{ form.description }}

@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.http import HttpResponse, HttpRequest, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from django.utils import simplejson
 from django.core import serializers
 from django.db.models import Q
@@ -120,8 +120,10 @@ def presentations_for_current_user(request):
 @cache_control(no_cache=True)
 @json_view
 def presentation_detail(request, id):    
-    p = get_object_or_404(Presentation.objects.filter(
-        id=id, id__in=accessible_ids(request.user, Presentation)))
+    p = Presentation.get_by_id_for_request(id, request)
+    if not p:
+        return dict(result='error')
+    
     flash = request.GET.get('flash') == '1'
     
     # Propagate the flash URL paramater into all image URLs to control the "Vary: cookie" header

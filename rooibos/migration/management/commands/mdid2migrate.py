@@ -2,7 +2,7 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 from django.db import connection, reset_queries
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from xml.dom import minidom
 import os
@@ -13,7 +13,7 @@ from datetime import datetime
 from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
 from rooibos.storage.models import Storage, Media
 from rooibos.solr import SolrIndex
-from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP, SystemAccess
+from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP
 from rooibos.util.progressbar import ProgressBar
 from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
 from rooibos.contrib.tagging.models import Tag
@@ -53,7 +53,7 @@ P = dict(
 
 
 class Command(BaseCommand):
-    help = 'Migrates database from older version'
+    help = 'Migrates database from MDID2'
     args = "config_file"
     option_list = BaseCommand.option_list + (
         make_option('--skip-users', dest='skip_users', action='store_true', help='Do not migrate user accounts'),
@@ -214,20 +214,16 @@ class Command(BaseCommand):
 
         # Migrate system permissions
 
-        system_permissions = [
-            ('CreateSlideshow', SystemAccess.objects.get(name='SLIDESHOW_CREATE')),
-            ('PublishSlideshow', SystemAccess.objects.get(name='SLIDESHOW_PUBLISH')),
-            ('UserOptions', SystemAccess.objects.get(name='USER_OPTIONS'))
-        ]
-
+        publish_permission = Permission.objects.get(codename='publish_presentations')
         for row in cursor.execute("SELECT ObjectID,UserID,GroupID,GrantPriv,DenyPriv " +
-                                  "FROM AccessControl WHERE ObjectType='O' AND ObjectID=1"):
-            for (perm, obj) in system_permissions:
-                ac = AccessControl()
-                ac.content_object = obj
-                if populate_access_control(ac, row, P[perm], 0, 0):
-                    if ac.read != None:
-                        ac.save()
+                                  "FROM AccessControl WHERE ObjectType='O' AND ObjectID=1"):            
+            if row.DenyPriv and row.DenyPriv & P['PublishSlideshow']:
+                continue
+            if row.GrantPriv and row.GrantPriv & P['PublishSlideshow']:
+                if row.UserID and users.has_key(row.UserID):
+                    users[row.UserID].user_permissions.add(publish_permission)
+                elif usergroups.has_key(row.GroupID):
+                    usergroups[row.GroupID].permissions.add(publish_permission)
 
         #Privilege.ModifyACL  -> manage
         #Privilege.ManageCollection  -> manage

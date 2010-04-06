@@ -1,11 +1,12 @@
 from django.db import models, connection
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes import generic
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from rooibos.data.models import Record
 from rooibos.storage.models import Media
 from rooibos.util import unique_slug
+from rooibos.access import accessible_ids
 
 
 class Presentation(models.Model):
@@ -54,6 +55,32 @@ class Presentation(models.Model):
         else:
             return []
 
+    def verify_password(self, request):
+        self.unlocked = (not self.password) or (request.session.get('passwords', dict()).get(self.id) == self.password)
+        return self.unlocked
+        
+    @staticmethod
+    def published_Q(owner=None):
+        publish_permission = Permission.objects.get(codename='publish_presentations')
+        valid_publishers = User.objects.filter(Q(id__in=publish_permission.user_set.all()) |
+                                               Q(groups__id__in=publish_permission.group_set.all()))
+        q = Q(owner__in=valid_publishers) & Q(hidden=False)
+        if owner:
+            return q | Q(owner=owner)
+        else:
+            return q
+        
+    @staticmethod
+    def get_by_id_for_request(id, request):
+        p = Presentation.objects.filter(Presentation.published_Q(request.user),
+                                        id=id,
+                                        id__in=accessible_ids(request.user, Presentation))
+        return p[0] if p and p[0].verify_password(request) else None
+
+    class Meta:
+        permissions = (
+            ("publish_presentations", "Can publish presentations"),
+        )
 
 class PresentationItem(models.Model):
 

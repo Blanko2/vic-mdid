@@ -160,8 +160,7 @@ def selected_records(request):
     class AddToPresentationForm(forms.Form):
         def available_presentations():
             presentations = list(filter_by_access(request.user, Presentation, write=True).values_list('id', 'title'))
-            if request.user.has_perm('presentation.add_presentation'):
-                presentations.insert(0, ('new', 'New Presentation'))
+            presentations.insert(0, ('new', 'New Presentation'))
             return presentations
         def clean(self):
             if self.cleaned_data.get("presentation") == 'new' and not self.cleaned_data.get("title"):
@@ -176,8 +175,6 @@ def selected_records(request):
             presentation = presentation_form.cleaned_data['presentation']
             title = presentation_form.cleaned_data['title']
             if presentation == 'new':
-                if not request.user.has_perm('presentation.add_presentation'):
-                    return HttpResponseForbidden("You are not allowed to create new presentations")
                 presentation = Presentation.objects.create(title=title, owner=request.user, hidden=True)
             else:
                 presentation = get_object_or_404(filter_by_access(request.user, Presentation, write=True), id=presentation)

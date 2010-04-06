@@ -129,7 +129,9 @@
         <th></th>
         <th>Title</th>
         {% if manage %}
+        {% if perms.presentation.publish_presentations %}
         <th>Hidden</th>
+        {% endif %}
         <th>Created</th>
         <th>Modified</th>
         {% else %}
@@ -137,6 +139,7 @@
         {% endif %}
         <th>Tags</th>
         <th>Items</th>
+        <th></th>
         <th></th>
     </tr>
 {% for presentation in presentations %}
@@ -152,7 +155,9 @@
             {% endif %}
         </td>
         {% if manage %}
+        {% if perms.presentation.publish_presentations %}
         <td>{{ presentation.hidden|yesno:"hidden,-" }}</td>
+        {% endif %}
         <td>{{ presentation.created|naturalday:"M j, Y" }}</td>
         <td>{{ presentation.modified|naturalday:"M j, Y" }}</td>
         {% else %}
@@ -168,7 +173,21 @@
             {% endif %}
         </td>
         <td>{{ presentation.visible_item_count }}</td>
-        <td>{% list_viewers presentation request.get_full_path %}</td>
+        <td>{% if presentation.password %}
+                {% if presentation.unlocked %}
+                <img src="{% url static "images/unlocked.gif" %}" />
+                {% else %}
+                <img src="{% url static "images/locked.gif" %}" />
+                {% endif %}
+            {% endif %} 
+        </td>
+        <td>
+            {% if not presentation.password or presentation.unlocked %}
+            {% list_viewers presentation request.get_full_path %}
+            {% else %}
+            <a href="{% url presentation-password presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}">Unlock</a>
+            {% endif %}
+        </td>
     </tr>
 {% endfor %}
 </table>
@@ -177,8 +196,10 @@
 
 {% if manage %}
 <label>With selected</label>
+{% if perms.presentation.publish_presentations %}
 <input type="submit" name="hide" value="Hide" />
 <input type="submit" name="unhide" value="Show" />
+{% endif %}
 <input type="submit" id="delete" name="delete" value="Delete" />
 {% endif %}
 

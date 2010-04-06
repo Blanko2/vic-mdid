@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db import backend
+from django.contrib.auth.models import Permission
 from django import forms
 from rooibos.contrib.tagging.models import Tag, TaggedItem
 from rooibos.contrib.tagging.forms import TagField
@@ -85,12 +86,14 @@ def edit(request, id, name):
         if form.is_valid():
             presentation.title = form.cleaned_data['title']
             presentation.name = None
-            presentation.hidden = form.cleaned_data['hidden']
+            if request.user.has_perm('presentation.publish_presentations'):
+                presentation.hidden = form.cleaned_data['hidden']
             presentation.description = form.cleaned_data['description']
             presentation.password = form.cleaned_data['password']
             presentation.save()
             Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
                                     form.cleaned_data['tags'])
+            request.user.message_set.create(message="Changes to presentation saved successfully.")
             return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
         form = PropertiesForm(initial={'title': presentation.title,
@@ -142,7 +145,7 @@ def browse(request, manage=False):
         raise Http404()
 
     presenter = request.user if manage else request.GET.get('presenter')
-    tags = request.GET.getlist('t')
+    tags = filter(None, request.GET.getlist('t'))
     remove_tag = request.GET.get('rt')
     if remove_tag and remove_tag in tags:
         tags.remove(remove_tag)
@@ -151,6 +154,9 @@ def browse(request, manage=False):
     get.setlist('t', tags)
     if get.has_key('rt'):
         del get['rt']    
+
+    print tags, 1 if tags else 0
+    print keywords
 
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
@@ -178,8 +184,14 @@ def browse(request, manage=False):
                  Q(owner__username__icontains=kw) for kw in keywords.split()))
     else:
         qk = Q()
-        
-    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, id__in=accessible_ids(request.user, Presentation)).order_by('title')
+
+    if manage:
+        qv = Q()
+    else:
+        qv = Presentation.published_Q()
+            
+    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv,
+                                                                        id__in=accessible_ids(request.user, Presentation)).order_by('title')
 
     class ManagePresentationsForm(forms.Form):
        tags = SplitTaggingField(label='Select existing tags:',
@@ -195,7 +207,7 @@ def browse(request, manage=False):
 
     if request.method == "POST":
 
-        if manage and (request.POST.get('hide') or request.POST.get('unhide')):
+        if manage and (request.POST.get('hide') or request.POST.get('unhide')) and request.user.has_perm('presentation.publish_presentations'):
             hide = request.POST.get('hide') or False
             ids = map(int, request.POST.getlist('h'))
             for presentation in Presentation.objects.filter(owner=request.user, id__in=ids):
@@ -246,6 +258,9 @@ def browse(request, manage=False):
             object_id__in=presentations.values('id'),
             content_type=OwnedWrapper.t(Presentation))    
         tags = Tag.objects.usage_for_queryset(q, counts=True)
+        
+        for p in presentations:
+            p.verify_password(request)
     else:
         tags = ()
     
@@ -273,4 +288,32 @@ def browse(request, manage=False):
                            },
                           context_instance=RequestContext(request))
 
-    pass
+def password(request, id, name):
+    
+    presentation = get_object_or_404(Presentation.objects.filter(Presentation.published_Q(request.user),
+                                id=id,
+                                id__in=accessible_ids(request.user, Presentation)))
+    
+    class PasswordForm(forms.Form):
+        password = forms.CharField(widget=forms.PasswordInput)
+        
+        def clean_password(self):
+            p = self.cleaned_data.get('password')
+            if p != presentation.password:
+                raise forms.ValidationError("Password is not correct.")
+            return p
+
+    if request.method == 'POST':
+        form = PasswordForm(request.POST)
+        if form.is_valid():
+            request.session.setdefault('passwords', dict())[presentation.id] = form.cleaned_data.get('password')
+            return HttpResponseRedirect(request.GET.get('next', reverse('presentation-browse')))
+    else:
+        form = PasswordForm()
+        
+    return render_to_response('presentation_password.html',
+                          {'form': form,
+                           'presentation': presentation,
+                           'next': request.GET.get('next', reverse('presentation-browse')),
+                           },
+                          context_instance=RequestContext(request))

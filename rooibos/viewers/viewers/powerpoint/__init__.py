@@ -293,7 +293,11 @@ class PowerPointPresentation(object):
         return reverse('viewers-powerpoint', kwargs={'id': obj.id, 'name': obj.name})
     
     def options(self, request, id, name):
-        presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)
+        return_url = request.GET.get('next', reverse('presentation-browse'))
+        presentation = Presentation.get_by_id_for_request(id, request)
+        if not presentation:
+            return HttpResponseRedirect(return_url)
+
         templates = [(reverse('viewers-powerpoint-download', kwargs={'id': presentation.id,
                                                                         'name': presentation.name,
                                                                         'template': t}),
@@ -303,12 +307,16 @@ class PowerPointPresentation(object):
         return render_to_response('presentations/powerpoint/options.html',
                                   {'templates': templates,
                                    'presentation': presentation,
-                                   'next': request.GET.get('next'),
+                                   'next': return_url,
                                    },
                                   context_instance=RequestContext(request))
     
     def generate(self, request, id, name, template):
-        presentation = get_object_or_404(filter_by_access(request.user, Presentation), id=id)        
+        return_url = request.GET.get('next', reverse('presentation-browse'))
+        presentation = Presentation.get_by_id_for_request(id, request)
+        if not presentation:
+            return HttpResponseRedirect(return_url)
+            
         g = PowerPointGenerator(presentation, request.user)
         filename = os.tempnam()
         try:

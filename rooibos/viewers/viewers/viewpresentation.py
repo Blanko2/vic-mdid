@@ -35,10 +35,10 @@ class ViewPresentation(object):
         return reverse('viewers-view', kwargs={'id': obj.id, 'name': obj.name})
     
     def view(self, request, id, name):
-        presentation = get_object_or_404(Presentation.objects.filter(
-            id=id, id__in=accessible_ids(request.user, Presentation)))
-
         return_url = request.GET.get('next', reverse('presentation-browse'))
+        presentation = Presentation.get_by_id_for_request(id, request)
+        if not presentation:
+            return HttpResponseRedirect(return_url)
         
         return render_to_response('presentations/mediaviewer.html',
                                   {'presentation': presentation,
