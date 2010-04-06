@@ -155,9 +155,6 @@ def browse(request, manage=False):
     if get.has_key('rt'):
         del get['rt']    
 
-    print tags, 1 if tags else 0
-    print keywords
-
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
                         filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))
