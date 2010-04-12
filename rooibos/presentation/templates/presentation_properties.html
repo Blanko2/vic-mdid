@@ -29,6 +29,15 @@
 {{ form.password }}
 {{ form.password.errors }}
 
+{{ form.fieldset.label_tag }}
+{{ form.fieldset }}
+{{ form.fieldset.errors }}
+
+{{ form.hide_default_data.label_tag }}
+{{ form.hide_default_data }}
+{{ form.hide_default_data.errors }}
+
+
 <div class="row">
     <input type="submit" value="Update" />
     <a href="{% url presentation-manage %}">Cancel</a>

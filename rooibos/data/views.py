@@ -126,6 +126,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
             value = forms.CharField(widget=forms.Textarea, required=False)
             context_type = forms.IntegerField(widget=forms.HiddenInput, required=False)
             context_id = forms.IntegerField(widget=forms.HiddenInput, required=False)
+            index_value = forms.CharField(widget=forms.HiddenInput, required=False)
 
             class Meta:
                 model = FieldValue

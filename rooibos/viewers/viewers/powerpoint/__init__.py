@@ -76,16 +76,16 @@ class PowerPointGenerator:
                 
     def _process_slides(self, outfile):
         for n in range(2, len(self.items) + 2):
+            item = self.items[n - 2]
+            
             x = xml.dom.minidom.parseString(self.slide_template)
             xr = xml.dom.minidom.parseString(self.slide_rel_template)
             xn = xml.dom.minidom.parseString(self.slide_notes_template)
             xnr = xml.dom.minidom.parseString(self.slide_notes_rel_template)
-            record = self.items[n - 2].record
+            record = item.record
 
             # insert notes
-            fields = record.get_fieldvalues(owner=self.user, context=record)
-
-            fieldvalues = list(record.get_fieldvalues())        
+            fieldvalues = list(item.get_fieldvalues())
             if fieldvalues:
                 fieldvalues[0]._subitem = False
             for i in range(1, len(fieldvalues)):
@@ -121,7 +121,7 @@ class PowerPointGenerator:
             for e in x.getElementsByTagName('a:t'):
                 t = e.firstChild.nodeValue
                 if t == 'title':
-                    t = record.title
+                    t = item.title or ''
                 e.firstChild.nodeValue = t
             # insert image if available
             image = get_image_for_record(record, self.user, 800, 600)

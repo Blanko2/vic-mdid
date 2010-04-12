@@ -116,18 +116,21 @@ class Record(models.Model):
         self._clear_cached_items()
         super(Record, self).save(kwargs)
 
-    def get_fieldvalues(self, owner=None, context=None, fieldset=None, hidden=False, include_context_owner=False):
+    def get_fieldvalues(self, owner=None, context=None, fieldset=None, hidden=False, include_context_owner=False,
+                        hide_default_data=False, q=None):
         qc = Q(context_type=None, context_id=None)
         if context:
             qc = qc | Q(context_type=ContentType.objects.get_for_model(context.__class__), context_id=context.id)
-        qo = Q(owner=None)
+        qo = Q(owner=None) if not hide_default_data else Q()
         if owner and owner.is_authenticated():
             qo = qo | Q(owner=owner)
         if context and include_context_owner and hasattr(context, 'owner') and context.owner:
             qo = qo | Q(owner=context.owner)
         qh = Q() if hidden else Q(hidden=False)
 
-        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo, qh) \
+        q = q or Q()
+
+        values = self.fieldvalue_set.select_related('record', 'field').filter(qc, qo, qh, q) \
                     .order_by('order','field','group','refinement')
 
         if fieldset:
@@ -166,7 +169,11 @@ class Record(models.Model):
     def title(self):
         if not getattr(self, "_cached_title", None):
             titlefield = Field.objects.get(standard__prefix='dc', name='title')
-            titles = self.fieldvalue_set.filter(Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields()))
+            titles = self.fieldvalue_set.filter(
+                Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields()),
+                owner=None,
+                context_type=None,
+                hidden=False)
             self._cached_title = None if not titles else titles[0].value
         return self._cached_title
 
@@ -236,6 +243,9 @@ class FieldSet(models.Model):
 
     def __unicode__(self):
         return self.title
+    
+    class Meta:
+        ordering = ['title']
 
 
 class FieldSetField(models.Model):

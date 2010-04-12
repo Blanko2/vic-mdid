@@ -3,7 +3,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes import generic
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from rooibos.data.models import Record
+from rooibos.data.models import Record, FieldSet, standardfield
 from rooibos.storage.models import Media
 from rooibos.util import unique_slug
 from rooibos.access import accessible_ids
@@ -18,6 +18,8 @@ class Presentation(models.Model):
     source = models.CharField(max_length=1024, null=True)
     description = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=32, blank=True, null=True)
+    fieldset = models.ForeignKey(FieldSet, null=True)
+    hide_default_data = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     ownedwrapper = generic.GenericRelation('util.OwnedWrapper')
@@ -89,6 +91,22 @@ class PresentationItem(models.Model):
     hidden = models.BooleanField(default=False)
     type = models.CharField(max_length=16, blank=True)
     order = models.SmallIntegerField()
+
+    @property
+    def title(self):
+        titlefield = standardfield('title')
+        q = Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields())
+        fv = self.get_fieldvalues(q=q)
+        return None if not fv else fv[0].value
+
+    def get_fieldvalues(self, owner=None, hidden=False, include_context_owner=True, q=None):
+        return self.record.get_fieldvalues(owner=owner,
+                                           context=self.presentation,
+                                           fieldset=self.presentation.fieldset,
+                                           hidden=hidden,
+                                           include_context_owner=include_context_owner,
+                                           hide_default_data=self.presentation.hide_default_data,
+                                           q=q)
 
     class Meta:
         ordering = ['order']

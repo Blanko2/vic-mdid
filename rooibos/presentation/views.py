@@ -20,6 +20,7 @@ from rooibos.access import filter_by_access, accessible_ids
 from rooibos.ui.forms import SplitTaggingField
 from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
+from rooibos.data.models import FieldSet
 from models import Presentation, PresentationItem
 import logging
 
@@ -71,7 +72,12 @@ def edit(request, id, name):
         OwnedWrapper, filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))]
     tags = Tag.objects.get_for_object(
         OwnedWrapper.objects.get_for_object(user=request.user, object=presentation))
-
+    fieldsets = [
+        ('0', 'Default'),
+        ('Your field sets', list(FieldSet.objects.filter(owner=request.user).values_list('id', 'title'))),
+        ('Default field sets', list(FieldSet.objects.filter(owner=None).values_list('id', 'title')))
+        ]
+        
     class PropertiesForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
         tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
@@ -80,6 +86,12 @@ def edit(request, id, name):
         description = forms.CharField(label='Description', widget=forms.Textarea, required=False)
         password = forms.CharField(label='Password', required=False,
                                    max_length=Presentation._meta.get_field('password').max_length)
+        fieldset = forms.ChoiceField(label='Field set', choices=fieldsets)
+        hide_default_data = forms.BooleanField(label='Hide default data', required=False)
+        
+        def clean_fieldset(self):
+            id = self.cleaned_data['fieldset']
+            return None if id == '0' else FieldSet.objects.get(id=id)
 
     if request.method == "POST":
         form = PropertiesForm(request.POST)
@@ -90,6 +102,8 @@ def edit(request, id, name):
                 presentation.hidden = form.cleaned_data['hidden']
             presentation.description = form.cleaned_data['description']
             presentation.password = form.cleaned_data['password']
+            presentation.fieldset = form.cleaned_data['fieldset']
+            presentation.hide_default_data = form.cleaned_data['hide_default_data']
             presentation.save()
             Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
                                     form.cleaned_data['tags'])
@@ -101,6 +115,8 @@ def edit(request, id, name):
                                'tags': tags,
                                'description': presentation.description,
                                'hidden': presentation.hidden,
+                               'fieldset': presentation.fieldset.id if presentation.fieldset else None,
+                               'hide_default_data': presentation.hide_default_data,
                                })
 
     return render_to_response('presentation_properties.html',

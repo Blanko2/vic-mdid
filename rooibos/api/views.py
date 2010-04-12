@@ -84,6 +84,26 @@ def _records_as_json(records, owner=None, context=None, process_url=lambda url: 
     return [_record_as_json(record, owner, context, process_url) for record in records]
 
 
+def _presentation_item_as_json(item, owner=None, process_url=lambda url: url):
+      return dict(
+                id=item.record.id,
+                name=item.record.name,
+                title=item.title or 'Untitled',
+                thumbnail=process_url(item.record.get_thumbnail_url()),
+                image=process_url(item.record.get_image_url()),
+                metadata=[
+                    dict(
+                        label=value.resolved_label,
+                        value=value.value
+                        )
+                    for value in item.get_fieldvalues(owner=owner)
+                ]
+            )
+  
+def _presentation_items_as_json(items, owner=None, process_url=lambda url: url):
+    return [_presentation_item_as_json(item, owner, process_url) for item in items]
+
+
 @json_view
 def api_search(request, id=None, name=None):
     hits, records, viewmode = search(request, id, name, json=True)
@@ -143,9 +163,8 @@ def presentation_detail(request, id):
                 description=p.description,
                 created=p.created.isoformat(),
                 modified=p.modified.isoformat(),
-                content=_records_as_json(map(lambda i: i.record, p.items.select_related('record').filter(hidden=False)),
+                content=_presentation_items_as_json(p.items.select_related('record').filter(hidden=False),
                                          owner=request.user if request.user.is_authenticated() else None,
-                                         context=p,
                                          process_url=lambda url:add_flash_parameter(url, request))
             )
 
