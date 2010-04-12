@@ -123,7 +123,8 @@ class FlashCards(object):
                           leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
                 data = []
                 data.append(Paragraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']))
-                values = record.get_fieldvalues(owner=request.user, context=presentation) #, fieldset=presentation.fieldset)
+                values = record.get_fieldvalues(owner=request.user, context=presentation,
+                                                include_context_owner=True) #, fieldset=presentation.fieldset)
                 for value in values:
                     v = value.value if len(value.value) < 100 else value.value[:100] + '...'
                     data.append(Paragraph('<b>%s:</b> %s' % (value.resolved_label, v), styles['Data']))

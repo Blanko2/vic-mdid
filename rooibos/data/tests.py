@@ -15,6 +15,8 @@ class FieldValueTestCase(unittest.TestCase):
         self.creatorField = Field.objects.create(label='Creator', name='creator')
         self.locationField = Field.objects.create(label='Location', name='location')
         self.user = User.objects.create(username='test')
+        self.user2 = User.objects.create(username='test2')
+        self.user3 = User.objects.create(username='test3')
 
     def tearDown(self):
         self.collection.delete()
@@ -22,6 +24,8 @@ class FieldValueTestCase(unittest.TestCase):
         self.creatorField.delete()
         self.locationField.delete()
         self.user.delete()
+        self.user2.delete()
+        self.user3.delete()
 
     def testFieldValueBasicContext(self):
         record = Record.objects.create()
@@ -43,6 +47,30 @@ class FieldValueTestCase(unittest.TestCase):
         self.assertEqual(4, len(record.get_fieldvalues(context=self.collection)))
         self.assertEqual(4, len(record.get_fieldvalues(owner=self.user)))
         self.assertEqual(5, len(record.get_fieldvalues(owner=self.user, context=self.collection)))
+
+    def testPresentationContext(self):
+        record = Record.objects.create()
+        owned_collection = Collection.objects.create(title='Owned collection', owner=self.user)
+       
+        v1 = record.fieldvalue_set.create(field=self.titleField, value='v')
+        v2 = record.fieldvalue_set.create(field=self.titleField, value='v-u1', owner=self.user)
+        v3 = record.fieldvalue_set.create(field=self.titleField, value='v-u2', owner=self.user2)
+        v4 = record.fieldvalue_set.create(field=self.titleField, value='v-u3', owner=self.user3)
+        v5 = record.fieldvalue_set.create(field=self.titleField, value='v-u1-ctx', owner=self.user, context=owned_collection)
+
+        values = record.get_fieldvalues(owner=self.user2, context=owned_collection)
+        expected = ['v', 'v-u2']
+        for v in values:
+            self.assertTrue(v.value in expected)
+            expected.remove(v.value)
+        self.assertEqual([], expected)
+        
+        values = record.get_fieldvalues(owner=self.user2, context=owned_collection, include_context_owner=True)
+        expected = ['v', 'v-u1', 'v-u2', 'v-u1-ctx']
+        for v in values:
+            self.assertTrue(v.value in expected)
+            expected.remove(v.value)
+        self.assertEqual([], expected)
 
 
 class GroupTestCase(unittest.TestCase):
