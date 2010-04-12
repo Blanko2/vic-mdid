@@ -128,6 +128,8 @@ LOGIN_CHECKS = (
     'rooibos.access.models.update_membership_by_attributes',
 )
 
+PDF_PAGESIZE = 'letter'  # 'A4'
+
 additional_settings = [
     'settings_local',
 ]

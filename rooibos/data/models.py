@@ -269,7 +269,7 @@ class FieldValue(models.Model):
     context = generic.GenericForeignKey('context_type', 'context_id')
 
     def save(self, **kwargs):
-        self.index_value = self.value[:32] if self.value else None
+        self.index_value = self.value[:32] if self.value != None else None
         super(FieldValue, self).save(kwargs)
         
     def __unicode__(self):

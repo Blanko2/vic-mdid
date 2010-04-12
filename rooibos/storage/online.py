@@ -26,3 +26,6 @@ class OnlineStorageSystem():
 
     def size(self, url):
         return None
+
+    def is_local(self):
+        return False

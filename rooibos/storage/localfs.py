@@ -31,3 +31,7 @@ class LocalFileSystemStorageSystem(FileSystemStorage):
         #todo need to create unique name, not random
         name = name or self.get_available_name("file-%s" % random.randint(1000000, 9999999))
         return FileSystemStorage.save(self, name, content)
+
+    def is_local(self):
+        return True
+    

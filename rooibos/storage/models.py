@@ -89,6 +89,9 @@ class Storage(models.Model):
             self.save()
             sync_access(self, self.derivative)
         return self.derivative
+    
+    def is_local(self):
+        return self.storage_system and self.storage_system.is_local()
 
 
 class Media(models.Model):
@@ -179,6 +182,9 @@ class Media(models.Model):
         for m in self.derivatives.all():
             m.delete_file()
         self.derivatives.all().delete()
+        
+    def is_local(self):
+        return self.storage and self.storage.is_local()
 
 
 class TrustedSubnet(models.Model):

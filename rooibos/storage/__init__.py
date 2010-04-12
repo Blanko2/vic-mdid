@@ -61,7 +61,7 @@ def get_media_for_record(record, user=None, passwords={}):
     return media
 
 
-def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
+def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False, force_local=False):
 
     media = get_media_for_record(record, user, passwords)
 
@@ -102,7 +102,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
         height = min(height, restrictions.get('height', height))
 
     # see if image needs resizing
-    if m.width > width or m.height > height or m.mimetype != 'image/jpeg':
+    if m.width > width or m.height > height or m.mimetype != 'image/jpeg' or (force_local and not m.is_local()):
 
         def derivative_image(master, width, height):
             import ImageFile
