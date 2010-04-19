@@ -49,6 +49,8 @@ class SearchFacet(object):
     def display_value(self, value):
         return value.replace('|', ' or ')
 
+    def federated_search_query(self, value):
+        return value.replace('|', ' ')
 
 class OwnerSearchFacet(SearchFacet):
 
@@ -62,6 +64,8 @@ class OwnerSearchFacet(SearchFacet):
     def or_available(self):
         return False
 
+    def federated_search_query(self, value):
+        return ''
 
 class StorageSearchFacet(SearchFacet):
 
@@ -85,6 +89,8 @@ class StorageSearchFacet(SearchFacet):
                     result[m.group(2)] = None  # make facet available, but without frequency count
         super(StorageSearchFacet, self).set_result(result)
 
+    def federated_search_query(self, value):
+        return ''
 
 class CollectionSearchFacet(SearchFacet):
 
@@ -98,6 +104,8 @@ class CollectionSearchFacet(SearchFacet):
         value = '|'.join(Collection.objects.filter(id__in=value.split('|')).values_list('title', flat=True))
         return super(CollectionSearchFacet, self).display_value(value)
 
+    def federated_search_query(self, value):
+        return ''
 
 _special = re.compile(r'(\+|-|&&|\|\||!|\(|\)|\{|}|\[|\]|\^|"|~|\*|\?|:|\\)')
 
@@ -133,6 +141,10 @@ class OwnedTagSearchFacet(SearchFacet):
     def display_value(self, value):
         id, value = value.split('-')
         return super(OwnedTagSearchFacet, self).display_value(value)
+
+    def federated_search_query(self, value):
+        id, value = value.split('-')
+        return super(OwnedTagSearchFacet, self).federated_search_query(value)
 
 
 def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
@@ -340,6 +352,14 @@ def search(request, id=None, name=None, selected=False, json=False):
                     negated=negated,
                     or_available=not negated and search_facets[f].or_available())
         
+    def federated_search_query(q, c):
+        (f, o) = c.split(':', 1)
+        if f.startswith('-'):
+            # can't negate in federated search
+            return q
+        v = search_facets[f].federated_search_query(o)
+        return v if not q else '%s %s' % (q, v)
+        
     # sort facets by label
     facets = sorted(search_facets.values(), key=lambda f: f.label)
 
@@ -375,7 +395,9 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'sort': sort,
                            'sortfields': fields,
                            'random': random.random(),
-                           'viewmode': viewmode,},
+                           'viewmode': viewmode,
+                           'federated_search_query': reduce(federated_search_query, criteria, keywords),
+                           },
                           context_instance=RequestContext(request))
 
 

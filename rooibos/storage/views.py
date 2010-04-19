@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import resolve
+from django.core.urlresolvers import resolve, reverse
 from django.db.models import Count, Q
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError, HttpResponseForbidden
 from django.shortcuts import _get_queryset, get_object_or_404, get_list_or_404, render_to_response
@@ -136,15 +136,15 @@ def record_thumbnail(request, id, name):
     record = get_object_or_404(Record.objects.filter(id=id,
         collection__id__in=accessible_ids(request.user, Collection)).distinct())
 
-    media = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
+    media = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))    
     if media:
-        content = media.load_file()
-        if content:
-            return HttpResponse(content=content, mimetype=str(media.mimetype))
-        else:
-            return HttpResponseServerError()
-    else:
-        raise Http404
+        try:
+            content = media.load_file()
+            if content:
+                return HttpResponse(content=content, mimetype=str(media.mimetype))
+        except IOError, ex:
+            pass
+    return HttpResponseRedirect(reverse('static', args=['images/thumbnail_unavailable.png']))
 
 
 @json_view

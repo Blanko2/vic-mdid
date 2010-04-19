@@ -46,6 +46,7 @@ TEMPLATE_DIRS = (
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
 SCRATCH_DIR = 'd:/dev/rooibos-scratch/'
+AUTO_STORAGE_DIR = 'd:/dev/rooibos-collections/'
 
 # Legacy setting for ImageViewer 2 support
 SECURE_LOGIN = False

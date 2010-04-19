@@ -89,13 +89,20 @@ class Record(models.Model):
     owner = models.ForeignKey(User, null=True)
 
     @staticmethod
-    def by_fieldvalue(fields, value):
+    def by_fieldvalue(fields, values):
         try:
             fields = iter(fields)
         except TypeError:
             fields = [fields]
-        return Record.objects.filter(fieldvalue__index_value=value[:32],
-                                     fieldvalue__value__iexact=value,
+        if not isinstance(values, (list, tuple)):
+            values = [values]
+            
+        index_values = [value[:32] for value in values]
+        
+        values_q = reduce(lambda q, value: q | Q(fieldvalue__value__iexact=value), values, Q())
+        
+        return Record.objects.filter(values_q,
+                                     fieldvalue__index_value__in=index_values,
                                      fieldvalue__field__in=fields)
 
     def __unicode__(self):

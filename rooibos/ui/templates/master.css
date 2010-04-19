@@ -517,7 +517,7 @@ html.js-enabled #basket-tab-pin {
     overflow: hidden;
 }
 
-.record-select {
+.record-select, .remote-record-select {
     position: absolute;
     top: 0px;
     right: 0px;
