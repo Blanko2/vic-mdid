@@ -1,6 +1,6 @@
 {% extends "master.html" %}
 {% load ui %}
-
+{% load impersonate_tags %}
 
 {% block content %}
 
@@ -9,5 +9,7 @@
 <div>Configure your user experience</div>
 
 <div>Reset stored interface settings</div>
+
+{% impersonation_form %}
 
 {% endblock %}

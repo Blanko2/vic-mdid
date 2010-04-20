@@ -43,6 +43,7 @@ urls = [
     (r'^nasa/', include('rooibos.federatedsearch.nasa.urls')),
     (r'^flickr/', include('rooibos.federatedsearch.flickr.urls')),
     (r'^artstor/', include('rooibos.federatedsearch.artstor.urls')),
+    (r'^impersonate/', include('rooibos.contrib.impersonate.urls')),
 
     url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_DIR}, name='static'),
     ]
