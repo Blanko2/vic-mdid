@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.csrf.middleware import csrf_exempt
 from django.core.urlresolvers import resolve, reverse
 from django.db.models import Count, Q
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError, HttpResponseForbidden
@@ -223,6 +224,8 @@ def manage_storage(request, storageid, storagename):
                           context_instance=RequestContext(request))
 
 
+
+@csrf_exempt
 @login_required
 def import_files(request):
 
@@ -263,9 +266,6 @@ def import_files(request):
             records = Record.by_fieldvalue(idfields, id).filter(collection=collection, owner=owner)
             result = "File skipped."
             record = None
-            
-            x = records.query.as_sql()
-            print x[0] % x[1]
             
             if len(records) == 1:
                 # Matching record found
