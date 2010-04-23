@@ -175,9 +175,9 @@
         <td>{{ presentation.visible_item_count }}</td>
         <td>{% if presentation.password %}
                 {% if presentation.unlocked %}
-                <img src="{% url static "images/unlocked.gif" %}" />
+                <img src="{% url static "images/unlocked.png" %}" />
                 {% else %}
-                <img src="{% url static "images/locked.gif" %}" />
+                <img src="{% url static "images/locked.png" %}" />
                 {% endif %}
             {% endif %} 
         </td>
