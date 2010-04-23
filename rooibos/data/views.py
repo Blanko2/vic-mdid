@@ -43,11 +43,13 @@ def collection_raw(request, id, name):
 
 
 
-def record(request, id, name, contexttype=None, contextid=None, contextname=None, edit=False, personal=False):
+def record(request, id, name, contexttype=None, contextid=None, contextname=None,
+           edit=False, customize=False, personal=False):
 
     writable_collections = list(accessible_ids_list(request.user, Collection, write=True))
     readable_collections = list(accessible_ids_list(request.user, Collection))
-
+    can_edit = request.user.is_authenticated()
+    
     next = request.GET.get('next')
 
     if id and name:
@@ -57,11 +59,23 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
             q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
                  Q(collection__id__in=readable_collections))
         record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
-        can_edit = check_access(request.user, record, write=True) | \
-            accessible_ids(request.user, record.collection_set, write=True).count() > 0
+        can_edit = can_edit and (
+            # checks if current user is owner:
+            check_access(request.user, record, write=True) or
+            # or if user has write access to collection:
+            accessible_ids(request.user, record.collection_set, write=True).count() > 0)
     else:
-        record = Record()
-        can_edit = len(readable_collections) > 0
+        if writable_collections or (personal and readable_collections):
+            record = Record()
+            if personal:
+                record.owner = request.user
+        else:
+            return HttpResponseForbidden()
+
+    if record.owner:
+        valid_collections = set(readable_collections) | set(writable_collections)
+    else:
+        valid_collections = writable_collections
 
     context = None
     if contexttype and contextid:
@@ -87,9 +101,11 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         except ObjectDoesNotExist:
             selected_fieldset = None
 
+    collection_items = collectionformset = None
+
     if edit:
 
-        if not can_edit and not personal and not context:
+        if not can_edit and not customize and not context:
             return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
         def _get_fields():
@@ -132,80 +148,49 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 model = FieldValue
                 exclude = []
 
-        class RecordMetadataForm(forms.Form):
 
-            def collection_choices(collections):
-                return [(coll.id, coll.title)
-                    for coll in Collection.objects.filter(id__in=collections)]
+        class CollectionForm(forms.Form):
+            
+            id = forms.IntegerField(widget=forms.HiddenInput)
+            title = forms.CharField(widget=DisplayOnlyTextWidget)
+            member = forms.BooleanField(required=False)
+            shared = forms.BooleanField(required=False)
 
-            personal = forms.BooleanField(required=False)
-            owner = forms.CharField(required=False)
-            collections = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple,
-                                                    choices=collection_choices(writable_collections),
-                                                    required=False,
-                                                    initial=record.collectionitem_set.values_list('collection_id', flat=True))
-            personal_collections = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple,
-                                                    choices=collection_choices(set(readable_collections) - set(writable_collections)),
-                                                    required=False,
-                                                    initial=record.collectionitem_set.values_list('collection_id', flat=True))
-
-            def clean_owner(self):
-                owner = self.cleaned_data['owner']
-                if owner != '' and not User.objects.filter(username=owner).count() > 0:
-                    raise forms.ValidationError('%s is not a valid username.' % owner)
-                return owner
-
-            def clean_collections(self):
-                return map(int, self.cleaned_data['collections'])
-
-            def clean_personal_collections(self):
-                return map(int, self.cleaned_data['personal_collections'])
-
-            def clean(self):
-                cleaned_data = self.cleaned_data
-                personal = cleaned_data.get('personal', False)
-                owner = cleaned_data.get('owner', '')
-                collections = cleaned_data.get('collections', [])
-                if not (personal or owner) and not collections:
-                    raise forms.ValidationError('Record must have an owner or belong to at least one collection')
-                if owner and not request.user.is_superuser and request.user.username != owner:
-                    raise forms.ValidationError('Cannot assign personal images to other users')
-                if personal and not owner:
-                    cleaned_data['owner'] = request.user.username
-                if owner and not personal:
-                    cleaned_data['personal'] = True
-                if not personal:
-                    cleaned_data['personal_collections'] = []
-                return cleaned_data
 
         fieldvalues_readonly = []
-        if personal or context:
+        if customize or context:
             fieldvalues = record.get_fieldvalues(owner=request.user, context=context, hidden=True).filter(owner=request.user)
         else:
             fieldvalues = record.get_fieldvalues(hidden=True)
 
         FieldValueFormSet = modelformset_factory(FieldValue, form=FieldValueForm,
                                                  exclude=FieldValueForm.Meta.exclude, can_delete=True, extra=3)
+        
+        CollectionFormSet = formset_factory(CollectionForm, extra=0)
+        
+        
         if request.method == 'POST':
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
-            metadataform = RecordMetadataForm(request.POST) if not (personal or context) else None
-            if formset.is_valid() and (personal or context or metadataform.is_valid()):
-
-                if not personal and not context:
-                    owner = metadataform.cleaned_data['owner']
-                    record.owner = User.objects.get(username=owner) if owner else None
-                    record.save()
-
-                    collections = metadataform.cleaned_data['collections'] + metadataform.cleaned_data['personal_collections']
-                    toadd = collections
-                    for citem in CollectionItem.objects.select_related('collection').filter(
-                        record=record, collection__id__in=writable_collections):
-                        if not citem.collection.id in collections:
-                            citem.delete()
-                        else:
-                            toadd.remove(citem.collection.id)
-                    for id in toadd:
-                        CollectionItem.objects.create(record=record, collection_id=id)
+            collectionformset = CollectionFormSet(request.POST, request.FILES, prefix='c') if not (customize or context) else None
+            if formset.is_valid() and (customize or context or collectionformset.is_valid()):# or metadataform.is_valid()):
+                    
+                if not (customize or context):
+                    collections = dict((c['id'],c)
+                        for c in collectionformset.cleaned_data
+                        if c['id'] in valid_collections)
+                    for item in record.collectionitem_set.filter(collection__in=valid_collections):
+                        if collections.has_key(item.collection_id):
+                            if not collections[item.collection_id]['member']:
+                                item.delete()
+                            elif collections[item.collection_id]['shared'] == item.hidden:
+                                item.hidden = not item.hidden
+                                item.save()
+                            del collections[item.collection_id]
+                    for coll in collections.values():
+                        if coll['member']:
+                            CollectionItem.objects.create(record=record,
+                                                          collection_id=coll['id'],
+                                                          hidden=not coll['shared'])
 
                 instances = formset.save(commit=False)
                 o1 = fieldvalues and max(v.order for v in fieldvalues) or 0
@@ -220,13 +205,13 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     if instance.order == 0:
                         order += 1
                         instance.order = order
-                    if personal or context:
+                    if customize or context:
                         instance.owner = request.user
                     if context:
                         instance.context = context
                     instance.save()
                 request.user.message_set.create(message="Changes to metadata saved successfully.")
-                url = next or reverse('data-record-edit-personal' if personal else 'data-record-edit',
+                url = next or reverse('data-record-edit-customize' if customize else 'data-record-edit',
                                       kwargs=dict(id=record.id, name=record.name))
                 return HttpResponseRedirect(url)
         else:
@@ -239,13 +224,29 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 initial = []
 
             formset = FieldValueFormSet(queryset=fieldvalues, prefix='fv', initial=initial)
-            metadataform = RecordMetadataForm(
-                initial={'personal': len(writable_collections) == 0}) if not (personal or context) else None
+            if not (customize or context):
+                
+                collections = dict(
+                    ((coll.id, dict(id=coll.id, title=coll.title))
+                        for coll in Collection.objects.filter(id__in=valid_collections)
+                    )
+                )
+                
+                for item in record.collectionitem_set.all():
+                    collections.get(item.collection_id, {}).update(dict(
+                        member=True,
+                        shared=not item.hidden,
+                    ))
+                
+                collections = sorted(collections.values(), key=lambda c: c['title'])
+                
+                collectionformset = CollectionFormSet(prefix='c', initial=collections)
 
     else:
         fieldvalues_readonly = record.get_fieldvalues(owner=request.user, fieldset=fieldset)
         formset = None
-        metadataform = None
+        q = Q() if record.owner == request.user or request.user.is_superuser else Q(hidden=False)
+        collection_items = record.collectionitem_set.filter(q, collection__in=readable_collections)
 
     return render_to_response('data_record.html',
                               {'record': record,
@@ -254,11 +255,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'selected_fieldset': fieldset,
                                'fieldvalues': fieldvalues_readonly,
                                'context': context,
-                               'personal': personal,
+                               'customize': customize,
                                'fv_formset': formset,
-                               'metadataform': metadataform,
+                               'c_formset': collectionformset,
                                'can_edit': can_edit,
                                'next': next,
+                               'collection_items': collection_items,
                                },
                               context_instance=RequestContext(request))
 

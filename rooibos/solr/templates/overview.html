@@ -16,7 +16,7 @@
     {% endif %}    
     <div>
         {% if collection.num_records %}
-        <a class="related-images" href="{% url solr-search %}?c=collections:{{ collection.id }}">Explore {{ collection.num_records|intcomma }}
+        <a class="related-images" href="{% url solr-search %}?c=allcollections:{{ collection.id }}">Explore {{ collection.num_records|intcomma }}
         record{{ collection.num_records|pluralize }}</a>
         <a href="{% url solr-browse-collection collection.id collection.name %}">Browse</a>
         {% else %}

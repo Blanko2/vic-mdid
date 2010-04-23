@@ -31,6 +31,7 @@
     "tag_secondary_text":           "black",
     "links":                        "{{ SECONDARY_COLOR }}",
     "user_icons":                   "{{ PRIMARY_COLOR }}",
+    "other_user_icons":             "white",
 
     "js_warning_text":              "white",
     "js_warning_background":        "red",
@@ -1011,6 +1012,24 @@ div.fieldvalue-edit div.narrow input {
 
 .user-icon {
     background-color: {{ colors.user_icons }};
+}
+
+.other-user-icon {
+    background-color: {{ colors.other_user_icons }};
+}
+
+.owner-icon {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    border: none !important;
+}
+
+.shared-icon {
+    position: absolute;
+    bottom: 2px;
+    right: 18px;
+    border: none !important;
 }
 
 #external-results {

@@ -17,8 +17,8 @@
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
-{% endcompress %}
     {% include "master.css" %}
+{% endcompress %}
 <!--[if IE]>
 {% compress css %}
     {% include "master-ie.css" %}
@@ -118,7 +118,7 @@
                         <ul class="menu">
                             <li><a href="{% url presentation-manage %}">Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Favorites</a></li>
-                            <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Content</a></li>
+                            <li><a href="{% url solr-organize %}?c=owner:{{ user.id }}">Content</a></li>
                         </ul>
                     </li>
                     {% endif %}
@@ -182,7 +182,7 @@
     <script type="text/javascript" src="{% url static 'scripts/json2.js' %}"></script>
     <!--<script type="text/javascript" src="{% url static 'scripts/related-images-bar.js' %}"></script>-->
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
-{% endcompress %}    
+
     <script type="text/javascript">
         function basket_scroll_arrows() {
             $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
@@ -420,6 +420,7 @@
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
         });
     </script>
+{% endcompress %}
 
 {% endblock %}
 </body>

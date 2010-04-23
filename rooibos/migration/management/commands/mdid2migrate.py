@@ -82,6 +82,8 @@ class Command(BaseCommand):
             print "Please specify exactly one configuration file."
             return
 
+        image_type = ContentType.objects.get_for_model(Record)        
+
         servertype, connection = self.readConfig(config_files[0])
 
         conn = None
@@ -125,7 +127,6 @@ class Command(BaseCommand):
                     users[row.ID] = user
                 except:
                     print "Warning: possible duplicate login detected: %s" % row.Login
-
 
         # Migrate user groups
         print "Migrating user groups"
@@ -315,13 +316,30 @@ class Command(BaseCommand):
                                   "CachedUntil,Expires,UserID,Flags FROM Images"):
             if groups.has_key(row.CollectionID) and \
                 (not options.get('skip_personal') or not row.UserID):
+                
+                if row.UserID:
+                    if users.has_key(row.UserID):
+                        owner = users[row.UserID]
+                        flags = row.Flags or 0
+                        shared = flags & 1
+                        suggested = flags & 2
+                        rejected = flags & 4
+                    else:
+                        continue
+                else:
+                    owner = shared = suggested = rejected = None
+                
                 image = Record.objects.create(created=row.Created or row.Modified or datetime.now(),
-                                                       name=row.Resource.rsplit('.', 1)[0],
-                                                       modified=row.Modified or datetime.now(),
-                                                       source=row.RemoteID,
-                                                       next_update=row.CachedUntil or row.Expires)
+                                                name=row.Resource.rsplit('.', 1)[0],
+                                                modified=row.Modified or datetime.now(),
+                                                source=row.RemoteID,
+                                                next_update=row.CachedUntil or row.Expires,
+                                                owner=owner,
+                                                )
                 images[row.ID] = image.id
-                CollectionItem.objects.create(record_id=image.id, collection=groups[row.CollectionID])
+                CollectionItem.objects.create(record_id=image.id,
+                                              collection=groups[row.CollectionID],
+                                              hidden=True if owner and not shared else False)
                 if storage.has_key(row.CollectionID):
                     if row.Resource.endswith('.xml'):
                         self.process_xml_resource(image, storage[row.CollectionID]["general"], row.Resource)
@@ -341,6 +359,12 @@ class Command(BaseCommand):
                                 url=os.path.join('full', row.Resource.strip()),
                                 storage=storage[row.CollectionID]['general'],
                                 mimetype='image/jpeg')
+                            
+                if owner and suggested and not rejected:
+                    Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(
+                                user=owner, object_id=image.id, type=image_type),
+                                'suggested')
+                
             count += 1
             if count % 100 == 0:
                 pb.update(count)
@@ -352,7 +376,6 @@ class Command(BaseCommand):
         # Migrate favorite images
 
         print "Migrating favorite images"
-        image_type = ContentType.objects.get_for_model(Record)
         for row in cursor.execute("SELECT UserID,ImageID FROM FavoriteImages"):
             if images.has_key(row.ImageID) and users.has_key(row.UserID):
                 Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(

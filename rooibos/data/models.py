@@ -77,6 +77,8 @@ class CollectionItem(models.Model):
     record = models.ForeignKey('Record')
     hidden = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return "Record %s Collection %s%s" % (self.record_id, self.collection_id, 'hidden' if self.hidden else '')
 
 class Record(models.Model):
     created = models.DateTimeField(default=datetime.now())
@@ -183,6 +185,10 @@ class Record(models.Model):
                 hidden=False)
             self._cached_title = None if not titles else titles[0].value
         return self._cached_title
+
+    @property
+    def shared(self):
+        return bool(self.collectionitem_set.filter(hidden=False).count()) if self.owner else None
 
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')

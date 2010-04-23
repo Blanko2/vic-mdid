@@ -194,9 +194,9 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         query = 'id:(%s) AND %s' % (' '.join(map(str, selected or [-1])), query)
 
     if not user.is_superuser:
-        groups = ' '.join(map(str, accessible_ids_list(user, Collection)))
+        collections = ' '.join(map(str, accessible_ids_list(user, Collection)))
         c = []
-        if groups: c.append('collections:(%s)' % groups)
+        if collections: c.append('collections:(%s)' % collections)
         if user.id: c.append('owner:%s' % user.id)
         if c:
             query = '(%s) AND %s' % (' OR '.join(c), query)
@@ -227,7 +227,7 @@ def run_search(user,
     search_facets = [SearchFacet('tag', 'Tags')] + [SearchFacet(field.name + '_t', field.label) for field in fields]
     search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
     search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
-    search_facets.append(CollectionSearchFacet('collections', 'Collection'))
+    search_facets.append(CollectionSearchFacet('allcollections', 'Collection'))
     search_facets.append(OwnerSearchFacet('owner', 'Owner'))
     # convert to dictionary
     search_facets = dict((f.name, f) for f in search_facets)
@@ -260,7 +260,7 @@ def run_search(user,
 
 
 
-def search(request, id=None, name=None, selected=False, json=False):
+def search(request, id=None, name=None, selected=False, json=False, organize=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
 
     update_record_selection(request)
@@ -397,6 +397,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'random': random.random(),
                            'viewmode': viewmode,
                            'federated_search_query': reduce(federated_search_query, criteria, keywords),
+                           'organize': organize,
                            },
                           context_instance=RequestContext(request))
 
@@ -532,8 +533,9 @@ def fieldvalue_autocomplete(request):
     limit = min(int(request.GET.get('limit', '10')), 100)
     field = request.GET.get('field')
     q = field and Q(field__id=field) or Q()
-    values = FieldValue.objects.filter(q, record__collection__in=collections, value__icontains=query) \
-        .values_list('value', flat=True).distinct().order_by('value')[:limit]
+    values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
+        .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
+    print values.query.as_sql()
     values = '\n'.join(urlquote(v) for v in values)
     return HttpResponse(content=values)
 
@@ -604,7 +606,7 @@ def search_form(request):
                         keywords.append('%s"%s"' % (type.isupper() and '-' or '', urlquote(criteria)))
             collections = collectionform.cleaned_data['collections']
             if collections:
-                query.append('c=collections:%s' % '|'.join(collections))
+                query.append('c=allcollections:%s' % '|'.join(collections))
             if query or keywords:
                 qs = 'kw=%s&' % '+'.join(keywords) + '&'.join(query)
                 return HttpResponseRedirect(reverse('solr-search') + '?' + qs)

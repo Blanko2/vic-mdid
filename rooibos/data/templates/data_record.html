@@ -61,6 +61,15 @@
 </div>
 {% endif %}
 
+{% if record.owner %}
+<div class="facet active-facet" id="data_record_owner">
+    <div class="facet-header">Owner</div>
+    <div class="facet-body">
+        {{ record.owner.get_full_name }} ({{ record.owner.username }})
+    </div>
+</div>
+{% endif %}
+
 {% if request.user.is_authenticated and record.id %}
 <div class="facet active-facet" id="data_record_editing">
     <div class="facet-header">Editing</div>
@@ -69,11 +78,14 @@
         <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
 {% endif %}
 {% if record.id and not fv_formset %}
-        <a href="{% url data-record-edit-personal record.id record.name %}">Customize Record</a><br />
+        <a href="{% url data-record-edit-customize record.id record.name %}">Customize Record</a><br />
 {% endif %}
 {% if fv_formset and record.id %}
         <a href="{% if next %}{{ next }}{% else %}{% url data-record record.id record.name %}{% endif %}">Cancel Editing</a><br />
 {% endif %}
+{% if record.owner %}{% ifequal record.owner request.user %}
+  {% add_tags_form record "suggested" "Suggest" %}
+{% endifequal %}{% endif %}
     </div>
 </div>
 {% endif %}
@@ -173,16 +185,39 @@ Display metadata as: <select name="fieldset">
     {% metadata record selected_fieldset %}
 </div>
 
+<br style="clear: left;" /><br />
+
+<h2>Collection Memberships</h2>
+
+<table>
+    <tr>
+    <th>Collection</th>
+    <th>{% if record.owner %}Shared{% else %}Visible{% endif %}</th>
+    </tr>
+
+{% for item in collection_items %}
+<tr class="{% cycle '' 'altrow' %}">
+    <td>
+        {{ item.collection.title }}
+    </td>
+    <td style="text-align: center;">
+        {{ item.hidden|yesno:"no,yes" }}
+    </td>
+</tr>
+{% endfor %}
+</table>
+
+
 {% else %}
 
 <h2>
-    {% if personal %}
+    {% if customize %}
         Annotate Record
     {% else %}
         {% if context %}
             Annotate Record for {{ context.title }}
         {% else %}
-            Edit Record
+            {{ record.id|yesno:"Edit,Create" }} Record
         {% endif %}
     {% endif %}
 </h2>
@@ -237,32 +272,33 @@ Display metadata as: <select name="fieldset">
     {% endfor %}
         </div>
 
-    {% if metadataform %}
-        <div>
-            <h3>Properties</h3>
-
-            {{ metadataform.errors }}
-
-            <div>
-                Personal image: {{ metadataform.personal }}
-            </div>
-            {% if user.is_superuser %}
-            <div>
-                Owner: {{ metadataform.owner }}
-            </div>
-            {% endif %}
-            {% if metadataform.collections.field.choices %}
-            Collections: 
-            <div class="multi-checkbox-list">
-                {{ metadataform.collections }}
-            </div>
-            {% endif %}
-            {% if metadataform.personal_collections.field.choices %}
-            <div>
-                Collections (available for personal images only): {{ metadataform.personal_collections }}
-            </div>
-            {% endif %}
-        </div>
+    {% if c_formset %}
+    {{ c_formset.management_form }}
+    <br /><br />
+    
+    <h2>Collection Memberships</h2>
+    <table>
+        <tr>
+        <th>Collection</th>
+        <th>Member</th>
+        <th>{% if record.owner %}Shared{% else %}Visible{% endif %}</th>
+        </tr>
+    
+    {% for form in c_formset.forms %}
+    <tr class="{% cycle '' 'altrow' %}">
+        <td>
+            {{ form.id }}
+            {{ form.title }}
+        </td>
+        <td style="text-align: center;">
+            {{ form.member }}
+        </td>
+        <td style="text-align: center;">
+            {{ form.shared }}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
     {% endif %}
 
         <input type="submit" value="Submit Changes" />

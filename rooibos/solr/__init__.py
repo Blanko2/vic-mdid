@@ -111,7 +111,6 @@ class SolrIndex():
     
     def _preload_related(self, model, records, filter=Q(), related=0):
         dict = {}
-        q = model.objects.select_related(depth=related).filter(filter, record__in=records)
         for x in model.objects.select_related(depth=related).filter(filter, record__in=records):
             dict.setdefault(x.record_id, []).append(x)
         return dict
@@ -135,9 +134,11 @@ class SolrIndex():
             doc.setdefault(v.field.full_name + '_s', []).append(clean_value)
         for f in required_fields:
             doc[f + '_t'] = SOLR_EMPTY_FIELD_VALUE
-        parents = map(lambda gm: gm.collection_id, groups)
+        all_parents = [g.collection_id for g in groups]
+        parents = [g.collection_id for g in groups if not g.hidden]
         # Combine the direct parents with (great-)grandparents
-        doc['collections'] = list(reduce(lambda x,y:set(x)|set(y),[self.parent_groups[p] for p in parents],parents))
+        doc['collections'] = list(reduce(lambda x, y: set(x) | set(y), [self.parent_groups[p] for p in parents], parents))
+        doc['allcollections'] = list(reduce(lambda x, y: set(x) | set(y), [self.parent_groups[p] for p in all_parents], all_parents))
         if record.owner_id:
             doc['owner'] = record.owner_id
         for m in media:

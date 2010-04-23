@@ -231,7 +231,12 @@
    -->
 
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
+   
+   <!-- list of collection identifiers in which the record exists and is not hidden -->
    <field name="collections" type="long" indexed="true" stored="true" multiValued="true" />
+   <!-- list of collection identifiers in which the record exists -->
+   <field name="allcollections" type="long" indexed="true" stored="true" multiValued="true" />
+   
    <field name="owner" type="long" indexed="true" stored="true" multiValued="false" />
    
    <field name="mimetype" type="string" indexed="true" stored="true" multiValued="true" />

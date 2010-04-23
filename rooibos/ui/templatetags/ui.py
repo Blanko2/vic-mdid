@@ -6,8 +6,9 @@ from django.template import Context, Variable, Template
 from django.contrib.contenttypes.models import ContentType
 from django.utils import simplejson
 from rooibos.contrib.tagging.models import Tag
-from rooibos.data.models import Record
+from rooibos.data.models import Record, Collection
 from rooibos.util.models import OwnedWrapper
+from rooibos.access import filter_by_access
 
 register = template.Library()
 
@@ -17,6 +18,7 @@ def record(context, record, selectable=False, viewmode="thumb"):
             'selectable': selectable,
             'selected': record.id in context['request'].session.get('selected_records', ()),
             'viewmode': viewmode,
+            'request': context['request'],
             }
 
 @register.simple_tag
@@ -65,9 +67,11 @@ def owned_tags_for_object(parser, token):
 
 
 @register.inclusion_tag('ui_tagging_form.html', takes_context=True)
-def add_tags_form(context, object):
+def add_tags_form(context, object, tag=None, label=None):
     return {'object_id': object.id,
             'object_type': ContentType.objects.get_for_model(object.__class__).id,
+            'tag': tag,
+            'label': label,
             'request': context['request'],
             }
 
@@ -79,6 +83,16 @@ def tag(context, tag, object=None, removable=False, styles=None):
             'tag': tag,
             'removable': removable,
             'styles': styles,
+            'request': context['request'],
+            }
+
+
+@register.inclusion_tag('ui_create_record_sidebar.html', takes_context=True)
+def create_record_sidebar(context):
+    user = context['request'].user
+    authenticated = user.is_authenticated()
+    return {'regular': authenticated and filter_by_access(user, Collection, write=True).count() > 0,
+            'personal': authenticated and filter_by_access(user, Collection).count() > 0,
             'request': context['request'],
             }
 
