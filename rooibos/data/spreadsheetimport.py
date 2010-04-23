@@ -53,6 +53,7 @@ class SpreadsheetImport(object):
     def _get_reader(self):
         self.csv_file.seek(0)
         dialect = csv.Sniffer().sniff(self.csv_file.read(1024))
+        dialect.doublequote = True
         self.csv_file.seek(0)
         return csv.DictReader(self.csv_file, dialect=dialect)
         
