@@ -373,6 +373,18 @@ class Command(BaseCommand):
                 break
         pb.done()
 
+        # Migrate image notes
+        
+        print "Migrating image notes"
+        for row in cursor.execute("SELECT ImageID,UserID,Annotation FROM ImageAnnotations"):
+            if images.has_key(row.ImageID) and users.has_key(row.UserID):
+                FieldValue.objects.create(record_id=images[row.ImageID],
+                                              field=standard_fields["dc.description"],
+                                              owner=users[row.UserID],
+                                              label="Note",
+                                              value=row.Annotation,
+                                              order=1000)
+
         # Migrate favorite images
 
         print "Migrating favorite images"
@@ -399,7 +411,7 @@ class Command(BaseCommand):
             if count % 100 == 0:
                 pb.update(count)
                 reset_queries()
-        pb.done()
+        pb.done()                
 
         # Migrate folders
         # Nothing to do - folders replaced by tags
@@ -439,7 +451,8 @@ class Command(BaseCommand):
                                               owner=slideshows[row.SlideshowID].owner,
                                               label="Annotation",
                                               value=row.Annotation,
-                                              context=item)
+                                              context=item,
+                                              order=1001)
             count += 1
             if count % 100 == 0:
                 pb.update(count)
@@ -461,10 +474,6 @@ class Command(BaseCommand):
                 ac.content_object = slideshows[row.ObjectID]
                 if populate_access_control(ac, row, P['ViewSlideshow'], P['ModifySlideshow'], P['DeleteSlideshow']):
                     ac.save()
-
-
-
-
 
 
 
