@@ -173,7 +173,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
             formset = FieldValueFormSet(request.POST, request.FILES, queryset=fieldvalues, prefix='fv')
             collectionformset = CollectionFormSet(request.POST, request.FILES, prefix='c') if not (customize or context) else None
             if formset.is_valid() and (customize or context or collectionformset.is_valid()):# or metadataform.is_valid()):
-                    
+                
+                record.save()
+                
                 if not (customize or context):
                     collections = dict((c['id'],c)
                         for c in collectionformset.cleaned_data
