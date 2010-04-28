@@ -54,6 +54,7 @@ SECURE_LOGIN = False
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_URL = '/'
 
 CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
 
