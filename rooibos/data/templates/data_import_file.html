@@ -9,16 +9,18 @@
 
 <form method="post" action=".">
     <table>
-        <tr><th>{{ form.collections.label }}: {{ form.collections.errors }}</th>
-            <td><div class="multi-checkbox-list">
+        <tr><th>{{ form.collections.label }}:</th>
+            <td>{{ form.collections.errors }}
+            <div class="multi-checkbox-list">
                 {{ form.collections }}
-            </div></td>
+            </div>{% if writable_collections %}* You may add regular records to this collection{% endif %}</td>
         </tr>
         <tr><th>{{ form.fieldset.label }}: {{ form.fieldset.errors }}</th><td>{{ form.fieldset }}</td></tr>
         <tr><th>{{ form.separator.label }}: {{ form.separator.errors }}</th><td>{{ form.separator }}</td></tr>
         <tr><th>{{ form.update.label }}: {{ form.update.errors }}</th><td>{{ form.update }}</td></tr>
         <tr><th>{{ form.add.label }}: {{ form.add.errors }}</th><td>{{ form.add }}</td></tr>
         <tr><th>{{ form.test.label }}: {{ form.test.errors }}</th><td>{{ form.test }}</td></tr>
+        <tr><th>{{ form.personal.label }}: {{ form.personal.errors }}</th><td>{{ form.personal }}</td></tr>
     </table>
     {{ mapping_formset.management_form }}
     {{ mapping_formset.non_form_errors }}
@@ -32,7 +34,10 @@
         <tr>
             <td>{{ mapping_form.fieldname }}</td>
             <td>{{ mapping_form.mapping }}</td>
-            <td>{{ mapping_form.separate }}</td>
+            <td>{{ mapping_form.separate }}
+                {{ mapping_form.mapping.errors }}
+                {{ mapping_form.separate.errors }}
+            </td>
         </tr>
     {% endfor %}
     </table>

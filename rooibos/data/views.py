@@ -1,29 +1,31 @@
+#from rooibos.viewers import get_viewers
 from __future__ import with_statement
-from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
-from django.core.urlresolvers import reverse
+from django import forms
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.forms.formsets import formset_factory
+from django.forms.models import modelformset_factory
+from django.forms.util import ErrorList
+from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.db.models import Q
-from django import forms
-from django.forms.models import modelformset_factory
-from django.forms.formsets import formset_factory
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
-from django.utils.safestring import mark_safe
 from django.utils import simplejson
-from rooibos.util import json_view
+from django.utils.safestring import mark_safe
 from models import *
-from rooibos.presentation.models import Presentation
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list, check_access
-#from rooibos.viewers import get_viewers
+from rooibos.presentation.models import Presentation
 from rooibos.storage.models import Media, Storage
+from rooibos.userprofile.views import load_settings, store_settings
+from rooibos.util import json_view
 from rooibos.workers.models import JobInfo
 from spreadsheetimport import SpreadsheetImport
 import os
-import string
 import random
+import string
 
 
 def collections(request):
@@ -318,7 +320,8 @@ class DisplayOnlyTextWidget(forms.HiddenInput):
 @login_required
 def data_import_file(request, file):
     
-    available_collections = filter_by_access(request.user, Collection, write=True)
+    available_collections = filter_by_access(request.user, Collection)
+    writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
     if not available_collections:
         raise Http404
     available_fieldsets = FieldSet.objects.filter(Q(owner=None) | Q(owner=request.user))
@@ -335,17 +338,31 @@ def data_import_file(request, file):
     
     class ImportOptionsForm(forms.Form):
         separator = forms.CharField(required=False)
-        collections = forms.MultipleChoiceField(choices=((c.id, c.title) for c in available_collections),
+        collections = forms.MultipleChoiceField(choices=((c.id, '%s%s' % ('*' if c.id in writable_collection_ids else '', c.title)) for c in sorted(available_collections, key=lambda c: c.title)),
                                                 widget=forms.CheckboxSelectMultiple)
         fieldset = forms.ChoiceField(choices=[(0, 'any')] + [(f.id, f.title) for f in available_fieldsets], required=False)
         update = forms.BooleanField(label='Update existing records', initial=True, required=False)
         add = forms.BooleanField(label='Add new records', initial=True, required=False)
         test = forms.BooleanField(label='Test import only', initial=False, required=False)
+        personal = forms.BooleanField(label='Personal records', initial=True, required=False)
+        
+        def clean(self):
+            cleaned_data = self.cleaned_data
+            if any(self.errors):
+                return cleaned_data
+            personal = cleaned_data['personal']
+            if not personal:
+                for c in map(int, cleaned_data['collections']):
+                    if not c in writable_collection_ids:
+                        self._errors['collections'] = ErrorList(["Can only add personal records to selected collections"])
+                        del cleaned_data['collections']
+                        return cleaned_data
+            return cleaned_data
         
     class MappingForm(forms.Form):
         fieldname = forms.CharField(widget=DisplayOnlyTextWidget)
         mapping = forms.ChoiceField(choices=_field_choices(), required=False)
-        separate = forms.BooleanField()
+        separate = forms.BooleanField(required=False)
 
     class BaseMappingFormSet(forms.formsets.BaseFormSet):
         def clean(self):
@@ -373,6 +390,15 @@ def data_import_file(request, file):
         form = ImportOptionsForm(request.POST)
         mapping_formset = MappingFormSet(request.POST, prefix='m')
         if form.is_valid() and mapping_formset.is_valid():
+            
+            imp, preview_rows = analyze(available_collections.filter(id__in=form.cleaned_data['collections']),
+                       form.cleaned_data['separator'],
+                       available_fieldsets.get(id=form.cleaned_data['fieldset']) if int(form.cleaned_data['fieldset']) else None)
+            
+            store_settings(request.user,
+                           'data_import_file_%s' % imp.field_hash,
+                           simplejson.dumps(dict(options=form.cleaned_data, mapping=mapping_formset.cleaned_data)))
+            
             if request.POST.get('import_button'):
                 j = JobInfo.objects.create(owner=request.user,
                                        func='csvimport',
@@ -383,6 +409,7 @@ def data_import_file(request, file):
                                                 update=form.cleaned_data['update'],
                                                 add=form.cleaned_data['add'],
                                                 test=form.cleaned_data['test'],
+                                                personal=form.cleaned_data['personal'],
                                                 fieldset=form.cleaned_data['fieldset'],
                                                 mapping=dict((f.cleaned_data['fieldname'], int(f.cleaned_data['mapping']))
                                                              for f in mapping_formset.forms),
@@ -393,26 +420,33 @@ def data_import_file(request, file):
                 j.run()
                 request.user.message_set.create(message='Import job has been submitted.')
                 return HttpResponseRedirect("%s?highlight=%s" % (reverse('workers-jobs'), j.id))
-            elif request.POST.get('preview_button'):
-                imp, preview_rows = analyze(available_collections.filter(id__in=form.cleaned_data['collections']),
-                                       form.cleaned_data['separator'],
-                                       available_fieldsets.get(id=form.cleaned_data['fieldset']) if int(form.cleaned_data['fieldset']) else None)
-                separator = form.cleaned_data['separator']
         else:
             imp, preview_rows = analyze(None, None, None)
     else:
         imp, preview_rows = analyze(None, None, None)
-        mapping_formset = MappingFormSet(initial=[dict(fieldname=f, mapping=v.id if v else 0, separate=True) for f, v in imp.mapping.iteritems()],
-                                         prefix='m')
-        form = ImportOptionsForm()
-
-    
         
-    
+        # try to load previously stored settings
+        key = 'data_import_file_%s' % imp.field_hash
+        values = load_settings(request.user, key)
+        if values.has_key(key):
+            value = simplejson.loads(values[key][0])
+            mapping = value['mapping']
+            options = value['options']
+        else:
+            mapping = [dict(fieldname=f, mapping=v.id if v else 0, separate=True)
+                       for f, v in imp.mapping.iteritems()]
+            options = None
+        
+        mapping = sorted(mapping, key=lambda m: m['fieldname'])
+        
+        mapping_formset = MappingFormSet(initial=mapping, prefix='m')
+        form = ImportOptionsForm(initial=options)
+
     return render_to_response('data_import_file.html',
                               {'form': form,
                                'preview_rows': preview_rows,
                                'mapping_formset': mapping_formset,
+                               'writable_collections': bool(writable_collection_ids),
                               },
                               context_instance=RequestContext(request))
 

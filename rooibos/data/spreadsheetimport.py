@@ -18,6 +18,7 @@ class SpreadsheetImport(object):
         self.csv_file = csv_file
         self.separator = separator
         self.analyzed = False
+        self.field_hash = None
         if mapping:
             self.mapping = dict((k, self._get_field(v)) for k, v in mapping.iteritems())
         else:
@@ -89,6 +90,7 @@ class SpreadsheetImport(object):
             return None
 
         fields = rows[0].keys()
+        self.field_hash = hash('\t'.join(sorted(fields)))
         if not self.mapping:       
             self.mapping = dict((field, self._guess_mapping(field)) for field in fields)
         if not separate_fields:

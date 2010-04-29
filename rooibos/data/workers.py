@@ -68,7 +68,7 @@ def csvimport(job):
         imp = SpreadsheetImport(infile,
                                 Collection.objects.filter(id__in=arg['collections']),
                                 separator=arg['separator'],
-                                owner=jobinfo.owner,
+                                owner=jobinfo.owner if arg['personal'] else None,
                                 preferred_fieldset=fieldset[0] if fieldset else None,
                                 mapping=arg['mapping'],
                                 separate_fields=arg['separate_fields'],
