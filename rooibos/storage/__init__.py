@@ -13,7 +13,7 @@ from rooibos.presentation.models import Presentation
 from models import Media, Storage
 
 
-mimetypes.init(os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'mime.types')))
+mimetypes.init([os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'mime.types'))])
 
 
 # sort images by area
