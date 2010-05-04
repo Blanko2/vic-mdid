@@ -50,7 +50,7 @@ class FlashCards(object):
     def __init__(self):
         pass
     
-    def analyze(self, obj):
+    def analyze(self, obj, user):
         if not isinstance(obj, Presentation):
             return NO_SUPPORT
         items = obj.cached_items()

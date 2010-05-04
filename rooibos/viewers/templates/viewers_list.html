@@ -1,4 +1,4 @@
 {% for viewer, viewer_url in viewers %}
     {% if viewer_url %}<a href="{{ viewer_url }}{% if next %}?next={{ next|urlencode }}{% endif %}">{% endif %}
-    {{ viewer.title }}{% if viewer_url %}</a>{% endif %}{% if not forloop.last %}, {% endif %}
+    {{ viewer.title }}{% if viewer_url %}</a>{% endif %}{% if not forloop.last %}{{ separator }}{% endif %}
 {% endfor %}

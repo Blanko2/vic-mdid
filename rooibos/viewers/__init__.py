@@ -22,9 +22,9 @@ def viewer(viewer_class):
         viewer_classes.append(v)
 
 
-def get_viewers_for_object(obj, inline=False):
+def get_viewers_for_object(obj, user, inline=False):
     vcs = inline and filter(lambda v: hasattr(v, 'inline'), viewer_classes) or viewer_classes
-    return filter(lambda v: v.analyze(obj) != NO_SUPPORT, vcs)
+    return filter(lambda v: v.analyze(obj, user) != NO_SUPPORT, vcs)
 
 
 def get_viewer_urls():
