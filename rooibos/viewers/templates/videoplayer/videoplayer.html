@@ -1,0 +1,39 @@
+{% extends "master.html" %}
+
+
+{% block sidebar %}
+{{ block.super }}
+
+{% if next %}
+<div class="facet active-facet" id="data_record_thumbnail">
+    <div class="facet-header">Record</div>
+    <div class="facet-body">
+        <a href="{{ next }}">Return to record</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>{{ record.title }}</h1>
+
+<div>
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,115,0" width="480" height="400" id="jmutube" align="middle">
+       <param name="movie" value="http://{{ request.get_host }}{% url static 'viewers/videoplayer/jmutube.swf' %}" />
+       <param name="allowFullScreen" value="true" />
+       <param name="allScriptAccess" value="sameDomain" />
+       <param name="quality" value="high" />
+       <param name="scale" value="exactfit" />
+       <param name="loop" value="false" />
+       <param name="FlashVars" value="rssfeed={% url viewers-videoplayer-rss record.id, record.name %}" />
+       <embed src="http://{{ request.get_host }}{% url static 'viewers/videoplayer/jmutube.swf' %}" width="480" height="400" align="middle" name="jmutube"
+          allowfullscreen="true" quality="high" scale="exactfit" type="application/x-shockwave-flash"
+          pluginspage="http://www.macromedia.com/go/getflashplayer" loop="false"
+          flashvars="rssfeed={% url viewers-videoplayer-rss record.id, record.name %}"></embed>
+</object>
+</div>
+
+{% endblock %}
