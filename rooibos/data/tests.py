@@ -1,5 +1,5 @@
 import unittest
-from models import Collection, CollectionItem, Record, Field
+from models import Collection, CollectionItem, Record, Field, get_system_field
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from rooibos.util import clear_cached_properties
@@ -425,6 +425,36 @@ Z003,Title8"""),
         
         self.assertEqual('Title', t1[0].value)
         self.assertEqual('NewTitle1', t2[0].value)
+
+    def testKeepSystemFieldValues(self):
+        identifier = Field.objects.get(name='identifier', standard__prefix='dc')
+        title = Field.objects.get(name='title', standard__prefix='dc')
+        system = get_system_field()
+
+        r1 = Record.objects.create(name='s001')
+        CollectionItem.objects.create(record=r1, collection=self.collection)
+        r1.fieldvalue_set.create(field=identifier, value='S001')
+        r1.fieldvalue_set.create(field=title, value='Title')
+        r1.fieldvalue_set.create(field=system, value='Keep this')
+        
+        testimport = SpreadsheetImport(StringIO("Identifier,Title\nS002,NewTitle2\nS001,NewTitle1"),
+                                       [self.collection])
+        testimport.name_field = 'Identifier'
+        testimport.run(update=True)
+
+        self.assertEqual(1, testimport.added)
+        self.assertEqual(1, testimport.updated)
+        self.assertEqual(0, testimport.added_skipped)
+        self.assertEqual(0, testimport.updated_skipped)
+
+        t1 = self.collection.records.get(name='s001').fieldvalue_set.filter(field=title)
+        t2 = self.collection.records.get(name='s002').fieldvalue_set.filter(field=title)
+        s = self.collection.records.get(name='s001').fieldvalue_set.filter(field=system)
+        
+        self.assertEqual('NewTitle1', t1[0].value)
+        self.assertEqual('NewTitle2', t2[0].value)
+        self.assertEqual('Keep this', s[0].value)
+
 
     def testSkipAdds(self):
         identifier = Field.objects.get(name='identifier', standard__prefix='dc')

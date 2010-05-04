@@ -1,5 +1,5 @@
 from django.db.models import Q, Count
-from models import Collection, Field, FieldValue, FieldSet, Record, CollectionItem
+from models import Collection, Field, FieldValue, FieldSet, Record, CollectionItem, get_system_field
 import csv
 
 
@@ -46,7 +46,7 @@ class SpreadsheetImport(object):
         if not value:
             return None
         value = unicode(value, 'utf8')
-        return value.split(self.separator) if (self.separator and split) else [value]
+        return map(lambda s: s.strip(), value.split(self.separator)) if (self.separator and split) else [value.strip()]
         
     def _split_values(self, row, split_all=False):
         return dict((key, self._split_value(val, split_all or self.separate_fields.get(key))) for key, val in row.iteritems())
@@ -129,10 +129,11 @@ class SpreadsheetImport(object):
         if not identifier_field:
             raise SpreadsheetImport.NoIdentifierException('No column is mapped to an identifier field')
         
+        system_field = get_system_field()
         
         def apply_values(record, row, is_new=False):
             if not is_new:
-                record.fieldvalue_set.filter(owner=None).delete()
+                record.fieldvalue_set.filter(~Q(field=system_field), owner=None).delete()
             for field, values in row.iteritems():
                 target = self.mapping.get(field)
                 if target and values:

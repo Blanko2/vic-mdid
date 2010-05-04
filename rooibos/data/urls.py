@@ -10,7 +10,7 @@ feeds = {
 
 urlpatterns = patterns('',
     url(r'^collections/$', collections, name='data-collections'),
-    url(r'^collection/(?P<id>\d+)/(?P<name>[-\w]+)/$', collection_raw, name='data-collection'),
+#    url(r'^collection/(?P<id>\d+)/(?P<name>[-\w]+)/$', collection_raw, name='data-collection'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/$', record, name='data-record'),
     url(r'^record-preview/(?P<id>\d+)/$', record_preview, name='data-record-preview'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/edit/$', record, kwargs={'edit': True}, name='data-record-edit'),

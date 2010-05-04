@@ -30,8 +30,8 @@ class Collection(models.Model):
     def __unicode__(self):
         return self.name
 
-    def get_absolute_url(self):
-        return reverse('data-collection', kwargs={'id': self.id, 'name': self.name})
+    #def get_absolute_url(self):
+    #    return reverse('data-collection', kwargs={'id': self.id, 'name': self.name})
 
     @property
     def all_child_collections(self):
@@ -205,11 +205,6 @@ class MetadataStandard(models.Model):
 
 
 class Field(models.Model):
-    TYPE_CHOICES = (
-        ('T', 'Text'),
-        ('D', 'Date'),
-        ('N', 'Numeric'),
-    )
     label = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
     standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
@@ -241,6 +236,12 @@ class Field(models.Model):
         unique_together = ('name', 'standard')
         ordering = ['name']
         order_with_respect_to = 'standard'
+        
+
+def get_system_field():
+    field, created = Field.objects.get_or_create(name='system-value',
+                                                 defaults=dict(label='System Value'))
+    return field
 
 
 class FieldSet(models.Model):
