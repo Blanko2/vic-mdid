@@ -48,8 +48,8 @@ class SpreadsheetImport(object):
         value = unicode(value, 'utf8')
         return map(lambda s: s.strip(), value.split(self.separator)) if (self.separator and split) else [value.strip()]
         
-    def _split_values(self, row, split_all=False):
-        return dict((key, self._split_value(val, split_all or self.separate_fields.get(key))) for key, val in row.iteritems())
+    def _split_values(self, row):
+        return dict((key, self._split_value(val, self.separate_fields.get(key))) for key, val in row.iteritems())
 
     def _get_reader(self):
         self.csv_file.seek(0)
@@ -85,7 +85,7 @@ class SpreadsheetImport(object):
         if separate_fields:
             self.separate_fields = separate_fields
         
-        rows = [self._split_values(row, True) for i, row in zip(range(preview_rows), reader)]        
+        rows = [self._split_values(row) for i, row in zip(range(preview_rows), reader)]        
         if not rows:
             return None
 
@@ -93,7 +93,7 @@ class SpreadsheetImport(object):
         self.field_hash = hash('\t'.join(sorted(fields)))
         if not self.mapping:       
             self.mapping = dict((field, self._guess_mapping(field)) for field in fields)
-        if not separate_fields:
+        if not self.separate_fields:
             self.separate_fields = dict((field, True) for field in fields)
 
         self.analyzed = True        

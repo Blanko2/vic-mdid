@@ -201,8 +201,7 @@ class CsvImportTestCase(unittest.TestCase):
         self.assertEqual('A002', data[1]['ID'][0])
         self.assertEqual('a002.jpg', data[1]['Filename'][0])
         self.assertEqual('Another Test', data[1]['Title'][0])
-        self.assertEqual('Andreas Knab', data[1]['Creator'][0])
-        self.assertEqual('John Doe', data[1]['Creator'][1])
+        self.assertEqual('Andreas Knab;John Doe', data[1]['Creator'][0])
         self.assertEqual('Virginia', data[1]['Location'][0])
         self.assertEqual(None, data[1]['Unused'])
         
