@@ -54,5 +54,7 @@ if 'apps.svohp' in apps:
     urls.append(url(r'^svohp/', include('apps.svohp.urls')))
 if 'apps.ovc' in apps:
     urls.append(url(r'^ovc/', include('apps.ovc.urls')))
+if 'apps.furiousflower' in apps:
+    urls.append(url(r'^furiousflower/', include('apps.furiousflower.urls')))
 
 urlpatterns = patterns('', *urls)

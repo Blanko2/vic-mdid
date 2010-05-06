@@ -11,12 +11,12 @@ class MetaDataNode(template.Node):
 
     def __init__(self, record, fieldset):
         self.record = Variable(record)
-        self.fieldset = Variable(fieldset)
+        self.fieldset = Variable(fieldset) if fieldset else None
 
     def render(self, context):
         record = self.record.resolve(context)
         fieldvalues = list(record.get_fieldvalues(owner=context['request'].user,
-                                                  fieldset=self.fieldset.resolve(context)))
+                                                  fieldset=self.fieldset.resolve(context) if self.fieldset else None))
         if fieldvalues:
             fieldvalues[0].subitem = False
         for i in range(1, len(fieldvalues)):
@@ -33,5 +33,9 @@ def metadata(parser, token):
     try:
         tag_name, record, fieldset = token.split_contents()
     except ValueError:
-        raise template.TemplateSyntaxError, "%r tag requires exactly two arguments" % token.contents.split()[0]
+        try:
+            tag_name, record = token.split_contents()
+            fieldset = None
+        except ValueError:
+            raise template.TemplateSyntaxError, "%r tag requires exactly one or two arguments" % token.contents.split()[0]
     return MetaDataNode(record, fieldset)
