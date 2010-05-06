@@ -1,4 +1,15 @@
-{% extends "master.html" %}
+{% extends request.master_template|default:"master.html" %}
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript" src="{% url static 'flowplayer/flowplayer-3.2.0.min.js' %}"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    flowplayer("player", "{% url static 'flowplayer/flowplayer-3.2.0.swf' %}");
+});
+</script>
+{% endblock %}
 
 
 {% block sidebar %}
@@ -20,20 +31,8 @@
 
 <h1>{{ record.title }}</h1>
 
-<div>
-<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,115,0" width="480" height="400" id="jmutube" align="middle">
-       <param name="movie" value="http://{{ request.get_host }}{% url static 'viewers/videoplayer/jmutube.swf' %}" />
-       <param name="allowFullScreen" value="true" />
-       <param name="allScriptAccess" value="sameDomain" />
-       <param name="quality" value="high" />
-       <param name="scale" value="exactfit" />
-       <param name="loop" value="false" />
-       <param name="FlashVars" value="rssfeed={% url viewers-videoplayer-rss record.id, record.name %}" />
-       <embed src="http://{{ request.get_host }}{% url static 'viewers/videoplayer/jmutube.swf' %}" width="480" height="400" align="middle" name="jmutube"
-          allowfullscreen="true" quality="high" scale="exactfit" type="application/x-shockwave-flash"
-          pluginspage="http://www.macromedia.com/go/getflashplayer" loop="false"
-          flashvars="rssfeed={% url viewers-videoplayer-rss record.id, record.name %}"></embed>
-</object>
-</div>
+
+<a href="{{ media.get_absolute_url }}" id="player"
+style="margin-top: 70px;display:block; width:{{ media.width|default:"520" }}px; height:{{ media.height|default:"330" }}px"></a> 
 
 {% endblock %}

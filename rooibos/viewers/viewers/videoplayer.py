@@ -25,14 +25,11 @@ class VideoPlayer(object):
             return NO_SUPPORT
         has_video = obj.media_set.filter(master=None,
                                          storage__in=filter_by_access(user, Storage),
-                                         mimetype='video/mp4').count() > 0
+                                         mimetype__in=('video/mp4', 'video/quicktime')).count() > 0
         return FULL_SUPPORT if has_video else NO_SUPPORT
     
     def url(self):
-        return [
-            url(r'^videoplayer/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.view, name='viewers-videoplayer'),
-            url(r'^videoplayer/(?P<id>[\d]+)/(?P<name>[-\w]+)/rss/$', self.single_file_rss_feed, name='viewers-videoplayer-rss'),
-            ]
+        return url(r'^videoplayer/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.view, name='viewers-videoplayer')
     
     def url_for_obj(self, obj):
         return reverse('viewers-videoplayer', kwargs={'id': obj.id, 'name': obj.name})
@@ -52,7 +49,7 @@ class VideoPlayer(object):
         
         media = record.media_set.filter(master=None,
                                      storage__in=filter_by_access(request.user, Storage),
-                                     mimetype='video/mp4')
+                                     mimetype__in=('video/mp4', 'video/quicktime'))
         if not media:
             raise Http404()
             
@@ -63,19 +60,7 @@ class VideoPlayer(object):
         record, media = self._get_record_and_media(request, id, name)
         return render_to_response('videoplayer/videoplayer.html',
                                   {'record': record,
+                                   'media': media,
                                    'next': request.GET.get('next'),
                                    },
                                   context_instance=RequestContext(request))
-    
-    
-    def single_file_rss_feed(self, request, id, name):
-        record, media = self._get_record_and_media(request, id, name)
-        return render_to_response('videoplayer/videoplayer.rss',
-                                  { 'title': record.title,
-                                   'url': record.get_absolute_url(),
-                                   'playlist': ({'record': record,
-                                                 'url': media.get_absolute_url(),
-                                                 'mimetype': media.mimetype,
-                                                 'size': media.file_size,
-                                                 },) },
-                                  context_instance = RequestContext(request))
