@@ -4,6 +4,19 @@
 {% load ui %}
 
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#delete-collection").click(function(event) {
+            if (!confirm("Are you sure you want to delete this collection?"))
+                event.preventDefault();
+        });
+    });
+</script>
+{% endblock %}
+
+
 {% block sidebar %}
 {% var as related_pages %}
 {"pages": [
@@ -48,6 +61,17 @@
         {% effective_permissions_form collection %}
     </div>
   </div>
+
+{% if can_delete %}
+  <div class="facet active-facet" id="collection_sidebar_delete">
+    <div class="facet-header">Delete Collection</div>
+    <div class="facet-body">
+        <form action="." method="POST">
+        <input type="submit" value="Delete" name="delete-collection" id="delete-collection" />
+        </form>
+    </div>
+  </div>
+{% endif %}
 
 {% endif %}
 

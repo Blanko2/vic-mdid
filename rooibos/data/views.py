@@ -514,18 +514,25 @@ def manage_collection(request, id=None, name=None):
             fields = ('title', 'hidden', 'owner', 'description', 'agreement', 'children')
 
     if request.method == "POST":
-        form = CollectionForm(request.POST, instance=collection)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('data-collection-manage', kwargs=dict(
-                id=form.instance.id, name=form.instance.name)))
-            
+        if request.POST.get('delete-collection'):
+            if not (request.user.is_superuser or request.user == collection.owner):
+                raise HttpResponseForbidden()
+            request.user.message_set.create(message="Collection '%s' has been deleted." % collection.title)
+            collection.delete()
+            return HttpResponseRedirect(reverse('data-collections-manage'))
+        else:
+            form = CollectionForm(request.POST, instance=collection)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse('data-collection-manage', kwargs=dict(
+                    id=form.instance.id, name=form.instance.name)))
     else:
         form = CollectionForm(instance=collection)
     
     return render_to_response('data_collection_edit.html',
                           {'form': form,
                            'collection': collection,
+                           'can_delete': collection.id and (request.user.is_superuser or collection.owner == request.user),
                           },
                           context_instance=RequestContext(request))
    
