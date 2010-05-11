@@ -257,9 +257,9 @@ Display metadata as: <select name="fieldset">
             {{ form.context_type }}
             {{ form.context_id }}
             <div class="fvcol">
+                <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
                 <span class="row"><label for="{{ form.field.html_name }}">Field:</label> {{ form.field }}</span>
                 <span class="row advanced"><label for="{{ form.refinement.html_name }}">Refine:</label> {{ form.refinement }}</span>
-                <span class="row"><label for="{{ form.label.html_name }}">Label:</label> {{ form.label }}</span>
             </div>
             <div class="fvcol">
                 <span class="row autocomplete">{{ form.value }}</span>

@@ -17,7 +17,9 @@
   <div class="facet active-facet" id="storage_sidebar_statistics">
     <div class="facet-header">Statistics</div>
     <div class="facet-body">
-        {{ storage.media_set.count|intcomma }} media entries
+        {% with storage.media_set.count as c %}
+        {{ c|intcomma }} media entr{{ c|pluralize:"y,ies" }}
+        {% endwith %}
     </div>
   </div>
 
