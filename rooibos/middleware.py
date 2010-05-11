@@ -7,7 +7,6 @@ class Middleware:
         if view_kwargs.has_key('master_template'):
             request.master_template = view_kwargs['master_template']
             del view_kwargs['master_template']
-            print request.master_template
         return None
     
     def process_request(self, request):

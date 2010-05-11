@@ -188,5 +188,4 @@ def autocomplete_user(request):
     if len(users) < limit:
         users.extend(User.objects.filter(~Q(username__istartswith=query), username__icontains=query)
                      .order_by('username').values_list('username', flat=True)[:limit-len(users)])
-    print users
     return HttpResponse(content='\n'.join(users))

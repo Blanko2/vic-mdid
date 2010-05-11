@@ -535,7 +535,7 @@ def fieldvalue_autocomplete(request):
     q = field and Q(field__id=field) or Q()
     values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
         .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
-    print values.query.as_sql()
+    #print values.query.as_sql()
     values = '\n'.join(urlquote(v) for v in values)
     return HttpResponse(content=values)
 
