@@ -1,0 +1,81 @@
+{% extends "master.html" %}
+{% load humanize %}
+{% load access_control %}
+{% load ui %}
+
+
+{% block sidebar %}
+{% var as related_pages %}
+{"pages": [
+    {"url": "{% url ui-management %}", "title": "Management"},
+    {"url": "{% url data-collections-manage %}", "title": "Collection Management"}
+]}
+{% endvar %}
+
+{{ block.super }}
+
+{% if collection.id %}
+  <div class="facet active-facet" id="collection_sidebar_statistics">
+    <div class="facet-header">Statistics</div>
+    <div class="facet-body">
+        {% with collection.records.count as c %}
+        {{ c|intcomma }} record{{ c|pluralize }}
+        {% endwith %}
+    </div>
+  </div>
+
+{% if collection.children.count %}
+  <div class="facet active-facet" id="collection_sidebar_children">
+    <div class="facet-header">Child Collections</div>
+    <div class="facet-body">
+        {% for child in collection.children.all %}
+        <a href="{% url data-collection-manage child.id, child.name %}">{{ child.title }}</a><br />
+        {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+  <div class="facet active-facet" id="collection_sidebar_permissions">
+    <div class="facet-header">Permissions <a href="{% permissions_modify_url collection %}"><img src="{% url static 'images/edit.png' %}" class="facet-button" /></a></div>
+    <div class="facet-body">
+        {% permissions_display collection %}
+    </div>
+  </div>
+  
+  <div class="facet active-facet" id="collection_sidebar_effective_permissions">
+    <div class="facet-header">Effective Permissions</div>
+    <div class="facet-body">
+        {% effective_permissions_form collection %}
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>Edit Collection</h1>
+
+<h2>{{ collection.title }}</h2>
+
+<form action="." method="POST" class="vertical">
+
+
+{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}
+{{ form.hidden.label_tag }}{{ form.hidden }}{{ form.hidden.errors }}
+{% if not form.owner.is_hidden %}{{ form.owner.label_tag }}{% endif %}{{ form.owner }}{{ form.owner.errors }}
+{{ form.description.label_tag }}{{ form.description }}{{ form.description.errors }}
+{{ form.agreement.label_tag }}{{ form.agreement }}{{ form.agreement.errors }}
+{{ form.children.label_tag }}<div class="multi-checkbox-list" style="float: left;">{{ form.children }}</div>{{ form.children.errors }}
+    
+<div class="row">
+    <br />
+    <input type="submit" value="{% if collection.id %}Update{% else %}Create{% endif %}" />
+    <a href="{% url data-collections-manage %}">Cancel</a>
+</div>
+    
+</form>
+
+{% endblock %}

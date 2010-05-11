@@ -23,12 +23,15 @@ class Collection(models.Model):
     agreement = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=32, blank=True)
 
+    class Meta:
+        ordering = ['title']
+        
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Collection, self).save(kwargs)
 
     def __unicode__(self):
-        return self.name
+        return '%s (%s)' % (self.title, self.name)
 
     #def get_absolute_url(self):
     #    return reverse('data-collection', kwargs={'id': self.id, 'name': self.name})

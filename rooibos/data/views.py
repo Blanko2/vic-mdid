@@ -468,3 +468,64 @@ def record_preview(request, id):
                                'none': None,
                                },
                               context_instance=RequestContext(request)))
+
+@login_required
+def manage_collections(request):
+    
+    collections = filter_by_access(request.user, Collection, manage=True)
+    
+    return render_to_response('data_manage_collections.html',
+                          {
+                           'collections': collections,
+                          },
+                          context_instance=RequestContext(request))
+
+
+@login_required
+def manage_collection(request, id=None, name=None):
+    
+    if id and name:
+        collection = get_object_or_404(Collection,
+                                       id__in=accessible_ids(request.user, Collection, manage=True),
+                                       id=id)
+    else:
+        collection = Collection(title='Untitled')
+        if not request.user.is_superuser:
+            collection.owner = request.user
+            collection.hidden = True
+
+    class CollectionForm(forms.ModelForm):
+        children = forms.ModelMultipleChoiceField(queryset=filter_by_access(request.user, Collection).exclude(id=collection.id),
+                                                  widget=forms.CheckboxSelectMultiple,
+                                                  required=False)
+        owner = forms.ModelChoiceField(queryset=User.objects,
+            widget=forms.Select if request.user.is_superuser else forms.HiddenInput,
+                                   required=False)
+        
+        def clean_owner(self):
+            if not request.user.is_superuser:
+                # non-admins cannot change collection owner
+                return collection.owner                
+            else:
+                return self.cleaned_data['owner']
+        
+        class Meta:
+            model = Collection
+            fields = ('title', 'hidden', 'owner', 'description', 'agreement', 'children')
+
+    if request.method == "POST":
+        form = CollectionForm(request.POST, instance=collection)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('data-collection-manage', kwargs=dict(
+                id=form.instance.id, name=form.instance.name)))
+            
+    else:
+        form = CollectionForm(instance=collection)
+    
+    return render_to_response('data_collection_edit.html',
+                          {'form': form,
+                           'collection': collection,
+                          },
+                          context_instance=RequestContext(request))
+   

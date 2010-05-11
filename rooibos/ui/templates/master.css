@@ -643,6 +643,10 @@ ul.errorlist li {
     white-space: nowrap;
 }
 
+.multi-checkbox-list li label {
+    margin: 0;
+}
+
 
 .pagination {
     clear: left;
