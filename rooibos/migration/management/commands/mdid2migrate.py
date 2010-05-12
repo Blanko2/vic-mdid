@@ -247,6 +247,7 @@ class Command(BaseCommand):
             ac.content_object = groups[row.ObjectID]
             if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection']):
                 ac.save()
+
             # full storage
             ac = AccessControl()
             if storage.has_key(row.ObjectID):
@@ -293,16 +294,16 @@ class Command(BaseCommand):
         fields = {}
         standard_fields = dict((str(f), f) for f in Field.objects.all())
 
-        for row in cursor.execute("SELECT ID,CollectionID,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
+        for row in cursor.execute("SELECT ID,CollectionID,Label,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
                                   FROM FieldDefinitions ORDER BY DisplayOrder"):
             if groups.has_key(row.CollectionID):
+                fields[row.ID] = Field.objects.create(label=row.Label, old_name=row.Name)
                 dc = ('dc.%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
                 if standard_fields.has_key(dc):
-                    fields[row.ID] = standard_fields[dc]
-                else:
-                    fields[row.ID] = Field.objects.create(label=row.Name)
+                    fields[row.ID].equivalent.add(standard_fields[dc])
                 FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
                                              field=fields[row.ID],
+                                             label=row.Label,
                                              order=fieldsets[row.CollectionID].fields.count() + 1,
                                              importance=(row.ShortView and 4) + (row.MediumView and 2) + (row.LongView and 1))
 

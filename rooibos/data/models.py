@@ -210,6 +210,7 @@ class MetadataStandard(models.Model):
 class Field(models.Model):
     label = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
+    old_name = models.CharField(max_length=100, null=True, blank=True)
     standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
     equivalent = models.ManyToManyField("self", null=True, blank=True)
 
@@ -263,11 +264,17 @@ class FieldSet(models.Model):
     
     class Meta:
         ordering = ['title']
+        
+    @staticmethod
+    def for_user(user):
+        return FieldSet.objects.filter(Q(owner=None) | Q(standard=True) |
+                                        (Q(owner=user) if user.is_authenticated() else Q()))
 
 
 class FieldSetField(models.Model):
     fieldset = models.ForeignKey(FieldSet)
     field = models.ForeignKey(Field)
+    label = models.CharField(max_length=100)
     order = models.IntegerField(default=0)
     importance = models.SmallIntegerField(default=1)
 

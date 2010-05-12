@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.utils.safestring import mark_safe
 from models import *
+from forms import FieldSetChoiceField
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list, check_access
 from rooibos.presentation.models import Presentation
 from rooibos.storage.models import Media, Storage
@@ -88,20 +89,16 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     media = Media.objects.select_related().filter(record=record,
                                                   storage__id__in=accessible_ids(request.user, Storage),
                                                   master=None)
+    edit = edit and request.user.is_authenticated()
+    
+    class FieldSetForm(forms.Form):
+        fieldset = FieldSetChoiceField(user=request.user, default_label='Default' if not edit else None)
 
-    if request.user.is_authenticated():
-        fieldsets = FieldSet.objects.filter(Q(owner=request.user) | Q(standard=True)).order_by('title')
+    fieldsetform = FieldSetForm(request.GET)
+    if fieldsetform.is_valid():
+        fieldset = fieldsetform.cleaned_data['fieldset']
     else:
-        fieldsets = FieldSet.objects.filter(standard=True).order_by('title')
-        edit = False
-
-    selected_fieldset = request.GET.get('fieldset')
-    fieldset = None
-    if selected_fieldset and selected_fieldset != '_all':
-        try:
-            fieldset = FieldSet.objects.get(name=selected_fieldset)
-        except ObjectDoesNotExist:
-            selected_fieldset = None
+        fieldset = None
 
     collection_items = collectionformset = None
 
@@ -110,14 +107,17 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         if not can_edit and not customize and not context:
             return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
-        def _get_fields():
-            return Field.objects.select_related('standard').all().order_by('standard', 'name')
-
         def _field_choices():
+            fsf = list(FieldSetField.objects.select_related('fieldset', 'field').all().order_by('fieldset__name', 'order', 'field__label'))
             grouped = {}
-            for f in _get_fields():
-                grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
-            return [('', '-' * 10)] + [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
+            for f in fsf:
+                grouped.setdefault((f.fieldset.title, f.fieldset.id), []).append(f.field)
+            others = list(Field.objects.exclude(id__in=[f.field.id for f in fsf]).order_by('label').values_list('id', 'label'))
+            choices = [('', '-' * 10)] + [(set[0], [(f.id, f.label) for f in fields])
+                for set, fields in sorted(grouped.iteritems(), key=lambda s: s[0][0])]            
+            if others:
+                choices.append(('Others', others))
+            return choices
 
         class FieldValueForm(forms.ModelForm):
 
@@ -125,10 +125,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 super(FieldValueForm, self).__init__(*args, **kwargs)
 
             def clean_field(self):
-                if not hasattr(self, '_fields'):
-                    self._fields = _get_fields()
-                data = self.cleaned_data.get('field')
-                return self._fields.get(id=data)
+                return Field.objects.get(id=self.cleaned_data['field'])
                 
             def clean_context_type(self):
                 context = self.cleaned_data.get('context_type')
@@ -220,7 +217,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 return HttpResponseRedirect(url)
         else:
 
-            if selected_fieldset:
+            if fieldset:
                 needed = fieldset.fields.filter(~Q(id__in=[fv.field_id for fv in fieldvalues])).order_by('fieldsetfield__order').values_list('id', flat=True)
                 initial = [{}] * len(fieldvalues) + [{'field': id} for id in needed]
                 FieldValueFormSet.extra = len(needed) + 3
@@ -255,8 +252,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
-                               'fieldsets': fieldsets,
-                               'selected_fieldset': fieldset,
+                               'fieldsetform': fieldsetform,
+                               'fieldset': fieldset,
                                'fieldvalues': fieldvalues_readonly,
                                'context': context,
                                'customize': customize,
@@ -324,7 +321,7 @@ def data_import_file(request, file):
     writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
     if not available_collections:
         raise Http404
-    available_fieldsets = FieldSet.objects.filter(Q(owner=None) | Q(owner=request.user))
+    available_fieldsets = FieldSet.for_user(request.user)
     
     def _get_fields():
         return Field.objects.select_related('standard').all().order_by('standard', 'name')

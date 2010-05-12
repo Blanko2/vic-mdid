@@ -182,18 +182,12 @@
 {% if not fv_formset %}
 
 <form id="metadata-form" class="submit-on-select-change" action="." method="GET">
-Display metadata as: <select name="fieldset">
-<option value="_all"{% if not selected_fieldset %} selected="selected"{% endif %}>Show All</option>
-<option value="">Default</option>
-{% for fieldset in fieldsets %}
-<option value="{{ fieldset.name }}"{% ifequal selected_fieldset.name fieldset.name %} selected="selected"{% endifequal %}>{{ fieldset.title }}</option>
-{% endfor %}
-</select>
+Display metadata as: {{ fieldsetform.fieldset }}
 <input type="submit" value="Change" />
 </form>
 
 <div>
-    {% metadata record selected_fieldset %}
+    {% metadata record fieldset %}
 </div>
 
 <br style="clear: left;" /><br />
@@ -234,12 +228,7 @@ Display metadata as: <select name="fieldset">
 </h2>
 
 <form method="GET" action="" class="submit-on-select-change">
-    Edit using fields template: <select name="fieldset">
-    <option value="">&nbsp;</option>
-    {% for fieldset in fieldsets %}
-    <option value="{{ fieldset.name }}">{{ fieldset.title }}</option>
-    {% endfor %}
-    </select>
+    Edit using fields template: {{ fieldsetform.fieldset }}
     <input type="submit" value="Edit" />
 </form>
 
