@@ -1,32 +1,192 @@
 {% extends "master.html" %}
 {% load ui %}
 
+{% block stylesheets %}
+{{ block.super }}
+<style type="text/css">
+
+html.js-enabled #items {
+    display: none;
+}
+
+#lighttable {
+    border: solid 2px lightgrey;
+    padding: 5px;
+    user-select: none; /* CSS3 */
+    -moz-user-select: none; /* Gecko (Firefox) */
+    -khtml-user-select:none; /* Webkit (Safari, Chrome) */
+}
+
+#lighttable div.slide, .lighttable-placeholder {
+    float: left;
+    margin: 5px;
+    background-color: lightgrey;
+    padding: 8px;
+    -moz-border-radius: 3px;
+    width: 100px;
+    height: 115px;
+}
+
+.lighttable-placeholder {
+    background-color: {{ PRIMARY_COLOR }};
+}
+
+#lighttable div.slide.selected {
+    background-color: {{ PRIMARY_COLOR }};
+}
+
+#lighttable div.slide.hidden div.title {
+    font-style: italic;
+}
+
+#lighttable div.slide.hidden div.title:before {
+    content: "[Hidden] ";
+}
+
+#lighttable div.slide.hidden img {
+    filter: alpha(opacity=30);
+	-moz-opacity: 0.3;
+	-khtml-opacity: 0.3;
+	opacity: 0.3;
+}
+
+#lighttable div.slide div.title {
+    font-size: xx-small;
+    width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+
+</style>
+{% endblock %}
+
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
-        $(document).ready(function() {
-            $("#dragdropnote").show();
-            $(".orderinput").hide();
-            $("#items tbody").sortable({
-                axis: 'y',
-                containment: '#items',
-                update: function(event, ui) {
-                    $("#items tbody tr:even").removeClass('altrow');
-                    $("#items tbody tr:odd").addClass('altrow');
-                    $(".orderinput input").each(function(i) { $(this).val(i); });
-                },
-                start: function(event, ui) {
-                    $(".controls", ui.helper).hide();
-                    ui.helper.removeClass('altrow');
-                },
-                stop: function(event, ui) {
-                    $(".controls", ui.helper).show();
-                }
-                }).css('cursor', 'move');
-            $(".delete input").click(function() {
-                $(".thumbnail", $(this).parent().parent()).toggle();
-            });
+
+    $(document).ready(function() {
+        $("#items tbody tr").each(function(i, e) {
+            var inputs = $(".thumbnail-col", e).children().not('a');
+            var thumbnail = $(".thumbnail-col a", e).children();
+            var title = $("<div class='title'>").text($(".title-col", e).text());
+            var order = $(".order-col", e).children().hide();
+            var controls = $(".controls", e).children().hide();
+            $("#lighttable").append($("<div class='slide' id='slide" + i + "'>").append(inputs, thumbnail, title, order, controls));
         });
+        $("#lighttable").append("<br style='clear: both;'>");
+        
+        $("#lighttable-buttons").show().children("button").attr('disabled', true);
+        
+        $("#duplicate-button").click(function(e) {
+            var selected_items = $("#lighttable div.slide.selected");
+            var insert_after = selected_items.last();
+            selected_items.each(function(i, e) {
+                var idx = parseInt($("#id_form-TOTAL_FORMS").val());
+                $("#id_form-TOTAL_FORMS").val(idx + 1);
+                var copy = $(e).clone();
+                copy.attr('id', 'slide' + idx).removeClass('selected');
+                $("input", copy).each(function(i, e) {
+                    var input = $(e);
+                    var name = input.attr('name', input.attr('name').replace(/[0-9]+/, idx)).attr('id', 'id_' + input.attr('name')).attr('name');
+                    if (name.match(/-id$/)) input.val('');
+                });
+                insert_after.after(copy);
+                insert_after = copy;
+            });
+            $(".orderinput input").each(function(i, e) { $(e).val(i); });
+            e.preventDefault();
+        });
+        
+        $("#delete-button").click(function(e) {
+            $("#lighttable div.slide.selected").each(function(i, e) {
+                $(e).removeClass('selected').hide(200);
+                $("input[id$=DELETE]", e).attr('checked', true);
+            });
+            $("#lighttable-buttons button").attr('disabled', true);
+            e.preventDefault();
+        });
+        
+        function markHidden() {
+            $("#lighttable div.slide").removeClass('hidden').has("input[id$=hidden]:checked").addClass('hidden');
+        }
+        markHidden();
+        
+        function showHide(hide) {
+            $("#lighttable div.slide.selected").each(function(i, e) {
+                $("input[id$=hidden]", e).attr('checked', hide);
+            });
+            markHidden();
+        }
+        
+
+        $("#show-button").click(function(e) { showHide(false); e.preventDefault(); });
+        $("#hide-button").click(function(e) { showHide(true); e.preventDefault(); });
+        
+        var firstselection;
+        
+        function select_slide(e) {
+            $("#lighttable div.slide").removeClass('selected');
+            var self = $(this);
+            if (!e.shiftKey || !firstselection) {
+                firstselection = self;
+            } else if (firstselection.attr('id') != self.attr('id')) {
+                var id = "[id=" + firstselection.attr("id") + "]";
+                (self.nextAll(id).length ? self.nextUntil(id) : self.prevUntil(id)).add(firstselection).addClass('selected');
+            }
+            self.addClass('selected');
+            $("#lighttable-buttons button").attr('disabled', false);
+            e.stopPropagation();
+        }
+        
+        $("#lighttable div.slide").disableSelection().live('click', select_slide).css('cursor', 'move');
+        $("#lighttable").click(function(e) {
+            if (!e.shiftKey) {
+                $("#lighttable div.slide").removeClass('selected');
+                firstselection = null;
+                $("#lighttable-buttons button").attr('disabled', true);
+            }
+        });
+        var selected_elements;
+        $("#lighttable").sortable({
+            containment: '#lighttable',
+            tolerance: 'pointer',
+            placeholder: 'lighttable-placeholder',
+            delay: 50,
+            distance: 5,
+            update: function(event, ui) {
+                var before = true;
+                var insert_after = ui.item;
+                var id = ui.item.attr('id');
+                selected_elements.each(function(i, e) {
+                    if ($(e).attr('id') == id) before = false;
+                    else if (before) ui.item.before(e);
+                    else {
+                        insert_after.after(e);
+                        insert_after = $(e);                        
+                    }
+                });
+                $(".orderinput input").each(function(i, e) { $(e).val(i); });
+                ui.item.unbind('click').one("click", function (e) {
+                    e.stopImmediatePropagation(); $(this).click(select_slide);
+                }); 
+            },
+            start: function(event, ui) {
+                if (!ui.item.hasClass('selected')) {
+                    $("#lighttable div.slide").removeClass('selected');
+                    ui.item.addClass('selected');
+                    ui.helper.addClass('selected');
+                    firstselection = ui.item;
+                }                
+                selected_elements = $("#lighttable div.slide.selected");
+                selected_elements.not(ui.item).hide(100);
+            },
+            stop: function(event, ui) {
+                selected_elements.not(ui.item).show(100);
+            }
+            }).show();
+        
+    });
 </script>
 {% endblock %}
 
@@ -35,16 +195,27 @@
 
 <h1>{{ presentation.title }}</h1>
 
-<div id="dragdropnote" style="display: none;">Drag and drop thumbnails into desired order.</div>
+<!--<div id="dragdropnote" style="display: none;">Drag and drop thumbnails into desired order.</div>-->
 
 <form method="POST" action="">
 {{ formset.management_form }}
+
+<div id="lighttable-buttons" style="float: right; display: none;">
+    <button id="show-button">Show</button>
+    <button id="hide-button">Hide</button>
+    <button id="duplicate-button">Duplicate</button>
+    <button id="delete-button">Delete</button>
+</div>
+
+<input type="submit" value="Save" />
+<a href="{% url presentation-edit presentation.id, presentation.name %}">Cancel</a>
+<a href=".">Revert changes</a>
+
+<div id="lighttable" style="display: none;">
+</div>
+
 <table id="items" summary="Included records" class="list">
     <thead>
-    <tr>
-        <td colspan="4"></td>
-        <td colspan="2"><input type="submit" value="Submit changes" /></td>
-    </tr>
     <tr>
         <th></th>
         <th>Title</th>
@@ -57,29 +228,28 @@
     <tbody>
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
-        <td>{{ form.id }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" /></a></td>
-        <td>{{ form.instance.record.title }}</td>
-        <td><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
+        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" /></a></td>
+        <td class="title-col">{{ form.instance.record.title }}</td>
+        <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
         <td><a href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, presentation_contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Annotate</a></td>
         <td class="controls">{{ form.hidden }}</td>
         <td class="controls delete">{{ form.DELETE }}</td>
     </tr>
 {% endfor %}
     </tbody>
-    <tfoot>
-    <tr>
-        <td colspan="4"></td>
-        <td colspan="2"><input type="submit" value="Submit changes" /></td>
-    </tr>
-    </tfoot>
 </table>
+
+<input type="submit" value="Save" />
+<a href="{% url presentation-edit presentation.id, presentation.name %}">Cancel</a>
+<a href=".">Revert changes</a>
+
 </form>
 
 {% endblock %}
 
 
 {% block sidebar %}
-
+<!--
 {% var as related_pages %}
 {"pages": [
 {% if presentation.items.count %}
@@ -90,5 +260,5 @@
 {% endvar %}
 
 {{ block.super }}
-
+-->
 {% endblock %}

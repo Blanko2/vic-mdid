@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.forms.models import modelformset_factory
+from django.forms.models import modelformset_factory, BaseModelFormSet
 from django.db.models.aggregates import Count
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
@@ -20,7 +20,7 @@ from rooibos.access import filter_by_access, accessible_ids
 from rooibos.ui.forms import SplitTaggingField
 from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
-from rooibos.data.models import FieldSet
+from rooibos.data.models import FieldSet, Record
 from rooibos.data.forms import FieldSetChoiceField
 from models import Presentation, PresentationItem
 import logging
@@ -124,11 +124,25 @@ def items(request, id, name):
     presentation = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
 
-    OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True, exclude=('record','presentation'))
+    class BaseOrderingFormSet(BaseModelFormSet):
+        def add_fields(self, form, index):
+            super(BaseOrderingFormSet, self).add_fields(form, index)
+            form.fields["record"] = forms.CharField(widget=forms.HiddenInput)
+        def clean(self):
+            super(BaseOrderingFormSet, self).clean()
+            for form in self.forms:
+                if form.cleaned_data.has_key('record'):
+                    form.cleaned_data['record'] = Record.objects.get(id=form.cleaned_data['record'])
+
+    OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
+                                           exclude=('presentation'), formset=BaseOrderingFormSet)
     if request.method == 'POST':
         formset = OrderingFormSet(request.POST, queryset=presentation.items.all())
         if formset.is_valid():
-            formset.save()
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.presentation = presentation
+                instance.save()
             request.user.message_set.create(message="Changes to presentation items saved successfully.")
             return HttpResponseRedirect(reverse('presentation-items', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
