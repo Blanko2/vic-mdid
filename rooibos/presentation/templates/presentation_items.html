@@ -12,6 +12,7 @@ html.js-enabled #items {
 #lighttable {
     border: solid 2px lightgrey;
     padding: 5px;
+    overflow: scroll;
     user-select: none; /* CSS3 */
     -moz-user-select: none; /* Gecko (Firefox) */
     -khtml-user-select:none; /* Webkit (Safari, Chrome) */
@@ -57,6 +58,22 @@ html.js-enabled #items {
     white-space: nowrap;
 }
 
+#lighttable-annotation {
+    border: solid 2px lightgrey;
+    border-top: none;
+    padding: 5px;
+}
+
+#lighttable-annotation textarea {
+    height: 40px;
+    width: 600px;
+    vertical-align: top;
+}
+
+td.annotation-col textarea {
+    height: 30px;
+    width: 200px;
+}
 
 </style>
 {% endblock %}
@@ -66,15 +83,16 @@ html.js-enabled #items {
 <script type="text/javascript">
 
     $(document).ready(function() {
+        
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
             var thumbnail = $(".thumbnail-col a", e).children();
             var title = $("<div class='title'>").text($(".title-col", e).text());
             var order = $(".order-col", e).children().hide();
             var controls = $(".controls", e).children().hide();
-            $("#lighttable").append($("<div class='slide' id='slide" + i + "'>").append(inputs, thumbnail, title, order, controls));
+            var annotation = $(".annotation-col", e).children().hide();
+            $("#lighttable").append($("<div class='slide' id='slide" + i + "'>").append(inputs, thumbnail, title, order, annotation, controls));
         });
-        $("#lighttable").append("<br style='clear: both;'>");
         
         $("#lighttable-buttons").show().children("button").attr('disabled', true);
         
@@ -86,7 +104,7 @@ html.js-enabled #items {
                 $("#id_form-TOTAL_FORMS").val(idx + 1);
                 var copy = $(e).clone();
                 copy.attr('id', 'slide' + idx).removeClass('selected');
-                $("input", copy).each(function(i, e) {
+                $("input,textarea", copy).each(function(i, e) {
                     var input = $(e);
                     var name = input.attr('name', input.attr('name').replace(/[0-9]+/, idx)).attr('id', 'id_' + input.attr('name')).attr('name');
                     if (name.match(/-id$/)) input.val('');
@@ -119,9 +137,29 @@ html.js-enabled #items {
             markHidden();
         }
         
-
         $("#show-button").click(function(e) { showHide(false); e.preventDefault(); });
         $("#hide-button").click(function(e) { showHide(true); e.preventDefault(); });
+        
+        var last_selected;
+        
+        function selectionChanged() {
+            selected = $("#lighttable div.slide.selected");
+            $("#lighttable-buttons button").attr('disabled', selected.length == 0);
+            if (last_selected) {
+                $("textarea", last_selected).val($("#lighttable-annotation textarea").val());
+            }
+            if (selected.length == 1) {
+                last_selected = selected;
+                $("#lighttable-annotation textarea").val($("textarea", last_selected).val()).attr('disabled', false);
+                $("#customize-link").empty().append($("a.customize", last_selected).clone().show());
+            } else {
+                last_selected = null;
+                $("#lighttable-annotation textarea").val('').attr('disabled', true);
+                 $("#customize-link").empty();
+            }            
+        }
+        
+        $("#items-form").submit(selectionChanged);
         
         var firstselection;
         
@@ -135,20 +173,22 @@ html.js-enabled #items {
                 (self.nextAll(id).length ? self.nextUntil(id) : self.prevUntil(id)).add(firstselection).addClass('selected');
             }
             self.addClass('selected');
-            $("#lighttable-buttons button").attr('disabled', false);
+            selectionChanged();
             e.stopPropagation();
         }
         
+        var selected_elements;
+        
         $("#lighttable div.slide").disableSelection().live('click', select_slide).css('cursor', 'move');
-        $("#lighttable").click(function(e) {
+        $("#lighttable").append(
+            "<br style='clear: both;'>"
+        ).click(function(e) {
             if (!e.shiftKey) {
                 $("#lighttable div.slide").removeClass('selected');
                 firstselection = null;
-                $("#lighttable-buttons button").attr('disabled', true);
+                selectionChanged();
             }
-        });
-        var selected_elements;
-        $("#lighttable").sortable({
+        }).sortable({
             containment: '#lighttable',
             tolerance: 'pointer',
             placeholder: 'lighttable-placeholder',
@@ -172,6 +212,7 @@ html.js-enabled #items {
                 }); 
             },
             start: function(event, ui) {
+                disableMetadataBubble(true);
                 if (!ui.item.hasClass('selected')) {
                     $("#lighttable div.slide").removeClass('selected');
                     ui.item.addClass('selected');
@@ -183,9 +224,23 @@ html.js-enabled #items {
             },
             stop: function(event, ui) {
                 selected_elements.not(ui.item).show(100);
+                disableMetadataBubble(false);
             }
             }).show();
         
+        $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 200)); }).resize();
+        
+        $("#lighttable-annotation").show().children().attr('disabled', true);
+        
+        $("a.customize").live('click', function(e) {
+            if (!confirm('This action will discard any changes you have made since the last save.'))
+                e.preventDefault();
+        });
+        
+        if (window.location.hash && window.location.hash.match(/^#s/)) {
+            $("#lighttable div.slide").has("input[id$=-id][value=" + window.location.hash.substring(2) + "]").addClass('selected');
+            selectionChanged();
+        }
     });
 </script>
 {% endblock %}
@@ -195,9 +250,7 @@ html.js-enabled #items {
 
 <h1>{{ presentation.title }}</h1>
 
-<!--<div id="dragdropnote" style="display: none;">Drag and drop thumbnails into desired order.</div>-->
-
-<form method="POST" action="">
+<form method="POST" action="" id="items-form">
 {{ formset.management_form }}
 
 <div id="lighttable-buttons" style="float: right; display: none;">
@@ -211,7 +264,10 @@ html.js-enabled #items {
 <a href="{% url presentation-edit presentation.id, presentation.name %}">Cancel</a>
 <a href=".">Revert changes</a>
 
-<div id="lighttable" style="display: none;">
+<div id="lighttable" style="display: none;"></div>
+<div id="lighttable-annotation" style="display: none;">
+    Annotation: <textarea name="annotation"></textarea>
+    <span id="customize-link"></span>
 </div>
 
 <table id="items" summary="Included records" class="list">
@@ -220,7 +276,7 @@ html.js-enabled #items {
         <th></th>
         <th>Title</th>
         <th><span class="orderinput">Order</span></th>
-        <th></th>
+        <th>Annotation</th>
         <th>Hidden</th>
         <th>Remove</th>
     </tr>
@@ -228,10 +284,11 @@ html.js-enabled #items {
     <tbody>
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
-        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" /></a></td>
+        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-record-id-{{ form.instance.record.id }}" /></a></td>
         <td class="title-col">{{ form.instance.record.title }}</td>
         <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
-        <td><a href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, presentation_contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Annotate</a></td>
+        <td class="annotation-col">{{ form.annotation }}<br />
+            <a class="customize" href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Customize record for this presentation</a></td>
         <td class="controls">{{ form.hidden }}</td>
         <td class="controls delete">{{ form.DELETE }}</td>
     </tr>

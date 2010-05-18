@@ -213,10 +213,12 @@
         
         
         // metadata bubble code
+        var disabledMetadataBubble = false;
         var showMetadataBubbleTimeout;
         var hideMetadataBubbleTimeout;
         var metadataBubbleCache = Object();
         function showMetadataBubble(anchor, id) {
+            if (disabledMetadataBubble) return;
             clearTimeout(hideMetadataBubbleTimeout);
             var bubble = $("#metadatabubble");
             var height = 250;
@@ -258,6 +260,11 @@
         
         function hideMetadataBubble() {
             $("#metadatabubble,#metadatabubble-arrow").hide('fast');
+        }
+        
+        function disableMetadataBubble(disable) {
+            disabledMetadataBubble = (disable == true)
+            if (disabledMetadataBubble) hideMetadataBubble();
         }
         
         function metadataBubbleTimeout(anchor, show) {

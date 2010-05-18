@@ -34,7 +34,7 @@ class PowerPointGenerator:
     
     def __init__(self, presentation, user):        
         self.presentation = presentation
-        self.items = presentation.items.all()
+        self.items = presentation.items.filter(hidden=False)
         self.slide_template = None
         self.slide_rel_template = None
         self.slide_notes_template = None
@@ -90,10 +90,11 @@ class PowerPointGenerator:
                 fieldvalues[0]._subitem = False
             for i in range(1, len(fieldvalues)):
                 fieldvalues[i]._subitem = (fieldvalues[i].field == fieldvalues[i - 1].field and
-                                          fieldvalues[i].group == fieldvalues[i - 1].group)
+                                          fieldvalues[i].group == fieldvalues[i - 1].group)                
                 
             body = xn.getElementsByTagName('p:txBody').item(0)
-            for value in fieldvalues:
+            
+            def appendText(text):
                 ap1 = xn.createElement('a:p')
                 ar = xn.createElement('a:r') 
                 arPr = xn.createElement('a:rPr')
@@ -101,15 +102,22 @@ class PowerPointGenerator:
                 arPr.setAttribute('lang','en-US') 
                 arPr.setAttribute('smtClean','0')
                 at = xn.createElement('a:t')
-                txt = xn.createTextNode('%s%s: %s' % (
-                      value._subitem and 'sub' or '', 
-                      value.resolved_label, 
-                      value.value or ''))
+                txt = xn.createTextNode(text)
                 at.appendChild(txt) 
                 ar.appendChild(arPr)
                 ar.appendChild(at)
                 ap1.appendChild(ar)
                 body.appendChild(ap1)
+            
+            for value in fieldvalues:
+                appendText('%s%s: %s' % (
+                      value._subitem and 'sub' or '', 
+                      value.resolved_label, 
+                      value.value or ''))
+
+            annotation = item.annotation
+            if annotation:
+                appendText('Annotation: %s' % annotation)
             
             test = xn.toxml(encoding="UTF-8")
             

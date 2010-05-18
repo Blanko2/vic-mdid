@@ -85,7 +85,7 @@ def _records_as_json(records, owner=None, context=None, process_url=lambda url: 
 
 
 def _presentation_item_as_json(item, owner=None, process_url=lambda url: url):
-      return dict(
+    data = dict(
                 id=item.record.id,
                 name=item.record.name,
                 title=item.title or 'Untitled',
@@ -99,6 +99,10 @@ def _presentation_item_as_json(item, owner=None, process_url=lambda url: url):
                     for value in item.get_fieldvalues(owner=owner)
                 ]
             )
+    annotation = item.annotation
+    if annotation:
+        data['metadata'].append(dict(label='Annotation', value=annotation))
+    return data
   
 def _presentation_items_as_json(items, owner=None, process_url=lambda url: url):
     return [_presentation_item_as_json(item, owner, process_url) for item in items]

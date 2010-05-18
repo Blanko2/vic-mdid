@@ -127,6 +127,9 @@ class FlashCards(object):
                 for value in values:
                     v = value.value if len(value.value) < 100 else value.value[:100] + '...'
                     data.append(Paragraph('<b>%s:</b> %s' % (value.resolved_label, v), styles['Data']))
+                annotation = item.annotation
+                if annotation:
+                    data.append(Paragraph('<b>%s:</b> %s' % ('Annotation', annotation), styles['Data']))
                 f.addFromList(data, p)
                 if data:
                     p.setFont('Helvetica', 8)

@@ -172,7 +172,10 @@
             {% endfor %}
             {% endif %}
         </td>
-        <td>{{ presentation.visible_item_count }}</td>
+        <td>{% with presentation.hidden_item_count as h %}
+          {{ presentation.visible_item_count }}{% if h %}&nbsp;(+{{h}}){% endif %}
+          {% endwith %}
+        </td>
         <td>{% if presentation.password %}
                 {% if presentation.unlocked %}
                 <img src="{% url static "images/unlocked.png" %}" />

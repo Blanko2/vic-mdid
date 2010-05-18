@@ -3,7 +3,8 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes import generic
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from rooibos.data.models import Record, FieldSet, standardfield
+from django.contrib.contenttypes.models import ContentType
+from rooibos.data.models import Record, FieldSet, FieldValue, standardfield
 from rooibos.storage.models import Media
 from rooibos.util import unique_slug
 from rooibos.access import accessible_ids
@@ -48,6 +49,9 @@ class Presentation(models.Model):
         
     def visible_item_count(self):
         return self.items.filter(hidden=False).count()
+
+    def hidden_item_count(self):
+        return self.items.filter(hidden=True).count()
 
     @staticmethod
     def check_passwords(passwords):
@@ -98,6 +102,51 @@ class PresentationItem(models.Model):
         q = Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields())
         fv = self.get_fieldvalues(q=q)
         return None if not fv else fv[0].value
+        
+    def annotation_getter(self):
+        if self.id:
+            try:
+                return FieldValue.objects.get(
+                    owner=self.presentation.owner,
+                    context_id=self.id,
+                    context_type=ContentType.objects.get_for_model(PresentationItem),
+                    field=standardfield('description'),
+                    record=self.record,
+                    label='Annotation'
+                ).value
+            except FieldValue.DoesNotExist:
+                return None
+        elif hasattr(self, '_saved_annotation'):
+            return self._saved_annotation
+        else:
+            return None
+        
+    def annotation_setter(self, value):
+        if self.id:
+            fv, created = FieldValue.objects.get_or_create(
+                owner=self.presentation.owner,
+                context_id=self.id,
+                context_type=ContentType.objects.get_for_model(PresentationItem),
+                field=standardfield('description'),
+                record=self.record,
+                label='Annotation',
+                defaults=dict(value=value)
+            )
+            if not created and value:
+                fv.value = value
+                fv.save()
+            if not value:
+                fv.delete()
+        else:
+            # we are not saved yet, so remember annotation for later
+            self._saved_annotation = value
+    
+    annotation = property(annotation_getter, annotation_setter)
+
+    def save(self, *args, **kwargs):
+        super(PresentationItem, self).save(*args, **kwargs)
+        if hasattr(self, '_saved_annotation'):
+            self.annotation = self._saved_annotation
 
     def get_fieldvalues(self, owner=None, hidden=False, include_context_owner=True, q=None):
         return self.record.get_fieldvalues(owner=owner,

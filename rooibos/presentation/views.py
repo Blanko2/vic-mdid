@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.forms.models import modelformset_factory, BaseModelFormSet
+from django.forms.models import modelformset_factory, BaseModelFormSet, ModelForm
 from django.db.models.aggregates import Count
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
@@ -124,20 +124,32 @@ def items(request, id, name):
     presentation = get_object_or_404(Presentation.objects.filter(
         id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
 
-    class BaseOrderingFormSet(BaseModelFormSet):
-        def add_fields(self, form, index):
-            super(BaseOrderingFormSet, self).add_fields(form, index)
-            form.fields["record"] = forms.CharField(widget=forms.HiddenInput)
-        def clean(self):
-            super(BaseOrderingFormSet, self).clean()
-            for form in self.forms:
-                if form.cleaned_data.has_key('record'):
-                    form.cleaned_data['record'] = Record.objects.get(id=form.cleaned_data['record'])
-
+    class BaseOrderingForm(ModelForm):
+        record = forms.CharField(widget=forms.HiddenInput)
+        annotation = forms.CharField(widget=forms.Textarea, required=False)
+        
+        def __init__(self, initial=None, instance=None, *args, **kwargs):
+            if instance:
+                object_data = dict(annotation=instance.annotation)
+            else:
+                object_data = dict()
+            if initial is not None:
+                object_data.update(initial)
+            super(BaseOrderingForm, self).__init__(initial=object_data, instance=instance, *args, **kwargs)
+            
+        def clean_record(self):
+            return Record.objects.get(id=self.cleaned_data['record'])
+        
+        def save(self, commit=True):
+            instance = super(BaseOrderingForm, self).save(commit)
+            instance.annotation = self.cleaned_data['annotation']
+            return instance
+        
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
-                                           exclude=('presentation'), formset=BaseOrderingFormSet)
+                                           exclude=('presentation'), form=BaseOrderingForm)
+    queryset = presentation.items.select_related('record').all()
     if request.method == 'POST':
-        formset = OrderingFormSet(request.POST, queryset=presentation.items.all())
+        formset = OrderingFormSet(request.POST, queryset=queryset)
         if formset.is_valid():
             instances = formset.save(commit=False)
             for instance in instances:
@@ -146,13 +158,13 @@ def items(request, id, name):
             request.user.message_set.create(message="Changes to presentation items saved successfully.")
             return HttpResponseRedirect(reverse('presentation-items', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
-        formset = OrderingFormSet(queryset=presentation.items.all())
+        formset = OrderingFormSet(queryset=queryset)
 
     contenttype = ContentType.objects.get_for_model(Presentation)
 
     return render_to_response('presentation_items.html',
                       {'presentation': presentation,
-                       'presentation_contenttype': "%s.%s" % (contenttype.app_label, contenttype.model),
+                       'contenttype': "%s.%s" % (contenttype.app_label, contenttype.model),
                        'formset': formset,},
                       context_instance=RequestContext(request))
 

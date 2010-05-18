@@ -138,6 +138,9 @@ class PrintView(object):
             values = item.get_fieldvalues(owner=request.user)
             for value in values:
                 text.append('<b>%s</b>: %s<br />' % (value.resolved_label, value.value))
+            annotation = item.annotation
+            if annotation:
+                text.append('<b>%s</b>: %s<br />' % ('Annotation', annotation))
             p = Paragraph(''.join(text), styles['Normal'])
             image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords, force_local=True)
             if image:
