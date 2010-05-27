@@ -14,4 +14,5 @@ urlpatterns = patterns('',
     url(r'^presentation/(?P<id>\d+)/$', presentation_detail, name='api-presentation-detail'),
     url(r'^keepalive/$', keep_alive, name='api-keepalive'),
     url(r'^autocomplete/user/$', autocomplete_user, name='api-autocomplete-user'),
+    url(r'^autocomplete/group/$', autocomplete_group, name='api-autocomplete-group'),
 )

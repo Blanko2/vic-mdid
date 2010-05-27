@@ -1,24 +1,24 @@
 from datetime import datetime
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext
-from django.http import HttpResponse, HttpRequest, HttpResponseNotAllowed, HttpResponseForbidden
-from django.utils import simplejson
-from django.core import serializers
-from django.db.models import Q
-from rooibos.ui import update_record_selection
-from rooibos.util import safe_int, json_view
-from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
-from rooibos.storage.models import Storage, Media
-from rooibos.data.models import Field, Collection, FieldValue, Record
-from rooibos.solr.views import *
-from rooibos.data.models import *
-from rooibos.storage import get_thumbnail_for_record
-from rooibos.storage.views import create_proxy_url_if_needed
-from rooibos.presentation.models import Presentation
-from rooibos.access import filter_by_access
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User, Group
+from django.core import serializers
+from django.db.models import Q
+from django.http import HttpResponse, HttpRequest, HttpResponseNotAllowed, HttpResponseForbidden
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext
+from django.utils import simplejson
 from django.views.decorators.cache import cache_control
+from rooibos.access import filter_by_access
+from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
+from rooibos.data.models import Collection, CollectionItem, DisplayFieldValue, Field, FieldSet, FieldSetField, FieldValue, MetadataStandard, Record
+from rooibos.presentation.models import Presentation
+from rooibos.solr.views import *
+from rooibos.storage import get_thumbnail_for_record
+from rooibos.storage.models import Storage, Media
+from rooibos.storage.views import create_proxy_url_if_needed
+from rooibos.ui import update_record_selection
+from rooibos.util import safe_int, json_view
 import django.contrib.auth
 
 
@@ -191,5 +191,21 @@ def autocomplete_user(request):
     users = list(User.objects.filter(username__istartswith=query).order_by('username').values_list('username', flat=True)[:limit])
     if len(users) < limit:
         users.extend(User.objects.filter(~Q(username__istartswith=query), username__icontains=query)
-                     .order_by('username').values_list('username', flat=True)[:limit-len(users)])
+                     .order_by('username').values_list('username', flat=True)[:limit - len(users)])
     return HttpResponse(content='\n'.join(users))
+
+
+@cache_control(no_cache=True)        
+def autocomplete_group(request):
+    query = request.GET.get('q', '').lower()
+    try:
+        limit = max(10, min(25, int(request.GET.get('limit', '10'))))
+    except ValueError:
+        limit = 10
+    if not query or not request.user.is_authenticated():
+        return ''
+    groups = list(Group.objects.filter(name__istartswith=query).order_by('name').values_list('name', flat=True)[:limit])
+    if len(groups) < limit:
+        groups.extend(Group.objects.filter(~Q(name__istartswith=query), name__icontains=query)
+                     .order_by('name').values_list('name', flat=True)[:limit - len(groups)])
+    return HttpResponse(content='\n'.join(groups))
