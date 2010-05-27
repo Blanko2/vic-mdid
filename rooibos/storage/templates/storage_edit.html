@@ -4,6 +4,18 @@
 {% load ui %}
 
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#delete-storage").click(function(event) {
+            if (!confirm("Are you sure you want to delete this storage?"))
+                event.preventDefault();
+        });
+    });
+</script>
+{% endblock %}
+
 {% block sidebar %}
 {% var as related_pages %}
 {"pages": [
@@ -13,6 +25,8 @@
 {% endvar %}
 
 {{ block.super }}
+
+{% if storage.id %}
 
   <div class="facet active-facet" id="storage_sidebar_statistics">
     <div class="facet-header">Statistics</div>
@@ -55,6 +69,20 @@
     </div>
   </div>
 
+{% if request.user.is_superuser %}
+  <div class="facet active-facet" id="storage_sidebar_delete">
+    <div class="facet-header">Delete Storage</div>
+    <div class="facet-body">
+        <form action="." method="POST">
+        <input type="submit" value="Delete" name="delete-storage" id="delete-storage" />
+        </form>
+    </div>
+  </div>
+{% endif %}
+
+
+{% endif %}
+
 {% endblock %}
 
 
@@ -68,8 +96,15 @@
     
 <table>
     {{ form }}
+    <tr>
+      <td>
+      </td>
+      <td>
+        <input type="Submit" value="Submit changes" /> <a href="{% url storage-manage %}">Cancel</a>
+      </td>
+    </tr>
 </table>
-    
+
 </form>
 
 {% endblock %}

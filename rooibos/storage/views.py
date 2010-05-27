@@ -205,17 +205,39 @@ def manage_storages(request):
 
 
 @login_required
-def manage_storage(request, storageid, storagename):
+def manage_storage(request, storageid=None, storagename=None):
     
-    storage = get_object_or_404(filter_by_access(request.user, Storage, manage=True), id=storageid)
+    if storageid and storagename:
+        storage = get_object_or_404(filter_by_access(request.user, Storage, manage=True), id=storageid)
+    else:
+        storage = Storage(system='local')
     
     class StorageForm(forms.ModelForm):
-        system = forms.CharField(widget=forms.Select(choices=[(s,s) for s in settings.STORAGE_SYSTEMS.keys()]))
+        system = forms.CharField(widget=forms.Select(choices=[(s,s) for s in settings.STORAGE_SYSTEMS.keys()],
+                                                     attrs={'disabled': 'disabled'} if storage.id else {}))
+        
+        def clean_system(self):
+            return self.cleaned_data['system'] if not self.instance.id else self.instance.system
+        
         class Meta:
             model = Storage
-            exclude = ('derivative',)
+            exclude = ('name', 'derivative')
     
-    form = StorageForm(instance=storage)
+    if request.method == "POST":
+        if request.POST.get('delete-storage'):
+            if not request.user.is_superuser:
+                raise HttpResponseForbidden()
+            request.user.message_set.create(message="Storage '%s' has been deleted." % storage.title)
+            storage.delete()
+            return HttpResponseRedirect(reverse('storage-manage'))
+        else:
+            form = StorageForm(request.POST, instance=storage)
+            if form.is_valid():   
+                form.save()
+                return HttpResponseRedirect(reverse('storage-manage-storage', kwargs=dict(
+                    storageid=form.instance.id, storagename=form.instance.name)))
+    else:
+        form = StorageForm(instance=storage)
     
     return render_to_response('storage_edit.html',
                           {'storage': storage,
