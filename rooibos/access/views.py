@@ -3,11 +3,12 @@ from django.shortcuts import get_object_or_404, get_list_or_404, render_to_respo
 from django.template import RequestContext
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.views import login as dj_login, logout as dj_logout
+from django import forms
 from models import AccessControl, update_membership_by_ip
-from . import check_access, get_effective_permissions
+from . import check_access, get_effective_permissions, get_accesscontrols_for_object
 
 
 def login(request, *args, **kwargs):
@@ -65,8 +66,67 @@ def modify_permissions(request, app_label, model, id, name):
         raise Http404
     check_access(request.user, object, manage=True, fail_if_denied=True)
     
+    permissions = get_accesscontrols_for_object(object)
+    
+    def tri_state(value):
+        return None if value == 'None' else value == 'True'
+    
+    class ACForm(forms.Form):
+        read = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
+        write = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
+        manage = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
+        
+    if request.method == "POST":
+        acobjects = AccessControl.objects.filter(id__in=request.POST.getlist('ac'),
+                                             content_type=contenttype,
+                                             object_id=id)
+        if request.POST.get('delete'):
+            acobjects.delete()
+            return HttpResponseRedirect(request.get_full_path())
+        else:
+            ac_form = ACForm(request.POST)
+            if ac_form.is_valid():
+                
+                def set_ac(ac):
+                    ac.read = ac_form.cleaned_data['read']
+                    ac.write = ac_form.cleaned_data['write']
+                    ac.manage = ac_form.cleaned_data['manage']
+                    ac.save()
+
+                map(set_ac, acobjects)
+                
+                username = request.POST.get('adduser')
+                if username:
+                    try:
+                        user = User.objects.get(username=username)
+                        ac = AccessControl.objects.filter(user=user, content_type=contenttype, object_id=id)
+                        if ac:
+                            set_ac(ac[0])
+                        else:
+                            set_ac(AccessControl(user=user, content_type=contenttype, object_id=id))                       
+                    except User.DoesNotExist:
+                        request.user.message_set.create(message="No user with username '%s' exists." % username)
+                
+                groupname = request.POST.get('addgroup')
+                if groupname:
+                    try:
+                        group = Group.objects.get(name=groupname)
+                        ac = AccessControl.objects.filter(usergroup=group, content_type=contenttype, object_id=id)
+                        if ac:
+                            set_ac(ac[0])
+                        else:
+                            set_ac(AccessControl(usergroup=group, content_type=contenttype, object_id=id))                       
+                    except Group.DoesNotExist:
+                        request.user.message_set.create(message="No group with name '%s' exists." % groupname)
+                
+                return HttpResponseRedirect(request.get_full_path())
+    else:
+        ac_form = ACForm()
+    
     return render_to_response('access_modify_permissions.html',
                               {'object': object,
                                'contenttype': contenttype,
+                               'permissions': permissions,
+                               'ac_form': ac_form,
                                },
                               context_instance=RequestContext(request))
