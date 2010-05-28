@@ -11,10 +11,12 @@
         if (this.checked) {
             var read = $(this).next('span');
             var write = read.next('span');
-            var manage = read.next('span');
+            var manage = write.next('span');
+            var restrictions = manage.next('span');
             $("#id_read").attr('selectedIndex', read.hasClass('a') * 1  + read.hasClass('d') * 2)
             $("#id_write").attr('selectedIndex', write.hasClass('a') * 1  + write.hasClass('d') * 2)
             $("#id_manage").attr('selectedIndex', manage.hasClass('a') * 1  + manage.hasClass('d') * 2)
+            $("#id_restrictions").val(restrictions.data('title') || "");
         }
     });
     
@@ -35,19 +37,9 @@
 <h1>Modify permissions for {{ object.title }}</h1>
 
 <form method="POST" action=".">
-
-<div class="permission-list">
-{% for ac in permissions %}
-<input type="checkbox" name="ac" value="{{ ac.id }}" />
-<span class="{{ ac.read|yesno:"a,d,u" }}">R</span>
-<span class="{{ ac.write|yesno:"a,d,u" }}">W</span>
-<span class="{{ ac.manage|yesno:"a,d,u" }}">M</span>
-{% if ac.user %}<img src="{% url static 'images/user.png' %}" alt="User" class="user-icon" />
-<a href="{% url access-effective-permissions contenttype.app_label, contenttype.model, object.id, object.name %}?user={{ ac.user.username|urlencode }}">{{ ac.user.username }}</a>
-{% else %}{% if ac.usergroup %}<img src="{% url static 'images/group.png' %}" alt="Group" class="user-icon" /> {{ ac.usergroup.name }}{% else %}Anonymous Users{% endif %}{% endif %}<br />
-{% endfor %}
-</div>
-
+{% with "true" as ac_selectable %}
+{% include "access_permissions_display.html" %}
+{% endwith %}
 <br />
 
 Set selected and new access controls to:
@@ -55,11 +47,11 @@ Set selected and new access controls to:
 {{ ac_form }}
 <tr>
     <td>Add user:</td>
-    <td><input type="text" class="autocomplete-user" name="adduser" autocomplete="off" /></td>
+    <td><input type="text" class="autocomplete-user" name="adduser" /></td>
 </tr>
 <tr>
     <td>Add group:</td>
-    <td><input type="text" class="autocomplete-group" name="addgroup" autocomplete="off" /></td>
+    <td><input type="text" class="autocomplete-group" name="addgroup" /></td>
 </tr>        
 </table>
 

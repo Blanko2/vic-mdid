@@ -75,6 +75,18 @@ def modify_permissions(request, app_label, model, id, name):
         read = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
         write = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
         manage = forms.TypedChoiceField(choices=((None, 'Not set'), (True, 'Allowed'), (False, 'Denied')), coerce=tri_state)
+        restrictions = forms.CharField(widget=forms.Textarea(attrs={'style': 'max-height: 100px;'}), required=False)
+        
+        def clean_restrictions(self):
+            r = unicode(self.cleaned_data['restrictions'])
+            if not r:
+                return None
+            try:
+                return dict(map(unicode.strip, kv.split('=', 1)) for kv in filter(None, map(unicode.strip, r.splitlines())))
+            except Exception, e:
+                print r
+                print e
+                raise forms.ValidationError('Please enter one key=value per line')
         
     if request.method == "POST":
         acobjects = AccessControl.objects.filter(id__in=request.POST.getlist('ac'),
@@ -91,6 +103,7 @@ def modify_permissions(request, app_label, model, id, name):
                     ac.read = ac_form.cleaned_data['read']
                     ac.write = ac_form.cleaned_data['write']
                     ac.manage = ac_form.cleaned_data['manage']
+                    ac.restrictions = ac_form.cleaned_data['restrictions']
                     ac.save()
 
                 map(set_ac, acobjects)

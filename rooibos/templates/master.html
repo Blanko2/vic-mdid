@@ -176,6 +176,7 @@
     <script type="text/javascript" src="{% url static 'jquery/jquery.ajaxmanager.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.autocomplete.pack.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-1.4.2-min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-1.0.0-rc3.min.js' %}"></script>
     <script type="text/javascript">
         var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
     </script>
@@ -432,6 +433,34 @@
         });
     </script>
 {% endcompress %}
+
+    <script type="text/javascript">
+        $(document).ready(function() 
+        {
+            $('div.permission-list span[title]').each(function() {
+                $(this).data('title', $(this).attr('title')).qtip({
+                    content: $(this).attr('title').replace('\n', '<br />'),
+                    position: {
+                        corner: {
+                            tooltip: 'bottomLeft',
+                            target: 'topRight'
+                        },
+                        adjust: {
+                            screen: true,
+                        }
+                    },
+                    style: {
+                        border: {
+                            radius: 4
+                        },
+                        fontSize: 'smaller',
+                        tip: true,
+                        name: 'cream'
+                    }
+                }).attr('title', '');
+            });
+        });
+    </script>
 
 {% endblock %}
 </body>
