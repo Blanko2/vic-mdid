@@ -110,7 +110,7 @@
     <div class="column">
     {% if not user.is_authenticated %}
         <h2>Log in</h2>
-        <form method="POST" action="{% url login %}" id="loginform">
+        <form method="POST" action="." id="loginform">
             {{ form.as_p }}
             <input type="submit" value="Log in" /> {% help "logging-in" "Help" "What is my login information?" %}
         </form>

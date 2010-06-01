@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import login
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from django.utils import simplejson
@@ -33,6 +34,8 @@ def css(request, stylesheet):
 
 
 def main(request):
+    if request.method == "POST":
+        return login(request)
 
     form = AuthenticationForm()
     
