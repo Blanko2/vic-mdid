@@ -327,17 +327,31 @@ def data_import_file(request, file):
         return Field.objects.select_related('standard').all().order_by('standard', 'name')
     
     def _field_choices():
+        fsf = list(FieldSetField.objects.select_related('fieldset', 'field').all().order_by('fieldset__name', 'order', 'field__label'))
         grouped = {}
-        for f in _get_fields():
-            grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
-        return [('0', '[do not import]'), ('-1', '[new field]')] + \
-               [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
+        for f in fsf:
+            grouped.setdefault((f.fieldset.title, f.fieldset.id), []).append(f.field)
+        others = list(Field.objects.exclude(id__in=[f.field.id for f in fsf]).order_by('label').values_list('id', 'label'))
+        choices = [('', '-' * 10)] + [(set[0], [(f.id, f.label) for f in fields])
+            for set, fields in sorted(grouped.iteritems(), key=lambda s: s[0][0])]            
+        if others:
+            choices.append(('Others', others))
+        return choices
+
+
+    #def _field_choices():
+    #    grouped = {}
+    #    for f in _get_fields():
+    #        grouped.setdefault(f.standard and f.standard.title or 'Other', []).append(f)
+    #    return [('0', '[do not import]'), ('-1', '[new field]')] + \
+    #           [(g, [(f.id, f.label) for f in grouped[g]]) for g in grouped]
     
     class ImportOptionsForm(forms.Form):
         separator = forms.CharField(required=False)
         collections = forms.MultipleChoiceField(choices=((c.id, '%s%s' % ('*' if c.id in writable_collection_ids else '', c.title)) for c in sorted(available_collections, key=lambda c: c.title)),
                                                 widget=forms.CheckboxSelectMultiple)
-        fieldset = forms.ChoiceField(choices=[(0, 'any')] + [(f.id, f.title) for f in available_fieldsets], required=False)
+        fieldset = FieldSetChoiceField(user=request.user, default_label='any')
+        #forms.ChoiceField(choices=[(0, 'any')] + [(f.id, f.title) for f in available_fieldsets], required=False)
         update = forms.BooleanField(label='Update existing records', initial=True, required=False)
         add = forms.BooleanField(label='Add new records', initial=True, required=False)
         test = forms.BooleanField(label='Test import only', initial=False, required=False)
@@ -360,6 +374,8 @@ def data_import_file(request, file):
         fieldname = forms.CharField(widget=DisplayOnlyTextWidget)
         mapping = forms.ChoiceField(choices=_field_choices(), required=False)
         separate = forms.BooleanField(required=False)
+        label = forms.CharField(required=False)
+        hidden = forms.BooleanField(required=False)
 
     class BaseMappingFormSet(forms.formsets.BaseFormSet):
         def clean(self):
@@ -373,12 +389,13 @@ def data_import_file(request, file):
             raise forms.ValidationError, "At least one field must be mapped to an identifier field."
 
 
-    MappingFormSet = formset_factory(MappingForm, extra=0, formset=BaseMappingFormSet)
+    MappingFormSet = formset_factory(MappingForm, extra=0, formset=BaseMappingFormSet, can_order=True)
 
-    def analyze(collections, separator, fieldset):
+    def analyze(collections=None, separator=None, separate_fields=None, fieldset=None):
         try:
             with open(os.path.join(_get_scratch_dir(), _get_filename(request, file)), 'rb') as csvfile:        
-                imp = SpreadsheetImport(csvfile, collections, separator=separator, preferred_fieldset=fieldset)
+                imp = SpreadsheetImport(csvfile, collections, separator=separator,
+                                        separate_fields=separate_fields, preferred_fieldset=fieldset)
                 return imp, imp.analyze()
         except IOError:
             raise Http404()
@@ -390,7 +407,9 @@ def data_import_file(request, file):
             
             imp, preview_rows = analyze(available_collections.filter(id__in=form.cleaned_data['collections']),
                        form.cleaned_data['separator'],
-                       available_fieldsets.get(id=form.cleaned_data['fieldset']) if int(form.cleaned_data['fieldset']) else None)
+                       dict((f.cleaned_data['fieldname'], f.cleaned_data['separate'])
+                            for f in mapping_formset.forms),
+                       available_fieldsets.get(id=form.cleaned_data['fieldset']) if int(form.cleaned_data.get('fieldset') or 0) else None)
             
             store_settings(request.user,
                            'data_import_file_%s' % imp.field_hash,
@@ -412,15 +431,21 @@ def data_import_file(request, file):
                                                              for f in mapping_formset.forms),
                                                 separate_fields=dict((f.cleaned_data['fieldname'], f.cleaned_data['separate'])
                                                                      for f in mapping_formset.forms),
+                                                labels=dict((f.cleaned_data['fieldname'], f.cleaned_data['label'])
+                                                             for f in mapping_formset.forms),
+                                                order=dict((f.cleaned_data['fieldname'], int(f.cleaned_data['ORDER']))
+                                                             for f in mapping_formset.forms),
+                                                hidden=dict((f.cleaned_data['fieldname'], f.cleaned_data['hidden'])
+                                                             for f in mapping_formset.forms),
                                                 )
                                        ))
                 j.run()
                 request.user.message_set.create(message='Import job has been submitted.')
                 return HttpResponseRedirect("%s?highlight=%s" % (reverse('workers-jobs'), j.id))
         else:
-            imp, preview_rows = analyze(None, None, None)
+            imp, preview_rows = analyze()
     else:
-        imp, preview_rows = analyze(None, None, None)
+        imp, preview_rows = analyze()
         
         # try to load previously stored settings
         key = 'data_import_file_%s' % imp.field_hash

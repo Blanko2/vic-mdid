@@ -10,7 +10,8 @@ class SpreadsheetImport(object):
               'on_duplicate_in_collection_skipped', 'on_continuation']
     
     def __init__(self, csv_file, collections, separator=';', preferred_fieldset=None,
-                 owner=None, mapping=None, separate_fields=None, **kwargs):
+                 owner=None, mapping=None, separate_fields=None, labels=None, order=None,
+                 hidden=None, **kwargs):
         self._fields = preferred_fieldset.fields.select_related('standard').all() if preferred_fieldset \
                        else Field.objects.select_related('standard').all()
         self._dcidentifier = Field.objects.get(name='identifier', standard__prefix='dc')
@@ -23,6 +24,9 @@ class SpreadsheetImport(object):
             self.mapping = dict((k, self._get_field(v)) for k, v in mapping.iteritems())
         else:
             self.mapping = dict()
+        self.labels = labels or dict()
+        self.order = order or dict()
+        self.hidden = hidden or dict()
         self.separate_fields = separate_fields or dict()
         self.name_field = None
         self.owner = owner
@@ -138,7 +142,11 @@ class SpreadsheetImport(object):
                 target = self.mapping.get(field)
                 if target and values:
                     for order, value in enumerate(values):
-                        record.fieldvalue_set.create(field=target, value=value, order=order)
+                        record.fieldvalue_set.create(field=target,
+                                                     value=value,
+                                                     label=self.labels.get(field),
+                                                     order=self.order.get(field, order),
+                                                     hidden=self.hidden.get(field, False))
         
         
         reader = self._get_reader()

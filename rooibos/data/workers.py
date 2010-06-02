@@ -72,6 +72,9 @@ def csvimport(job):
                                 preferred_fieldset=fieldset[0] if fieldset else None,
                                 mapping=arg['mapping'],
                                 separate_fields=arg['separate_fields'],
+                                labels=arg['labels'],
+                                order=arg['order'],
+                                hidden=arg['hidden'],
                                 **handlers)
         imp.run(arg['update'],
                 arg['add'],

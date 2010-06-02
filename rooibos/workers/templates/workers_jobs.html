@@ -22,13 +22,29 @@
         $(".job-args").each(function() {
             var a = $(this).text();
             if (a.length > 30) 
-                $(this).attr('title', a).text(a.substring(0, 30) + '...');
+                $(this).qtip({
+                    content: a,
+                    position: {
+                        corner: {
+                            target: 'rightMiddle',
+                            tooltip: 'leftTop'
+                        },
+                        adjust: {
+                            screen: true,
+                        }
+                    },
+                    style: {
+                        name: 'cream',
+                        tip: true,
+                        width: 500
+                    }
+                }).text(a.substring(0, 30) + '...');
         });
         checkbox = $('<input type="checkbox">').click(function() {
             var c = this.checked;
             $("input[name=r]").each(function() { this.checked = c; });
         });
-        $("#remove-col").append(checkbox);        
+        $("#remove-col").append(checkbox);
     });
 </script>
 {% endblock %}

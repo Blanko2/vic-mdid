@@ -21,7 +21,8 @@ class MetaDataNode(template.Node):
             fieldvalues[0].subitem = False
         for i in range(1, len(fieldvalues)):
             fieldvalues[i].subitem = (fieldvalues[i].field == fieldvalues[i - 1].field and
-                                      fieldvalues[i].group == fieldvalues[i - 1].group)
+                                      fieldvalues[i].group == fieldvalues[i - 1].group and
+                                      fieldvalues[i].resolved_label == fieldvalues[i - 1].resolved_label)
         
         return render_to_string('data_metadata.html',
                                 dict(values=fieldvalues),

@@ -25,21 +25,34 @@
     {{ mapping_formset.management_form }}
     {{ mapping_formset.non_form_errors }}
     <table>
+        <thead>
         <tr>
             <th>Source field</th>
             <th>Map to</th>
-            <th>Separate values</th>
+            <th>Separate</th>
+            <th>Label</th>
+            <th>Hidden</th>
+            <th>Order</th>
         </tr>
+        </thead>
+        <tbody>
     {% for mapping_form in mapping_formset.forms %}
         <tr>
             <td>{{ mapping_form.fieldname }}</td>
             <td>{{ mapping_form.mapping }}</td>
-            <td>{{ mapping_form.separate }}
-                {{ mapping_form.mapping.errors }}
-                {{ mapping_form.separate.errors }}
+            <td style="text-align: center;">{{ mapping_form.separate }}</td>
+            <td>{{ mapping_form.label }}</td>
+            <td style="text-align: center;">{{ mapping_form.hidden }}</td>
+            <td class="orderinput">{{ mapping_form.ORDER }}
+            {{ mapping_form.mapping.errors }}
+            {{ mapping_form.separate.errors }}
+            {{ mapping_form.label.errors }}
+            {{ mapping_form.hidden.errors }}
+            {{ mapping_form.ORDER.errors }}
             </td>
         </tr>
     {% endfor %}
+        </tbody>
     </table>
     
     <input type="submit" name="import_button" value="Import File" />
@@ -48,7 +61,7 @@
 
 
 {% if preview_rows %}
-
+<br />
 <h2>Preview</h2>
 
 {% for row in preview_rows %}
