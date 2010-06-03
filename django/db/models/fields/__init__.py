@@ -224,8 +224,9 @@ class Field(object):
             if hasattr(value, 'relabel_aliases'):
                 return value
             if lookup_type == 'in':
-                query_uses_limit = value.query.high_mark is not None or \
-                    value.query.low_mark
+                query_uses_limit = hasattr(value, 'query') and (
+                    value.query.high_mark is not None or \
+                    value.query.low_mark)
                 if query_uses_limit and \
                             not connection.features.allow_limit_in_in_subquery:
                     ret = map(pk_trace, value)

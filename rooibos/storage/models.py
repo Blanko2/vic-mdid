@@ -83,11 +83,17 @@ class Storage(models.Model):
 
     def get_derivative_storage(self):
         if not self.derivative:
-            self.derivative = Storage.objects.create(title=self.title,
-                                                     system='local',
-                                                     base=os.path.join(settings.SCRATCH_DIR, self.name))
-            self.save()
-            sync_access(self, self.derivative)
+            d = Storage.objects.create(title=self.title,
+                                       system='local',
+                                       base=os.path.join(settings.SCRATCH_DIR, self.name))
+            updated = Storage.objects.filter(id=self.id, derivative=None).update(derivative=d)
+            if updated != 1:
+                # Race condition, some other thread just created a derivative also
+                d.delete()
+                return Storage.objects.get(master=self)
+            else:
+                self.derivative = Storage.objects.get(master=self)
+                sync_access(self, self.derivative)
         return self.derivative
     
     def is_local(self):

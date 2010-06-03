@@ -4,6 +4,7 @@ import tempfile
 import os.path
 import Image
 import shutil
+from threading import Thread
 from StringIO import StringIO
 from django.test.client import Client
 from django.core.files import File
@@ -15,6 +16,7 @@ from localfs import LocalFileSystemStorageSystem
 from rooibos.storage import get_thumbnail_for_record, get_image_for_record
 from rooibos.access.models import AccessControl
 from rooibos.presentation.models import Presentation, PresentationItem
+from sqlite3 import OperationalError
 
 
 class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
@@ -164,6 +166,33 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         result = get_image_for_record(self.record, width=400, height=400, user=user2,
                                       passwords={presentation.id: 'secret'})
         self.assertEqual(400, result.width)
+
+
+    def testDerivativeStorageRaceCondition(self):
+        
+        s = Storage.objects.create(title='Test', system='local')
+        derivatives = dict()
+        errors = dict()
+        
+        class GetDerivativeStorageThread(Thread):
+            def run(self):
+                try:
+                    d = s.get_derivative_storage()
+                    derivatives.setdefault(d, None)
+                except OperationalError, e:
+                    if e.message == 'database is locked':
+                        pass
+                    elif e.message.startswith('no such table'):
+                        errors.setdefault('Cannot run this test with in-memory sqlite database', None)
+                    else:
+                        raise e
+                
+        threads = [GetDerivativeStorageThread() for i in range(10)]
+        map(Thread.start, threads)
+        map(Thread.join, threads)
+        
+        self.assertEqual({}, errors)
+        self.assertEqual(1, len(derivatives.keys()))
 
 
 
