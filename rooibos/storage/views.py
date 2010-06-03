@@ -151,13 +151,14 @@ def record_thumbnail(request, id, name):
 @json_view
 def create_proxy_url_view(request):
     if request.method == 'POST':
-        proxy_url = ProxyUrl.create_proxy_url(request.POST['url'],
-                                     request.POST['context'],
-                                     request.META['REMOTE_ADDR'],
-                                     request.user)
-        if not proxy_url:
-            return HttpResponseForbidden()
-        return dict(id=proxy_url.uuid)
+        if request.POST.has_key('url') and request.POST.has_key('context'):
+            proxy_url = ProxyUrl.create_proxy_url(request.POST['url'],
+                                         request.POST['context'],
+                                         request.META['REMOTE_ADDR'],
+                                         request.user)
+            if proxy_url:
+                return dict(id=proxy_url.uuid)
+        return dict(result='error', message='Invalid request. Proxy URL could not be created.')
     else:
         return HttpResponseNotAllowed(['POST'])
 
