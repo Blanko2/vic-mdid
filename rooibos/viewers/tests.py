@@ -1,6 +1,6 @@
 from __future__ import with_statement
 import unittest
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from rooibos.data.models import Collection, CollectionItem, Record, Field, FieldValue
 from rooibos.storage.models import Media, Storage
 from rooibos.presentation.models import Presentation, PresentationItem
@@ -46,7 +46,7 @@ class PowerpointTestCase(unittest.TestCase):
         sourceField = Field.objects.get(name='source', standard__prefix='dc')
         presentation = Presentation.objects.create(title='Simple Presentation',
                                                    description='This is a PowerPoint presentation created from a template and populated with data.',
-                                                   owner_id=1)
+                                                   owner=User.objects.get(username='admin'))
         for n in range(1, 11):
             record = Record.objects.create()
             FieldValue.objects.create(record=record, field=field, value='Record %s' % n)

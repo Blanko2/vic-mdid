@@ -84,8 +84,6 @@ def modify_permissions(request, app_label, model, id, name):
             try:
                 return dict(map(unicode.strip, kv.split('=', 1)) for kv in filter(None, map(unicode.strip, r.splitlines())))
             except Exception, e:
-                print r
-                print e
                 raise forms.ValidationError('Please enter one key=value per line')
         
     if request.method == "POST":

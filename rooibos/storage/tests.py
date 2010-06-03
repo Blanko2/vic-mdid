@@ -154,6 +154,14 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         result = get_image_for_record(self.record, width=400, height=400, user=user2)
         self.assertEqual(400, result.width)
 
+        # limit user2 image size
+        user2_storage_acl.restrictions = dict(width=200, height=200)
+        user2_storage_acl.save()
+        
+        # we should now get a smaller image
+        result = get_image_for_record(self.record, width=400, height=400, user=user2)
+        self.assertEqual(200, result.width)
+
         # password protect the presentation
         presentation.password='secret'
         presentation.save()
@@ -165,7 +173,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         # with presentation password, image should be returned
         result = get_image_for_record(self.record, width=400, height=400, user=user2,
                                       passwords={presentation.id: 'secret'})
-        self.assertEqual(400, result.width)
+        self.assertEqual(200, result.width)
 
 
     def testDerivativeStorageRaceCondition(self):

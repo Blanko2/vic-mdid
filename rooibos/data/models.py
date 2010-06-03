@@ -290,7 +290,7 @@ class FieldValue(models.Model):
     field = models.ForeignKey(Field)
     refinement = models.CharField(max_length=100, blank=True)
     owner = models.ForeignKey(User, null=True, blank=True)
-    label = models.CharField(max_length=100, blank=True)
+    label = models.CharField(max_length=100, null=True, blank=True)
     hidden = models.BooleanField(default=False)
     order = models.IntegerField(default=0)
     group = models.IntegerField(null=True, blank=True)

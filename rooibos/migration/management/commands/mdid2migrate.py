@@ -189,7 +189,7 @@ class Command(BaseCommand):
                                                                           base=os.path.join(base, 'thumb'))
                 fieldsets[row.ID] = FieldSet.objects.create(title='%s fields' % row.Title)
 
-                groups_medium_dimensions[row.ID] = dict(max_height=row.MediumImageHeight, max_width=row.MediumImageWidth)
+                groups_medium_dimensions[row.ID] = dict(height=row.MediumImageHeight, width=row.MediumImageWidth)
 
         # Migrate collection permissions
 
