@@ -6,8 +6,6 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.views import login
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from django.utils import simplejson
@@ -34,11 +32,7 @@ def css(request, stylesheet):
 
 
 def main(request):
-    if request.method == "POST":
-        return login(request)
-
-    form = AuthenticationForm()
-    
+   
     (hits, records, search_facets, orfacet, query, fields) = run_search(
         request.user,
         criteria=['mimetype:image/jpeg'],
@@ -51,8 +45,7 @@ def main(request):
     random.shuffle(order)
 
     return render_to_response('main.html',
-                              {'form': form,
-                               'records': records,
+                              {'records': records,
                                'order': [0] + order},
                               context_instance=RequestContext(request))
 
