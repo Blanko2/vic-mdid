@@ -384,7 +384,8 @@ def data_import_file(request, file):
             _dcidentifier = Field.objects.get(name='identifier', standard__prefix='dc')
             _identifier_ids = list(_dcidentifier.get_equivalent_fields().values_list('id', flat=True)) + [_dcidentifier.id]
             for i in range(self.total_form_count()):
-                if int(self.forms[i].cleaned_data['mapping']) in _identifier_ids:
+                if self.forms[i].cleaned_data['mapping'] and \
+                    (int(self.forms[i].cleaned_data['mapping']) in _identifier_ids):
                     return
             raise forms.ValidationError, "At least one field must be mapped to an identifier field."
 
@@ -428,7 +429,7 @@ def data_import_file(request, file):
                                                 personal=form.cleaned_data['personal'],
                                                 fieldset=form.cleaned_data['fieldset'],
                                                 mapping=dict((f.cleaned_data['fieldname'], int(f.cleaned_data['mapping']))
-                                                             for f in mapping_formset.forms),
+                                                             for f in mapping_formset.forms if f.cleaned_data['mapping']),
                                                 separate_fields=dict((f.cleaned_data['fieldname'], f.cleaned_data['separate'])
                                                                      for f in mapping_formset.forms),
                                                 labels=dict((f.cleaned_data['fieldname'], f.cleaned_data['label'])

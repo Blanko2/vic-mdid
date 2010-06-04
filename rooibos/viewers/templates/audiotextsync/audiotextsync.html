@@ -16,6 +16,8 @@
             -moz-border-radius: 2px;
             -webkit-border-radius: 2px;
             cursor: pointer;
+            padding: 0 3px 0 5px;
+            font-family: serif;
         }
 {% if edit %}        
         #transcript div {
@@ -98,7 +100,7 @@
             var div = $("#transcript div");
             for (var m in markers){
                 div.eq(markers[m][0]).prepend($("<span>").addClass("play").
-                                            attr("id", "play-" + markers[m][1].replace(/:/g, "-")).text(">")).
+                                            attr("id", "play-" + markers[m][1].replace(/:/g, "-")).html("&#9658;")).
                                             attr("title", "Play from " + markers[m][1]);
             };
 
