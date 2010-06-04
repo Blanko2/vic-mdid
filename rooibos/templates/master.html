@@ -11,6 +11,7 @@
         document.documentElement.className = 'js-enabled';
     </script>
     <title>MDID{% block title %}{% endblock %}</title>
+    <link rel="shortcut icon" href="{% url static 'images/favicon.ico' %}" />
 {% block stylesheets %}
 {% compress css %}
     <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
