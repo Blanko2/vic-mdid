@@ -447,13 +447,8 @@ class Command(BaseCommand):
                                                order=row.DisplayOrder,
                                                hidden=row.Scratch)
                 if row.Annotation:
-                    FieldValue.objects.create(record_id=images[row.ImageID],
-                                              field=standard_fields["dc.description"],
-                                              owner=slideshows[row.SlideshowID].owner,
-                                              label="Annotation",
-                                              value=row.Annotation,
-                                              context=item,
-                                              order=1001)
+                    item.annotation = row.Annotation
+
             count += 1
             if count % 100 == 0:
                 pb.update(count)
