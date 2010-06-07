@@ -364,3 +364,17 @@ def standardfield(field, standard='dc', equiv=False):
         return Field.objects.filter(Q(id=f.id) | Q(id__in=f.get_equivalent_fields()))
     else:
         return f
+
+
+class Vocabulary(models.Model):
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50)
+    description = models.TextField(null=True, blank=True)
+    standard = models.NullBooleanField()
+    origin = models.TextField(null=True, blank=True)
+    fields = models.ManyToManyField(Field)
+    
+    
+class VocabularyTerm(models.Model):
+    vocabulary = models.ForeignKey(Vocabulary)
+    term = models.TextField()

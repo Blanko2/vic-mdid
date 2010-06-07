@@ -10,10 +10,11 @@ import pyodbc
 import gc
 from urlparse import urlparse
 from datetime import datetime
-from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField
+from rooibos.data.models import Collection, CollectionItem, Field, FieldValue, Record, FieldSet, FieldSetField, Vocabulary, VocabularyTerm
 from rooibos.storage.models import Storage, Media
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl, ExtendedGroup, ATTRIBUTE_BASED_GROUP, IP_BASED_GROUP
+from rooibos.access import sync_access
 from rooibos.util.progressbar import ProgressBar
 from rooibos.presentation.models import Presentation, PresentationItem, PresentationItemInfo
 from rooibos.contrib.tagging.models import Tag
@@ -288,19 +289,38 @@ class Command(BaseCommand):
                         AccessControl.objects.create(content_object=storage[id]['medium'], read=True)
                         AccessControl.objects.create(content_object=storage[id]['thumb'], read=True)
 
+
+        # Migrating controlled lists
+        print "Migrating controlled lists"
+        vocabularies = {}
+        for row in cursor.execute("SELECT ID,Title,Description,Standard,Origin,CollectionID FROM ControlledLists"):
+            vocabularies[row.ID] = Vocabulary.objects.create(title=row.Title,
+                                                             description=row.Description,
+                                                             standard=row.Standard,
+                                                             origin=row.Origin)
+            if groups.has_key(row.CollectionID):
+                sync_access(groups[row.CollectionID], vocabularies[row.ID])
+
+        for row in cursor.execute("SELECT ControlledListID,ItemValue FROM ControlledListValues"):
+            VocabularyTerm.objects.create(vocabulary=vocabularies[row.ControlledListID],
+                                          term=row.ItemValue)
+
         # Migrate fields
 
         print "Migrating fields"
         fields = {}
         standard_fields = dict((str(f), f) for f in Field.objects.all())
 
-        for row in cursor.execute("SELECT ID,CollectionID,Label,Name,DCElement,DCRefinement,ShortView,MediumView,LongView \
-                                  FROM FieldDefinitions ORDER BY DisplayOrder"):
+        for row in cursor.execute("""SELECT ID,CollectionID,Label,Name,DCElement,DCRefinement,
+                                  ShortView,MediumView,LongView,ControlledListID
+                                  FROM FieldDefinitions ORDER BY DisplayOrder"""):
             if groups.has_key(row.CollectionID):
                 fields[row.ID] = Field.objects.create(label=row.Label, old_name=row.Name)
                 dc = ('dc.%s%s%s' % (row.DCElement, row.DCRefinement and '.' or '', row.DCRefinement or '')).lower()
                 if standard_fields.has_key(dc):
                     fields[row.ID].equivalent.add(standard_fields[dc])
+                if vocabularies.has_key(row.ControlledListID):
+                    vocabularies[row.ControlledListID].fields.add(fields[row.ID])
                 FieldSetField.objects.create(fieldset=fieldsets[row.CollectionID],
                                              field=fields[row.ID],
                                              label=row.Label,
