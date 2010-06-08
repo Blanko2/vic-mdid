@@ -1,4 +1,14 @@
+{% if result.iteritems %}
+{% for field, messages in result.iteritems %}
+{{ field|capfirst }}:
+    {% for message in messages %}
+        {{ message }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    {% if not forloop.last %}; {% endif %}
+{% endfor %}
+{% else %}
 {{ result }}
+{% endif %}
 {% if record %}
 <a href="{{ record.get_absolute_url }}" target="_blank">View record</a>
 {% endif %}

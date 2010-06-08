@@ -102,13 +102,41 @@ $(document).ready(function() {
 <h2>Import Media Files</h2>
 
 <form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="upload-control">
-    {{ form.collection.label }} {{ form.collection }}<br />
-    {{ form.storage.label }} {{ form.storage }}<br />
-    <span id="html-upload-control">{{ form.file.label }} {{ form.file }}<br /></span>
-    {{ form.create_records.label }} {{ form.create_records }}<br />
-    {{ form.personal_records.label }} {{ form.personal_records }}<br />
-    {{ form.replace_files.label }} {{ form.replace_files }}<br />
-    <br /><input type="submit" value="Upload Media" id="upload-button" />
+<table>
+	<tr>
+		<th>{{ form.collection.label }}
+		</th>
+		<td>{{ form.collection }}<br />
+	* You may add regular records to this collection
+		</td>
+	</tr>
+	<tr>
+		<th>{{ form.storage.label }}
+		</th>
+		<td>{{ form.storage }}
+		</td>
+	</tr>
+	<tr>
+		<th>{{ form.create_records.label }}
+		</th>
+		<td>{{ form.create_records }}
+		</td>
+	</tr>
+	<tr>
+		<th>{{ form.personal_records.label }}
+		</th>
+		<td>{{ form.personal_records }}
+		</td>
+	</tr>
+	<tr>
+		<th>{{ form.replace_files.label }}
+		</th>
+		<td>{{ form.replace_files }}
+		</td>
+	</tr>
+</table>
+<span id="html-upload-control">{{ form.file.label }} {{ form.file }}<br /></span>
+<input type="submit" value="Upload Media" id="upload-button" />
 </form>
 
 <div id="upload-queue"></div>

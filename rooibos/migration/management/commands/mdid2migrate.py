@@ -235,7 +235,7 @@ class Command(BaseCommand):
         #Privilege.FullSizedImages  -> read (applied to storage)
         #Privilege.AnnotateImages  -> n/a
         #Privilege.ManageControlledLists  -> manage
-        #Privilege.PersonalImages  -> n/a
+        #Privilege.PersonalImages  -> write (applied to general storage)
         #Privilege.ShareImages  -> n/a
         #Privilege.SuggestImages  -> n/a
 
@@ -275,7 +275,7 @@ class Command(BaseCommand):
 
                 ac = AccessControl()
                 ac.content_object = storage[row.ObjectID]['general']
-                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'], P['ManageCollection'],
+                if populate_access_control(ac, row, P['ReadCollection'], P['ModifyImages'] | P['PersonalImages'], P['ManageCollection'],
                                            general_restrictions):
                     ac.save()
 

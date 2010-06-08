@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.csrf.middleware import csrf_exempt
 from django.core.urlresolvers import resolve, reverse
+from django.forms.util import ErrorList
 from django.db.models import Count, Q
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError, HttpResponseForbidden
 from django.shortcuts import _get_queryset, get_object_or_404, get_list_or_404, render_to_response
@@ -14,7 +15,7 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.views.decorators.cache import cache_control
 from models import Media, Storage, TrustedSubnet, ProxyUrl
-from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
+from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
 from rooibos.storage import get_image_for_record, get_thumbnail_for_record
@@ -249,27 +250,41 @@ def manage_storage(request, storageid=None, storagename=None):
 def import_files(request):
 
     available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True).order_by('title').values_list('id', 'title'))
-    available_collections = get_list_or_404(filter_by_access(request.user, Collection, write=True).order_by('title').values_list('id', 'title'))
-    
+    available_collections = get_list_or_404(filter_by_access(request.user, Collection))
+    writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
+
     class UploadFileForm(forms.Form):
-        collection = forms.ChoiceField(choices=available_collections)
+        collection = forms.ChoiceField(choices=((c.id, '%s%s' % ('*' if c.id in writable_collection_ids else '', c.title)) for c in sorted(available_collections, key=lambda c: c.title)))
         storage = forms.ChoiceField(choices=available_storage)
         file = forms.FileField()
         create_records = forms.BooleanField(required=False)
         replace_files = forms.BooleanField(required=False, label='Replace files of same type')
         personal_records = forms.BooleanField(required=False)
         
+        def clean(self):
+            cleaned_data = self.cleaned_data
+            if any(self.errors):
+                return cleaned_data
+            personal = cleaned_data['personal_records']
+            if not personal:
+                if not int(cleaned_data['collection']) in writable_collection_ids:
+                    self._errors['collection'] = ErrorList(["Can only add personal records to selected collection"])
+                    del cleaned_data['collection']
+                    return cleaned_data
+            return cleaned_data
+
 
     if request.method == 'POST':
         
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            
-            collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True))
-            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage']), write=True))
+           
             create_records = form.cleaned_data['create_records']
             replace_files = form.cleaned_data['replace_files']
             personal_records = form.cleaned_data['personal_records']
+           
+            collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True if not personal_records else None))
+            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage']), write=True))
             file = request.FILES['file']
 
             mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
@@ -328,19 +343,28 @@ def import_files(request):
                 pass
 
             if request.POST.get('swfupload') == 'true':
-                
                 html = render_to_string('storage_import_file_response.html',
                                  {'result': result,
                                   'record': record,},
                                  context_instance=RequestContext(request)
                                  )
-                
                 return HttpResponse(content=simplejson.dumps(dict(status='ok', html=html)),
                                     mimetype='application/json')
 
             request.user.message_set.create(message=result)
             next = request.GET.get('next', request.get_full_path())
             return HttpResponseRedirect(next)
+            
+        else:
+            # invalid form submission
+            if request.POST.get('swfupload') == 'true':
+                html = render_to_string('storage_import_file_response.html',
+                                 {'result': form.errors},
+                                 context_instance=RequestContext(request)
+                                 )                
+                return HttpResponse(content=simplejson.dumps(dict(status='ok', html=html)),
+                                    mimetype='application/json')
+                
     else:
         form = UploadFileForm()
 

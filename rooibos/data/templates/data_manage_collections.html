@@ -8,11 +8,12 @@
 
 <h1>Collection Management</h1>
 
+<a href="{% url data-collection-new %}">Create new Collection</a>
+
+
 {% if collections %}
 
 {% paginate %}
-
-<a href="{% url data-collection-new %}">Create new Collection</a>
 
 <table class="list" summary="Collections">
     <tr>
