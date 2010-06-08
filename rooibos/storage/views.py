@@ -91,11 +91,9 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 
 @login_required
 def media_upload(request, recordid, record):
-
     available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True
                                          ).values_list('name','title'))
-    record = get_object_or_404(Record.objects.filter(id=recordid,
-        collection__id__in=accessible_ids(request.user, Collection)).distinct())
+    record = Record.get_or_404(id, request.user)
 
     class UploadFileForm(forms.Form):
         storage = forms.ChoiceField(choices=available_storage)
@@ -134,9 +132,7 @@ def media_upload(request, recordid, record):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
-    record = get_object_or_404(Record.objects.filter(id=id,
-        collection__id__in=accessible_ids(request.user, Collection)).distinct())
-
+    record = Record.get_or_404(id, request.user)
     media = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))    
     if media:
         try:

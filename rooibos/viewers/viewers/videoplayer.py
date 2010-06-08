@@ -33,29 +33,17 @@ class VideoPlayer(object):
     
     def url_for_obj(self, obj):
         return reverse('viewers-videoplayer', kwargs={'id': obj.id, 'name': obj.name})
-    
-    
-    def _get_record_and_media(self, request, id, name):
-        readable_collections = list(accessible_ids_list(request.user, Collection))
-
-        if request.user.is_superuser:
-            q = Q()
-        else:
-            q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
-                 Q(collection__id__in=readable_collections))
-        record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
-    
-        storages = filter_by_access(request.user, Storage)
         
+    def _get_record_and_media(self, request, id, name):
+        record = Record.get_or_404(id, request.user)
+        storages = filter_by_access(request.user, Storage)
         media = record.media_set.filter(master=None,
                                      storage__in=filter_by_access(request.user, Storage),
                                      mimetype__in=('video/mp4', 'video/quicktime'))
         if not media:
             raise Http404()
-            
         return (record, media[0])
         
-    
     def view(self, request, id, name):        
         record, media = self._get_record_and_media(request, id, name)
         return render_to_response('videoplayer/videoplayer.html',

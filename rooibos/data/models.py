@@ -1,14 +1,16 @@
+from datetime import datetime
+from django.contrib.auth.models import User
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
-from django.core.cache import cache
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
-from datetime import datetime
+from django.shortcuts import get_object_or_404
+from rooibos.access import accessible_ids
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
-import random
 import logging
+import random
 
 
 class Collection(models.Model):
@@ -92,6 +94,15 @@ class Record(models.Model):
     manager = models.CharField(max_length=50, null=True)
     next_update = models.DateTimeField(null=True)
     owner = models.ForeignKey(User, null=True)
+
+    @staticmethod
+    def get_or_404(id, user):
+        if user.is_superuser:
+            q = Q()
+        else:
+            q = ((Q(owner=user) if user.is_authenticated() else Q(owner=None)) |
+                 Q(collection__id__in=accessible_ids(user, Collection)))
+        return get_object_or_404(Record.objects.filter(q, id=id).distinct())
 
     @staticmethod
     def by_fieldvalue(fields, values):

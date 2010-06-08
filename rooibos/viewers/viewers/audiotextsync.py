@@ -46,21 +46,12 @@ class AudioTextSync(object):
     
     
     def _get_record_and_access(self, request, id, name):
-        readable_collections = list(accessible_ids_list(request.user, Collection))
-        can_edit = request.user.is_authenticated()
-
-        if request.user.is_superuser:
-            q = Q()
-        else:
-            q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
-                 Q(collection__id__in=readable_collections))
-        record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
-        can_edit = can_edit and (
+        record = Record.get_or_404(id, request.user)
+        can_edit = request.user.is_authenticated() and (
             # checks if current user is owner:
             check_access(request.user, record, write=True) or
             # or if user has write access to collection:
             accessible_ids(request.user, record.collection_set, write=True).count() > 0)
-
         return (record, can_edit)        
     
     

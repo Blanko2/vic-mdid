@@ -117,7 +117,7 @@ def api_search(request, id=None, name=None):
 
 @json_view
 def record(request, id, name):
-    record = get_object_or_404(Record.objects.filter(id=id, collection__id__in=accessible_ids(request.user, Collection)))
+    record = Record.get_or_404(id, request.user)
 #    media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
     return dict(record=_record_as_json(record, owner=request.user))
 

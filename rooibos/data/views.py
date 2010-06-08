@@ -56,12 +56,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     next = request.GET.get('next')
 
     if id and name:
-        if request.user.is_superuser:
-            q = Q()
-        else:
-            q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
-                 Q(collection__id__in=readable_collections))
-        record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
+        record = Record.get_or_404(id, request.user)
         can_edit = can_edit and (
             # checks if current user is owner:
             check_access(request.user, record, write=True) or
@@ -476,16 +471,7 @@ def data_import_file(request, file):
     
 @json_view
 def record_preview(request, id):
-
-    readable_collections = list(accessible_ids_list(request.user, Collection))
-
-    if request.user.is_superuser:
-        q = Q()
-    else:
-        q = ((Q(owner=request.user) if request.user.is_authenticated() else Q(owner=None)) |
-             Q(collection__id__in=readable_collections))
-    record = get_object_or_404(Record.objects.filter(q, id=id).distinct())
-
+    record = Record.get_or_404(id, request.user)
     return dict(html=render_to_string('data_previewrecord.html',
                               {'record': record,
                                'none': None,
