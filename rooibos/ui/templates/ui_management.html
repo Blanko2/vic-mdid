@@ -24,7 +24,7 @@
 <p>Depending on your permissions, you may see different management options below.</p>
 
 <ul id="management">
-{% if storage_manage %}
+{% if user.is_superuser or storage_manage %}
     <li><a href="{% url storage-manage %}"><img src="{% url static 'images/icons/hdd_unmount.png' %}" alt="Manage Storage" /> Manage Storage</a></li>
 {% endif %}
 {% if collection_write %}

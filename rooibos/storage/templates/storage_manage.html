@@ -8,11 +8,13 @@
 
 <h1>Storage Management</h1>
 
+{% if user.is_superuser %}
+<a href="{% url storage-create-storage %}">Create new storage area</a>
+{% endif %}
+
 {% if storages %}
 
 {% paginate %}
-
-<a href="{% url storage-create-storage %}">Create new storage area</a>
 
 <table class="list" summary="Storages">
     <tr>

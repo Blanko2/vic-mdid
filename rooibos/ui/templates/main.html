@@ -75,8 +75,10 @@
 
   {% include "ie6warning.html" %}
 
-  {% if records %}
   <div id="image-preview">
+    
+    {% if records %}
+
     <div id="image-preview-container">
         {% for record in records %}
         {% with record.title as title %}
@@ -102,8 +104,10 @@
     <div class="image-title"><a href="{{ records.0.get_absolute_url }}">{{ records.0.title }}</a></div>
     <div class="image-subtitle"><a href="{% url solr-search-collection collection.id, collection.name %}">{{ collection.title }}</a></div>
     {% endwith %}
+    
+    {% endif %}
   </div>
-  {% endif %}
+  
 
   <div class="columns">
   

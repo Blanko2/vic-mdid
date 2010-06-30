@@ -44,6 +44,7 @@
             <td>{{ mapping_form.label }}</td>
             <td style="text-align: center;">{{ mapping_form.hidden }}</td>
             <td class="orderinput">{{ mapping_form.ORDER }}
+            {{ mapping_form.fieldname.errors }}
             {{ mapping_form.mapping.errors }}
             {{ mapping_form.separate.errors }}
             {{ mapping_form.label.errors }}
