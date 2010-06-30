@@ -9,7 +9,7 @@ class CurrentHitCountManager(models.Manager):
 
 class HitCount(models.Model):
     
-    query = models.CharField(max_length=256, db_index=True)
+    query = models.CharField(max_length=255, db_index=True)
     source = models.CharField(max_length=32, db_index=True)
     hits = models.IntegerField()
     results = models.TextField(blank=True, null=True)

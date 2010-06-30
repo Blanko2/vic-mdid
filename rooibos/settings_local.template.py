@@ -40,13 +40,13 @@ SECRET_KEY = 'e#!poDuIJ}N,".K=H:T/4z5POb;Gl/N6$6a&,(DRAHUF5c",_p'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 TEMPLATE_DIRS = (
-    'd:/dev/rooibos/rooibos/templates',
+    'c:/mdid/rooibos/templates',
 )
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
-SCRATCH_DIR = 'd:/dev/rooibos-scratch/'
-AUTO_STORAGE_DIR = 'd:/dev/rooibos-collections/'
+SCRATCH_DIR = 'c:/mdid-scratch/'
+AUTO_STORAGE_DIR = 'c:/mdid-collections/'
 
 # Legacy setting for ImageViewer 2 support
 SECURE_LOGIN = False
@@ -73,9 +73,9 @@ FLICKR_SECRET = ''
 ARTSTOR_GATEWAY = None
 #ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'
 
-STATIC_DIR = 'd:/dev/rooibos/rooibos/static/'
+STATIC_DIR = 'c:/mdid/rooibos/static/'
 OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
-FFMPEG_EXECUTABLE = 'd:/dev/ffmpeg-15394/ffmpeg.exe'
+FFMPEG_EXECUTABLE = 'c:/mdid/ffmpeg-15394/ffmpeg.exe'
 
 GEARMAN_SERVERS = ['127.0.0.1']
 
