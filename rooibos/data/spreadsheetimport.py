@@ -93,7 +93,7 @@ class SpreadsheetImport(object):
         if not rows:
             return None
 
-        fields = rows[0].keys()
+        fields = filter(None, rows[0].keys())
         self.field_hash = hash('\t'.join(sorted(fields)))
         if not self.mapping:       
             self.mapping = dict((field, self._guess_mapping(field)) for field in fields)

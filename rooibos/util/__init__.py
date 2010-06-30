@@ -52,7 +52,7 @@ def json_view(func):
     return wrap
 
 
-def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', check_current_slug=False):
+def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', id_field='id', check_current_slug=False):
     """Ensures a unique slug field by appending an integer counter to duplicate slugs.
 
     Source: http://www.djangosnippets.org/snippets/512/
@@ -72,7 +72,7 @@ def unique_slug(item, slug_source=None, slug_literal=None, slug_field='name', ch
 
     If slug_source does not exist, it will be used as a literal string.
     """
-    if check_current_slug or not getattr(item, slug_field): # if it's already got a slug, do nothing.
+    if check_current_slug or not getattr(item, slug_field) or not getattr(item, id_field): # if it's already got a slug, do nothing.
         from django.template.defaultfilters import slugify
         itemModel = item.__class__
         max_length = itemModel._meta.get_field(slug_field).max_length
