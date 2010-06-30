@@ -218,12 +218,29 @@ class MetadataStandard(models.Model):
         return self.title
 
 
+class Vocabulary(models.Model):
+    title = models.CharField(max_length=100)
+    name = models.SlugField(max_length=50)
+    description = models.TextField(null=True, blank=True)
+    standard = models.NullBooleanField()
+    origin = models.TextField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name_plural = "vocabularies"
+
+    
+class VocabularyTerm(models.Model):
+    vocabulary = models.ForeignKey(Vocabulary)
+    term = models.TextField()
+
+
 class Field(models.Model):
     label = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
     old_name = models.CharField(max_length=100, null=True, blank=True)
     standard = models.ForeignKey(MetadataStandard, null=True, blank=True)
     equivalent = models.ManyToManyField("self", null=True, blank=True)
+    vocabulary = models.ForeignKey(Vocabulary, null=True, blank=True)
 
     def save(self, **kwargs):
         unique_slug(self, slug_source='label', slug_field='name', check_current_slug=kwargs.get('force_insert'))
@@ -299,7 +316,7 @@ class FieldSetField(models.Model):
 class FieldValue(models.Model):
     record = models.ForeignKey(Record, editable=False)
     field = models.ForeignKey(Field)
-    refinement = models.CharField(max_length=100, blank=True)
+    refinement = models.CharField(max_length=100, null=True, blank=True)
     owner = models.ForeignKey(User, null=True, blank=True)
     label = models.CharField(max_length=100, null=True, blank=True)
     hidden = models.BooleanField(default=False)
@@ -310,7 +327,7 @@ class FieldValue(models.Model):
     date_start = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     date_end = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=0)
     numeric_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
-    language = models.CharField(max_length=5, blank=True)
+    language = models.CharField(max_length=5, null=True, blank=True)
     context_type = models.ForeignKey(ContentType, null=True, blank=True)
     context_id = models.PositiveIntegerField(null=True, blank=True)
     context = generic.GenericForeignKey('context_type', 'context_id')
@@ -375,17 +392,3 @@ def standardfield(field, standard='dc', equiv=False):
         return Field.objects.filter(Q(id=f.id) | Q(id__in=f.get_equivalent_fields()))
     else:
         return f
-
-
-class Vocabulary(models.Model):
-    title = models.CharField(max_length=100)
-    name = models.SlugField(max_length=50)
-    description = models.TextField(null=True, blank=True)
-    standard = models.NullBooleanField()
-    origin = models.TextField(null=True, blank=True)
-    fields = models.ManyToManyField(Field)
-    
-    
-class VocabularyTerm(models.Model):
-    vocabulary = models.ForeignKey(Vocabulary)
-    term = models.TextField()

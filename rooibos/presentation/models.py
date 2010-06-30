@@ -102,18 +102,18 @@ class PresentationItem(models.Model):
         q = Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields())
         fv = self.get_fieldvalues(q=q)
         return None if not fv else fv[0].value
-        
-    def annotation_getter(self):
-        if self.id:
-            try:
-                return FieldValue.objects.get(
-                    owner=self.presentation.owner,
+    
+    def _annotation_filter(self):
+        return dict(owner=self.presentation.owner,
                     context_id=self.id,
                     context_type=ContentType.objects.get_for_model(PresentationItem),
                     field=standardfield('description'),
-                    record=self.record,
-                    label='Annotation'
-                ).value
+                    record=self.record)
+    
+    def annotation_getter(self):
+        if self.id:
+            try:
+                return FieldValue.objects.get(**self._annotation_filter()).value
             except FieldValue.DoesNotExist:
                 return None
         elif hasattr(self, '_saved_annotation'):
@@ -123,20 +123,20 @@ class PresentationItem(models.Model):
         
     def annotation_setter(self, value):
         if self.id:
-            fv, created = FieldValue.objects.get_or_create(
-                owner=self.presentation.owner,
-                context_id=self.id,
-                context_type=ContentType.objects.get_for_model(PresentationItem),
-                field=standardfield('description'),
-                record=self.record,
-                label='Annotation',
-                defaults=dict(value=value)
-            )
-            if not created and value:
-                fv.value = value
-                fv.save()
-            if not value:
-                fv.delete()
+            if value:
+                fv, created = FieldValue.objects.get_or_create(
+                    defaults=dict(label='Annotation',
+                                  value=value),
+                    **self._annotation_filter()
+                )
+                if not created:
+                    fv.value = value
+                    fv.save()
+            else:
+                try:
+                    FieldValue.objects.get(**self._annotation_filter()).delete()
+                except FieldValue.DoesNotExist:
+                    pass
         else:
             # we are not saved yet, so remember annotation for later
             self._saved_annotation = value
