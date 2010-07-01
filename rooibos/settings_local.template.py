@@ -75,9 +75,9 @@ GEARMAN_SERVERS = ['127.0.0.1']
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'auth.ldapauth.LdapAuthenticationBackend',
-#    'auth.mailauth.ImapAuthenticationBackend',
-#    'auth.mailauth.PopAuthenticationBackend',
+    'rooibos.auth.ldapauth.LdapAuthenticationBackend',
+#    'rooibos.auth.mailauth.ImapAuthenticationBackend',
+#    'rooibos.auth.mailauth.PopAuthenticationBackend',
 )
 
 MIDDLEWARE_CLASSES = (

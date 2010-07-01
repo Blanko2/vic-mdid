@@ -144,6 +144,9 @@ additional_settings = [
     'settings_local',
 ]
 
+if os.environ.get('ROOIBOS_ADDITIONAL_SETTINGS'):
+    additional_settings.append(os.environ.get('ROOIBOS_ADDITIONAL_SETTINGS'))
+
 # Load settings for additional applications
 for settings in additional_settings:
 #    print "Loading additional settings from %s" % settings

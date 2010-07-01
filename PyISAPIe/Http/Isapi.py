@@ -7,15 +7,16 @@
 This serves up the Django site 'mysite' via WSGI. Currently the core
 handler pyisapie.py is not up to date.
 """
-from django.core.handlers.wsgi import WSGIHandler as DjangoHandler
-from Http.WSGI import RunWSGI
-from Http import Env
 import os
 import sys
 
 install_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(install_dir)
 sys.path.append(os.path.join(install_dir, 'rooibos', 'contrib'))
+
+from django.core.handlers.wsgi import WSGIHandler as DjangoHandler
+from Http.WSGI import RunWSGI
+from Http import Env
 # Change this!
 os.environ["DJANGO_SETTINGS_MODULE"] = "rooibos.settings"
 
@@ -32,7 +33,7 @@ Base = "/"
 # directory to Django's admin media folder and so expect the
 # files to be served by the static file handler.
 #
-Exclude = ["/media"]
+Exclude = ["/static"]
 
 # The main request handler.
 # This object can be re-created for every request if desired.
