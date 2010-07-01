@@ -22,7 +22,7 @@ DATABASE_HOST = ''             # Set to empty string for localhost. Not used wit
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 DEFAULT_CHARSET = 'utf-8'
-DATABASE_CHARSET =  'utf8'
+DATABASE_CHARSET = 'utf8'
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -38,10 +38,6 @@ SECRET_KEY = 'e#!poDuIJ}N,".K=H:T/4z5POb;Gl/N6$6a&,(DRAHUF5c",_p'
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
-
-TEMPLATE_DIRS = (
-    'c:/mdid/rooibos/templates',
-)
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/'
 
@@ -73,9 +69,7 @@ FLICKR_SECRET = ''
 ARTSTOR_GATEWAY = None
 #ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'
 
-STATIC_DIR = 'c:/mdid/rooibos/static/'
 OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
-FFMPEG_EXECUTABLE = 'c:/mdid/ffmpeg-15394/ffmpeg.exe'
 
 GEARMAN_SERVERS = ['127.0.0.1']
 

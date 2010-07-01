@@ -2,7 +2,9 @@
 # they should go in settings_local.py instead
 # with a blank setting in settings_local.template.py
 
-import os.path
+import os
+
+install_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -127,6 +129,14 @@ WEBSERVICE_NAMESPACE = "http://mdid.jmu.edu/webservices"
 LOGIN_CHECKS = (
     'rooibos.access.models.update_membership_by_attributes',
 )
+
+TEMPLATE_DIRS = (
+    os.path.join(install_dir, 'rooibos', 'templates'),
+)
+
+STATIC_DIR = os.path.join(install_dir, 'rooibos', 'static')
+
+FFMPEG_EXECUTABLE = os.path.join(install_dir, 'dist', 'windows', 'ffmpeg', 'bin', 'ffmpeg.exe')
 
 PDF_PAGESIZE = 'letter'  # 'A4'
 
