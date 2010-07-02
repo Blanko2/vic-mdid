@@ -33,6 +33,7 @@ class SpreadsheetImport(object):
         self.collections = collections
         for event in self.events:
             setattr(self, event, [kwargs[event]] if event in kwargs else [])
+        self.decode_error = False
 
     def _get_field(self, field):
         """
@@ -49,7 +50,12 @@ class SpreadsheetImport(object):
     def _split_value(self, value, split=True):
         if not value:
             return None
-        value = unicode(value, 'utf8')
+        try:
+            value = unicode(value, 'utf8')
+        except UnicodeDecodeError:
+            print "split error"
+            self.decode_error = True
+            value = ''
         return map(lambda s: s.strip(), value.split(self.separator)) if (self.separator and split) else [value.strip()]
         
     def _split_values(self, row):

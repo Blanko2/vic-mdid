@@ -282,23 +282,36 @@ def data_import(request):
                 raise forms.ValidationError("Please upload a CSV file with a .csv file extension")
             return file
 
+    utf8_error = False
+
     if request.method == 'POST':        
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             file = request.FILES['file']
             
             filename = "".join(random.sample(string.letters + string.digits, 32))
-            dest = open(os.path.join(_get_scratch_dir(), _get_filename(request, filename)), 'wb+')
+            full_path = os.path.join(_get_scratch_dir(), _get_filename(request, filename))
+            dest = open(full_path, 'wb+')
             for chunk in file.chunks():
                 dest.write(chunk)
             dest.close()
             
-            return HttpResponseRedirect(reverse('data-import-file', args=(filename,)))
+            file = open(full_path, 'r')
+            try:
+                for line in file:
+                    value = unicode(line, 'utf8')
+                return HttpResponseRedirect(reverse('data-import-file', args=(filename,)))
+            except UnicodeDecodeError:
+                utf8_error = True
+            finally:
+                file.close()
+
     else:
         form = UploadFileForm()
     
     return render_to_response('data_import.html',
                               {'form': form,
+                               'utf8_error': utf8_error,
                               },
                               context_instance=RequestContext(request))
     
