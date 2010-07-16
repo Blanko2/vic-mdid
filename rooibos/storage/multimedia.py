@@ -8,7 +8,7 @@ import logging
 from django.utils import simplejson
 from StringIO import StringIO
 from subprocess import Popen, PIPE
-from PIL import Image
+import Image
 
 def _seconds_to_timestamp(seconds):
     hours = seconds / 3600

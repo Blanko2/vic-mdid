@@ -210,9 +210,13 @@ def manage_storage(request, storageid=None, storagename=None):
     else:
         storage = Storage(system='local')
     
+    if not storage.id:
+        system_choices = [(s,s) for s in settings.STORAGE_SYSTEMS.keys()]
+    else:
+        system_choices = [(storage.system, storage.system)]
+    
     class StorageForm(forms.ModelForm):
-        system = forms.CharField(widget=forms.Select(choices=[(s,s) for s in settings.STORAGE_SYSTEMS.keys()],
-                                                     attrs={'disabled': 'disabled'} if storage.id else {}))
+        system = forms.CharField(widget=forms.Select(choices=system_choices))
         
         def clean_system(self):
             return self.cleaned_data['system'] if not self.instance.id else self.instance.system
