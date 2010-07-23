@@ -18,6 +18,8 @@ USE_I18N = False
 
 USE_ETAGS = False
 
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
