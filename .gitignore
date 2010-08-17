@@ -1,3 +1,6 @@
 *.pyc
 rooibos/settings_local.py
-
+solr/logs/
+solr/solr/data/
+apps/
+rooibos/*/migrations/
