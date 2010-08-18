@@ -1,6 +1,8 @@
 *.pyc
+*.pyo
 rooibos/settings_local.py
 solr/logs/
 solr/solr/data/
 apps/
+scratch/
 rooibos/*/migrations/
