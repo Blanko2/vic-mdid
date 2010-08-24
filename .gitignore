@@ -6,3 +6,5 @@ solr/solr/data/
 apps/
 scratch/
 rooibos/*/migrations/
+solr/wrapper.*
+solr/wrapper-license.conf
