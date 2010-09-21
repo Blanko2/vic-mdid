@@ -30,8 +30,6 @@ import mimetypes
 
 
 def add_content_length(func):
-    # Disable to make it work with latest PyISAPIe
-    return func
     def _add_header(request, *args, **kwargs):
         response = func(request, *args, **kwargs)
         if type(response) == HttpResponse:
