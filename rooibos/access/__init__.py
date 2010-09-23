@@ -39,7 +39,7 @@ def get_effective_permissions_and_restrictions(user, model_instance):
             manage = combine(ac.manage, manage)
             if ac.restrictions:
                 for k, v in ac.restrictions.iteritems():
-                    if not restrictions.has_key(k) or restrictions[k] > v:
+                    if not restrictions.has_key(k) or restrictions[k] < v:
                         restrictions[k] = v;
         return (read, write, manage, restrictions)
 

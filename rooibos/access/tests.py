@@ -146,18 +146,20 @@ class AccessTestCase(unittest.TestCase):
         user.groups.add(usergroup2)
 
         AccessControl.objects.create(usergroup=usergroup1, content_object=storage, read=True,
-                                     restrictions=dict(width=200, height=200))
+                                     restrictions=dict(width=200, height=200, downloadable=0))
         AccessControl.objects.create(usergroup=usergroup2, content_object=storage, read=True,
-                                     restrictions=dict(width=300, height=300))
+                                     restrictions=dict(width=300, height=300, downloadable=1))
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
-        self.assertEqual(200, restrictions.get('width'))
+        self.assertEqual(300, restrictions.get('width'))
+        self.assertTrue(restrictions.get('downloadable'))
 
         AccessControl.objects.create(user=user, content_object=storage, read=True,
-                                     restrictions=dict(width=500, height=500))
+                                     restrictions=dict(width=100, height=100))
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
-        self.assertEqual(500, restrictions.get('width'))
+        self.assertEqual(100, restrictions.get('width'))
+        self.assertTrue(restrictions.get('downloadable'))
 
 
 class ExtendedGroupTestCase(unittest.TestCase):
