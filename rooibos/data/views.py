@@ -84,6 +84,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     media = Media.objects.select_related().filter(record=record,
                                                   storage__id__in=accessible_ids(request.user, Storage),
                                                   master=None)
+    # Only list media that is downloadable
+    media = filter(lambda m: m.is_downloadable_by(request.user), media)
+    
     edit = edit and request.user.is_authenticated()
 
     class FieldSetForm(forms.Form):

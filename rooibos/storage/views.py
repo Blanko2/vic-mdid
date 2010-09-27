@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.views.decorators.cache import cache_control
 from models import Media, Storage, TrustedSubnet, ProxyUrl
-from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
+from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
 from rooibos.storage import get_image_for_record, get_thumbnail_for_record, match_up_media
@@ -45,18 +45,12 @@ def retrieve(request, recordid, record, mediaid, media):
     # check if media exists
     mediaobj = get_object_or_404(Media.objects.filter(id=mediaid, record__id=recordid))
 
-    # check permissions
-    try:
-        mediaobj = Media.objects.get(id=mediaid,
-                                 record__id=recordid,
-                                 record__collection__id__in=accessible_ids(request.user, Collection),
-                                 storage__id__in=accessible_ids(request.user, Storage))
-    except Media.DoesNotExist:
+    # check permissions on record
+    if not check_access(request.user, mediaobj.record):
         return HttpResponseForbidden()
 
-    r, w, m, restrictions = get_effective_permissions_and_restrictions(request.user, mediaobj.storage)
-    # if size restrictions exist, no direct download of a media file is allowed
-    if restrictions and (restrictions.has_key('width') or restrictions.has_key('height')):
+    # check permissions on storage
+    if not mediaobj.is_downloadable_by(request.user):
         raise Http404()
 
     try:
@@ -94,7 +88,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 def media_upload(request, recordid, record):
     available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True
                                          ).values_list('name','title'))
-    record = Record.get_or_404(id, request.user)
+    record = Record.get_or_404(recordid, request.user)
 
     class UploadFileForm(forms.Form):
         storage = forms.ChoiceField(choices=available_storage)

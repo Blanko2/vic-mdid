@@ -10,16 +10,23 @@ import uuid
 from rooibos.contrib.ipaddr import IP
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 from rooibos.data.models import Record
-from rooibos.access import sync_access
+from rooibos.access import sync_access, get_effective_permissions_and_restrictions
 import multimedia
 
 class Storage(models.Model):
     title = models.CharField(max_length=100)
     name = models.SlugField(max_length=50)
     system = models.CharField(max_length=50)
-    base = models.CharField(max_length=1024, null=True)
-    urlbase = models.CharField(max_length=1024, null=True, blank=True, verbose_name='URL base')
-    serverbase = models.CharField(max_length=1024, null=True, blank=True, verbose_name='server base')
+    base = models.CharField(max_length=1024, null=True,
+                            help_text="Absolute path to server directory containing files.")
+    urlbase = models.CharField(max_length=1024, null=True, blank=True, verbose_name='URL base',
+                               help_text="URL at which stored file is available, e.g. through streaming. " +
+                               "May contain %(filename)s placeholder, which will be replaced with the media url property.")
+    deliverybase = models.CharField(db_column='serverbase', max_length=1024,
+                                    null=True, blank=True, verbose_name='server base',
+                                    help_text="Absolute path to server directory in which a temporary symlink " +
+                                    "to the actual file should be created when the file is requested e.g. for " +
+                                    "streaming.")
     derivative = models.OneToOneField('self', null=True, related_name='master')
 
     class Meta:
@@ -205,6 +212,17 @@ class Media(models.Model):
 
     def is_local(self):
         return self.storage and self.storage.is_local()
+
+    def is_downloadable_by(self, user):
+        r, w, m, restrictions = get_effective_permissions_and_restrictions(user, self.storage)
+        # if size or download restrictions exist, no direct download of a media file is allowed
+        if restrictions and (restrictions.has_key('width') or
+                             restrictions.has_key('height') or
+                             not restrictions.get('downloadable', True)):
+            return False
+        else:
+            return r
+
 
 
 class TrustedSubnet(models.Model):
