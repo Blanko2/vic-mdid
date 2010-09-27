@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 import sys
 import mimetypes
 import logging
+import os
 
 
 def json_view(func):
@@ -152,3 +153,16 @@ def xfilter(func, iterator):
         next = iterator.next()
         if func(next):
             yield next
+
+
+def create_symlink(file, symlink):
+    if hasattr(os, 'symlink'):
+        # Linux, use built-in function
+        try:
+            os.symlink(file, symlink)
+            return True
+        except OSError:
+            return False
+    else:
+        # Windows, use mklink
+        return 0 == os.system("mklink \"%s\" \"%s\"" % (symlink, file))
