@@ -31,8 +31,23 @@ $(document).ready(function() {
 
 <h1>{{ record.title }}</h1>
 
+{% if media.1 %}
 
-<a href="{{ media.get_delivery_url }}" id="player"
-style="margin-top: 70px;display:block; width:{{ media.width|default:"520" }}px; height:{{ media.height|default:"330" }}px"></a>
+Multiple videos available:
+<ul>
+    {% for m in media %}
+    <li><a href=".?next={{ next|urlencode }}&video={{ forloop.counter0 }}">Video {{ forloop.counter }}:
+        {% if m.width and m.height %}{{ m.width }}x{{ m.height }}{% endif %}
+        {% if m.bitrate %}at {{ m.bitrate }} kbps{% endif %}
+        in {{ m.storage.title }}</a>
+        {% ifequal selectedmedia m %}(currently playing){% endifequal %}
+    </li>
+    {% endfor %}
+</ul>
+
+{% endif %}
+
+<a href="{{ selectedmedia.get_delivery_url }}" id="player"
+style="margin: 40px auto; display:block; width:{{ selectedmedia.width|default:"520" }}px; height:{{ selectedmedia.height|default:"330" }}px"></a>
 
 {% endblock %}
