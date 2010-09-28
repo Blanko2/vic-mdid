@@ -218,7 +218,7 @@ class Media(models.Model):
         # if size or download restrictions exist, no direct download of a media file is allowed
         if restrictions and (restrictions.has_key('width') or
                              restrictions.has_key('height') or
-                             not restrictions.get('downloadable', True)):
+                             restrictions.get('download', 'yes') == 'no'):
             return False
         else:
             return r

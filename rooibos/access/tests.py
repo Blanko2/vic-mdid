@@ -3,7 +3,8 @@ from rooibos.data.models import Collection, Record, Field
 from rooibos.storage.models import Storage
 from models import update_membership_by_attributes, update_membership_by_ip, AccessControl, ExtendedGroup, \
     ATTRIBUTE_BASED_GROUP, AUTHENTICATED_GROUP, EVERYBODY_GROUP, IP_BASED_GROUP
-from . import check_access, get_effective_permissions, filter_by_access, get_effective_permissions_and_restrictions
+from . import check_access, get_effective_permissions, filter_by_access, \
+    get_effective_permissions_and_restrictions, add_restriction_precedence
 from django.contrib.auth.models import User, Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 
@@ -146,20 +147,41 @@ class AccessTestCase(unittest.TestCase):
         user.groups.add(usergroup2)
 
         AccessControl.objects.create(usergroup=usergroup1, content_object=storage, read=True,
-                                     restrictions=dict(width=200, height=200, downloadable=0))
+                                     restrictions=dict(width=200, height=200, download='no'))
         AccessControl.objects.create(usergroup=usergroup2, content_object=storage, read=True,
-                                     restrictions=dict(width=300, height=300, downloadable=1))
+                                     restrictions=dict(width=300, height=300, download='yes'))
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
         self.assertEqual(300, restrictions.get('width'))
-        self.assertTrue(restrictions.get('downloadable'))
+        self.assertEqual('yes', restrictions.get('download'))
 
         AccessControl.objects.create(user=user, content_object=storage, read=True,
                                      restrictions=dict(width=100, height=100))
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
         self.assertEqual(100, restrictions.get('width'))
-        self.assertTrue(restrictions.get('downloadable'))
+        self.assertEqual('yes', restrictions.get('download'))
+
+    def testRestrictionPrecendences(self):
+        user = User.objects.create(username='test-restrprec')
+        usergroup1 = Group.objects.create(name='group-restrprec-1')
+        usergroup2 = Group.objects.create(name='group-restrprec-2')
+        storage = Storage.objects.create(name='test-restrprec')
+        user.groups.add(usergroup1)
+        user.groups.add(usergroup2)
+
+        AccessControl.objects.create(usergroup=usergroup1, content_object=storage, read=True,
+                                     restrictions=dict(test='abc'))
+        AccessControl.objects.create(usergroup=usergroup2, content_object=storage, read=True,
+                                     restrictions=dict(test='xyz'))
+
+        add_restriction_precedence('test', lambda a, b: 'abc' if a == 'abc' or b == 'abc' else 'xyz')
+        (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
+        self.assertEqual('abc', restrictions.get('test'))
+
+        add_restriction_precedence('test', lambda a, b: 'xyz' if a == 'xyz' or b == 'xyz' else 'abc')
+        (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
+        self.assertEqual('xyz', restrictions.get('test'))
 
 
 class ExtendedGroupTestCase(unittest.TestCase):

@@ -2,11 +2,36 @@
 
 {% block javascript %}
 {{ block.super }}
-<script type="text/javascript" src="{% url static 'flowplayer/flowplayer-3.2.0.min.js' %}"></script>
+<script type="text/javascript" src="{% url static 'flowplayer/flowplayer-3.2.4.min.js' %}"></script>
 
 <script type="text/javascript">
 $(document).ready(function() {
-    flowplayer("player", "{% url static 'flowplayer/flowplayer-3.2.0.swf' %}");
+    var url = "{{ selectedmedia.get_delivery_url }}";
+    var clip;
+    if (url.match(/^rtmp:/)) {
+        url = url.split("/mp4:");
+        clip = {
+            clip: {
+                url: "mp4:" + url[1],
+                provider: 'influxis',
+                scaling: 'fit'
+            },
+            plugins: {
+                influxis: {
+                    url: "{% url static 'flowplayer/flowplayer.rtmp-3.2.3.swf' %}",
+                    netConnectionUrl: url[0]
+                }
+            }
+        };
+    } else {
+        clip = {
+            clip: {
+                url: url,
+                scaling: 'fit'
+            }
+        };
+    }
+    flowplayer("player", "{% url static 'flowplayer/flowplayer-3.2.4.swf' %}", clip);
 });
 </script>
 {% endblock %}

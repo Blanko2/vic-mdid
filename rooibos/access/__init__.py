@@ -5,6 +5,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import _get_queryset
 
 
+restriction_precedences = dict()
+
+
+def add_restriction_precedence(setting, func):
+    restriction_precedences[setting] = func
+
+
 def get_accesscontrols_for_object(model_instance):
     from models import AccessControl
     model_type = ContentType.objects.get_for_model(model_instance)
@@ -39,8 +46,13 @@ def get_effective_permissions_and_restrictions(user, model_instance):
             manage = combine(ac.manage, manage)
             if ac.restrictions:
                 for k, v in ac.restrictions.iteritems():
-                    if not restrictions.has_key(k) or restrictions[k] < v:
-                        restrictions[k] = v;
+                    func = restriction_precedences.get(k)
+                    if not restrictions.has_key(k):
+                        restrictions[k] = v
+                    elif func:
+                        restrictions[k] = func(restrictions[k], v)
+                    elif restrictions[k] < v:
+                        restrictions[k] = v
         return (read, write, manage, restrictions)
 
     (gr, gw, gm, restrictions) = reduce_by_filter(lambda a: a.usergroup)
