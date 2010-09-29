@@ -46,7 +46,7 @@ class VideoPlayer(object):
         storages = filter_by_access(request.user, Storage)
         media = record.media_set.filter(master=None,
                                      storage__in=filter_by_access(request.user, Storage),
-                                     mimetype__in=('video/mp4', 'video/quicktime'))
+                                     mimetype__in=('video/mp4', 'video/quicktime')).order_by('bitrate')
         media = filter(lambda m: self._check_playable(request.user, m), media)
         if not media:
             raise Http404()
