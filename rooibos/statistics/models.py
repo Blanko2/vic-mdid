@@ -14,18 +14,26 @@ class Activity(models.Model):
     time = models.TimeField()
     event = models.CharField(max_length=64)
     data = models.TextField(blank=True)
-    
+
     def __unicode__(self):
         return "Activity (%s %s) %s" % (self.date, self.time, self.event)
-    
+
+    # Override user property to allow AnonymousUser objects, which otherwise fail
+    _user = user
+    def _user_get(self):
+        return self._user
+    def _user_set(self, value):
+        self._user = value if value and not value.is_anonymous() else None
+    user = property(_user_get, _user_set)
+
     def save(self, *args, **kwargs):
         if not self.date:
             self.date = datetime.now().date()
         if not self.time:
             self.time = datetime.now().time()
         super(Activity, self).save(*args, **kwargs)
-    
-    
+
+
 class AccumulatedActivity(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.PositiveIntegerField(null=True)
