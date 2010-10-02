@@ -38,31 +38,13 @@
     </div>
   </div>
 
-{% if storage.derivative %}
-  <div class="facet active-facet" id="storage_sidebar_derivative">
-    <div class="facet-header">Derivative Storage</div>
-    <div class="facet-body">
-        <a href="{% url storage-manage-storage storage.derivative.id, storage.derivative.name %}">{{ storage.derivative.title }}</a>
-    </div>
-  </div>
-{% endif %}
-
-{% if storage.master %}
-  <div class="facet active-facet" id="storage_sidebar_master">
-    <div class="facet-header">Master Storage</div>
-    <div class="facet-body">
-        <a href="{% url storage-manage-storage storage.master.id, storage.master.name %}">{{ storage.master.title }}</a>
-    </div>
-  </div>
-{% endif %}
-
   <div class="facet active-facet" id="storage_sidebar_permissions">
     <div class="facet-header">Permissions <a href="{% permissions_modify_url storage %}"><img src="{% url static 'images/edit.png' %}" class="facet-button" /></a></div>
     <div class="facet-body">
         {% permissions_display storage %}
     </div>
   </div>
-  
+
   <div class="facet active-facet" id="storage_sidebar_effective_permissions">
     <div class="facet-header">Effective Permissions</div>
     <div class="facet-body">
@@ -94,7 +76,7 @@
 <h2>{{ storage.title }}</h2>
 
 <form action="." method="POST">
-    
+
 <table>
     {{ form }}
     <tr>

@@ -27,6 +27,7 @@ class Storage(models.Model):
                                     help_text="Absolute path to server directory in which a temporary symlink " +
                                     "to the actual file should be created when the file is requested e.g. for " +
                                     "streaming.")
+    # This field is no longer used
     derivative = models.OneToOneField('self', null=True, related_name='master')
 
     class Meta:
@@ -37,11 +38,6 @@ class Storage(models.Model):
         super(Storage, self).save(kwargs)
 
     def __unicode__(self):
-        try:
-            if self.master:
-                return self.name + " (derivative)"
-        except:
-            pass
         return self.name
 
     @property
@@ -95,20 +91,8 @@ class Storage(models.Model):
         storage = self.storage_system
         return storage and storage.size(name) or None
 
-    def get_derivative_storage(self):
-        if not self.derivative:
-            d = Storage.objects.create(title=self.title,
-                                       system='local',
-                                       base=os.path.join(settings.SCRATCH_DIR, self.name))
-            updated = Storage.objects.filter(id=self.id, derivative=None).update(derivative=d)
-            if updated != 1:
-                # Race condition, some other thread just created a derivative also
-                d.delete()
-                return Storage.objects.get(master=self)
-            else:
-                self.derivative = Storage.objects.get(master=self)
-                sync_access(self, self.derivative)
-        return self.derivative
+    def get_derivative_storage_path(self):
+        return os.path.join(settings.SCRATCH_DIR, self.name)
 
     def is_local(self):
         return self.storage_system and self.storage_system.is_local()
@@ -127,6 +111,7 @@ class Media(models.Model):
     width = models.IntegerField(null=True)
     height = models.IntegerField(null=True)
     bitrate = models.IntegerField(null=True)
+    # This field is no longer used
     master = models.ForeignKey('self', null=True, related_name='derivatives')
 
     class Meta:

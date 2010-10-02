@@ -27,7 +27,7 @@ class VideoPlayer(object):
     def analyze(self, obj, user):
         if not isinstance(obj, Record):
             return NO_SUPPORT
-        videos = obj.media_set.filter(master=None,
+        videos = obj.media_set.filter(
                                      storage__in=filter_by_access(user, Storage),
                                      mimetype__in=('video/mp4', 'video/quicktime'))
         for video in videos:
@@ -44,7 +44,7 @@ class VideoPlayer(object):
     def _get_record_and_media(self, request, id, name):
         record = Record.get_or_404(id, request.user)
         storages = filter_by_access(request.user, Storage)
-        media = record.media_set.filter(master=None,
+        media = record.media_set.filter(
                                      storage__in=filter_by_access(request.user, Storage),
                                      mimetype__in=('video/mp4', 'video/quicktime')).order_by('bitrate')
         media = filter(lambda m: self._check_playable(request.user, m), media)

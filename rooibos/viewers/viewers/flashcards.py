@@ -46,10 +46,10 @@ class FlashCards(object):
 
     title = "Flash Cards"
     weight = 40
-    
+
     def __init__(self):
         pass
-    
+
     def analyze(self, obj, user):
         if not isinstance(obj, Presentation):
             return NO_SUPPORT
@@ -61,13 +61,13 @@ class FlashCards(object):
             return PARTIAL_SUPPORT
         else:
             return FULL_SUPPORT
-    
+
     def url(self):
         return url(r'^flashcards/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.view, name='viewers-flashcards')
-    
+
     def url_for_obj(self, obj):
         return reverse('viewers-flashcards', kwargs={'id': obj.id, 'name': obj.name})
-    
+
     def view(self, request, id, name):
         return_url = request.GET.get('next', reverse('presentation-browse'))
         presentation = Presentation.get_by_id_for_request(id, request)
@@ -80,12 +80,12 @@ class FlashCards(object):
 
         pagesize = getattr(pagesizes, settings.PDF_PAGESIZE)
         width, height = pagesize
-        
+
         p = canvas.Canvas(response, pagesize=pagesize)
         styles = getStyleSheet()
-        
+
         items = presentation.items.filter(hidden=False)
-        
+
         def decoratePage():
             p.saveState()
             p.setDash(2, 2)
@@ -101,11 +101,11 @@ class FlashCards(object):
             p.rotate(270)
             p.drawString(0, 0, 'Fold here')
             p.restoreState()
-        
+
         def drawCard(index, item):
             p.saveState()
             p.translate(0, height / 3 * (2 - index % 3))
-            
+
             try:
                 # retrieve record while making sure it's accessible to presentation owner
                 record = Record.objects.get(Q(owner=presentation.owner) |
@@ -113,11 +113,11 @@ class FlashCards(object):
                                             id=item.record.id)
             except Record.DoesNotExist:
                 record = None
-                
+
             if record:
-                image = get_image_for_record(record, presentation.owner, 800, 800, passwords, force_local=True)
+                image = get_image_for_record(record, presentation.owner, 800, 800, passwords)
                 if image:
-                    p.drawImage(image.get_absolute_file_path(), inch / 2, inch / 2, width=width / 2 - inch, height=height / 3 - inch)
+                    p.drawImage(image, inch / 2, inch / 2, width=width / 2 - inch, height=height / 3 - inch)
                 f = Frame(width / 2 + inch / 2, inch / 2,
                           width=width / 2 - inch, height = height / 3 - inch,
                           leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
@@ -135,16 +135,16 @@ class FlashCards(object):
                     p.setFont('Helvetica', 8)
                     p.setFillColorRGB(0, 0, 0)
                     p.drawRightString(width - inch / 2, inch / 2, '...')
-            
+
             p.restoreState()
-        
+
         for index, item in enumerate(items):
             if index % 3 == 0:
                 if index > 0:
                     p.showPage()
                 decoratePage()
             drawCard(index, item)
-            
-        p.showPage()        
+
+        p.showPage()
         p.save()
         return response

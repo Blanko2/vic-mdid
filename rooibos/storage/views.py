@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from datetime import datetime, timedelta
 from django import forms
 from django.conf import settings
@@ -18,7 +19,7 @@ from models import Media, Storage, TrustedSubnet, ProxyUrl
 from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
-from rooibos.storage import get_image_for_record, get_thumbnail_for_record, match_up_media
+from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media
 from rooibos.util import json_view
 import logging
 import os
@@ -41,27 +42,22 @@ def add_content_length(func):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):
-
     # check if media exists
-    mediaobj = get_object_or_404(Media.objects.filter(id=mediaid, record__id=recordid))
+    mediaobj = get_media_for_record(recordid, request.user).filter(id=mediaid)
 
-    # check permissions on record
-    if not check_access(request.user, mediaobj.record):
+    # check download status
+    if not mediaobj or not mediaobj[0].is_downloadable_by(request.user):
         return HttpResponseForbidden()
 
-    # check permissions on storage
-    if not mediaobj.is_downloadable_by(request.user):
-        raise Http404()
-
     try:
-        content = mediaobj.load_file()
+        content = mediaobj[0].load_file()
     except IOError:
         raise Http404()
 
     if content:
-        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
+        return HttpResponse(content=content, mimetype=str(mediaobj[0].mimetype))
     else:
-        return HttpResponseRedirect(mediaobj.get_absolute_url())
+        return HttpResponseRedirect(mediaobj[0].get_absolute_url())
 
 
 @add_content_length
@@ -71,22 +67,21 @@ def retrieve_image(request, recordid, record, width=None, height=None):
     width = int(width or '100000')
     height = int(height or '100000')
 
-    media = get_image_for_record(recordid, request.user, width, height)
-
-    if not media:
+    path = get_image_for_record(recordid, request.user, width, height)
+    if not path:
         raise Http404()
 
-    # return resulting image
-    content = media.load_file()
-    if content:
-        return HttpResponse(content=content, mimetype=str(media.mimetype))
-    else:
-        return HttpResponseServerError()
+    try:
+        return HttpResponse(content=file(path, 'rb').read(), mimetype='image/jpeg')
+    except IOError:
+        logging.error("IOError: %s" % path)
+        raise Http404()
+
 
 
 @login_required
 def media_upload(request, recordid, record):
-    available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True
                                          ).values_list('name','title'))
     record = Record.get_or_404(recordid, request.user)
 
@@ -128,15 +123,13 @@ def media_upload(request, recordid, record):
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
     record = Record.get_or_404(id, request.user)
-    media = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
-    if media:
+    filename = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
+    if filename:
         try:
-            content = media.load_file()
-            if content:
-                return HttpResponse(content=content, mimetype=str(media.mimetype))
-        except IOError, ex:
-            pass
-    return HttpResponseRedirect(reverse('static', args=['images/thumbnail_unavailable.png']))
+            return HttpResponse(content=open(filename, 'rb').read(), mimetype='image/jpeg')
+        except IOError:
+            logging.error("IOError: %s" % path)
+    return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 
 @json_view
@@ -247,7 +240,7 @@ def manage_storage(request, storageid=None, storagename=None):
 @login_required
 def import_files(request):
 
-    available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), write=True).order_by('title').values_list('id', 'title'))
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True).order_by('title').values_list('id', 'title'))
     available_collections = get_list_or_404(filter_by_access(request.user, Collection))
     writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
 
@@ -375,7 +368,7 @@ def import_files(request):
 
 @login_required
 def match_up_files(request):
-    available_storage = get_list_or_404(filter_by_access(request.user, Storage.objects.filter(master=None), manage=True).order_by('title').values_list('id', 'title'))
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage, manage=True).order_by('title').values_list('id', 'title'))
     available_collections = get_list_or_404(filter_by_access(request.user, Collection, manage=True))
 
     class MatchUpForm(forms.Form):

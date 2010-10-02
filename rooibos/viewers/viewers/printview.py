@@ -57,10 +57,10 @@ class PrintView(object):
 
     title = "Print View"
     weight = 40
-    
+
     def __init__(self):
         pass
-    
+
     def analyze(self, obj, user):
         if not isinstance(obj, Presentation):
             return NO_SUPPORT
@@ -72,13 +72,13 @@ class PrintView(object):
             return PARTIAL_SUPPORT
         else:
             return FULL_SUPPORT
-    
+
     def url(self):
         return url(r'^printview/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.view, name='viewers-printview')
-    
+
     def url_for_obj(self, obj):
         return reverse('viewers-printview', kwargs={'id': obj.id, 'name': obj.name})
-    
+
     def view(self, request, id, name):
         return_url = request.GET.get('next', reverse('presentation-browse'))
         presentation = Presentation.get_by_id_for_request(id, request)
@@ -91,7 +91,7 @@ class PrintView(object):
 
         pagesize = getattr(pagesizes, settings.PDF_PAGESIZE)
         width, height = pagesize
-        
+
         class DocTemplate(BaseDocTemplate):
             def afterPage(self):
                 self.handle_nextPageTemplate('Later')
@@ -100,7 +100,7 @@ class PrintView(object):
             return Frame(left, inch / 2,
                            width=width / 2 - 0.75 * inch, height = height - inch,
                           leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=False)
-        
+
         def prepare_first_page(canvas, document):
             p1 = Paragraph(presentation.title, styles['Heading'])
             p2 = Paragraph(presentation.owner.get_full_name(), styles['SubHeading'])
@@ -119,20 +119,20 @@ class PrintView(object):
             canvas.setStrokeColorRGB(0, 0, 0)
             canvas.line(width / 2, inch / 2, width / 2, height - inch - h1 - h2)
             canvas.restoreState()
-        
+
         def prepare_later_page(canvas, document):
             canvas.saveState()
             canvas.setStrokeColorRGB(0, 0, 0)
             canvas.line(width / 2, inch / 2, width / 2, height - inch / 2)
             canvas.restoreState()
-        
-        
+
+
         styles = getStyleSheet()
-        
+
         items = presentation.items.filter(hidden=False)
-        
+
         content = []
-        
+
         for index, item in enumerate(items):
             text = []
             values = item.get_fieldvalues(owner=request.user)
@@ -142,10 +142,10 @@ class PrintView(object):
             if annotation:
                 text.append('<b>%s</b>: %s<br />' % ('Annotation', annotation))
             p = Paragraph(''.join(text), styles['Normal'])
-            image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords, force_local=True)
+            image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords)
             if image:
                 try:
-                    i = flowables.Image(image.get_absolute_file_path(),
+                    i = flowables.Image(image,
                                         width=1.5 * inch * (image.width or 100) / 100,
                                         height=1.5 * inch * (image.height or 100) / 100)
                     p = flowables.ParagraphAndImage(p, i)
@@ -153,7 +153,7 @@ class PrintView(object):
                     pass
             content.append(flowables.KeepTogether(
                 [Paragraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']), p]))
-        
+
         first_template = PageTemplate(id='First',
                                       frames=[column_frame(inch / 2), column_frame(width / 2 + 0.25 * inch)],
                                       pagesize=pagesize,
@@ -162,7 +162,7 @@ class PrintView(object):
                                       frames=[column_frame(inch / 2), column_frame(width / 2 + 0.25 * inch)],
                                       pagesize=pagesize,
                                       onPage=prepare_later_page)
-        
+
         doc = DocTemplate(response)
         doc.addPageTemplates([first_template, later_template])
         doc.build(content)
