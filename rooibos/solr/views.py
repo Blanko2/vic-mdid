@@ -77,6 +77,7 @@ class StorageSearchFacet(SearchFacet):
 
     def process_criteria(self, criteria, user, *args, **kwargs):
         criteria = '|'.join('s*-%s' %s for s in criteria.split('|'))
+        # TODO: need to handle case when no storage is available
         return user.is_superuser and criteria \
             or '(%s) AND (%s)' % (' '.join('s%s-*' % s for s in self.available_storage), criteria)
 
@@ -244,7 +245,7 @@ def run_search(user,
     if produce_facets:
         for f in search_facets:
             search_facets[f].set_result(facets.get(f))
-    
+
     if orquery:
         (f, v) = orquery.split(':', 1)
         orfacets = s.search(_generate_query(search_facets, user, collection, criteria, keywords, selected,
@@ -270,9 +271,9 @@ def search(request, id=None, name=None, selected=False, json=False, organize=Fal
     remove = request.GET.get('rem', None)
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
-    
+
     # get parameters relevant for view
-    
+
     viewmode = request.GET.get('v', 'thumb')
     if viewmode == 'list':
         pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
@@ -281,7 +282,7 @@ def search(request, id=None, name=None, selected=False, json=False, organize=Fal
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'score desc').lower()
     if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
-    
+
     orquery = request.GET.get('or', None)
     user = request.user
 
@@ -351,7 +352,7 @@ def search(request, id=None, name=None, selected=False, json=False, organize=Fal
                     label=search_facets[f[1 if negated else 0:]].label,
                     negated=negated,
                     or_available=not negated and search_facets[f].or_available())
-        
+
     def federated_search_query(q, c):
         (f, o) = c.split(':', 1)
         if f.startswith('-'):
@@ -359,7 +360,7 @@ def search(request, id=None, name=None, selected=False, json=False, organize=Fal
             return q
         v = search_facets[f].federated_search_query(o)
         return v if not q else '%s %s' % (q, v)
-        
+
     # sort facets by label
     facets = sorted(search_facets.values(), key=lambda f: f.label)
 
@@ -412,7 +413,7 @@ def search_facets(request, id=None, name=None, selected=False):
     remove = request.GET.get('rem', None)
     if remove: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
-    
+
     user = request.user
 
     if selected:
@@ -438,7 +439,7 @@ def search_facets(request, id=None, name=None, selected=False):
     q.setlist('c', criteria)
     qurl = q.urlencode()
     limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
-        
+
     # sort facets by label
     facets = sorted(search_facets.values(), key=lambda f: f.label)
 

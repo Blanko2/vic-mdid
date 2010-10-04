@@ -9,7 +9,6 @@ from django.db import connection
 from django.db.models import Q, F
 from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions, add_restriction_precedence
 from rooibos.data.models import Collection, Record, standardfield
-from rooibos.presentation.models import Presentation
 from models import Media, Storage
 
 
@@ -54,6 +53,7 @@ def get_media_for_record(record, user=None, passwords={}):
 
     # get available media objects
     # Has access to collection containing record and to storage containing media
+    from rooibos.presentation.models import Presentation
     media = Media.objects.filter(
         Q(record__collection__id__in=accessible_ids(user, Collection)) # record is accessible
         | ownercheck # or record is accessible via owner
