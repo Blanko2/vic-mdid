@@ -405,7 +405,7 @@ def data_import_file(request, file):
 
     def analyze(collections=None, separator=None, separate_fields=None, fieldset=None):
         try:
-            with open(os.path.join(_get_scratch_dir(), _get_filename(request, file)), 'rb') as csvfile:
+            with open(os.path.join(_get_scratch_dir(), _get_filename(request, file)), 'rU') as csvfile:
                 imp = SpreadsheetImport(csvfile, collections, separator=separator,
                                         separate_fields=separate_fields, preferred_fieldset=fieldset)
                 return imp, imp.analyze()
