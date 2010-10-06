@@ -6,6 +6,12 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
+
+    $("#play_button").hide();
+    $("#video_list").change(function() {
+        $("#video_form").submit();
+    });
+
     var url = "{{ selectedmedia.get_delivery_url }}";
     var clip;
     if (url.match(/^rtmp:/)) {
@@ -44,7 +50,8 @@ $(document).ready(function() {
 <div class="facet active-facet" id="data_record_thumbnail">
     <div class="facet-header">Record</div>
     <div class="facet-body">
-        <a href="{{ next }}">Return to record</a>
+        <a href="{{ record.get_absolute_url }}">Go to record</a><br />
+        <a href="{{ next }}">Return to previous page</a>
     </div>
 </div>
 {% endif %}
@@ -57,19 +64,20 @@ $(document).ready(function() {
 <h1>{{ record.title }}</h1>
 
 {% if media.1 %}
-
 Multiple videos available:
-<ul>
-    {% for m in media %}
-    <li><a href=".?next={{ next|urlencode }}&video={{ forloop.counter0 }}">Video {{ forloop.counter }}:
-        {% if m.width and m.height %}{{ m.width }}x{{ m.height }}{% endif %}
-        {% if m.bitrate %}at {{ m.bitrate }} kbps{% endif %}
-        in {{ m.storage.title }}</a>
-        {% ifequal selectedmedia m %}(currently playing){% endifequal %}
-    </li>
-    {% endfor %}
-</ul>
-
+<form method="get" action=".?next={{ next|urlencode }}" id="video_form">
+    <select name="video" id="video_list">
+        {% for m in media %}
+        <option value="{{ forloop.counter0 }}"{% ifequal selectedmedia m %} selected="selected"{% endifequal %}>
+            Video {{ forloop.counter }}:
+            {% if m.width and m.height %}{{ m.width }}x{{ m.height }}{% endif %}
+            {% if m.bitrate %}at {{ m.bitrate }} kbps{% endif %}
+            in {{ m.storage.title }}
+        </option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Play" id="play_button" />
+</form>
 {% endif %}
 
 <a href="{{ selectedmedia.get_delivery_url }}" id="player"
