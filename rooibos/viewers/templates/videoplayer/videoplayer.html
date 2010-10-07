@@ -45,23 +45,19 @@ $(document).ready(function() {
 
 {% block sidebar %}
 {{ block.super }}
-
-{% if next %}
 <div class="facet active-facet" id="data_record_thumbnail">
     <div class="facet-header">Record</div>
     <div class="facet-body">
         <a href="{{ record.get_absolute_url }}">Go to record</a><br />
-        <a href="{{ next }}">Return to previous page</a>
+        {% if next %}<a href="{{ next }}">Return to previous page</a>{% endif %}
     </div>
 </div>
-{% endif %}
-
 {% endblock %}
 
 
 {% block content %}
 
-<h1>{{ record.title }}</h1>
+<h1><a href="{{ record.get_absolute_url }}">{{ record.title }}</a></h1>
 
 {% if media.1 %}
 Multiple videos available:
