@@ -128,7 +128,7 @@ def record_thumbnail(request, id, name):
         try:
             return HttpResponse(content=open(filename, 'rb').read(), mimetype='image/jpeg')
         except IOError:
-            logging.error("IOError: %s" % path)
+            logging.error("IOError: %s" % filename)
     return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 
