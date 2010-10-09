@@ -27,7 +27,7 @@ class AudioTextSync(object):
         storages = filter_by_access(user, Storage)
 
         has_text = has_audio = False
-        for media in obj.media_set.filter(master=None, storage__in=storages):
+        for media in obj.media_set.filter(storage__in=storages):
             if media.mimetype == 'audio/mpeg':
                 has_audio = True
             elif media.mimetype == 'text/plain':
@@ -71,7 +71,7 @@ class AudioTextSync(object):
         storages = filter_by_access(request.user, Storage)
 
         textmedia = audiomedia = None
-        for media in record.media_set.filter(master=None, storage__in=storages):
+        for media in record.media_set.filter(storage__in=storages):
             if not audiomedia and media.mimetype == 'audio/mpeg':
                 audiomedia = media
             elif not textmedia and media.mimetype == 'text/plain':

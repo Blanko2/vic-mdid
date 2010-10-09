@@ -14,9 +14,9 @@ class FieldValueTestCase(unittest.TestCase):
         self.titleField = Field.objects.create(label='Title', name='title')
         self.creatorField = Field.objects.create(label='Creator', name='creator')
         self.locationField = Field.objects.create(label='Location', name='location')
-        self.user = User.objects.create(username='test')
-        self.user2 = User.objects.create(username='test2')
-        self.user3 = User.objects.create(username='test3')
+        self.user = User.objects.create(username='FieldValueTestCase-test')
+        self.user2 = User.objects.create(username='FieldValueTestCase-test2')
+        self.user3 = User.objects.create(username='FieldValueTestCase-test3')
 
     def tearDown(self):
         self.collection.delete()
@@ -167,7 +167,7 @@ class CsvImportTestCase(unittest.TestCase):
         self.titleField = Field.objects.create(label='Title', name='title')
         self.creatorField = Field.objects.create(label='Creator', name='creator')
         self.locationField = Field.objects.create(label='Location', name='location')
-        self.user = User.objects.create(username='test')
+        self.user = User.objects.create(username='CsvImportTestCase-test')
         self.records = []
 
     def tearDown(self):

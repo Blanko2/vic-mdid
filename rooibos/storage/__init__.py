@@ -12,6 +12,27 @@ from rooibos.data.models import Collection, Record, standardfield
 from models import Media, Storage
 
 
+try:
+    # Derivative storage no longer used, remove all from database
+    # Due to dependencies, need to delete them individually after removing the derivative connections
+    storage_ids = list(Media.objects.filter(master__isnull=False).values_list('storage__id', flat=True).distinct())
+    storage_ids.extend(Storage.objects.exclude(id__in=Media.objects.all().values('storage__id'))
+                                      .filter(base__startswith='d:/mdid/scratch/').values_list('id', flat=True))
+    for storage in Storage.objects.filter(master__isnull=False).exclude(id__in=storage_ids):
+        storage_ids.append(storage.id)
+    for storage in Storage.objects.filter(id__in=storage_ids):
+        try:
+            storage.master.derivative = None
+            storage.master.save()
+        except Storage.DoesNotExist:
+            pass
+    for storage in Storage.objects.filter(id__in=storage_ids):
+        storage.delete()
+except Exception, ex:
+    # Clean up failed, log exception and continue
+    logging.error("Derivative storage cleanup failed: %s" % ex)
+    pass
+
 def download_precedence(a, b):
     if a == 'yes' or b == 'yes':
         return 'yes'
@@ -69,7 +90,7 @@ def get_media_for_record(record, user=None, passwords={}):
     return media
 
 
-def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False, force_local=False):
+def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
 
     media = get_media_for_record(record, user, passwords)
 
@@ -78,7 +99,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
         # also support video and audio
          q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
 
-    media = media.filter(q, master=None) # don't look for derivatives here
+    media = media.filter(q)
 
     if not media:
         return None
@@ -110,9 +131,12 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
         height = min(height, restrictions.get('height', height))
 
     # see if image needs resizing
-    if m.width > width or m.height > height or m.mimetype != 'image/jpeg' or (force_local and not m.is_local()):
+    if m.width > width or m.height > height or m.mimetype != 'image/jpeg' or not m.is_local():
 
         def derivative_image(master, width, height):
+            if not master.file_exists():
+                logging.error('Image derivative failed for media %d, cannot find file' % master.id)
+                return None, (None, None)
             import ImageFile
             ImageFile.MAXBLOCK = 16 * 1024 * 1024
             from multimedia import get_image
@@ -128,39 +152,34 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
                 image.save(output, 'JPEG', quality=85, optimize=True)
-                return output, image.size
+                return output.getvalue(), image.size
             except Exception, e:
-                logging.error('Could not create derivative image, exception: %s' % e)
+                logging.error('Image derivative failed for media %d (%s)' % (master.id, e))
                 return None, (None, None)
 
         # See if a derivative already exists
-        d = m.derivatives.filter(Q(width=width, height__lte=height) | Q(width__lte=width, height=height),
-                                 # find a square derivative if requested, or if source is square,
-                                 # otherwise look for a non-square (i.e. something matching the original aspect ratio)
-                                 Q(width=F('height')) if crop_to_square or m.width == m.height else ~Q(width=F('height')),
-                                 mimetype='image/jpeg')
-        if d:
-            # use derivative
-            d = d[0]
-            if not d.file_exists():
-                # file has been removed, recreate
+        name = '%s-%sx%s%s.jpg' % (m.id, width, height, 'sq' if crop_to_square else '')
+        sp = m.storage.get_derivative_storage_path()
+        if sp:
+            if not os.path.exists(sp):
+                os.makedirs(sp)
+            path = os.path.join(sp, name)
+
+            if not os.path.exists(path) or os.path.getsize(path) == 0:
                 output, (w, h) = derivative_image(m, width, height)
-                if not output:
+                if output:
+                    with file(path, 'wb') as f:
+                        f.write(output)
+                else:
                     return None
-                d.save_file('%s-%sx%s.jpg' % (d.id, w, h), output)
-            m = d
+
+            return path
         else:
-            # create new derivative with correct size
-            output, (w, h) = derivative_image(m, width, height)
-            if not output:
-                return None
-            storage = m.storage.get_derivative_storage()
-            m = Media.objects.create(record=m.record, storage=storage, mimetype='image/jpeg',
-                                     width=w, height=h, master=m)
-            m.save_file('%s-%sx%s.jpg' % (m.id, w, h), output)
+            return None
 
-    return m
+    else:
 
+        return m.get_absolute_file_path()
 
 
 def get_thumbnail_for_record(record, user=None, crop_to_square=False):

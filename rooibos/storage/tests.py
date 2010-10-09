@@ -15,6 +15,7 @@ from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
 from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media
 from rooibos.access.models import AccessControl
+from rooibos.access import get_effective_permissions
 from rooibos.presentation.models import Presentation, PresentationItem
 from sqlite3 import OperationalError
 
@@ -73,8 +74,9 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
             media.save_file('dcmetro.tif', f)
 
         thumbnail = get_thumbnail_for_record(self.record)
-        self.assertTrue(thumbnail.width == 100)
-        self.assertTrue(thumbnail.height < 100)
+        width, height = Image.open(thumbnail).size
+        self.assertTrue(width == 100)
+        self.assertTrue(height < 100)
 
         media.delete()
 
@@ -87,8 +89,9 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
             media.save_file('dcmetro.tif', f)
 
         thumbnail = get_thumbnail_for_record(self.record, crop_to_square=True)
-        self.assertTrue(thumbnail.width == 100)
-        self.assertTrue(thumbnail.height == 100)
+        width, height = Image.open(thumbnail).size
+        self.assertTrue(width == 100)
+        self.assertTrue(height == 100)
 
         media.delete()
 
@@ -112,11 +115,11 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         result1 = get_image_for_record(self.record, width=400, height=400, user=user1)
         result2 = get_image_for_record(self.record, width=400, height=400, user=user2)
 
-        self.assertEqual(400, result1.width)
-        self.assertEqual(200, result2.width)
+        self.assertEqual(400, Image.open(result1).size[0])
+        self.assertEqual(200, Image.open(result2).size[0])
 
         result3 = get_image_for_record(self.record, width=400, height=400, user=user2)
-        self.assertEqual(result2.id, result3.id)
+        self.assertEqual(result2, result3)
 
         media.delete()
 
@@ -152,7 +155,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
 
         # now user2 should get the image
         result = get_image_for_record(self.record, width=400, height=400, user=user2)
-        self.assertEqual(400, result.width)
+        self.assertEqual(400, Image.open(result).size[0])
 
         # limit user2 image size
         user2_storage_acl.restrictions = dict(width=200, height=200)
@@ -160,7 +163,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
 
         # we should now get a smaller image
         result = get_image_for_record(self.record, width=400, height=400, user=user2)
-        self.assertEqual(200, result.width)
+        self.assertEqual(200, Image.open(result).size[0])
 
         # password protect the presentation
         presentation.password='secret'
@@ -173,34 +176,7 @@ class LocalFileSystemStorageSystemTestCase(unittest.TestCase):
         # with presentation password, image should be returned
         result = get_image_for_record(self.record, width=400, height=400, user=user2,
                                       passwords={presentation.id: 'secret'})
-        self.assertEqual(200, result.width)
-
-
-    def testDerivativeStorageRaceCondition(self):
-
-        s = Storage.objects.create(title='Test', system='local')
-        derivatives = dict()
-        errors = dict()
-
-        class GetDerivativeStorageThread(Thread):
-            def run(self):
-                try:
-                    d = s.get_derivative_storage()
-                    derivatives.setdefault(d, None)
-                except OperationalError, e:
-                    if e.message == 'database is locked':
-                        pass
-                    elif e.message.startswith('no such table'):
-                        errors.setdefault('Cannot run this test with in-memory sqlite database', None)
-                    else:
-                        raise e
-
-        threads = [GetDerivativeStorageThread() for i in range(10)]
-        map(Thread.start, threads)
-        map(Thread.join, threads)
-
-        self.assertEqual({}, errors)
-        self.assertEqual(1, len(derivatives.keys()))
+        self.assertEqual(200, Image.open(result).size[0])
 
 
     def testDeliveryUrl(self):
@@ -336,8 +312,9 @@ class OnlineStorageSystemTestCase(unittest.TestCase):
         url = "file:///" + os.path.join(os.path.dirname(__file__), 'test_data', 'dcmetro.tif').replace('\\', '/')
         media = Media.objects.create(record=self.record, storage=self.storage, url=url, mimetype='image/tiff')
         thumbnail = get_thumbnail_for_record(self.record)
-        self.assertTrue(thumbnail.width == 100)
-        self.assertTrue(thumbnail.height < 100)
+        width, height = Image.open(thumbnail).size
+        self.assertTrue(width == 100)
+        self.assertTrue(height < 100)
 
         media.delete()
 
@@ -408,7 +385,8 @@ class ProtectedContentDownloadTestCase(unittest.TestCase):
         self.assertEqual(401, response.status_code)
 
         # with basic auth
-        response = c.get(self.media.get_absolute_url(), HTTP_AUTHORIZATION='basic %s' % 'protectedtest:test'.encode('base64').strip())
+        response = c.get(self.media.get_absolute_url(),
+                         HTTP_AUTHORIZATION='basic %s' % 'protectedtest:test'.encode('base64').strip())
         self.assertEqual(200, response.status_code)
         self.assertEqual('hello world', response.content)
 
