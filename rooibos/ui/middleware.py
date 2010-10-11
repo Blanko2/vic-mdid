@@ -21,13 +21,13 @@ class PageTitles:
             return None
 
         if response.status_code == 200 and response.get('Content-Type', '').startswith('text/html'):
-            title = _find_tag(response.content, 'title')
+            # If the page contains Unicode characters, not converting this to Unicode
+            # will cause runtime errors as strip_tags forces Unicode.
+            c = unicode(response.content, 'utf8')
+            title = _find_tag(c, 'title')
             if title and response.content[title[0]:title[1]] == "MDID":
-                heading = _find_tag(response.content, 'h1')
+                heading = _find_tag(c, 'h1')
                 if heading:
-                    # If the page contains Unicode characters, not converting this to Unicode
-                    # will cause runtime errors as strip_tags forces Unicode.
-                    c = unicode(response.content, 'utf8')
                     response.content = "%sMDID - %s%s" % (c[:title[0]],
                                                           strip_tags(c[heading[0]:heading[1]]),
                                                           c[title[1]:])
