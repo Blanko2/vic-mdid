@@ -67,5 +67,5 @@ class LocalFileSystemStorageSystem(FileSystemStorage):
             path = path[len(location):]
             if path.startswith(os.path.sep):
                 path = path[len(os.path.sep):]
-            result.extend(os.path.join(path, file) for file in files)
+            result.extend(os.path.normcase(os.path.join(path, file)) for file in files)
         return result

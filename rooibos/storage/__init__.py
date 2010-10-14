@@ -212,14 +212,17 @@ def analyze_media(storage):
     # Storage must be able to provide file list
     if hasattr(storage, 'get_files'):
         # Find extra files, i.e. files in the storage area that don't have a matching media record
-        extra = storage.get_files()
+        files = storage.get_files()
+        # convert to dict for faster lookup
+        extra = dict(zip(files, [None] * len(files)))
         # Find broken media, i.e. media that does not have a related file on the file system
         for media in Media.objects.filter(storage=storage):
-            url = os.path.normpath(media.url)
-            if url in extra:
+            url = os.path.normcase(os.path.normpath(media.url))
+            if extra.has_key(url):
                 # File is in use
-                extra.remove(url)
+                del extra[url]
             else:
                 # missing file
                 broken.append(media)
+        extra = extra.keys()
     return broken, extra
