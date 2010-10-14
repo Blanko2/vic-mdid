@@ -185,7 +185,7 @@ def manage_storages(request):
 
     for s in storages:
         s.analysis_available = hasattr(s, 'get_files')
-        
+
     return render_to_response('storage_manage.html',
                           {'storages': storages,
                            },
@@ -423,3 +423,41 @@ def analyze(request, id, name):
                            'extra': extra,
                            },
                           context_instance=RequestContext(request))
+
+
+@login_required
+def find_records_without_media(request):
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage, manage=True).order_by('title').values_list('id', 'title'))
+    available_collections = get_list_or_404(filter_by_access(request.user, Collection, manage=True))
+
+    class SelectionForm(forms.Form):
+        collection = forms.ChoiceField(choices=((c.id, c.title) for c in sorted(available_collections, key=lambda c: c.title)))
+        storage = forms.ChoiceField(choices=available_storage)
+
+    identifiers = records = []
+    analyzed = False
+
+    if request.method == 'POST':
+
+        form = SelectionForm(request.POST)
+        if form.is_valid():
+
+            collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), manage=True))
+            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage']), manage=True))
+
+            records = analyze_records(collection, storage)
+            analyzed = True
+
+            identifiers = FieldValue.objects.filter(field__in=standardfield('identifier', equiv=True),
+                                                    record__in=records).order_by('value').values_list('value', flat=True)
+
+    else:
+        form = SelectionForm(request.GET)
+
+    return render_to_response('storage_find_records_without_media.html',
+                              {'form': form,
+                               'identifiers': identifiers,
+                               'records': records,
+                               'analyzed': analyzed,
+                               },
+                              context_instance=RequestContext(request))
