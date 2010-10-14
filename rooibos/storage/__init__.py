@@ -187,7 +187,7 @@ def get_thumbnail_for_record(record, user=None, crop_to_square=False):
 
 
 def match_up_media(storage, collection):
-    broken, files = analyze_media(storage, collection)
+    broken, files = analyze_media(storage)
     # find records that have an ID matching one of the remaining files
     idfields = standardfield('identifier', equiv=True)
     results = []
@@ -206,7 +206,7 @@ def analyze_records(collection, storage):
     return collection.records.exclude(id__in=collection.records.filter(media__storage=storage).values('id'))
 
 
-def analyze_media(storage, collection):
+def analyze_media(storage):
     broken = []
     extra = []
     # Storage must be able to provide file list

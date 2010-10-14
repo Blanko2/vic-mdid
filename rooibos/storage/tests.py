@@ -502,7 +502,7 @@ class AnalyzeTestCase(unittest.TestCase):
 
     def testAnalyzeMedia(self):
 
-        broken, extra = analyze_media(self.storage, self.collection)
+        broken, extra = analyze_media(self.storage)
 
         self.assertEqual(1, len(broken))
         self.assertEqual('id_missing.txt', broken[0].url)
