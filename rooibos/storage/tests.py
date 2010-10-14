@@ -13,7 +13,7 @@ from django.conf import settings
 from rooibos.data.models import *
 from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
-from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media, analyze
+from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media, analyze_records, analyze_media
 from rooibos.access.models import AccessControl
 from rooibos.access import get_effective_permissions
 from rooibos.presentation.models import Presentation, PresentationItem
@@ -491,9 +491,18 @@ class AnalyzeTestCase(unittest.TestCase):
         file.write('test')
         file.close()
 
-    def testAnalyze(self):
+    def testAnalyzeCollection(self):
 
-        broken, extra, empty = analyze(self.storage, self.collection)
+        empty = analyze_records(self.collection, self.storage)
+
+        self.assertEqual(2, len(empty))
+        titles = sorted(e.title for e in empty)
+        self.assertEqual('id_missing_other', titles[0])
+        self.assertEqual('id_no_media', titles[1])
+
+    def testAnalyzeMedia(self):
+
+        broken, extra = analyze_media(self.storage, self.collection)
 
         self.assertEqual(1, len(broken))
         self.assertEqual('id_missing.txt', broken[0].url)
@@ -502,8 +511,3 @@ class AnalyzeTestCase(unittest.TestCase):
         extra = sorted(extra)
         self.assertEqual('id_2.txt', extra[0])
         self.assertEqual(os.path.join('sub', 'id_99.txt'), extra[1])
-
-        self.assertEqual(2, len(empty))
-        titles = sorted(e.title for e in empty)
-        self.assertEqual('id_missing_other', titles[0])
-        self.assertEqual('id_no_media', titles[1])
