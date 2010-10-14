@@ -36,6 +36,7 @@ td.limitwidth + td.limitwidth {
         <th>Base</th>
         <th>URL Base</th>
         <th>Delivery Base</th>
+        <th></th>
     </tr>
 
 {% for storage in storages %}
@@ -45,6 +46,7 @@ td.limitwidth + td.limitwidth {
     <td class="limitwidth" title="{{ storage.base|default:"" }}">{{ storage.base|default:"" }}</td>
     <td class="limitwidth" title="{{ storage.urlbase|default:"" }}">{{ storage.urlbase|default:"" }}</td>
     <td class="limitwidth" title="{{ storage.deliverybase|default:"" }}">{{ storage.deliverybase|default:"" }}</td>
+    <td>{% if storage.analysis_available %}<a href="{% url storage-analyze storage.id, storage.name %}">Analyze</a>{% endif %}</td>
 </tr>
 {% endfor %}
 

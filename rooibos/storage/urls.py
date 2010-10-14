@@ -16,4 +16,6 @@ urlpatterns = patterns('',
     url(r'^storage/(?P<storageid>\d+)/(?P<storagename>[-\w]+)/$', manage_storage, name='storage-manage-storage'),
     url(r'^storage/new/$', manage_storage, name='storage-create-storage'),
     url(r'^match-up-files/$', match_up_files, name='storage-match-up-files'),
+    url(r'^match-up-files/$', match_up_files, name='storage-match-up-files'),
+    url(r'^analyze/(?P<id>\d+)/(?P<name>[-\w]+)/$', analyze, name='storage-analyze'),
 )

@@ -19,7 +19,7 @@ from models import Media, Storage, TrustedSubnet, ProxyUrl
 from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
-from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media
+from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records
 from rooibos.util import json_view
 import logging
 import os
@@ -183,6 +183,9 @@ def manage_storages(request):
 
     storages = filter_by_access(request.user, Storage, manage=True).order_by('title')
 
+    for s in storages:
+        s.analysis_available = hasattr(s, 'get_files')
+        
     return render_to_response('storage_manage.html',
                           {'storages': storages,
                            },
@@ -408,3 +411,15 @@ def match_up_files(request):
                               {'form': form,
                                },
                               context_instance=RequestContext(request))
+
+
+@login_required
+def analyze(request, id, name):
+    storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=id), manage=True))
+    broken, extra = analyze_media(storage)
+    return render_to_response('storage_analyze.html',
+                          {'storage': storage,
+                           'broken': broken,
+                           'extra': extra,
+                           },
+                          context_instance=RequestContext(request))
