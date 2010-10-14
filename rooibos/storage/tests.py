@@ -13,7 +13,7 @@ from django.conf import settings
 from rooibos.data.models import *
 from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
-from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media
+from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media, analyze
 from rooibos.access.models import AccessControl
 from rooibos.access import get_effective_permissions
 from rooibos.presentation.models import Presentation, PresentationItem
@@ -396,7 +396,6 @@ class ProtectedContentDownloadTestCase(unittest.TestCase):
         self.assertEqual('hello world', response.content)
 
 
-
 class AutoConnectMediaTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -451,3 +450,60 @@ class AutoConnectMediaTestCase(unittest.TestCase):
         record, file_url = match
         self.assertEqual(r2, record)
         self.assertEqual('id_2.txt', file_url)
+
+
+class AnalyzeTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        os.mkdir(os.path.join(self.tempdir, 'sub'))
+        self.collection = Collection.objects.create(title='AnalyzeTest')
+        self.storage = Storage.objects.create(title='AnalyzeTest', system='local', base=self.tempdir)
+        self.other_storage = Storage.objects.create(title='OtherAnalyzeTest', system='local', base=self.tempdir)
+        self.records = []
+        self.create_file('id_1')
+        self.create_file('id_2')
+        self.create_file(os.path.join('sub', 'id_99'))
+        self.create_record('id_1', 'id_1')
+        self.create_record('id_missing', 'id_missing')
+        self.create_record('id_no_media', None)
+        self.create_record('id_missing_other', 'id_missing_other', self.other_storage)
+
+    def tearDown(self):
+        for record in self.records:
+            record.delete()
+        self.storage.delete()
+        self.collection.delete()
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def create_record(self, id, media, storage=None):
+        record = Record.objects.create(name='id')
+        CollectionItem.objects.create(collection=self.collection, record=record)
+        FieldValue.objects.create(record=record, field=standardfield('identifier'), value=id)
+        FieldValue.objects.create(record=record, field=standardfield('title'), value=id)
+        self.records.append(record)
+        if media:
+            record.media_set.create(storage=storage or self.storage, url='%s.txt' % media)
+        return record
+
+    def create_file(self, id):
+        file = open(os.path.join(self.tempdir, '%s.txt' % id), 'w')
+        file.write('test')
+        file.close()
+
+    def testAnalyze(self):
+
+        broken, extra, empty = analyze(self.storage, self.collection)
+
+        self.assertEqual(1, len(broken))
+        self.assertEqual('id_missing.txt', broken[0].url)
+
+        self.assertEqual(2, len(extra))
+        extra = sorted(extra)
+        self.assertEqual('id_2.txt', extra[0])
+        self.assertEqual(os.path.join('sub', 'id_99.txt'), extra[1])
+
+        self.assertEqual(2, len(empty))
+        titles = sorted(e.title for e in empty)
+        self.assertEqual('id_missing_other', titles[0])
+        self.assertEqual('id_no_media', titles[1])

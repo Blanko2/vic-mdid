@@ -213,3 +213,32 @@ def match_up_media(storage, collection):
             results.append((records[0], file))
 
     return results
+
+
+def analyze(storage, collection):
+
+    broken = []
+    extra = []
+
+    # find empty records, i.e. records that don't have any media in the given storage
+    empty = collection.records.exclude(id__in=collection.records.filter(media__storage=storage).values('id'))
+
+    # If storage area can't provide file list, skip other tests
+    if not hasattr(storage, 'get_files'):
+        return [], [], empty
+
+    files = storage.get_files()
+
+    # Find broken media, i.e. media that does not have a related file on the file system
+    for media in Media.objects.filter(storage=storage):
+        url = os.path.normpath(media.url)
+        if url in files:
+            files.remove(url)
+        else:
+            # missing file
+            broken.append(media)
+
+    # Find extra files, i.e. files in the storage area that don't have a matching media record
+    extra = files
+
+    return broken, extra, empty
