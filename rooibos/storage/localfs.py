@@ -6,6 +6,7 @@ import random
 from time import time
 import hashlib
 from rooibos.util import create_symlink
+from rooibos.statistics.models import Activity
 
 
 class LocalFileSystemStorageSystem(FileSystemStorage):
@@ -31,9 +32,17 @@ class LocalFileSystemStorageSystem(FileSystemStorage):
             symlink = os.path.join(storage.deliverybase, filename)
             if not os.path.exists(symlink):
                 create_symlink(self.get_absolute_file_path(storage, media), symlink)
+
+            Activity.objects.create(event='media-delivery-url',
+                    content_object=media,
+                    data=dict(symlink=symlink))
+
             return storage.urlbase % dict(filename=filename)
         elif storage.urlbase:
             # Return a link based on the configured urlbase
+            Activity.objects.create(event='media-delivery-url',
+                    content_object=media)
+
             return storage.urlbase % dict(filename=media.url)
         else:
             # No special delivery options configured

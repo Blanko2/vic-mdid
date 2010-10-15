@@ -21,6 +21,7 @@ from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
 from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records
 from rooibos.util import json_view
+from rooibos.statistics.models import Activity
 import logging
 import os
 import uuid
@@ -48,29 +49,37 @@ def retrieve(request, recordid, record, mediaid, media):
     # check download status
     if not mediaobj or not mediaobj[0].is_downloadable_by(request.user):
         return HttpResponseForbidden()
+    mediaobj = mediaobj[0]
 
     try:
-        content = mediaobj[0].load_file()
+        content = mediaobj.load_file()
     except IOError:
         raise Http404()
 
+    Activity.objects.create(event='media-download',
+                            request=request,
+                            content_object=mediaobj)
     if content:
-        return HttpResponse(content=content, mimetype=str(mediaobj[0].mimetype))
+        return HttpResponse(content=content, mimetype=str(mediaobj.mimetype))
     else:
-        return HttpResponseRedirect(mediaobj[0].get_absolute_url())
+        return HttpResponseRedirect(mediaobj.get_absolute_url())
 
 
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve_image(request, recordid, record, width=None, height=None):
 
-    width = int(width or '100000')
-    height = int(height or '100000')
+    width = int(width)
+    height = int(height)
 
-    path = get_image_for_record(recordid, request.user, width, height)
+    path = get_image_for_record(recordid, request.user, width or 100000, height or 100000)
     if not path:
         raise Http404()
 
+    Activity.objects.create(event='media-download-image',
+                            request=request,
+                            content_object=Record.objects.get(id=recordid),
+                            data=dict(width=width, height=height))
     try:
         return HttpResponse(content=file(path, 'rb').read(), mimetype='image/jpeg')
     except IOError:
@@ -124,7 +133,12 @@ def media_upload(request, recordid, record):
 def record_thumbnail(request, id, name):
     record = Record.get_or_404(id, request.user)
     filename = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
+
     if filename:
+        Activity.objects.create(event='media-thumbnail',
+                                request=request,
+                                content_object=record,
+                                data=dict(square=int(request.GET.has_key('square'))))
         try:
             return HttpResponse(content=open(filename, 'rb').read(), mimetype='image/jpeg')
         except IOError:
