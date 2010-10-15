@@ -70,7 +70,7 @@ IsapiEnvAuto = [
   #"LOCAL_ADDR",
   #"LOGON_USER",
   #"PATH_TRANSLATED",
-  #"REMOTE_ADDR",
+  "REMOTE_ADDR",
   #"REMOTE_HOST",
   #"REMOTE_PORT",
   #"REMOTE_USER",
