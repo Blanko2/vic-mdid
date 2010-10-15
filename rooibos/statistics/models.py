@@ -50,7 +50,8 @@ class Activity(models.Model):
             self.data = ''
         if self.request:
             self.user = self.request.user
-            r = {'request.referer': self.request.META.get('HTTP_REFERER')}
+            r = {'request.referer': self.request.META.get('HTTP_REFERER'),
+                 'request.remote_addr': self.request.META.get('REMOTE_ADDR')}
             if self.data:
                 r.update(self.data)
             self.data = r
