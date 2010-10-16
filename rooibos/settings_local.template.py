@@ -2,6 +2,12 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 #LOGGING_OUTPUT_ENABLED = True
 
+# Needed to enable compression JS and CSS files
+COMPRESS = True
+MEDIA_URL = '/static/'
+MEDIA_ROOT = 'd:/mdid/rooibos/static/'
+
+
 ADMINS = (
 #    ('Your name', 'your@email.example'),
 )
