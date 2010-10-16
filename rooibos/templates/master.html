@@ -23,7 +23,7 @@
 <!--[if IE]>
 {% compress css %}
     {% include "master-ie.css" %}
-{% endcompress %}        
+{% endcompress %}
 <![endif]-->
 {% endblock %}
 </head>
@@ -31,7 +31,7 @@
 <body class="ui-reset master">
 
 {% block raw-content %}
-    <div id="content-wrapper">        
+    <div id="content-wrapper">
         <div id="content">
 
 {% if messages %}
@@ -98,8 +98,8 @@
             <li>{% with request.pagehelp|default:"" as help %}{% pagehelp help %}{% endwith %}</li>
         </ul>
         <span id="javascriptwarning">You have JavaScript disabled.  MDID works better with JavaScript enabled.</span>
-    </div>    
-    
+    </div>
+
     <div id="header-bar">
         <div class="spacer">
             <div id="header">
@@ -137,7 +137,7 @@
                     </li>
                 </ul>
             </div>
-        </div>        
+        </div>
     </div>
 {% endblock %}
 
@@ -191,7 +191,7 @@
             $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
             $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 50); }).length > 0) ? "visible" : "hidden");
         }
-        
+
         function recordSelection(ids, checked) {
             var method = ids == 0 ? 'GET' : 'POST';
             if (ids.constructor != Array) ids = [ids];
@@ -212,8 +212,8 @@
         function bindSelectRecordCheckboxes() {
             $(".record-select").click(function() { recordSelection($(this).attr('value'), $(this).attr('checked')); });
         }
-        
-        
+
+
         // metadata bubble code
         var disabledMetadataBubble = false;
         var showMetadataBubbleTimeout;
@@ -245,7 +245,7 @@
             }
             var html = metadataBubbleCache[id] ?
                 metadataBubbleCache[id] :
-                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 122px;' />";                
+                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 122px;' />";
             bubble.html(html).css('left', left).css('top', top).show('fast');
             $("#metadatabubble-arrow").css('background-image', 'url(' + bg + ')').css('left', aleft).css('top', atop).show('fast');
             if (!metadataBubbleCache[id])
@@ -259,16 +259,16 @@
                     }
                 });
         }
-        
+
         function hideMetadataBubble() {
             $("#metadatabubble,#metadatabubble-arrow").hide('fast');
         }
-        
+
         function disableMetadataBubble(disable) {
             disabledMetadataBubble = (disable == true)
             if (disabledMetadataBubble) hideMetadataBubble();
         }
-        
+
         function metadataBubbleTimeout(anchor, show) {
             var id = anchor.attr("id");
             id = id.substring(id.lastIndexOf('-') + 1);
@@ -279,18 +279,18 @@
             else
                 hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
         }
-        
+
         $(".record-anchor[id*=record-id-]").live('mouseenter mouseleave', function(event) {
                 metadataBubbleTimeout($(this), event.type == 'mouseenter');
         });
-        
+
         $("#metadatabubble").hover(function() {
             clearTimeout(hideMetadataBubbleTimeout);
         }, function() {
             hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
         });
-        
-        
+
+
         function store_profile_setting(key, value) {
             ajaxManager.add({
                 type: 'POST',
@@ -323,9 +323,9 @@
                     $(".facet-more", facet).click(function() { $(this).hide(); $(terms).show(); return false; }).show();
                 }
             });
-            
+
             $(".facet-header.collapsed").next().hide();
-            
+
             $(".facet-header").each(function() {
                 var id = $(this).parent().attr('id');
                 if (id) {
@@ -340,8 +340,8 @@
                 if (id) store_profile_setting('ui_' + id, $(this).next().is(':hidden'));
                 $(this).next().toggle('fast');
                 return false;
-            }).css('cursor', 'pointer').children().click(function(event) { event.stopPropagation(); /* to keep links in facet header working */});            
-            
+            }).css('cursor', 'pointer').children().click(function(event) { event.stopPropagation(); /* to keep links in facet header working */});
+
             $(".facet .facet-body .facet-line .facet-exclude").css('visibility', 'hidden');
         };
 
@@ -423,20 +423,19 @@
             });
             $("#basket-content").css('overflow', 'hidden');
             basket_scroll_arrows();
-            
+
             bindSelectRecordCheckboxes();
-            
+
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
             $(".autocomplete-group").autocomplete('{% url api-autocomplete-group %}', {});
-            
+
             setTimeout(function() { $("#messages").css('visibility', 'hidden'); }, 8000);
         });
     </script>
-{% endcompress %}
 
     <script type="text/javascript">
-        $(document).ready(function() 
+        $(document).ready(function()
         {
             $('div.permission-list span[title]').each(function() {
                 $(this).data('title', $(this).attr('title')).qtip({
@@ -462,6 +461,7 @@
             });
         });
     </script>
+{% endcompress %}
 
 {% endblock %}
 </body>
