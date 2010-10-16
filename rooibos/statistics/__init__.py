@@ -18,8 +18,9 @@ def accumulate(event=None, from_date=None, until_date=None, object=None):
         query = query.filter(content_type=content_type, object_id=object.id)
     rows = []
     for data in query.values('content_type','object_id','date','event').annotate(count=Count('id')):
-        # query.values() returns dates as strings
-        data['date'] = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        # query.values() returns dates as strings for some databases
+        if type(data['date']) != date:
+            data['date'] = datetime.strptime(data['date'], '%Y-%m-%d').date()
         # query.values() does not return objects for foreign keys, only ids
         if data['content_type']:
             data['content_type'] = ContentType.objects.get_for_id(data['content_type'])
@@ -35,7 +36,7 @@ def accumulate(event=None, from_date=None, until_date=None, object=None):
 
 
 def get_history(event, from_date, until_date=None, object=None, acc=False):
-    
+
     if acc:
         rows = accumulate(event, from_date, until_date, object)
     else:
@@ -45,7 +46,7 @@ def get_history(event, from_date, until_date=None, object=None, acc=False):
         if object:
             content_type = ContentType.objects.get_for_model(object)
             rows = rows.filter(content_type=content_type, object_id=object.id)
-    
+
     sum = dict()
     for row in rows:
         sum[row.date] = sum.get(row.date, 0) + row.count
