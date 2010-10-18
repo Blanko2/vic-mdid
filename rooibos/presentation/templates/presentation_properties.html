@@ -6,7 +6,7 @@
 
 <h1>{{ presentation.title }}</h1>
 
-<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST" class="vertical">
+<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST" class="vertical">{% csrf_token %}
 
 {{ form.title.label_tag }}
 {{ form.title }}

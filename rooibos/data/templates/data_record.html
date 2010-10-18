@@ -233,7 +233,7 @@ Display metadata as: {{ fieldsetform.fieldset }}
 </form>
 
 
-<form method="POST" action="">
+<form method="POST" action="">{% csrf_token %}
     {{ fv_formset.management_form }}
     <div style="margin-top: 20px;">
         <div id="fieldvalues">
@@ -275,7 +275,7 @@ Display metadata as: {{ fieldsetform.fieldset }}
     {% if c_formset %}
     {{ c_formset.management_form }}
     <br /><br />
-    
+
     <h2>Collection Memberships</h2>
     <table>
         <tr>
@@ -283,7 +283,7 @@ Display metadata as: {{ fieldsetform.fieldset }}
         <th>Member</th>
         <th>{% if record.owner %}Shared{% else %}Visible{% endif %}</th>
         </tr>
-    
+
     {% for form in c_formset.forms %}
     <tr class="{% cycle '' 'altrow' %}">
         <td>

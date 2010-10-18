@@ -6,7 +6,7 @@
 
 
 {% block raw-content %}
-<form action="{{ request.get_full_url }}" method="POST">
+<form action="{{ request.get_full_url }}" method="POST">{% csrf_token %}
 {{ block.super }}
 </form>
 {% endblock %}
@@ -23,14 +23,14 @@
         {{ form.tags.label_tag }}
         {{ form.tags }}
         {{ form.tags.errors }}
-        
+
         {{ form.mode.label_tag }}
         {{ form.mode }}
         {{ form.mode.errors }}
         <input type="submit" value="Update" name="update_tags" />
     </div>
   </div>
-    
+
   <div class="facet active-facet" id="presentations_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
@@ -43,7 +43,7 @@
 {% var as refine %}
 { "url": "{{ request.path }}?{% if active_presenter %}presenter={{ active_presenter|urlencode }}&{% endif %}kw={{ keywords|urlencode }}&{% for t in active_tags %}t={{ t|urlencode }}&{% endfor %}" }
 {% endvar %}
-  
+
 {% if active_presenter and not manage %}
   <div class="facet active-facet">
     <div class="facet-header"><a href="{% url presentation-browse %}?kw={{ keywords|urlencode }}&amp;t={{ active_tags|join:"||"|urlencode }}" title="Remove this criteria"><img src="{% url static 'images/facet_close.png' %}" alt="Remove" title="Remove" class="facet-close" /></a>Presenter</div>
@@ -63,7 +63,7 @@
     <div class="facet-header">Presenters</div>
     <div class="facet-body">
     {% for presenter in presenters %}
-        <div class="facet-line">            
+        <div class="facet-line">
             <a href="{{ refine.url }}presenter={{ presenter.username|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
             &nbsp;<span class="facet-freq">{{ presenter.presentations|intcomma  }}</span>
         </div>
@@ -78,7 +78,7 @@
     <div class="facet-header">Tags</div>
     <div class="facet-body">
     {% for tag in tags %}
-        <div class="facet-line">            
+        <div class="facet-line">
             <a href="{{ refine.url }}t={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
@@ -93,7 +93,7 @@
     <div class="facet-header">Your Tags</div>
     <div class="facet-body">
     {% for tag in usertags %}
-        <div class="facet-line">            
+        <div class="facet-line">
             <a href="{{ refine.url }}t={{ tag|urlencode }}">{{ tag }}</a>
             {% if tag.count %}&nbsp;<span class="facet-freq">{{ tag.count|intcomma  }}</span>{% endif %}
         </div>
@@ -182,7 +182,7 @@
                 {% else %}
                 <img src="{% url static "images/locked.png" %}" />
                 {% endif %}
-            {% endif %} 
+            {% endif %}
         </td>
         <td>
             {% if not presentation.password or presentation.unlocked %}

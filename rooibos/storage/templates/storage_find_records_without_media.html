@@ -23,7 +23,7 @@
 <div>This feature finds the record identifiers of all records in the selected
 collection that do not have at least one media object from the selected storage attached.</div>
 
-<form method="post" action="{{ request.get_full_path }}">
+<form method="post" action="{{ request.get_full_path }}">{% csrf_token %}
 <table>
 	<tr>
 		<th>{{ form.collection.label }}

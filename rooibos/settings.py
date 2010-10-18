@@ -58,7 +58,7 @@ MIDDLEWARE_CLASSES = (
     'rooibos.ui.middleware.PageTitles',
     'django.middleware.common.CommonMiddleware',
     'rooibos.util.stats_middleware.StatsMiddleware',
-    'django.contrib.csrf.middleware.CsrfMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'rooibos.api.middleware.CookielessSessionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

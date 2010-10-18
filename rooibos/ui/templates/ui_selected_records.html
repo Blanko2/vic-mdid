@@ -34,7 +34,7 @@
   <div class="facet active-facet" id="ui_selected_presentation">
     <div class="facet-header">Add to presentation</div>
     <div class="facet-body">
-        <form method="POST" action=".">
+        <form method="POST" action=".">{% csrf_token %}
             {{ presentation_form.presentation.label }}:<br />
             {{ presentation_form.presentation }}<br />
             {{ presentation_form.title.label }}:<br />

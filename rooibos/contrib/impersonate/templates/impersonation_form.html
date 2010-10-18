@@ -1,5 +1,5 @@
 {% spaceless %}
-<form action="{% url impersonation-start %}?next={{ request.get_full_path|urlencode }}" method="post">
+<form action="{% url impersonation-start %}?next={{ request.get_full_path|urlencode }}" method="post">{% csrf_token %}
 Impersonate:
 <select name="username">
     <option></option>

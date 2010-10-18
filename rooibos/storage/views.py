@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
-from django.contrib.csrf.middleware import csrf_exempt
 from django.core.urlresolvers import resolve, reverse
 from django.forms.util import ErrorList
 from django.db.models import Count, Q
@@ -253,7 +252,6 @@ def manage_storage(request, storageid=None, storagename=None):
 
 
 
-@csrf_exempt
 @login_required
 def import_files(request):
 

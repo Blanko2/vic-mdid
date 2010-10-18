@@ -68,7 +68,7 @@
   <div class="facet active-facet" id="collection_sidebar_delete">
     <div class="facet-header">Delete Collection</div>
     <div class="facet-body">
-        <form action="." method="POST">
+        <form action="." method="POST">{% csrf_token %}
         <input type="submit" value="Delete" name="delete-collection" id="delete-collection" />
         </form>
     </div>
@@ -86,7 +86,7 @@
 
 <h2>{{ collection.title }}</h2>
 
-<form action="." method="POST" class="vertical">
+<form action="." method="POST" class="vertical">{% csrf_token %}
 
 
 {{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}
