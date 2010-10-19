@@ -162,15 +162,24 @@ class TagManager(models.Manager):
         Passing a value for ``min_count`` implies ``counts=True``.
         """
 
-        extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
-        where, params = queryset.query.where.as_sql()
+        if getattr(queryset.query, 'get_compiler', None):
+            # Django 1.2 and up compatible (multiple databases)
+            compiler = queryset.query.get_compiler(using='default')
+            extra_joins = ' '.join(compiler.get_from_clause()[0][1:])
+            where, params = queryset.query.where.as_sql(compiler.quote_name_unless_alias, compiler.connection)
+        else:
+            # Django 1.1 and down compatible (single database)
+            extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
+            where, params = queryset.query.where.as_sql()
+
         if where:
             extra_criteria = 'AND %s' % where
         else:
             extra_criteria = ''
-        extra_where = queryset.query.extra_where
+        extra_where = queryset.query.where.as_sql(connection.ops.quote_name, connection)
         if extra_where:
-            extra_criteria = extra_criteria + ' AND ' + ' AND '.join(extra_where)
+            print extra_where
+            extra_criteria = extra_criteria + ' AND ' + (extra_where[0] % tuple(extra_where[1]))
         return self._get_usage(queryset.model, counts, min_count, extra_joins, extra_criteria, params)
 
     def related_for_model(self, tags, model, counts=False, min_count=None):
