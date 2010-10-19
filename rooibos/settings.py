@@ -69,6 +69,7 @@ MIDDLEWARE_CLASSES = (
     'djangologging.middleware.SuppressLoggingOnAjaxRequestsMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    'rooibos.storage.middleware.StorageCleanupOnStart',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
