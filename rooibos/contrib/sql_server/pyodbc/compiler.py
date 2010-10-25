@@ -33,7 +33,7 @@ USE_TOP_LMARK = 2 # For SQL Server 2000 when offset but no limit is provided
 
 
 class SQLCompiler(compiler.SQLCompiler):
-    
+
     def resolve_columns(self, row, fields=()):
         index_start = len(self.query.extra_select.keys())
         values = [self.query.convert_values(v, None, connection=self.connection) for v in row[:index_start]]
@@ -115,7 +115,7 @@ class SQLCompiler(compiler.SQLCompiler):
             if not ordering:
                 meta = self.query.get_meta()
                 qn = self.quote_name_unless_alias
-                # Special case: pk not in out_cols, use random ordering. 
+                # Special case: pk not in out_cols, use random ordering.
                 #
                 if '%s.%s' % (qn(meta.db_table), qn(meta.pk.db_column or meta.pk.column)) not in self.get_columns():
                     ordering = ['RAND()']
@@ -241,7 +241,7 @@ class SQLCompiler(compiler.SQLCompiler):
         # SQL Server 2005
         if self.connection.ops._get_sql_server_ver(self.connection) >= 2005:
             sql, params = self._as_sql(USE_ROW_NUMBER)
-            
+
             # Construct the final SQL clause, using the initial select SQL
             # obtained above.
             result = ['SELECT * FROM (%s) AS X' % sql]
@@ -274,15 +274,22 @@ class SQLCompiler(compiler.SQLCompiler):
 
 
 class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
-    def as_sql(self):
-        sql, params = super(SQLInsertCompiler, self).as_sql()
+    def as_sql(self, *args, **kwargs):
+        # Fix for Django ticket #14019
+        if not hasattr(self, 'return_id'):
+            self.return_id = False
+
+        sql, params = super(SQLInsertCompiler, self).as_sql(*args, **kwargs)
+
         meta = self.query.get_meta()
-        quoted_table = self.connection.ops.quote_name(meta.db_table)
-        if meta.pk.db_column in self.query.columns and meta.pk.__class__.__name__ == "AutoField":
-            if len(self.query.columns) == 1 and not params:
-                sql = "INSERT INTO %s DEFAULT VALUES" % quoted_table
-            else:
-                sql = "SET IDENTITY_INSERT %s ON;\n%s;\nSET IDENTITY_INSERT %s OFF" % \
+
+        if meta.has_auto_field:
+            # db_column is None if not explicitly specified by model field
+            auto_field_column = meta.auto_field.db_column or meta.auto_field.column
+
+            if auto_field_column in self.query.columns:
+                quoted_table = self.connection.ops.quote_name(meta.db_table)
+                sql = "SET IDENTITY_INSERT %s ON;%s;SET IDENTITY_INSERT %s OFF" %\
                     (quoted_table, sql, quoted_table)
 
         return sql, params
