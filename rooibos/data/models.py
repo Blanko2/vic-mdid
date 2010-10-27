@@ -27,7 +27,7 @@ class Collection(models.Model):
 
     class Meta:
         ordering = ['title']
-        
+
     def save(self, **kwargs):
         unique_slug(self, slug_source='title', slug_field='name', check_current_slug=kwargs.get('force_insert'))
         super(Collection, self).save(kwargs)
@@ -112,11 +112,11 @@ class Record(models.Model):
             fields = [fields]
         if not isinstance(values, (list, tuple)):
             values = [values]
-            
+
         index_values = [value[:32] for value in values]
-        
+
         values_q = reduce(lambda q, value: q | Q(fieldvalue__value__iexact=value), values, Q())
-        
+
         return Record.objects.filter(values_q,
                                      fieldvalue__index_value__in=index_values,
                                      fieldvalue__field__in=fields)
@@ -207,7 +207,7 @@ class Record(models.Model):
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')
 
-    
+
 
 class MetadataStandard(models.Model):
     title = models.CharField(max_length=100)
@@ -224,11 +224,11 @@ class Vocabulary(models.Model):
     description = models.TextField(null=True, blank=True)
     standard = models.NullBooleanField()
     origin = models.TextField(null=True, blank=True)
-    
+
     class Meta:
         verbose_name_plural = "vocabularies"
 
-    
+
 class VocabularyTerm(models.Model):
     vocabulary = models.ForeignKey(Vocabulary)
     term = models.TextField()
@@ -268,7 +268,7 @@ class Field(models.Model):
         unique_together = ('name', 'standard')
         ordering = ['name']
         order_with_respect_to = 'standard'
-        
+
 
 def get_system_field():
     field, created = Field.objects.get_or_create(name='system-value',
@@ -289,14 +289,14 @@ class FieldSet(models.Model):
 
     def __unicode__(self):
         return self.title
-    
+
     class Meta:
         ordering = ['title']
-        
+
     @staticmethod
     def for_user(user):
         return FieldSet.objects.filter(Q(owner=None) | Q(standard=True) |
-                                        (Q(owner=user) if user.is_authenticated() else Q()))
+                                        (Q(owner=user) if user and user.is_authenticated() else Q()))
 
 
 class FieldSetField(models.Model):
@@ -335,7 +335,7 @@ class FieldValue(models.Model):
     def save(self, **kwargs):
         self.index_value = self.value[:32] if self.value != None else None
         super(FieldValue, self).save(kwargs)
-        
+
     def __unicode__(self):
         return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
 
@@ -345,7 +345,7 @@ class FieldValue(models.Model):
 
     def dump(self, owner=None, collection=None):
         print("%s: %s" % (self.resolved_label, self.value))
-        
+
     class Meta:
         ordering = ['order']
 
