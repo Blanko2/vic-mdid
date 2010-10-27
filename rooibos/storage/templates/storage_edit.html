@@ -58,7 +58,7 @@
   <div class="facet active-facet" id="storage_sidebar_delete">
     <div class="facet-header">Delete Storage</div>
     <div class="facet-body">
-        <form action="." method="POST">
+        <form action="." method="POST">{% csrf_token %}
         <input type="submit" value="Delete" name="delete-storage" id="delete-storage" />
         </form>
     </div>
@@ -77,7 +77,7 @@
 
 <h2>{{ storage.title }}</h2>
 
-<form action="." method="POST">
+<form action="." method="POST">{% csrf_token %}
 
 <table>
     {{ form }}

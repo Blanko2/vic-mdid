@@ -4,8 +4,8 @@
 
 <h1>Create new presentation</h1>
 
-<form action="{% url presentation-create %}?next={{ next }}" method="POST" class="vertical">
-    
+<form action="{% url presentation-create %}?next={{ next }}" method="POST" class="vertical">{% csrf_token %}
+
 {{ form.title.label_tag }}
 {{ form.title }}
 {{ form.title.errors }}

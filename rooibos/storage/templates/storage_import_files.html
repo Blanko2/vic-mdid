@@ -4,8 +4,8 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript" src="{% url static "swfupload/swfupload.js" %}"></script>
-<script type="text/javascript" src="{% url static "swfupload/plugins/swfupload.cookies.js" %}"></script> 
-<script type="text/javascript" src="{% url static "jquery/jquery.swfupload.js" %}"></script> 
+<script type="text/javascript" src="{% url static "swfupload/plugins/swfupload.cookies.js" %}"></script>
+<script type="text/javascript" src="{% url static "jquery/jquery.swfupload.js" %}"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
@@ -55,15 +55,15 @@ $(document).ready(function() {
                         $(this).swfupload('addPostParam', '{{ form.create_records.name }}', $("#{{ form.create_records.auto_id }}").attr("checked") ? "on" : "");
                         $(this).swfupload('addPostParam', '{{ form.personal_records.name }}', $("#{{ form.personal_records.auto_id }}").attr("checked") ? "on" : "");
                         $(this).swfupload('addPostParam', '{{ form.replace_files.name }}', $("#{{ form.replace_files.auto_id }}").attr("checked") ? "on" : "");
-                    
+
                         $('#upload-progress').remove();
                         $('#upload-queue-' + file.id).after($("<div id='upload-progress'><div><"+"/div><"+"/div>"));
-                    
+
 			$('#log').append('<li>Upload start - '+file.name+'<'+'/li>');
 		})
 		.bind('uploadProgress', function(event, file, bytesLoaded){
 			$('#log').append('<li>Upload progress - '+bytesLoaded+'<'+'/li>');
-                        
+
                         if (file.size > 0) {
                             var w = parseInt(200 * bytesLoaded / file.size);
                             $('#upload-progress').css('width', w + 'px')
@@ -71,24 +71,24 @@ $(document).ready(function() {
                         }
 		})
 		.bind('uploadSuccess', function(event, file, serverData){
-			
+
 			data = JSON.parse(serverData);
-			
+
 			$('#upload-progress').replaceWith('<div class="upload-complete">' + data.html + '<'+'/div>');
-			
+
 			$('#log').append('<li>Upload success - '+file.name+'<'+'/li>');
 		})
 		.bind('uploadComplete', function(event, file){
 			$('#log').append('<li>Upload complete - '+file.name+'<'+'/li>');
-                        
-                        
-                        
+
+
+
 			// upload has completed, lets try the next one in the queue
 			$(this).swfupload('startUpload');
 		})
 		.bind('uploadError', function(event, file, errorCode, message){
 			$('#log').append('<li>Upload error - '+message+'<'+'/li>');
-                        
+
                         $('#upload-progress').replaceWith('<div class="upload-failed">Error<'+'/div>');
 		});
 
@@ -101,7 +101,7 @@ $(document).ready(function() {
 
 <h2>Import Media Files</h2>
 
-<form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="upload-control">
+<form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="upload-control">{% csrf_token %}
 <table>
 	<tr>
 		<th>{{ form.collection.label }}

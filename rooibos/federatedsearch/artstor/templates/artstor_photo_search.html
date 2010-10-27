@@ -14,14 +14,14 @@
     Page {{ results.page }} of {{ results.pages }}.
     {% if results.page > 1 %}<a href="javascript:;" onclick="paginate(-1)">Previous</a>{% endif %}
     {% if results.page < results.pages %}<a href="javascript:;"  onclick="paginate(1)">Next</a>{% endif %}
-    
+
     <a href="{% url solr-search %}">Reset</a>
     <input id="submit_flickr_selections" type="submit" name="action" value="Select" />
     <input id="submit_flickr_deselections" type="submit" name="action" value="Deselect" />
 </div>
 
 <div class="horizontal-block">
-    <form action="{% url artstor-photo-search %}" method="post">
+    <form action="{% url artstor-photo-search %}" method="post">{% csrf_token %}
         Keywords: <input name="search_string" type="text_field" value="{{ search_string }}" />
         <input type="submit" value="Go" />
         View:
@@ -52,7 +52,7 @@
 </div>
 {% endif %}
 
-<form name="pagination" action="{% url artstor-photo-search %}" method="post">
+<form name="pagination" action="{% url artstor-photo-search %}" method="post">{% csrf_token %}
     <input name="search_string" type="hidden" value="{{ search_string }}"/>
     <input name="search_page" type="hidden" value="{{ search_page }}"/>
     <input name="view" type="hidden" value="{{ view }}"/>

@@ -58,7 +58,7 @@ MIDDLEWARE_CLASSES = (
     'rooibos.ui.middleware.PageTitles',
     'django.middleware.common.CommonMiddleware',
     'rooibos.util.stats_middleware.StatsMiddleware',
-    'django.contrib.csrf.middleware.CsrfMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'rooibos.api.middleware.CookielessSessionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -69,6 +69,7 @@ MIDDLEWARE_CLASSES = (
     'djangologging.middleware.SuppressLoggingOnAjaxRequestsMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    'rooibos.storage.middleware.StorageCleanupOnStart',
 )
 
 ROOT_URLCONF = 'rooibos.urls'
