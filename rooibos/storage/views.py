@@ -69,10 +69,7 @@ def retrieve(request, recordid, record, mediaid, media):
 @cache_control(private=True, max_age=3600)
 def retrieve_image(request, recordid, record, width=None, height=None):
 
-    width = int(width)
-    height = int(height)
-
-    path = get_image_for_record(recordid, request.user, width or 100000, height or 100000)
+    path = get_image_for_record(recordid, request.user, int(width or 100000), int(height or 100000))
     if not path:
         raise Http404()
 
