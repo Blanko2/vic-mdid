@@ -199,7 +199,7 @@ class MigrateModel(object):
                         else:
                             logging.error("No instance created: %s %s" % (self.model_name, self.key(row)))
                             self.errors += 1
-                    except IntegrityError, ex:
+                    except (IntegrityError, pyodbc.IntegrityError), ex:
                         logging.error("Integrity error: %s %s" % (self.model_name, self.key(row)))
                         logging.error(ex)
                         self.errors += 1
