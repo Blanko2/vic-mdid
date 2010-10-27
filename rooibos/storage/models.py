@@ -28,7 +28,8 @@ class Storage(models.Model):
                                     "to the actual file should be created when the file is requested e.g. for " +
                                     "streaming.")
     # This field is no longer used
-    derivative = models.OneToOneField('self', null=True, related_name='master')
+    #derivative = models.OneToOneField('self', null=True, related_name='master')
+    derivative = models.IntegerField(null=True, db_column='derivative_id')
 
     class Meta:
         verbose_name_plural = 'storage'
