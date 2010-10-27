@@ -14,13 +14,21 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-#DATABASE_ENGINE = 'sqlite3'
+# Settings for MySQL
 DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_OPTIONS = {
     'use_unicode': True,
     'charset': 'utf8',
 }
 
+# Settings for Microsoft SQL Server
+#DATABASE_ENGINE = 'sql_server.pyodbc'
+#DATABASE_OPTIONS= {
+#    'driver': 'SQL Native Client',
+#    'MARS_Connection': True,
+#}
+
+# Settings for all database systems
 DATABASE_NAME = 'rooibos'             # Or path to database file if using sqlite3.
 DATABASE_USER = 'rooibos'             # Not used with sqlite3.
 DATABASE_PASSWORD = 'rooibos'         # Not used with sqlite3.
