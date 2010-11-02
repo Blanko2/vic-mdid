@@ -21,9 +21,11 @@
 {% var as related_pages %}
 {"pages": [
     {"url": "{% url ui-management %}", "title": "Management"},
-    {"url": "{% url data-collections-manage %}", "title": "Collection Management"},
+    {"url": "{% url data-collections-manage %}", "title": "Collection Management"}
+    {% if collection.id %},
     {"url": "{% url storage-match-up-files %}?collection={{ collection.id }}", "title": "Match Up Media"},
     {"url": "{% url storage-find-records-without-media %}?collection={{ collection.id }}", "title": "Find Empty Records"}
+    {% endif %}
 ]}
 {% endvar %}
 
