@@ -179,7 +179,10 @@ class TagManager(models.Manager):
         extra_where = queryset.query.where.as_sql(connection.ops.quote_name, connection)
         if extra_where:
             print extra_where
-            extra_criteria = extra_criteria + ' AND ' + (extra_where[0] % tuple(extra_where[1]))
+            # need to insert extra_where[1] params into regular params at the right position
+            # so that strings get properly quoted when running the query
+            extra_criteria = extra_criteria + ' AND ' + extra_where[0]
+            params.extend(extra_where[1])
         return self._get_usage(queryset.model, counts, min_count, extra_joins, extra_criteria, params)
 
     def related_for_model(self, tags, model, counts=False, min_count=None):
