@@ -169,7 +169,7 @@
     var custom_process_facets = false;
 </script>
 {% block javascript %}
-{% compress js %}
+<!--{ % compress js %}-->
     <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.1.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.7.2.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
@@ -433,6 +433,7 @@
             setTimeout(function() { $("#messages").css('visibility', 'hidden'); }, 8000);
         });
     </script>
+<!--{ % endcompress %}-->
 
     <script type="text/javascript">
         $(document).ready(function()
@@ -461,9 +462,11 @@
             });
         });
     </script>
-{% endcompress %}
 
 {% endblock %}
+
+<script type="text/javascript" src="http://mint.cit.jmu.edu/mint/?js"></script>
+
 </body>
 
 </html>
