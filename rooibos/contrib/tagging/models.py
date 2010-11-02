@@ -178,7 +178,6 @@ class TagManager(models.Manager):
             extra_criteria = ''
         extra_where = queryset.query.where.as_sql(connection.ops.quote_name, connection)
         if extra_where:
-            print extra_where
             # need to insert extra_where[1] params into regular params at the right position
             # so that strings get properly quoted when running the query
             extra_criteria = extra_criteria + ' AND ' + extra_where[0]
