@@ -52,6 +52,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
+#    'rooibos.profile_middleware.ProfileMiddleware',
     'rooibos.middleware.Middleware',
     'rooibos.help.middleware.PageHelp',
     'rooibos.sslredirect.SSLRedirect',
