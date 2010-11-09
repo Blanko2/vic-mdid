@@ -5,3 +5,4 @@ from flashcards import FlashCards
 from printview import PrintView
 from audiotextsync import AudioTextSync
 from videoplayer import VideoPlayer
+from audioplayer import AudioPlayer
