@@ -13,11 +13,12 @@ urlpatterns = patterns('',
     url(r'^collections/manage/$', manage_collections, name='data-collections-manage'),
     url(r'^collection/new/$', manage_collection, name='data-collection-new'),
     url(r'^collection/(?P<id>\d+)/(?P<name>[-\w]+)/manage/$', manage_collection, name='data-collection-manage'),
-    
+
 #    url(r'^collection/(?P<id>\d+)/(?P<name>[-\w]+)/$', collection_raw, name='data-collection'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/$', record, name='data-record'),
     url(r'^record-preview/(?P<id>\d+)/$', record_preview, name='data-record-preview'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/edit/$', record, kwargs={'edit': True}, name='data-record-edit'),
+    url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/delete/$', record_delete, name='data-record-delete'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/edit/(?P<contexttype>\w+\.\w+)/(?P<contextid>\d+)/(?P<contextname>[-\w]+)/$', record, kwargs={'edit': True}, name='data-record-edit-context'),
     url(r'^record/(?P<id>\d+)/(?P<name>[-\w]+)/edit/customize/$', record, kwargs={'edit': True, 'customize': True}, name='data-record-edit-customize'),
     url(r'^record/new/$', record, kwargs={'id': None, 'name': None, 'edit': True}, name='data-record-new'),
