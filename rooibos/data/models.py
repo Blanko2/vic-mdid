@@ -100,7 +100,7 @@ class Record(models.Model):
         if user.is_superuser:
             q = Q()
         else:
-            q = ((Q(owner=user) if user.is_authenticated() else Q(owner=None)) |
+            q = ((Q(owner=user) if user.is_authenticated() else Q()) |
                  Q(collection__id__in=accessible_ids(user, Collection)))
         return get_object_or_404(Record.objects.filter(q, id=id).distinct())
 
