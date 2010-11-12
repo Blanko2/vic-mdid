@@ -87,6 +87,12 @@
 {% if record.owner %}{% ifequal record.owner request.user %}
   {% add_tags_form record "suggested" "Suggest" %}
 {% endifequal %}{% endif %}
+{% if can_edit and record.id and not fv_formset %}
+    <form method="post" action="{% url data-record-delete record.id, record.name %}">{% csrf_token %}
+        <input type="submit" name="delete_record" value="Delete Record" />
+    </form>
+{% endif %}
+
         </div>
     </div>
 </div>
