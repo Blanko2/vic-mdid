@@ -302,7 +302,7 @@ class FieldSet(models.Model):
 class FieldSetField(models.Model):
     fieldset = models.ForeignKey(FieldSet)
     field = models.ForeignKey(Field)
-    label = models.CharField(max_length=100)
+    label = models.CharField(max_length=100, null=True, blank=True)
     order = models.IntegerField(default=0)
     importance = models.SmallIntegerField(default=1)
 
