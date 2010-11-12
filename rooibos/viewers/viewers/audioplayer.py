@@ -29,7 +29,7 @@ class AudioPlayer(object):
             return NO_SUPPORT
         audios = obj.media_set.filter(
                                      storage__in=filter_by_access(user, Storage),
-                                     mimetype__in=('audio/mpeg',))
+                                     mimetype__in=('audio/mpeg', 'audio/x-aac'))
         for audio in audios:
             if self._check_playable(user, audio):
                 return FULL_SUPPORT
@@ -46,7 +46,7 @@ class AudioPlayer(object):
         storages = filter_by_access(request.user, Storage)
         media = record.media_set.filter(
                                      storage__in=filter_by_access(request.user, Storage),
-                                     mimetype__in=('audio/mpeg',)).order_by('bitrate')
+                                     mimetype__in=('audio/mpeg', 'audio/x-aac')).order_by('bitrate')
         media = filter(lambda m: self._check_playable(request.user, m), media)
         if not media:
             raise Http404()
