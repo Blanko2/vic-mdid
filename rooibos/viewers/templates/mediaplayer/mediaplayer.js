@@ -23,7 +23,8 @@ clip = {
             autoHide: false
         }
         {% endif %}
-    };
+    }
+};
 {% else %}
 clip = {
     clip: {
