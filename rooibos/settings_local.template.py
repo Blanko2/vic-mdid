@@ -139,6 +139,9 @@ SSL_PORT = None  # ':443'
 PRIMARY_COLOR = "rgb(152, 189, 198)"
 SECONDARY_COLOR = "rgb(118, 147, 154)"
 
+WWW_AUTHENTICATION_REALM = "Please log in to access media from MDID at Your University"
+
+
 additional_settings = [
 #    'apps.jmutube.settings_local',
 #    'apps.svohp.settings_local',

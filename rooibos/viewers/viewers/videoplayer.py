@@ -29,7 +29,7 @@ class VideoPlayer(object):
             return NO_SUPPORT
         videos = obj.media_set.filter(
                                      storage__in=filter_by_access(user, Storage),
-                                     mimetype__in=('video/mp4', 'video/quicktime'))
+                                     mimetype__in=('video/mp4', 'video/quicktime', 'video/x-m4v'))
         for video in videos:
             if self._check_playable(user, video):
                 return FULL_SUPPORT
@@ -46,7 +46,7 @@ class VideoPlayer(object):
         storages = filter_by_access(request.user, Storage)
         media = record.media_set.filter(
                                      storage__in=filter_by_access(request.user, Storage),
-                                     mimetype__in=('video/mp4', 'video/quicktime')).order_by('bitrate')
+                                     mimetype__in=('video/mp4', 'video/quicktime', 'video/x-m4v')).order_by('bitrate')
         media = filter(lambda m: self._check_playable(request.user, m), media)
         if not media:
             raise Http404()
