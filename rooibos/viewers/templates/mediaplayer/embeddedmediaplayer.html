@@ -34,8 +34,8 @@ Multiple media files available:
         {% for m in media %}
         <option value="{{ forloop.counter0 }}"{% ifequal selectedmedia m %} selected="selected"{% endifequal %}>
             Media {{ forloop.counter }}:
-            {% if m.width and m.height %}{{ m.width }}x{{ m.height }}{% endif %}
-            {% if m.bitrate %}at {{ m.bitrate }} kbps{% endif %}
+            {% if m.width and m.height %}{{ m.width }}x{{ m.height }}{% if m.bitrate %} at{% endif %}{% endif %}
+            {% if m.bitrate %}{{ m.bitrate }} kbps{% endif %}
             in {{ m.storage.title }}
         </option>
         {% endfor %}
