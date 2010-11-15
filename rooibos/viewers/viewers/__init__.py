@@ -4,5 +4,4 @@ from viewpresentation import ViewPresentation
 from flashcards import FlashCards
 from printview import PrintView
 from audiotextsync import AudioTextSync
-from videoplayer import VideoPlayer
-from audioplayer import AudioPlayer
+from mediaplayer import MediaPlayer, EmbeddedMediaPlayer
