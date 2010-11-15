@@ -74,6 +74,7 @@
 <div class="facet active-facet" id="data_record_editing">
     <div class="facet-header">Editing</div>
     <div class="facet-body">
+        <div>
 {% if can_edit and record.id and not fv_formset %}
         <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
 {% endif %}
@@ -86,6 +87,13 @@
 {% if record.owner %}{% ifequal record.owner request.user %}
   {% add_tags_form record "suggested" "Suggest" %}
 {% endifequal %}{% endif %}
+{% if can_edit and record.id and not fv_formset %}
+    <form method="post" action="{% url data-record-delete record.id, record.name %}">{% csrf_token %}
+        <input type="submit" name="delete_record" value="Delete Record" />
+    </form>
+{% endif %}
+
+        </div>
     </div>
 </div>
 {% endif %}
@@ -109,12 +117,14 @@
 <div class="facet active-facet" id="data_record_all_tags">
     <div class="facet-header">All Tags</div>
     <div class="facet-body">
+        <div>
     {% owned_tags_for_object record except request.user as tags %}
     {% for tag in tags %}
         {% tag tag record %}
     {% empty %}
         Not tagged yet.
     {% endfor %}
+        </div>
     </div>
 </div>
 {% endif %}

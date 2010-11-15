@@ -429,6 +429,8 @@
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
             $(".autocomplete-group").autocomplete('{% url api-autocomplete-group %}', {});
+            $(".impersonation-autocomplete").autocomplete('{% url impersonation-autocomplete-user %}', {});
+
 
             setTimeout(function() { $("#messages").css('visibility', 'hidden'); }, 8000);
         });
