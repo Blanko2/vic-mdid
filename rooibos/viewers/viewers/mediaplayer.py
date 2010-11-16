@@ -18,7 +18,7 @@ class MediaPlayer(object):
     title = "Media Player"
     weight = 20
 
-    _supported_mimetypes = ('video/mp4', 'video/quicktime', 'video/x-m4v',
+    _supported_mimetypes = ('video/mp4', 'video/quicktime', 'video/x-m4v', 'video/x-flv',
                             'audio/mpeg', 'audio/x-aac')
     _url_name = 'viewers-mediaplayer'
     _url_pattern = r'^mediaplayer/(?P<id>[\d]+)/(?P<name>[-\w]+)/$'
@@ -119,6 +119,8 @@ class EmbeddedMediaPlayer(MediaPlayer):
                 streaming_media = prot + re.sub(r'\.mp3$', '', streaming_media)
             except ValueError:
                 pass
+        if not '://' in delivery_url:
+            delivery_url = server + delivery_url
 
         return render_to_response('mediaplayer/mediaplayer.js',
                                   {'record': record,

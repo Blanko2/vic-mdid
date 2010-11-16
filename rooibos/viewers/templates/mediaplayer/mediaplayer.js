@@ -29,7 +29,7 @@ clip = {
 clip = {
     clip: {
         autoPlay: false,
-        url: '{{ server_url }}{{ delivery_url|escapejs }}'
+        url: '{{ delivery_url|escapejs }}'
         {% if audio %} ,
         type: 'audio'
         {% else %} ,
