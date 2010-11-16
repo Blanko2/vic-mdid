@@ -35,6 +35,13 @@
 
 
 {% block sidebar %}
+
+{% var as related_pages %}
+{"pages": [
+    {"url": "{% url solr-search %}?kw={{ query|urlencode }}", "title": "Back to Explore"}
+]}
+{% endvar %}
+
 {{ block.super }}
 
   <div class="facet active-facet" id="results_sidebar_keywords">
