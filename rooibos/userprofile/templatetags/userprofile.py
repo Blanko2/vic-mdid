@@ -16,12 +16,12 @@ class ProfileSettingsNode(template.Node):
     def __init__(self, filter):
         self.filter = filter
     def render(self, context):
-        user = context['request'].user
-        if user.is_authenticated():
+        user = context['request'].user if context.has_key('request') else None
+        if user and user.is_authenticated():
             try:
                 profile = user.get_profile()
             except UserProfile.DoesNotExist:
-                profile = UserProfile.objects.create(user=user)    
+                profile = UserProfile.objects.create(user=user)
             if self.filter:
                 preferences = profile.preferences.filter(setting__istartswith=self.filter)
             else:
@@ -33,8 +33,8 @@ class ProfileSettingsNode(template.Node):
         else:
             result = '{}';
         return result
-        
-    
+
+
 @register.tag
 def profile_settings(parser, token):
     try:

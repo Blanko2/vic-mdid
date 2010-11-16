@@ -22,7 +22,9 @@ def login(request, *args, **kwargs):
 
 def logout(request, *args, **kwargs):
     if request.session.get('unsafe_logout'):
-        return render_to_response('unsafe_logout.html')
+        return render_to_response('unsafe_logout.html',
+                                  {},
+                                  context_instance=RequestContext(request))
     else:
         kwargs['next_page'] = request.GET.get('next', kwargs.get('next_page', settings.LOGOUT_URL))
         return dj_logout(request, *args, **kwargs)
