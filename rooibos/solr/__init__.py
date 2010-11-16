@@ -107,6 +107,35 @@ class SolrIndex():
         else:
             SolrIndexUpdates.objects.filter(id__in=processed_updates).delete()
 
+    def clear_missing(self, verbose=False):
+        conn = Solr(settings.SOLR_URL)
+        start = 0
+        to_delete = []
+        pb = None
+        if verbose: print "Checking for indexed records no longer in database"
+        while True:
+            if verbose and pb: pb.update(start)
+            result = conn.search('*:*', sort='id asc', start=start, rows=500, fields=['id'])
+            if not result:
+                break
+            if verbose and not pb: pb = ProgressBar(result.hits)
+            ids = [int(r['id']) for r in result]
+            records = Record.objects.filter(id__in=ids).values_list('id', flat=True)
+            for r in records:
+                ids.remove(r)
+            to_delete.extend(ids)
+            start += 500
+        if verbose and pb: pb.done()
+        pb = None
+        if verbose and to_delete:
+            print "Removing unneeded records from index"
+            pb = ProgressBar(len(to_delete))
+        while to_delete:
+            if verbose and pb: pb.update(pb.total - len(to_delete))
+            conn.delete(q='id:(%s)' % ' '.join(map(str, to_delete[:500])))
+            to_delete = to_delete[500:]
+        if verbose and pb: pb.done()
+
     @staticmethod
     def mark_for_update(record_id, delete=False):
         from models import mark_for_update

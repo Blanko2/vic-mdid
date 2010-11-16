@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from rooibos.solr import SolrIndex
 
 class Command(BaseCommand):
-    help = 'Updates the Solr index\nAvailable commands: optimize|index|reindex|rebuild|clear'
+    help = 'Updates the Solr index\nAvailable commands: optimize|index|reindex|rebuild|clean|clear'
     args = 'command'
 
     def handle(self, *commands, **options):
@@ -17,6 +17,9 @@ class Command(BaseCommand):
                     s.index(verbose=True)
                 elif command == 'reindex':
                     s.index(verbose=True, all=True)
+                    s.clear_missing(verbose=True)
+                elif command == 'clean':
+                    s.clear_missing(verbose=True)
                 elif command == 'rebuild':
                     s.clear()
                     s.index(verbose=True, all=True)
