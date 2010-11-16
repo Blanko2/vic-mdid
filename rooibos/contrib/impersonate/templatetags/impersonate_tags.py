@@ -10,8 +10,12 @@ class ImpersonationFormNode(template.Node):
     def render(self, context):
         request = context['request']
         current = get_real_user(request)
-        users = get_available_users(current or request.user.username).count()
-        if users:
+        user_count = get_available_users(current or request.user.username).count()
+        if user_count:
+            if user_count <= 100:
+                users = get_available_users(current or request.user.username).values_list('username', flat=True)
+            else:
+                users = None
             return render_to_string('impersonation_form.html',
                                     {'users': users,
                                      'current': current,
