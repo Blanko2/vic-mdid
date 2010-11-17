@@ -10,6 +10,7 @@ from rooibos.data.models import Record, Collection, standardfield, get_system_fi
 from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
 from rooibos.storage.models import Storage
 from rooibos.util import json_view
+from rooibos.statistics.models import Activity
 import re
 
 
@@ -121,6 +122,10 @@ class EmbeddedMediaPlayer(MediaPlayer):
                 pass
         if not '://' in delivery_url:
             delivery_url = server + delivery_url
+
+        Activity.objects.create(event='mediaplayer-embed',
+                                request=request,
+                                content_object=selectedmedia)
 
         return render_to_response('mediaplayer/mediaplayer.js',
                                   {'record': record,
