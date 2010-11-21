@@ -110,17 +110,162 @@
 {% endblock %}
 
 
-{% block content %}
 
-{% autopaginate presentations 25 %}
+{% block stylesheets %}
+{{ block.super }}
+<style type="text/css">
+
+#actionbar {
+  border: solid thin {{ PRIMARY_COLOR }};
+  border-left-color: lightgrey;
+  border-right-color: lightgrey;
+  height: 1.7em;
+  margin: 0;
+  background: url({% url static 'images/actionbar-gradient.jpg' %}) bottom repeat-x;
+}
+
+#actionbar .pagination {
+  float: right;
+  clear: none;
+  border: none;
+}
+
+#actionbar li {
+  list-style: none;
+  float: left;
+  padding: 0.2em 0.5em;
+  border-right: solid thin {{ PRIMARY_COLOR }};
+}
+
+#actionbar a {
+  text-decoration: none;
+  color: black;
+}
+
+
+table.list tr+tr td {
+  border-top: solid thin white;
+  border-bottom: solid thin white;
+}
+
+td.item-actions-menu {
+  display: none;
+}
+
+tr.actionrow-selected td.item-actions-menu, tr.actionrow-open td.item-actions-menu {
+  display: table-cell;
+}
+
+
+tr.actionrow-selected td {
+  border-top: solid thin  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid thin  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.jpg' %}) bottom repeat-x;
+}
+
+td.item-actions-menu div {
+  display: none;
+  position: absolute;
+  right: 0px;
+  border: solid thin {{ PRIMARY_COLOR }};
+}
+
+tr.actionrow-open td.item-actions-menu div {
+  display: block;
+}
+
+html.js-enabled td.item-actions {
+  display: none;
+}
+
+</style>
+
+{% endblock %}
+
+
+
+{% block javascript %}
+
+{{ block.super }}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+  $("table.list tr+tr").each(function() {
+    var r = $(this);
+    var c = $("<td class='item-actions-menu'>&dArr;</td>");
+    var d = $("<div>");
+    var u = $("<ul>");
+    $("td.item-actions a", r).each(function() {
+      var l = $("<li>");
+      l.append($(this));
+      u.append(l);
+    });
+    d.append(u);
+    c.append(d)
+    r.append(c);
+  });
+
+
+  var open_row = null;
+
+  $("table.list tr+tr").hover(function() {
+
+    $(this).toggleClass("actionrow-selected");
+
+  }).click(function() {
+
+    if (open_row) {
+      $(open_row).removeClass('actionrow-open');
+    }
+    if (open_row == this) {
+      open_row = null;
+      return;
+    }
+    open_row = this;
+
+    var r = $(this);
+    r.addClass('actionrow-open');
+
+
+
+
+
+  });
+
+});
+
+</script>
+
+{% endblock %}
+
+
+{% block content-top %}
+
+{% autopaginate presentations 10 %}
 
 <h1>{{ manage|yesno:"Manage,Browse" }} Presentations</h1>
 
+
+<ul id="actionbar">
+
 {% if manage %}
-<a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a><br /><br />
+<li><a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a></li>
 {% endif %}
 
-{% paginate %}
+<li class="pagination">{% paginate %}</li>
+
+</ul>
+
+<br style="clear: left;" />
+
+
+{% endblock %}
+
+
+
+{% block content %}
 
 {% if presentations %}
 
@@ -145,7 +290,7 @@
 {% for presentation in presentations %}
     {% owned_tags_for_object presentation for request.user as ptags %}
     {% owned_tags_for_object presentation for presentation.owner as otags %}
-    <tr class="{% cycle "" "altrow" %}">
+    <tr>
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td>
             {% if manage %}
@@ -184,7 +329,7 @@
                 {% endif %}
             {% endif %}
         </td>
-        <td>
+        <td class="item-actions">
             {% if not presentation.password or presentation.unlocked %}
             {% list_viewers presentation request.get_full_path %}
             {% else %}
