@@ -82,10 +82,8 @@ class ProfileMiddleware(object):
                     mygroups[ group ] = 0
                 mygroups[ group ] += time
 
-        return "<pre>" + \
-               " ---- By file ----\n\n" + self.get_summary(mystats,sum) + "\n" + \
-               " ---- By group ---\n\n" + self.get_summary(mygroups,sum) + \
-               "</pre>"
+        return " ---- By file ----\n\n" + self.get_summary(mystats,sum) + "\n" + \
+               " ---- By group ---\n\n" + self.get_summary(mygroups,sum)
 
     def process_response(self, request, response):
         if (settings.DEBUG or request.user.is_superuser) and request.GET.has_key('prof'):
@@ -102,10 +100,11 @@ class ProfileMiddleware(object):
             sys.stdout = old_stdout
             stats_str = out.getvalue()
 
-            if response and response.content and stats_str:
-                response.content = "<pre>" + stats_str + "</pre>"
+            #if response and response.content and stats_str:
+            response.content = stats_str
+            response['Content-Type'] = 'text/plain'
 
-            response.content = "\n".join(response.content.split("\n")[:40])
+#            response.content = "\n".join(response.content.split("\n")[:40])
 
             response.content += self.summary_for_files(stats_str)
 
