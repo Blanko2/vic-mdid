@@ -65,7 +65,8 @@
 <form method="POST" action=".">{% csrf_token %}
 <input type="hidden" name="q" value="{{ query }}" />
 <div>
-    Your query found {{ results.hits|intcomma }} hit{{ results.hits|pluralize }}.
+    Your query found {{ results.hits|intcomma }} image{{ results.hits|pluralize }} licenses under
+    a Creative Commons license.
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
@@ -85,15 +86,9 @@
 {% for r in results.records %}
 
 <div class="record">
-    <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
-    <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a><br /><br />
-    <span style="font-size: smaller;">by {{ r.owner }}</span>
-    </div>
+    <a href="{{ r.record_url }}" target="flickr_page"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
+    <div class="record-title"><a href="{{ r.record_url }}" target="flickr_page">{{ r.title }}</a></div>
     <input type="checkbox" class="remote-record-select" name="r" value="{{ r.flickr_id }}"{% if r.selected %} checked="checked"{% endif %} />
-    <div style="font-size: smaller; position: absolute; bottom: 0px;">
-        {% if r.license.url %}<a href="{{ r.license.url }}" target="_blank">{{ r.license.name }}</a>
-        {% else %}{{ r.license.name }}{% endif %}
-    </div>
 </div>
 
 {% endfor %}

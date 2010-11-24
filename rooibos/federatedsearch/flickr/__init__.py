@@ -1,17 +1,19 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
-from os import makedirs
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue, FieldSet
 from rooibos.federatedsearch.models import FederatedSearch
 from rooibos.solr import SolrIndex
 from rooibos.solr.models import SolrIndexUpdates
 from rooibos.storage import Storage, Media
+from rooibos.workers.models import JobInfo
+from django.utils import simplejson
 import flickrapi
 import urllib
 import urllib2
 import time
+import os
 
 
 class FlickrSearch(FederatedSearch):
@@ -69,7 +71,7 @@ class FlickrSearch(FederatedSearch):
         return storage
 
 
-    def get_license(self, id):
+    def get_licenses(self):
         if not hasattr(self, '_licenses'):
             print "fetching licenses"
             self._licenses = cache.get('flickr.photos.licenses.getInfo')
@@ -82,12 +84,22 @@ class FlickrSearch(FederatedSearch):
                 self._licenses = dict((l['id'], dict(name=l['name'], url=l['url']))
                     for l in results.licenses[0].license)
                 cache.set('flickr.photos.licenses.getInfo', self._licenses, 3600)
-        return self._licenses.get(id)
+        return self._licenses
+
+
+    def get_license(self, id):
+        return self.get_licenses().get(id)
+
+
+    def get_cc_licenses(self):
+        return [id for id, license in self.get_licenses().iteritems()
+                if license['url'].startswith('http://creativecommons.org/')]
 
 
     def search(self, query, page=1, pagesize=50, sort='date-posted-desc'):
         if not query:
             return None
+        cc_licenses = ','.join(self.get_cc_licenses())
         results = self.flickr.flickr_call(method='flickr.photos.search',
                                           text=query,
                                           api_key=settings.FLICKR_KEY,
@@ -95,6 +107,7 @@ class FlickrSearch(FederatedSearch):
                                           page=page,
                                           per_page=pagesize,
                                           extras='url_t,license,owner_name',
+                                          license=cc_licenses,
                                           sort=sort)
 
         images = [
@@ -193,9 +206,9 @@ class FlickrSearch(FederatedSearch):
         CollectionItem.objects.create(collection=collection, record=record)
 
         # create job to download actual media file
-        #job = JobInfo.objects.create(func='nasa_download_media', arg=simplejson.dumps(dict(
-        #    record=record.id, url=media[0][0])))
-        #job.run()
+        job = JobInfo.objects.create(func='flickr_download_media', arg=simplejson.dumps(dict(
+            record=record.id, url=image_url)))
+        job.run()
 
         return record
 
