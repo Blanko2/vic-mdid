@@ -14,7 +14,7 @@
         if (ids.constructor != Array) ids = [ids];
         ajaxManager.add({
             type: method,
-            url: '{% url nasa-nix-select %}',
+            url: '{% url flickr-select %}',
             data: {'id': JSON.stringify(ids), 'checked': checked},
             dataType: 'json',
             success: function(r) {
@@ -57,25 +57,20 @@
 
 
 {% block content-top %}
-<h1>ARTstor</h1>
+<h1>Flickr</h1>
 {% endblock %}
 
 
 {% block content %}
-
-{% if failure %}
-
-ARTstor could not perform the desired search, probably because it is not specific
-enough.  Please add additional keywords and try again.
-
-{% else %}
-
 <form method="POST" action=".">{% csrf_token %}
 <input type="hidden" name="q" value="{{ query }}" />
-
-<div style="float: left;">
-    Your query found {{ results.hits|intcomma }} hit{{ results.hits|pluralize }}.
+<div>
+    Your query found {{ results.hits|intcomma }} image{{ results.hits|pluralize }} licenses under
+    a Creative Commons license.
+    <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
+
+
 
 {% if results.records %}
 
@@ -87,15 +82,15 @@ enough.  Please add additional keywords and try again.
 </div>
 {% endif %}
 
-Due to licensing restrictions, records are not available for immediate inclusion into
-slideshows.
-
 <div id="resultlist" class="resultlist-thumb">
 {% for r in results.records %}
+
 <div class="record">
-    <a href="{{ r.record_url }}" target="af"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
-    <div class="record-title"><a href="{{ r.record_url }}" target="af">{{ r.title }}</a></div>
+    <a href="{{ r.record_url }}" target="flickr_page"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
+    <div class="record-title"><a href="{{ r.record_url }}" target="flickr_page">{{ r.title }}</a></div>
+    <input type="checkbox" class="remote-record-select" name="r" value="{{ r.flickr_id }}"{% if r.selected %} checked="checked"{% endif %} />
 </div>
+
 {% endfor %}
 </div>
 
@@ -107,11 +102,8 @@ slideshows.
 </div>
 {% endif %}
 
-<iframe name="af" style="height: 5px;"></iframe>
 {% endif %}
 
 </form>
-
-{% endif %}
 
 {% endblock %}
