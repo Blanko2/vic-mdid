@@ -22,6 +22,7 @@ class FlickrSearch(FederatedSearch):
         self.flickr = flickrapi.FlickrAPI(settings.FLICKR_KEY, settings.FLICKR_SECRET, cache=True, store_token=False)
 
     def hits_count(self, keyword):
+        cc_licenses = ','.join(self.get_cc_licenses())
         results = self.flickr.flickr_call(method='flickr.photos.search',
                                           text=keyword,
                                           api_key=settings.FLICKR_KEY,
@@ -29,6 +30,7 @@ class FlickrSearch(FederatedSearch):
                                           page=1,
                                           per_page=1,
                                           extras='url_t,path_alias',
+                                          license=cc_licenses,
                                           sort='date-posted-desc')
         return int(results.photos[0]['total'])
 
