@@ -433,6 +433,40 @@
 
 
             setTimeout(function() { $("#messages").css('visibility', 'hidden'); }, 8000);
+
+
+            // convert list of actions to row drop-down menu
+            $("table.itemactions tr+tr").each(function() {
+              var r = $(this);
+              var c = $("<td class='item-actions-menu'><img src='{% url static 'images/down_arrow.png' %}' /></td>");
+              var u = $("<ul>");
+              $("td.item-actions a", r).each(function() { u.append($("<li>").append($(this))); });
+              if (!u.children().length) u.append($("<li>No actions available</li>"));
+              r.append(c.append($("<div>").append(u)));
+            });
+
+            var open_row = null;
+
+            $("table.itemactions tr+tr").hover(function() {
+              $(this).addClass("actionrow-selected");
+            }, function() {
+              $(this).removeClass("actionrow-selected");
+            }).click(function() {
+              if (open_row) $(open_row).removeClass('actionrow-open');
+              if (open_row == this) {
+                open_row = null;
+              } else {
+                open_row = this;
+                var r = $(this);
+                r.addClass('actionrow-open');
+                var menu = $("td.item-actions-menu div", r)
+                menu.offset({
+                  left: r.offset().left + r.width() - menu.width() - 1,
+                  top: r.offset().top + r.height() - 1
+                  });
+              }
+            });
+
         });
     </script>
 <!--{ % endcompress %}-->
