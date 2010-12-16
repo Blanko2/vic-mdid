@@ -144,8 +144,7 @@ class OwnedTagSearchFacet(SearchFacet):
         return super(OwnedTagSearchFacet, self).display_value(value)
 
     def federated_search_query(self, value):
-        id, value = value.split('-')
-        return super(OwnedTagSearchFacet, self).federated_search_query(value)
+        return ''
 
 
 def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
