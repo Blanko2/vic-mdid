@@ -447,10 +447,9 @@
 
             var open_row = null;
 
-            $("table.itemactions tr+tr").hover(function() {
+            $("table.itemactions tr+tr").mouseenter(function() {
+              $("table.itemactions tr.actionrow-selected").removeClass("actionrow-selected");
               $(this).addClass("actionrow-selected");
-            }, function() {
-              $(this).removeClass("actionrow-selected");
             }).click(function() {
               if (open_row) $(open_row).removeClass('actionrow-open');
               if (open_row == this) {
@@ -460,10 +459,13 @@
                 var r = $(this);
                 r.addClass('actionrow-open');
                 var menu = $("td.item-actions-menu div", r)
-                menu.offset({
+                var o = {
                   left: r.offset().left + r.width() - menu.width() - 1,
                   top: r.offset().top + r.height() - 1
-                  });
+                  };
+                // apply offset twice, first time around does not always work on Chrome
+                menu.offset(o);
+                menu.offset(o);
               }
             });
 
