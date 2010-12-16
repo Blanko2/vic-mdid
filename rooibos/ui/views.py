@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import simplejson
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -19,12 +19,12 @@ from rooibos.util.models import OwnedWrapper
 from rooibos.solr.views import run_search
 from rooibos.context_processors import selected_records as ctx_selected_records
 from rooibos.presentation.models import Presentation
-import random 
+import random
 
 
 @cache_control(max_age=24 * 3600)
 def css(request, stylesheet):
-    
+
     return render_to_response(stylesheet + '.css',
                               {},
                               context_instance=RequestContext(request),
@@ -32,7 +32,7 @@ def css(request, stylesheet):
 
 
 def main(request):
-   
+
     (hits, records, search_facets, orfacet, query, fields) = run_search(
         request.user,
         criteria=['mimetype:image/jpeg'],
@@ -119,12 +119,12 @@ def upload_progress(request):
 
 @login_required
 def manage(request):
-    
+
     storage_manage = filter_by_access(request.user, Storage, manage=True).count() > 0
     storage_write = filter_by_access(request.user, Storage, write=True).count() > 0
     collection_write = filter_by_access(request.user, Collection, write=True).count() > 0
     collection_manage = filter_by_access(request.user, Collection, manage=True).count() > 0
-    
+
     return render_to_response('ui_management.html',
                               {'storage_manage': storage_manage,
                                'storage_write': storage_write,
@@ -132,23 +132,23 @@ def manage(request):
                                'collection_manage': collection_manage,
                               },
                               context_instance=RequestContext(request))
-    
+
 
 @login_required
 def options(request):
-    
+
     return render_to_response('ui_options.html',
                               {
                               },
                               context_instance=RequestContext(request))
-    
+
 
 def clear_selected_records(request):
     request.session['selected_records'] = ()
-    
+
     return HttpResponseRedirect(request.GET.get('next', reverse('ui-selected')))
-    
-    
+
+
 
 def selected_records(request):
 
