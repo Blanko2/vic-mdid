@@ -177,6 +177,7 @@
     <script type="text/javascript" src="{% url static 'jquery/jquery.ajaxmanager.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.autocomplete.pack.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-1.4.2-min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery.multicheckbox.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-1.0.0-rc3.min.js' %}"></script>
     <script type="text/javascript">
         var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
@@ -445,18 +446,24 @@
               r.append(c.append($("<div>").append(u)));
             });
 
-            var open_row = null;
+
+            $(document).click(function() {
+                $("table.itemactions tr.actionrow-open").removeClass('actionrow-open');
+            });
+
+            $("table.itemactions tr+tr a, table.itemactions tr+tr input").click(function(event) {
+                event.stopPropagation();
+            });
 
             $("table.itemactions tr+tr").mouseenter(function() {
               $("table.itemactions tr.actionrow-selected").removeClass("actionrow-selected");
               $(this).addClass("actionrow-selected");
             }).click(function() {
-              if (open_row) $(open_row).removeClass('actionrow-open');
-              if (open_row == this) {
-                open_row = null;
-              } else {
-                open_row = this;
                 var r = $(this);
+                if (r.hasClass('actionrow-open')) return;
+
+                $("table.itemactions tr.actionrow-open").removeClass('actionrow-open');
+
                 r.addClass('actionrow-open');
                 var menu = $("td.item-actions-menu div", r)
                 var o = {
@@ -466,8 +473,76 @@
                 // apply offset twice, first time around does not always work on Chrome
                 menu.offset(o);
                 menu.offset(o);
-              }
+                return false;
             });
+
+            // actionbar functions
+
+              $(document).click(function() {
+                $("#actionbar li div.dropdown").hide();
+              });
+              $("#actionbar li div.dropdown").click(function(event) {
+                event.stopPropagation();
+              }).each(function() {
+                var d = $(".dropdown-anchor", $(this).parent());
+                d.click(function() {
+                    var r = $(this).parent();
+                    var menu = $("div.dropdown", r);
+                    if (menu.is(":visible")) {
+                      menu.hide();
+                    } else {
+                      var o = {
+                        left: r.offset().left - 1,
+                        top: r.offset().top + 28
+                      };
+                      // apply offset twice, first time around does not always work on Chrome
+                      menu.show();
+                      menu.offset(o);
+                      menu.offset(o);
+                      menu.trigger('actionbar-dropdown-open');
+                    }
+                    return false;
+                  }).css("cursor", "pointer");
+              }).css("cursor", "default");
+
+              $("#actionbar li div.tags-dropdown").bind('actionbar-dropdown-open', function() {
+                var menu = $(this);
+                var tags = {};
+                var rows = 0;
+                // get selected rows and count different tags
+                $("input:checkbox:checked[name=h]").each(function() {
+                  var row = $(this).parent().parent();
+                  var t = $("span.tag span.t", row).text();
+                  tags[t] = (tags[t] || 0) + 1;
+                  rows++;
+                });
+                $("input:checkbox", menu).each(function() {
+                  var t = $(this).next().text();
+                  var c = $("<input type='checkbox' value='true' />");
+                  c.attr('name', $(this).attr('name'));
+                  if (tags[t]) {
+                    if (tags[t] == rows) {
+                      c.attr('checked', 'checked');
+                    } else {
+                      c.multicheckbox({'mixed': true});
+                    }
+                  } else {
+                    c.attr('checked', '');
+                  }
+                  $(this).replaceWith(c);
+                });
+              });
+
+
+              $("#actionbar li div.tags-dropdown input:submit").click(function() {
+                $("#actionbar li div.dropdown").hide();
+                $("input:checkbox[name^=update_tag_]").each(function() {
+                  var c = $(this);
+                  if (!c.is(':checked')) {
+                    c.attr('value', 'false').attr('checked', 'checked');
+                  }
+                });
+              });
 
         });
     </script>

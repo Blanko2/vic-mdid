@@ -1106,4 +1106,51 @@ html.js-enabled td.item-actions {
   display: none;
 }
 
+
+/* Actionbar */
+
+#actionbar {
+  border: solid thin {{ PRIMARY_COLOR }};
+  border-left-color: lightgrey;
+  border-right-color: lightgrey;
+  height: 28px;
+  margin: 0;
+  background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+#actionbar .pagination {
+  float: right;
+  clear: none;
+  border: none;
+}
+
+#actionbar li {
+  list-style: none;
+  float: left;
+  padding: 0.2em 0.5em;
+  height: 23px;
+  border-right: solid thin {{ PRIMARY_COLOR }};
+}
+
+#actionbar a {
+  text-decoration: none;
+  color: black;
+}
+
+#actionbar li > input {
+  background: none;
+  border: none;
+}
+
+html.js-enabled #actionbar li div.dropdown {
+  display: none;
+  position: absolute;
+  background: #f2f2f2;
+  border: solid thin {{ PRIMARY_COLOR }};
+  padding: 0.5em;
+  margin-top: 0.2em;
+  -moz-box-shadow: 3px 3px 5px lightgrey;
+  -webkit-box-shadow: 3px 3px 5px lightgrey;
+}
+
 </style>
