@@ -9,6 +9,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.data.models import Record, Collection
 from rooibos.util.models import OwnedWrapper
 from rooibos.access import filter_by_access
+from base64 import b32encode
 
 register = template.Library()
 
@@ -24,6 +25,10 @@ def record(context, record, selectable=False, viewmode="thumb"):
 @register.simple_tag
 def dir2(var):
     return dir(var)
+
+@register.filter
+def base32(value):
+    return b32encode(str(value)).replace('=', '_')
 
 @register.filter
 def scale(value, params):
@@ -47,12 +52,12 @@ class OwnedTagsForObjectNode(template.Node):
             ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
             context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
         else:
-            qs = OwnedWrapper.objects.filter(object_id=object.id, content_type=OwnedWrapper.t(object.__class__)) 
+            qs = OwnedWrapper.objects.filter(object_id=object.id, content_type=OwnedWrapper.t(object.__class__))
             if not user.is_anonymous():
-                qs = qs.exclude(user=user)                
+                qs = qs.exclude(user=user)
             context[self.var_name] = Tag.objects.cloud_for_queryset(qs)
         return ''
-    
+
 @register.tag
 def owned_tags_for_object(parser, token):
     try:
@@ -104,7 +109,7 @@ class VariablesNode(template.Node):
     def __init__(self, nodelist, var_name):
         self.nodelist = nodelist
         self.var_name = var_name
-        
+
     def render(self, context):
         source = self.nodelist.render(context)
         context[self.var_name] = simplejson.loads(source)
@@ -123,7 +128,7 @@ def do_variables(parser, token):
     else:
         msg = '"%s" tag had invalid arguments' % tag_name
         raise template.TemplateSyntaxError(msg)
-           
+
     nodelist = parser.parse(('endvar',))
     parser.delete_first_token()
     return VariablesNode(nodelist, var_name)

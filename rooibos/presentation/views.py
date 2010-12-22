@@ -24,6 +24,7 @@ from rooibos.data.models import FieldSet, Record
 from rooibos.data.forms import FieldSetChoiceField
 from models import Presentation, PresentationItem
 import logging
+import base64
 
 
 @login_required
@@ -73,7 +74,7 @@ def edit(request, id, name):
         OwnedWrapper, filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))]
     tags = Tag.objects.get_for_object(
         OwnedWrapper.objects.get_for_object(user=request.user, object=presentation))
-    
+
     class PropertiesForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
         tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
@@ -84,7 +85,7 @@ def edit(request, id, name):
                                    max_length=Presentation._meta.get_field('password').max_length)
         fieldset = FieldSetChoiceField(label='Field set', user=request.user)
         hide_default_data = forms.BooleanField(label='Hide default data', required=False)
-        
+
 
     if request.method == "POST":
         form = PropertiesForm(request.POST)
@@ -127,7 +128,7 @@ def items(request, id, name):
     class BaseOrderingForm(ModelForm):
         record = forms.CharField(widget=forms.HiddenInput)
         annotation = forms.CharField(widget=forms.Textarea, required=False)
-        
+
         def __init__(self, initial=None, instance=None, *args, **kwargs):
             if instance:
                 object_data = dict(annotation=instance.annotation)
@@ -136,15 +137,15 @@ def items(request, id, name):
             if initial is not None:
                 object_data.update(initial)
             super(BaseOrderingForm, self).__init__(initial=object_data, instance=instance, *args, **kwargs)
-            
+
         def clean_record(self):
             return Record.objects.get(id=self.cleaned_data['record'])
-        
+
         def save(self, commit=True):
             instance = super(BaseOrderingForm, self).save(commit)
             instance.annotation = self.cleaned_data['annotation']
             return instance
-        
+
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
                                            exclude=('presentation'), form=BaseOrderingForm)
     queryset = presentation.items.select_related('record').all()
@@ -172,7 +173,7 @@ def items(request, id, name):
 @login_required
 def manage(request):
     return browse(request, manage=True)
-    
+
 
 def browse(request, manage=False):
 
@@ -188,7 +189,7 @@ def browse(request, manage=False):
     get = request.GET.copy()
     get.setlist('t', tags)
     if get.has_key('rt'):
-        del get['rt']    
+        del get['rt']
 
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
@@ -203,13 +204,13 @@ def browse(request, manage=False):
         q = Q(*(Q(id__in=x) for x in ids))
     else:
         q = Q()
-        
+
     if presenter:
         presenter = User.objects.get(username=presenter)
         qp = Q(owner=presenter)
     else:
         qp = Q()
-        
+
     if keywords:
         qk = Q(*(Q(title__icontains=kw) | Q(description__icontains=kw) |
                  Q(owner__last_name__icontains=kw) | Q(owner__first_name__icontains=kw) |
@@ -221,21 +222,9 @@ def browse(request, manage=False):
         qv = Q()
     else:
         qv = Presentation.published_Q()
-            
+
     presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv,
                                                                         id__in=accessible_ids(request.user, Presentation)).order_by('title')
-
-    class ManagePresentationsForm(forms.Form):
-       tags = SplitTaggingField(label='Select existing tags:',
-                                choices=[(t, t) for t in existing_tags],
-                                required=False,
-                                add_label='Enter additional tags:')
-       mode = forms.ChoiceField(label='Action',
-                                required=True,
-                                choices=[('add', 'Add to existing tags'),
-                                         ('replace', 'Replace existing tags'),
-                                         ('remove', 'Remove existing tags')],
-                                initial='add')
 
     if request.method == "POST":
 
@@ -249,30 +238,41 @@ def browse(request, manage=False):
         if manage and request.POST.get('delete'):
             ids = map(int, request.POST.getlist('h'))
             Presentation.objects.filter(owner=request.user, id__in=ids).delete()
-        
+
         if request.POST.get('keywords_go'):
             get['kw'] = request.POST.get('kw')
             return HttpResponseRedirect(request.path + '?' + get.urlencode())
-            
+
         if request.POST.get('update_tags'):
             ids = map(int, request.POST.getlist('h'))
-            form = ManagePresentationsForm(request.POST)
-            if form.is_valid():
-                action = form.cleaned_data['mode']
-                for presentation in presentations.filter(id__in=ids):
-                    if action == 'replace':
-                        Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                                form.cleaned_data['tags'])
-                    elif action == 'add':
-                        for tag in parse_tag_input(form.cleaned_data['tags']):
-                            Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                                '"%s"' % tag)
-                    elif action == 'remove':
-                        Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')
-                        
+
+            new_tags = request.POST.get('new_tags')
+
+            update_tags = ((base64.b32decode(k[11:].replace('_', '=')), v)
+                for k, v in request.POST.iteritems()
+                if k.startswith('update_tag_'))
+
+            print list(update_tags)
+
+            ## TODO: process tags
+
+            
+
+            #form = ManagePresentationsForm(request.POST)
+            #if form.is_valid():
+            #    action = form.cleaned_data['mode']
+            #    for presentation in presentations.filter(id__in=ids):
+            #        if action == 'replace':
+            #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+            #                                    form.cleaned_data['tags'])
+            #        elif action == 'add':
+            #            for tag in parse_tag_input(form.cleaned_data['tags']):
+            #                Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+            #                                    '"%s"' % tag)
+            #        elif action == 'remove':
+            #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')
+
         return HttpResponseRedirect(request.get_full_path())
-    else:
-        form = ManagePresentationsForm()
 
 
     active_tags = tags
@@ -288,14 +288,14 @@ def browse(request, manage=False):
             where=('%s=%s' % (col(OwnedWrapper, 'object_id'), col(Presentation, 'id')),
                    '%s=%s' % (col(OwnedWrapper, 'user'), col(Presentation, 'owner')))).filter(
             object_id__in=presentations.values('id'),
-            content_type=OwnedWrapper.t(Presentation))    
+            content_type=OwnedWrapper.t(Presentation))
         tags = Tag.objects.usage_for_queryset(q, counts=True)
-        
+
         for p in presentations:
             p.verify_password(request)
     else:
         tags = ()
-    
+
     if presentations and request.user.is_authenticated():
         usertags = Tag.objects.usage_for_queryset(OwnedWrapper.objects.filter(
                         user=request.user,
@@ -303,7 +303,7 @@ def browse(request, manage=False):
                         content_type=OwnedWrapper.t(Presentation)), counts=True)
     else:
         usertags = ()
-    
+
     presenters = User.objects.filter(presentation__in=presentations) \
                      .annotate(presentations=Count('presentation')).order_by('last_name', 'first_name')
 
@@ -316,19 +316,18 @@ def browse(request, manage=False):
                            'presentations': presentations,
                            'presenters': presenters if len(presenters) > 1 else None,
                            'keywords': keywords,
-                           'form': form,
                            },
                           context_instance=RequestContext(request))
 
 def password(request, id, name):
-    
+
     presentation = get_object_or_404(Presentation.objects.filter(Presentation.published_Q(request.user),
                                 id=id,
                                 id__in=accessible_ids(request.user, Presentation)))
-    
+
     class PasswordForm(forms.Form):
         password = forms.CharField(widget=forms.PasswordInput)
-        
+
         def clean_password(self):
             p = self.cleaned_data.get('password')
             if p != presentation.password:
@@ -342,7 +341,7 @@ def password(request, id, name):
             return HttpResponseRedirect(request.GET.get('next', reverse('presentation-browse')))
     else:
         form = PasswordForm()
-        
+
     return render_to_response('presentation_password.html',
                           {'form': form,
                            'presentation': presentation,

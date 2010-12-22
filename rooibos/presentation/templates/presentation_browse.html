@@ -16,28 +16,12 @@
 {{ block.super }}
 
 {% if presentations %}
-
-  <div class="facet active-facet" id="presentations_sidebar_update_tags">
-    <div class="facet-header">Update Tags</div>
-    <div class="facet-body">Add or remove tags on selected presentations<br />
-        {{ form.tags.label_tag }}
-        {{ form.tags }}
-        {{ form.tags.errors }}
-
-        {{ form.mode.label_tag }}
-        {{ form.mode }}
-        {{ form.mode.errors }}
-        <input type="submit" value="Update" name="update_tags" />
-    </div>
-  </div>
-
   <div class="facet active-facet" id="presentations_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
         <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" name="keywords_go" />
     </div>
   </div>
-
 {% endif %}
 
 {% var as refine %}
@@ -121,7 +105,7 @@
   border-right-color: lightgrey;
   height: 1.7em;
   margin: 0;
-  background: url({% url static 'images/actionbar-gradient.jpg' %}) bottom repeat-x;
+  background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
 }
 
 #actionbar .pagination {
@@ -142,6 +126,22 @@
   color: black;
 }
 
+#actionbar li > input {
+  background: none;
+  border: none;
+}
+
+html.js-enabled #actionbar li div.dropdown {
+  display: none;
+  position: absolute;
+  background: #f2f2f2;
+  border: solid thin {{ PRIMARY_COLOR }};
+  padding: 0.5em;
+  margin-top: 0.2em;
+  -moz-box-shadow: 3px 3px 5px lightgrey;
+  -webkit-box-shadow: 3px 3px 5px lightgrey;
+}
+
 </style>
 
 {% endblock %}
@@ -152,9 +152,75 @@
 
 {{ block.super }}
 
+<script type="text/javascript" src="{% url static 'jquery/jquery.multicheckbox.js' %}"></script>
+
 <script type="text/javascript">
 
+function update_tag_checkboxes(menu) {
+  var tags = {};
+  var rows = 0;
+  // get selected rows and count different tags
+  $("input:checkbox:checked[name=h]").each(function() {
+    var row = $(this).parent().parent();
+    var t = $("span.tag span.t", row).text();
+    tags[t] = (tags[t] || 0) + 1;
+    rows++;
+  });
+  $("input:checkbox", menu).each(function() {
+    var t = $(this).next().text();
+    var c = $("<input type='checkbox' value='true' />");
+    c.attr('name', $(this).attr('name'));
+    if (tags[t]) {
+      if (tags[t] == rows) {
+        c.attr('checked', 'checked');
+      } else {
+        c.multicheckbox({'mixed': true});
+      }
+    } else {
+      c.attr('checked', '');
+    }
+    $(this).replaceWith(c);
+  });
+}
+
+
 $(document).ready(function() {
+
+  $(document).click(function() {
+    $("#actionbar li div.dropdown").hide();
+  });
+  $("#actionbar li div.dropdown").click(function(event) {
+    event.stopPropagation();
+  }).each(function() {
+    var d = $(".dropdown-anchor", $(this).parent());
+    d.click(function() {
+        var r = $(this).parent();
+        var menu = $("div.dropdown", r);
+        if (menu.is(":visible")) {
+          menu.hide();
+        } else {
+          var o = {
+            left: r.offset().left - 1,
+            top: r.offset().top + r.height() + 3
+          };
+          // apply offset twice, first time around does not always work on Chrome
+          menu.offset(o).offset(o).show();
+          update_tag_checkboxes(menu);
+        }
+        return false;
+      }).css("cursor", "pointer");
+  }).css("cursor", "default");
+
+  $("#update_tags").click(function() {
+    $("#actionbar li div.dropdown").hide();
+    $("input:checkbox[name^=update_tag_]").each(function() {
+      var c = $(this);
+      if (!c.is(':checked')) {
+        c.attr('value', 'false').attr('checked', 'checked');
+      }
+    });
+  });
+
 });
 
 </script>
@@ -174,6 +240,31 @@ $(document).ready(function() {
 {% if manage %}
 <li><a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a></li>
 {% endif %}
+
+<li><span class="dropdown-anchor">Tags <img src="{% url static 'images/down_arrow.png' %}" /></span>
+<div class="dropdown">
+  <div style="max-height: 200px; overflow: auto;">
+  {% for tag in usertags %}
+  <input type="checkbox" name="update_tag_{{ tag|base32 }}" value="true" /><span class="tag">{{ tag }}</span><br />
+  {% endfor %}
+  </div>
+  <br />
+  Assign new tags:<br />
+  <input type="text" name="new_tags" /><br />
+  <br />
+  <input type="submit" id="update_tags" name="update_tags" value="Update" style="float: right;" />
+</div>
+</li>
+
+
+{% if manage %}
+{% if perms.presentation.publish_presentations %}
+<li><input type="submit" name="hide" value="Hide" /></li>
+<li><input type="submit" name="unhide" value="Show" /></li>
+{% endif %}
+<li><input type="submit" id="delete" name="delete" value="Delete" /></li>
+{% endif %}
+
 
 <li class="pagination">{% paginate %}</li>
 
@@ -261,16 +352,6 @@ $(document).ready(function() {
 {% endfor %}
 </table>
 
-{% paginate %}
-
-{% if manage %}
-<label>With selected</label>
-{% if perms.presentation.publish_presentations %}
-<input type="submit" name="hide" value="Hide" />
-<input type="submit" name="unhide" value="Show" />
-{% endif %}
-<input type="submit" id="delete" name="delete" value="Delete" />
-{% endif %}
 
 {% else %}
 No presentations available.
