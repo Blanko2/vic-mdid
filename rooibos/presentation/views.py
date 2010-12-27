@@ -245,32 +245,33 @@ def browse(request, manage=False):
 
         if request.POST.get('update_tags'):
             ids = map(int, request.POST.getlist('h'))
+            new_tags = parse_tag_input(request.POST.get('new_tags'))
+            try:
+                update_tags = [(base64.b32decode(k[11:].replace('_', '=')), v)
+                    for k, v in request.POST.iteritems()
+                    if k.startswith('update_tag_')]
+            except TypeError:
+                # Could not decode base32 encoded tag names
+                update_tags = ()
 
-            new_tags = request.POST.get('new_tags')
-
-            update_tags = ((base64.b32decode(k[11:].replace('_', '=')), v)
-                for k, v in request.POST.iteritems()
-                if k.startswith('update_tag_'))
-
-            print list(update_tags)
-
-            ## TODO: process tags
-
-            
-
-            #form = ManagePresentationsForm(request.POST)
-            #if form.is_valid():
-            #    action = form.cleaned_data['mode']
-            #    for presentation in presentations.filter(id__in=ids):
-            #        if action == 'replace':
-            #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-            #                                    form.cleaned_data['tags'])
-            #        elif action == 'add':
-            #            for tag in parse_tag_input(form.cleaned_data['tags']):
-            #                Tag.objects.add_tag(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-            #                                    '"%s"' % tag)
-            #        elif action == 'remove':
-            #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation), '')
+            for presentation in presentations.filter(id__in=ids):
+                wrapper = OwnedWrapper.objects.get_for_object(user=request.user, object=presentation)
+                for tag_name, action in update_tags:
+                    if action == 'mixed':
+                        # Don't need to change anything
+                        continue
+                    elif action == 'true':
+                        # Add tag to all selected presentations
+                        Tag.objects.add_tag(wrapper, '"%s"' % tag_name)
+                    elif action == 'false':
+                        # Remove tag from all selected presentations
+                        keep_tags = Tag.objects.get_for_object(wrapper).exclude(name=tag_name).values_list('name')
+                        Tag.objects.update_tags(wrapper,  ' '.join(map(lambda s: '"%s"' % s, keep_tags)))
+                    else:
+                        # Invalid action
+                        pass
+                for tag_name in new_tags:
+                    Tag.objects.add_tag(wrapper, '"%s"' % tag_name)
 
         return HttpResponseRedirect(request.get_full_path())
 

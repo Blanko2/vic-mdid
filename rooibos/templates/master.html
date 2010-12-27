@@ -512,8 +512,10 @@
                 // get selected rows and count different tags
                 $("input:checkbox:checked[name=h]").each(function() {
                   var row = $(this).parent().parent();
-                  var t = $("span.tag span.t", row).text();
-                  tags[t] = (tags[t] || 0) + 1;
+                  $("span.tag span.t", row).each(function() {
+                    var t = $(this).text();
+                    tags[t] = (tags[t] || 0) + 1;
+                  });
                   rows++;
                 });
                 $("input:checkbox", menu).each(function() {
