@@ -76,7 +76,11 @@
     <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
 </div>
 <div id="basket-tab">
-    {% include "ui_basket_header.html" %}
+    <div id="basket-tab-icon"></div>
+    <span id="basket-header">{% include "ui_basket_header.html" %}</span>
+    {% if user.is_authenticated %}
+    <img src="{% url static 'images/pin_up.png' %}" id="basket-tab-pin" title="Click to keep open or automatically hide" />
+    {% endif %}
 </div>
 
 <div id="metadatabubble"></div>
@@ -204,7 +208,7 @@
                 dataType: 'json',
                 success: function(r) {
                     $("#basket-thumbs").html(r.basket);
-                    $("#basket-tab").html(r.header);
+                    $("#basket-header").html(r.header);
                     basket_scroll_arrows();
                 }
             });
