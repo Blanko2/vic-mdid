@@ -8,4 +8,5 @@ urlpatterns = patterns('',
     url(r'^items/(?P<id>\d+)/(?P<name>[-\w]+)/$', items, name='presentation-items'),
     url(r'^browse/$', browse, name='presentation-browse'),
     url(r'^password/(?P<id>\d+)/(?P<name>[-\w]+)/$', password, name='presentation-password'),
+    url(r'^addselected/(?P<id>\d+)/(?P<name>[-\w]+)/$', add_selected_items, name='presentation-add-selected'),
 )

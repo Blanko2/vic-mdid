@@ -199,6 +199,9 @@
             {% endif %}
         </td>
         <td class="item-actions">
+            {% if manage %}
+            <a href="{% url presentation-add-selected presentation.id, presentation.name %}">Add selected items</a>,
+            {% endif %}
             {% if not presentation.password or presentation.unlocked %}
             {% list_viewers presentation request.get_full_path %}
             {% else %}

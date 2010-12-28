@@ -96,13 +96,17 @@ class Record(models.Model):
     owner = models.ForeignKey(User, null=True)
 
     @staticmethod
-    def get_or_404(id, user):
+    def get_many(user, *ids):
         if user.is_superuser:
             q = Q()
         else:
             q = ((Q(owner=user) if user.is_authenticated() else Q()) |
                  Q(collection__id__in=accessible_ids(user, Collection)))
-        return get_object_or_404(Record.objects.filter(q, id=id).distinct())
+        return Record.objects.filter(q, id__in=ids)
+
+    @staticmethod
+    def get_or_404(id, user):
+        return get_object_or_404(Record.get_many(user, id).distinct())
 
     @staticmethod
     def by_fieldvalue(fields, values):

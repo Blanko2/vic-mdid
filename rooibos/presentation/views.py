@@ -349,3 +349,20 @@ def password(request, id, name):
                            'next': request.GET.get('next', reverse('presentation-browse')),
                            },
                           context_instance=RequestContext(request))
+
+
+@login_required
+def add_selected_items(request, id, name):
+
+    selected = request.session.get('selected_records', ())
+    records = Record.get_many(request.user, *selected)
+
+    presentation = get_object_or_404(Presentation.objects.filter(
+        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+
+    c = presentation.items.count()
+    for record in records:
+        c += 1
+        presentation.items.create(record=record, order=c)
+
+    return HttpResponseRedirect(presentation.get_absolute_url(edit=True))

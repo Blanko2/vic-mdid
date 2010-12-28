@@ -67,8 +67,7 @@
 {% block basket %}
 <div id="basket-content">
     <div id="basket-menu">
-        <a href="{% url ui-selected %}">Manage</a><br />
-        <a href="{% url solr-selected %}">See all</a><br />
+        <a href="{% url solr-selected %}">Explore</a><br />
         <a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a><br />
     </div>
     <div id="basket-scroll-right"></div>
