@@ -23,8 +23,7 @@
 
 {% var as related_pages %}
 {"pages": [
-    {"url": "{% url solr-selected %}", "title": "Explore {{ selected|length|intcomma }} selected record{{ selected|pluralize }}"},
-    {"url": "{% url flickr-export-photo-list %}", "title": "Export to Flickr"}
+    {"url": "{% url solr-selected %}", "title": "Explore {{ selected|length|intcomma }} selected record{{ selected|pluralize }}"}
 ]}
 {% endvar %}
 
