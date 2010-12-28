@@ -1116,6 +1116,7 @@ html.js-enabled td.item-actions {
   height: 28px;
   margin: 0;
   background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+  clear: left;
 }
 
 #actionbar .pagination {
@@ -1150,10 +1151,22 @@ html.js-enabled td.item-actions {
   margin-top: 0.2em;
   -moz-box-shadow: 3px 3px 5px lightgrey;
   -webkit-box-shadow: 3px 3px 5px lightgrey;
+  z-index: 1000;
 }
 
 html.js-enabled #actionbar li div.dropdown {
   display: none;
+}
+
+html.js-enabled #actionbar li .dropdown-anchor {
+    cursor: pointer;
+}
+
+html.js-enabled #actionbar li > input {
+    cursor: pointer;
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    font-size: 100%;
+    margin-top: -2px;
 }
 
 </style>
