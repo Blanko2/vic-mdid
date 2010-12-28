@@ -12,6 +12,8 @@ from nasa import NasaImageExchange
 from artstor import ArtstorSearch
 from flickr import FlickrSearch
 
+import logging
+
 
 #sources = {
 #    'NasaImageExchange': NasaImageExchange,
@@ -61,7 +63,8 @@ def sidebar_api(request):
                                             hits=self.hits,
                                             valid_until=datetime.now() + timedelta(1))
                 except Exception, e:
-                    print e
+                    import traceback
+                    logging.error("Federated Search: %s\n%s" % (e, traceback.format_exc()))
                     self.hits = -1
     
     threads = []

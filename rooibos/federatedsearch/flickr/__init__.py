@@ -29,9 +29,8 @@ class FlickrSearch(FederatedSearch):
                                           format='xmlnode',
                                           page=1,
                                           per_page=1,
-                                          extras='url_t,path_alias',
                                           license=cc_licenses,
-                                          sort='date-posted-desc')
+                                         )
         return int(results.photos[0]['total'])
 
     def get_label(self):
@@ -75,10 +74,8 @@ class FlickrSearch(FederatedSearch):
 
     def get_licenses(self):
         if not hasattr(self, '_licenses'):
-            print "fetching licenses"
             self._licenses = cache.get('flickr.photos.licenses.getInfo')
             if not self._licenses:
-                print "fetching licenses from flickr"
                 results = self.flickr.flickr_call(method='flickr.photos.licenses.getInfo',
                                                 api_key=settings.FLICKR_KEY,
                                                 format='xmlnode',

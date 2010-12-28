@@ -65,7 +65,7 @@
 <form method="POST" action=".">{% csrf_token %}
 <input type="hidden" name="q" value="{{ query }}" />
 <div>
-    Your query found {{ results.hits|intcomma }} image{{ results.hits|pluralize }} licenses under
+    Your query found {{ results.hits|intcomma }} image{{ results.hits|pluralize }} licensed under
     a Creative Commons license.
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
