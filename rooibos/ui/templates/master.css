@@ -1142,8 +1142,7 @@ html.js-enabled td.item-actions {
   border: none;
 }
 
-html.js-enabled #actionbar li div.dropdown {
-  display: none;
+#actionbar li div.dropdown {
   position: absolute;
   background: #f2f2f2;
   border: solid thin {{ PRIMARY_COLOR }};
@@ -1151,6 +1150,10 @@ html.js-enabled #actionbar li div.dropdown {
   margin-top: 0.2em;
   -moz-box-shadow: 3px 3px 5px lightgrey;
   -webkit-box-shadow: 3px 3px 5px lightgrey;
+}
+
+html.js-enabled #actionbar li div.dropdown {
+  display: none;
 }
 
 </style>

@@ -538,18 +538,6 @@
                   $(this).replaceWith(c);
                 });
               });
-
-
-              $("#actionbar li div.tags-dropdown input:submit").click(function() {
-                $("#actionbar li div.dropdown").hide();
-                $("input:checkbox[name^=update_tag_]").each(function() {
-                  var c = $(this);
-                  if (!c.is(':checked')) {
-                    c.attr('value', 'false').attr('checked', 'checked');
-                  }
-                });
-              });
-
         });
     </script>
 <!--{ % endcompress %}-->

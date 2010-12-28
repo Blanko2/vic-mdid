@@ -1,5 +1,6 @@
 {% load ui %}
 <li><span class="dropdown-anchor">Tags <img src="{% url static 'images/down_arrow.png' %}" /></span>
+<input type="hidden" name="all_tags" value='{% for tag in actionbar_tags %}"{{ tag }}" {% endfor %}' />
 <div class="dropdown tags-dropdown">
   <div style="max-height: 200px; overflow: auto;">
   {% for tag in actionbar_tags %}
