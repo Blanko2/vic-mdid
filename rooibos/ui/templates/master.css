@@ -1,7 +1,7 @@
 {% load ui %}
 {% var as colors %}
 {
-    "background":                   "rgb(229, 225, 214)", 
+    "background":                   "rgb(229, 225, 214)",
     "background_top":               "rgb( 83,  82,  78)",
     "background_top_gradient":      "rgb(127, 127, 127)",
     "content_background":           "white",
@@ -9,7 +9,7 @@
     "content_border_gradient2":     "rgb(174, 171, 163)",
     "content_text":                 "black",
     "header_background":            "{{ PRIMARY_COLOR }}",
-    "headings":                     "{{ PRIMARY_COLOR }}", 
+    "headings":                     "{{ PRIMARY_COLOR }}",
     "topmenu_text":                 "white",
     "dropdownmenu_background":      "rgb(241, 241, 241)",
     "dropdownmenu_text":            "{{ SECONDARY_COLOR }}",
@@ -77,7 +77,7 @@ body.master {
     min-width: 970px;
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
     padding-bottom: 80px;
-}        
+}
 
 img {
     margin: 0;
@@ -202,7 +202,7 @@ html.js-enabled #header-bar {
 }
 
 html.js-enabled #header ul li {
-    height: 37px;    
+    height: 37px;
 }
 
 #header ul li.selected {
@@ -222,7 +222,7 @@ html.js-enabled #header .search form {
 }
 
 html.js-enabled #header .search span {
-    display: inline;    
+    display: inline;
 }
 
 
@@ -268,7 +268,7 @@ html.js-enabled #header ul.menu {
     display: none;
     margin-top: 0;
 }
-    
+
 html.js-enabled #header ul ul {
     position: absolute;
 }
@@ -424,7 +424,7 @@ html.js-enabled #basket-tab-pin {
 #sidebar select {
   width: 170px;
 }
-  
+
 #keywords {
     width: 135px;
     height: 16px;
@@ -701,7 +701,7 @@ ul.errorlist li {
     margin-right: 10px;
 }
 
-#upload-queue .upload-complete {    
+#upload-queue .upload-complete {
     color: {{ colors.success }};
 }
 
@@ -1054,6 +1054,106 @@ div.fieldvalue-edit div.narrow input {
 
 tr.middle-align td, tr.middle-align th {
     vertical-align: middle;
+}
+
+
+/* Action drop-down menus for lists */
+
+table.itemactions tr+tr td {
+  border-top: solid thin white;
+  border-bottom: solid thin white;
+}
+
+td.item-actions-menu {
+  display: none;
+}
+
+tr.actionrow-selected td.item-actions-menu, tr.actionrow-open td.item-actions-menu {
+  display: table-cell;
+}
+
+
+tr.actionrow-selected td, tr.actionrow-open td {
+  border-top: solid thin  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid thin  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+td.item-actions-menu div {
+  display: none;
+  position: absolute;
+  border: solid thin {{ PRIMARY_COLOR }};
+  border-top-color: #f2f2f2;
+  border-right: none;
+  background-color: #f2f2f2;
+}
+
+td.item-actions-menu div ul {
+  list-style-type: disc;
+  margin-bottom: 0.5em;
+  color: {{ PRIMARY_COLOR }};
+}
+
+td.item-actions-menu div ul li a {
+  text-decoration: none;
+}
+
+tr.actionrow-open td.item-actions-menu div {
+  display: block;
+}
+
+html.js-enabled td.item-actions {
+  display: none;
+}
+
+
+/* Actionbar */
+
+#actionbar {
+  border: solid thin {{ PRIMARY_COLOR }};
+  border-left-color: lightgrey;
+  border-right-color: lightgrey;
+  height: 28px;
+  margin: 0;
+  background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+#actionbar .pagination {
+  float: right;
+  clear: none;
+  border: none;
+}
+
+#actionbar li {
+  list-style: none;
+  float: left;
+  padding: 0.2em 0.5em;
+  height: 23px;
+  border-right: solid thin {{ PRIMARY_COLOR }};
+}
+
+#actionbar a {
+  text-decoration: none;
+  color: black;
+}
+
+#actionbar li > input {
+  background: none;
+  border: none;
+}
+
+#actionbar li div.dropdown {
+  position: absolute;
+  background: #f2f2f2;
+  border: solid thin {{ PRIMARY_COLOR }};
+  padding: 0.5em;
+  margin-top: 0.2em;
+  -moz-box-shadow: 3px 3px 5px lightgrey;
+  -webkit-box-shadow: 3px 3px 5px lightgrey;
+}
+
+html.js-enabled #actionbar li div.dropdown {
+  display: none;
 }
 
 </style>

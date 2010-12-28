@@ -28,17 +28,20 @@ class SplitTaggingWidget(forms.MultiWidget):
             return [parse_tag_input(value[0]), None]
         else:
             return [None, None]
-    
 
-class SplitTaggingField(forms.MultiValueField):    
-    def __init__(self, choices=(), add_label='', attrs=None, *args, **kwargs):        
+
+class SplitTaggingField(forms.MultiValueField):
+    def __init__(self, choices=(), add_label='', attrs=None, *args, **kwargs):
         self.choices = list(choices)
         fields = (
             forms.MultipleChoiceField(choices=self.choices),
             TagField(),
         )
         self.widget = SplitTaggingWidget(attrs, self.choices, add_label)
-        super(SplitTaggingField, self).__init__(fields, *args, **kwargs)        
+        super(SplitTaggingField, self).__init__(fields, *args, **kwargs)
 
     def compress(self, data_list):
-        return '"%s"' % '","'.join(data_list[0] + parse_tag_input(data_list[1]))
+        if data_list:
+            return '"%s"' % '","'.join(data_list[0] + parse_tag_input(data_list[1]))
+        else:
+            return ''

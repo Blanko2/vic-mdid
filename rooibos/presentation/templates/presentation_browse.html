@@ -16,28 +16,12 @@
 {{ block.super }}
 
 {% if presentations %}
-
-  <div class="facet active-facet" id="presentations_sidebar_update_tags">
-    <div class="facet-header">Update Tags</div>
-    <div class="facet-body">Add or remove tags on selected presentations<br />
-        {{ form.tags.label_tag }}
-        {{ form.tags }}
-        {{ form.tags.errors }}
-
-        {{ form.mode.label_tag }}
-        {{ form.mode }}
-        {{ form.mode.errors }}
-        <input type="submit" value="Update" name="update_tags" />
-    </div>
-  </div>
-
   <div class="facet active-facet" id="presentations_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
         <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" name="keywords_go" />
     </div>
   </div>
-
 {% endif %}
 
 {% var as refine %}
@@ -110,21 +94,51 @@
 {% endblock %}
 
 
-{% block content %}
+
+{% block content-top %}
 
 {% autopaginate presentations 25 %}
 
 <h1>{{ manage|yesno:"Manage,Browse" }} Presentations</h1>
 
+
+<ul id="actionbar">
+
 {% if manage %}
-<a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a><br /><br />
+<li><a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a></li>
 {% endif %}
 
-{% paginate %}
+{% with usertags as actionbar_tags %}
+{% include 'ui_actionbar_tag_dropdown.html' %}
+{% endwith %}
+
+{% if manage %}
+{% if perms.presentation.publish_presentations %}
+<li><input type="submit" name="hide" value="Hide" /></li>
+<li><input type="submit" name="unhide" value="Show" /></li>
+{% endif %}
+<li><input type="submit" id="delete" name="delete" value="Delete" /></li>
+{% endif %}
+
+
+<li class="pagination">&nbsp;{% paginate %}</li>
+
+</ul>
+
+<br style="clear: left;" />
+
+
+{% endblock %}
+
+
+
+{% block content %}
+
+{% autopaginate presentations 25 %}
 
 {% if presentations %}
 
-<table summary="List of Presentations" class="list">
+<table summary="List of Presentations" class="itemactions">
     <tr>
         <th></th>
         <th>Title</th>
@@ -145,7 +159,7 @@
 {% for presentation in presentations %}
     {% owned_tags_for_object presentation for request.user as ptags %}
     {% owned_tags_for_object presentation for presentation.owner as otags %}
-    <tr class="{% cycle "" "altrow" %}">
+    <tr>
         <td><input type="checkbox" name="h" value="{{ presentation.id }}" /></td>
         <td>
             {% if manage %}
@@ -184,7 +198,7 @@
                 {% endif %}
             {% endif %}
         </td>
-        <td>
+        <td class="item-actions">
             {% if not presentation.password or presentation.unlocked %}
             {% list_viewers presentation request.get_full_path %}
             {% else %}
@@ -195,16 +209,6 @@
 {% endfor %}
 </table>
 
-{% paginate %}
-
-{% if manage %}
-<label>With selected</label>
-{% if perms.presentation.publish_presentations %}
-<input type="submit" name="hide" value="Hide" />
-<input type="submit" name="unhide" value="Show" />
-{% endif %}
-<input type="submit" id="delete" name="delete" value="Delete" />
-{% endif %}
 
 {% else %}
 No presentations available.
