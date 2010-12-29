@@ -200,7 +200,7 @@
         </td>
         <td class="item-actions">
             {% if manage %}
-            <a href="{% url presentation-add-selected presentation.id, presentation.name %}">Add selected items</a>,
+            <input type="submit" name="add-selected-items-{{ presentation.id }}" value="Add selected items" />, 
             {% endif %}
             {% if not presentation.password or presentation.unlocked %}
             {% list_viewers presentation request.get_full_path %}

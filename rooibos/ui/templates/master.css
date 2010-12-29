@@ -1098,6 +1098,17 @@ td.item-actions-menu div ul li a {
   text-decoration: none;
 }
 
+td.item-actions-menu div ul li input {
+    border: none;
+    background: none;
+    padding: 0;
+    margin-left: -3px;
+    cursor: pointer;
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    font-size: 100%;
+    color: {{ colors.links }};
+}
+
 tr.actionrow-open td.item-actions-menu div {
   display: block;
 }
@@ -1139,8 +1150,12 @@ html.js-enabled td.item-actions {
 }
 
 #actionbar li > input {
-  background: none;
-  border: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    font-size: 100%;
+    margin-top: -2px;
 }
 
 #actionbar li div.dropdown {
@@ -1160,13 +1175,6 @@ html.js-enabled #actionbar li div.dropdown {
 
 html.js-enabled #actionbar li .dropdown-anchor {
     cursor: pointer;
-}
-
-html.js-enabled #actionbar li > input {
-    cursor: pointer;
-    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
-    font-size: 100%;
-    margin-top: -2px;
 }
 
 </style>

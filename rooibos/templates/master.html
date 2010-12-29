@@ -444,7 +444,7 @@
               var r = $(this);
               var c = $("<td class='item-actions-menu'><img src='{% url static 'images/down_arrow.png' %}' /><" + "/td>");
               var u = $("<ul>");
-              $("td.item-actions a", r).each(function() { u.append($("<li>").append($(this))); });
+              $("td.item-actions a, td.item-actions input", r).each(function() { u.append($("<li>").append($(this))); });
               if (!u.children().length) u.append($("<li>No actions available<" + "/li>"));
               r.append(c.append($("<div>").append(u)));
             });
