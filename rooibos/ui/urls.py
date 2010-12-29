@@ -10,4 +10,5 @@ urlpatterns = patterns('',
     url(r'^manage/$', manage, name='ui-management'),
     url(r'^options/$', options, name='ui-options'),
     url(r'^clear-selected/$', clear_selected_records, name='ui-clear-selected'),
+    url(r'^delete-selected/$', delete_selected_records, name='ui-delete-selected'),
 )

@@ -136,7 +136,6 @@ def manage(request):
 
 @login_required
 def options(request):
-
     return render_to_response('ui_options.html',
                               {
                               },
@@ -145,5 +144,27 @@ def options(request):
 
 def clear_selected_records(request):
     request.session['selected_records'] = ()
-
     return HttpResponseRedirect(request.GET.get('next', reverse('solr-search')))
+
+
+@login_required
+def delete_selected_records(request):
+
+    selected = list(request.session['selected_records'])
+    deletable_items = []
+    for record in Record.objects.filter(id__in=selected):
+        if record.deletable_by(request.user):
+            deletable_items.append(record)
+
+    if request.method == 'POST':
+        for record in deletable_items:
+            if record.id in selected: selected.remove(record.id)
+            record.delete()
+        request.session['selected_records'] = selected
+        return HttpResponseRedirect(request.GET.get('next', reverse('solr-selected')))
+
+    return render_to_response('ui_delete_selected.html',
+                              {
+                                'items': deletable_items,
+                              },
+                              context_instance=RequestContext(request))

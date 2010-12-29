@@ -160,6 +160,12 @@
   <a href="{% url presentation-create %}">Presentation</a>
   </div>
 </li>
+
+<li><span class="dropdown-anchor">Selected Items <img src="{% url static 'images/down_arrow.png' %}" /></span>
+  <div class="dropdown">
+  <a href="{% url ui-delete-selected %}" id="delete-selected-items">Delete</a><br />
+  </div>
+</li>
 {% endif %}
 
 <!--
