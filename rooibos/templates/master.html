@@ -122,7 +122,7 @@
                         <ul class="menu">
                             <li><a href="{% url presentation-manage %}">Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Favorites</a></li>
-                            <li><a href="{% url solr-organize %}?c=owner:{{ user.id }}">Content</a></li>
+                            <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Content</a></li>
                         </ul>
                     </li>
                     {% endif %}
