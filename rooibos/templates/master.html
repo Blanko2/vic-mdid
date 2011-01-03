@@ -482,9 +482,9 @@
             // actionbar functions
 
               $(document).click(function() {
-                $("#actionbar li div.dropdown").hide();
+                $("ul.actionbar li div.dropdown").hide();
               });
-              $("#actionbar li div.dropdown").click(function(event) {
+              $("ul.actionbar li div.dropdown").click(function(event) {
                 event.stopPropagation();
               }).each(function() {
                 var d = $(".dropdown-anchor", $(this).parent());
@@ -495,7 +495,7 @@
                       menu.hide();
                     } else {
                       // hide all other menus
-                      $("#actionbar li div.dropdown").hide();
+                      $("ul.actionbar li div.dropdown").hide();
                       var o = {
                         left: r.offset().left - 1,
                         top: r.offset().top + 28
@@ -510,7 +510,7 @@
                   });
               }).css("cursor", "default");
 
-              $("#actionbar li div.tags-dropdown").bind('actionbar-dropdown-open', function() {
+              $("ul.actionbar li div.tags-dropdown").bind('actionbar-dropdown-open', function() {
                 var menu = $(this);
                 var tags = {};
                 var rows = 0;
