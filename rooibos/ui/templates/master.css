@@ -409,6 +409,7 @@ html.js-enabled #basket-tab-pin {
     width: 195px;
     clear: right;
     margin-top: 20px;
+    background-color: {{ colors.content_background }};
 }
 
 #sidebar img, #sidebar .image {
@@ -583,7 +584,7 @@ html.js-enabled #basket-tab-pin {
 
 
 
-form.vertical label {
+.vertical label {
     display: block;
     float: left;
     width: 120px;
@@ -592,24 +593,24 @@ form.vertical label {
     margin: 3px 3px;
 }
 
-form.vertical input, form.vertical select, form.vertical textarea, form.vertical label.inline, form.vertical ul {
+.vertical input, .vertical select, .vertical textarea, .vertical label.inline, .vertical ul {
     display: block;
     float: left;
     margin: 3px;
     list-style: none;
 }
 
-form.vertical li label {
+.vertical li label {
     clear: left;
     width: auto;
 }
 
-form.vertical label.inline {
+.vertical label.inline {
     clear: none;
     width: auto;
 }
 
-form.vertical div.row {
+.vertical div.row {
     clear: left;
     margin: 3px 3px 3px 124px;
 }
@@ -1120,23 +1121,27 @@ html.js-enabled td.item-actions {
 
 /* Actionbar */
 
-#actionbar {
+ul.actionbar {
   border: solid thin {{ PRIMARY_COLOR }};
   border-left-color: lightgrey;
   border-right-color: lightgrey;
   height: 28px;
-  margin: 0;
+  margin: 0 0 20px 0;
   background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
   clear: left;
 }
 
-#actionbar .pagination {
+ul.actionbar .pagination {
   float: right;
   clear: none;
   border: none;
 }
 
-#actionbar li {
+ul.actionbar .secondary {
+  border: none;
+}
+
+ul.actionbar li {
   list-style: none;
   float: left;
   padding: 0.2em 0.5em;
@@ -1144,12 +1149,12 @@ html.js-enabled td.item-actions {
   border-right: solid thin {{ PRIMARY_COLOR }};
 }
 
-#actionbar a {
+ul.actionbar a {
   text-decoration: none;
   color: black;
 }
 
-#actionbar li > input {
+ul.actionbar li > input, ul.actionbar li > button {
     background: none;
     border: none;
     cursor: pointer;
@@ -1158,7 +1163,7 @@ html.js-enabled td.item-actions {
     margin-top: -2px;
 }
 
-#actionbar li div.dropdown {
+ul.actionbar li div.dropdown {
   position: absolute;
   background: #f2f2f2;
   border: solid thin {{ PRIMARY_COLOR }};
@@ -1169,11 +1174,11 @@ html.js-enabled td.item-actions {
   z-index: 1000;
 }
 
-html.js-enabled #actionbar li div.dropdown {
+html.js-enabled ul.actionbar li div.dropdown {
   display: none;
 }
 
-html.js-enabled #actionbar li .dropdown-anchor {
+html.js-enabled ul.actionbar li .dropdown-anchor {
     cursor: pointer;
 }
 

@@ -523,7 +523,7 @@
                   });
                   rows++;
                 });
-                $("input:checkbox", menu).each(function() {
+                if (rows) $("input:checkbox", menu).each(function() {
                   var t = $(this).next().text();
                   var c = $("<input type='checkbox' value='true' />");
                   c.attr('name', $(this).attr('name'));
