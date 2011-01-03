@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rooibos.access import accessible_ids
+from rooibos.access import accessible_ids, check_access
 from rooibos.util import unique_slug, cached_property, clear_cached_properties
 import logging
 import random
@@ -96,13 +96,17 @@ class Record(models.Model):
     owner = models.ForeignKey(User, null=True)
 
     @staticmethod
-    def get_or_404(id, user):
+    def get_many(user, *ids):
         if user.is_superuser:
             q = Q()
         else:
             q = ((Q(owner=user) if user.is_authenticated() else Q()) |
                  Q(collection__id__in=accessible_ids(user, Collection)))
-        return get_object_or_404(Record.objects.filter(q, id=id).distinct())
+        return Record.objects.filter(q, id__in=ids)
+
+    @staticmethod
+    def get_or_404(id, user):
+        return get_object_or_404(Record.get_many(user, id).distinct())
 
     @staticmethod
     def by_fieldvalue(fields, values):
@@ -207,6 +211,12 @@ class Record(models.Model):
     def _clear_cached_items(self):
         clear_cached_properties(self, 'title', 'thumbnail')
 
+    def deletable_by(self, user):
+        return (
+            # checks if user is owner:
+            check_access(user, self, write=True) or
+            # or if user has write access to collection:
+            accessible_ids(user, self.collection_set, write=True).count() > 0)
 
 
 class MetadataStandard(models.Model):

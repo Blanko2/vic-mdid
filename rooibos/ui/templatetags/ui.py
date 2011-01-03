@@ -92,17 +92,6 @@ def tag(context, tag, object=None, removable=False, styles=None):
             }
 
 
-@register.inclusion_tag('ui_create_record_sidebar.html', takes_context=True)
-def create_record_sidebar(context):
-    user = context['request'].user
-    authenticated = user.is_authenticated()
-    return {'regular': authenticated and filter_by_access(user, Collection, write=True).count() > 0,
-            'personal': authenticated and filter_by_access(user, Collection).count() > 0,
-            'request': context['request'],
-            }
-
-
-
 # The following is based on http://www.djangosnippets.org/snippets/829/
 
 class VariablesNode(template.Node):

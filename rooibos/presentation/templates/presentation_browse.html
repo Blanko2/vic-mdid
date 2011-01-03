@@ -102,7 +102,7 @@
 <h1>{{ manage|yesno:"Manage,Browse" }} Presentations</h1>
 
 
-<ul id="actionbar">
+<ul class="actionbar">
 
 {% if manage %}
 <li><a href="{% url presentation-create %}?next={% url presentation-manage %}">Create new presentation</a></li>
@@ -199,6 +199,9 @@
             {% endif %}
         </td>
         <td class="item-actions">
+            {% if manage %}
+            <input type="submit" name="add-selected-items-{{ presentation.id }}" value="Add selected items" />,
+            {% endif %}
             {% if not presentation.password or presentation.unlocked %}
             {% list_viewers presentation request.get_full_path %}
             {% else %}

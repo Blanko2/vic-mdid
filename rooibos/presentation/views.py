@@ -22,6 +22,7 @@ from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
 from rooibos.data.models import FieldSet, Record
 from rooibos.data.forms import FieldSetChoiceField
+from rooibos.ui.actionbar import update_actionbar_tags
 from models import Presentation, PresentationItem
 import logging
 import base64
@@ -77,53 +78,16 @@ def edit(request, id, name):
 
     class PropertiesForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
-        tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
-                                         required=False, add_label='Additional tags')
+#        tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
+#                                         required=False, add_label='Additional tags')
         hidden = forms.BooleanField(label='Hidden', required=False)
-        description = forms.CharField(label='Description', widget=forms.Textarea, required=False)
+        description = forms.CharField(label='Description',
+                                      widget=forms.Textarea(attrs={'rows': 5}), required=False)
         password = forms.CharField(label='Password', required=False,
                                    max_length=Presentation._meta.get_field('password').max_length)
         fieldset = FieldSetChoiceField(label='Field set', user=request.user)
         hide_default_data = forms.BooleanField(label='Hide default data', required=False)
 
-
-    if request.method == "POST":
-        form = PropertiesForm(request.POST)
-        if form.is_valid():
-            presentation.title = form.cleaned_data['title']
-            presentation.name = None
-            if request.user.has_perm('presentation.publish_presentations'):
-                presentation.hidden = form.cleaned_data['hidden']
-            presentation.description = form.cleaned_data['description']
-            presentation.password = form.cleaned_data['password']
-            presentation.fieldset = form.cleaned_data['fieldset']
-            presentation.hide_default_data = form.cleaned_data['hide_default_data']
-            presentation.save()
-            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                    form.cleaned_data['tags'])
-            request.user.message_set.create(message="Changes to presentation saved successfully.")
-            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
-    else:
-        form = PropertiesForm(initial={'title': presentation.title,
-                               'hidden': presentation.hidden,
-                               'tags': tags,
-                               'description': presentation.description,
-                               'hidden': presentation.hidden,
-                               'fieldset': presentation.fieldset.id if presentation.fieldset else None,
-                               'hide_default_data': presentation.hide_default_data,
-                               })
-
-    return render_to_response('presentation_properties.html',
-                      {'presentation': presentation,
-                       'form': form,},
-                      context_instance=RequestContext(request))
-
-
-@login_required
-def items(request, id, name):
-
-    presentation = get_object_or_404(Presentation.objects.filter(
-        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
 
     class BaseOrderingForm(ModelForm):
         record = forms.CharField(widget=forms.HiddenInput)
@@ -149,7 +113,7 @@ def items(request, id, name):
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
                                            exclude=('presentation'), form=BaseOrderingForm)
     queryset = presentation.items.select_related('record').all()
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('update-items'):
         formset = OrderingFormSet(request.POST, queryset=queryset)
         if formset.is_valid():
             instances = formset.save(commit=False)
@@ -157,16 +121,50 @@ def items(request, id, name):
                 instance.presentation = presentation
                 instance.save()
             request.user.message_set.create(message="Changes to presentation items saved successfully.")
-            return HttpResponseRedirect(reverse('presentation-items', kwargs={'id': presentation.id, 'name': presentation.name}))
+            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
         formset = OrderingFormSet(queryset=queryset)
 
     contenttype = ContentType.objects.get_for_model(Presentation)
 
-    return render_to_response('presentation_items.html',
+    if request.method == "POST" and (
+        request.POST.get('update-properties') or request.POST.get('update_tags')):
+
+        update_actionbar_tags(request, presentation)
+
+        form = PropertiesForm(request.POST)
+        if form.is_valid():
+            presentation.title = form.cleaned_data['title']
+            presentation.name = None
+            if request.user.has_perm('presentation.publish_presentations'):
+                presentation.hidden = form.cleaned_data['hidden']
+            presentation.description = form.cleaned_data['description']
+            presentation.password = form.cleaned_data['password']
+            presentation.fieldset = form.cleaned_data['fieldset']
+            presentation.hide_default_data = form.cleaned_data['hide_default_data']
+            presentation.save()
+#            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
+#                                    form.cleaned_data['tags'])
+            request.user.message_set.create(message="Changes to presentation saved successfully.")
+            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
+    else:
+        form = PropertiesForm(initial={'title': presentation.title,
+                               'hidden': presentation.hidden,
+#                               'tags': tags,
+                               'description': presentation.description,
+                               'hidden': presentation.hidden,
+                               'fieldset': presentation.fieldset.id if presentation.fieldset else None,
+                               'hide_default_data': presentation.hide_default_data,
+                               })
+
+    return render_to_response('presentation_properties.html',
                       {'presentation': presentation,
                        'contenttype': "%s.%s" % (contenttype.app_label, contenttype.model),
-                       'formset': formset,},
+                       'formset': formset,
+                       'form': form,
+                       'selected_tags': [tag.name for tag in tags],
+                       'usertags': existing_tags if len(existing_tags) > 0 else None,
+                       },
                       context_instance=RequestContext(request))
 
 
@@ -245,33 +243,23 @@ def browse(request, manage=False):
 
         if request.POST.get('update_tags'):
             ids = map(int, request.POST.getlist('h'))
-            new_tags = parse_tag_input(request.POST.get('new_tags'))
-            all_tags = parse_tag_input(request.POST.get('all_tags'))
-            try:
-                update_tags = dict((base64.b32decode(k[11:].replace('_', '=')), v)
-                    for k, v in request.POST.iteritems()
-                    if k.startswith('update_tag_'))
-            except TypeError:
-                # Could not decode base32 encoded tag names
-                update_tags = ()
+            update_actionbar_tags(request, *presentations.filter(id__in=ids))
 
-            remove_tags = [tag_name for tag_name in all_tags
-                           if tag_name not in update_tags.keys() and tag_name not in new_tags]
+        # check for clicks on "add selected items" buttons
+        for button in filter(lambda k: k.startswith('add-selected-items-'), request.POST.keys()):
+            id = int(button[len('add-selected-items-'):])
+            selected = request.session.get('selected_records', ())
+            records = Record.get_many(request.user, *selected)
 
-            for presentation in presentations.filter(id__in=ids):
-                wrapper = OwnedWrapper.objects.get_for_object(user=request.user, object=presentation)
-                for tag_name, action in update_tags.iteritems():
-                    if action == 'mixed':
-                        # Don't need to change anything
-                        continue
-                    elif action == 'true':
-                        # Add tag to all selected presentations
-                        Tag.objects.add_tag(wrapper, '"%s"' % tag_name)
-                for tag_name in new_tags:
-                    Tag.objects.add_tag(wrapper, '"%s"' % tag_name)
-                for tag_name in remove_tags:
-                    keep_tags = Tag.objects.get_for_object(wrapper).exclude(name=tag_name).values_list('name')
-                    Tag.objects.update_tags(wrapper,  ' '.join(map(lambda s: '"%s"' % s, keep_tags)))
+            presentation = get_object_or_404(Presentation.objects.filter(
+                id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+
+            c = presentation.items.count()
+            for record in records:
+                c += 1
+                presentation.items.create(record=record, order=c)
+
+            return HttpResponseRedirect(reverse('presentation-items', args=(presentation.id, presentation.name)))
 
         return HttpResponseRedirect(request.get_full_path())
 

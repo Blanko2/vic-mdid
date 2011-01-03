@@ -48,21 +48,12 @@ def collections(request):
 
 @login_required
 def record_delete(request, id, name):
-
     if request.method == 'POST':
-
         record = Record.get_or_404(id, request.user)
-        can_edit = (
-            # checks if current user is owner:
-            check_access(request.user, record, write=True) or
-            # or if user has write access to collection:
-            accessible_ids(request.user, record.collection_set, write=True).count() > 0)
-
-        if can_edit:
+        if record.deletable_by(request.user):
             record.delete()
             request.user.message_set.create(message="Record deleted successfully.")
             return HttpResponseRedirect(reverse('solr-search'))
-
     return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
 
