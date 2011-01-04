@@ -11,6 +11,7 @@ def settings(request):
         'STATIC_DIR': _settings.STATIC_DIR,
         'PRIMARY_COLOR': _settings.PRIMARY_COLOR,
         'SECONDARY_COLOR': _settings.SECONDARY_COLOR,
+        'CUSTOM_TRACKER_HTML': getattr(_settings, 'CUSTOM_TRACKER_HTML', ''),
     }
 
 

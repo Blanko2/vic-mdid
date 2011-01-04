@@ -141,6 +141,7 @@ SECONDARY_COLOR = "rgb(118, 147, 154)"
 
 WWW_AUTHENTICATION_REALM = "Please log in to access media from MDID at Your University"
 
+CUSTOM_TRACKER_HTML = ""
 
 additional_settings = [
 #    'apps.jmutube.settings_local',
