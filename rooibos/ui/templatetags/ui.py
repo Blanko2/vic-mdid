@@ -9,7 +9,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.data.models import Record, Collection
 from rooibos.util.models import OwnedWrapper
 from rooibos.access import filter_by_access
-from base64 import b32encode
+from base64 import b32encode, b64encode
 
 register = template.Library()
 
@@ -27,8 +27,12 @@ def dir2(var):
     return dir(var)
 
 @register.filter
-def base32(value):
-    return b32encode(str(value)).replace('=', '_')
+def base32(value, filler='='):
+    return b32encode(str(value)).replace('=', filler)
+
+@register.filter
+def base64(value, filler='='):
+    return b64encode(str(value)).replace('=', filler)
 
 @register.filter
 def scale(value, params):
