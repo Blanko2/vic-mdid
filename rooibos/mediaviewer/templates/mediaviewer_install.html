@@ -25,11 +25,13 @@
 {% block content %}
 
 {% var as air %}
-{"url": "http{% if request.META.HTTPS == "on" %}s{% endif %}://{{ request.META.HTTP_HOST }}{% url static 'dmvinstaller/DesktopMediaViewer.air' %}"}
+{"url": "http{% if request.META.HTTPS == "on" %}s{% endif %}://{{ request.META.HTTP_HOST }}{% url static 'dmvinstaller/DesktopMediaViewer.air' %}",
+"server": "http{% if request.META.HTTPS == "on" %}s{% endif %}://{{ request.META.HTTP_HOST }}{% url main %}"}
 {% endvar %}
 
 
 <h1>Install MediaViewer</h1>
+
 
 
 
@@ -70,7 +72,7 @@ if (hasReqestedVersion) {
 		'name','badge',
 		'allowscriptaccess','all',
 		'pluginspage','http://www.macromedia.com/go/getflashplayer',
-		'flashvars','appname=Desktop%20MediaViewer&arguments=aHR0cDovL21kaWQuY2l0LmptdS5lZHUv&appurl={{ air.url }}&airversion=2.0&imageurl={% url static 'dmvinstaller/badgeImage.png' %}',
+		'flashvars','appname=Desktop%20MediaViewer&arguments={{ air.server|base64|urlencode }}&appurl={{ air.url }}&airversion=2.0&imageurl={% url static 'dmvinstaller/badgeImage.png' %}',
 		'movie','{% url static 'dmvinstaller/badge' %}' ); //end AC code
 
 } else {  // Flash Player is too old or we can't detect the plugin
