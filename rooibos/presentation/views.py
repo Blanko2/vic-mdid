@@ -259,7 +259,7 @@ def browse(request, manage=False):
                 c += 1
                 presentation.items.create(record=record, order=c)
 
-            return HttpResponseRedirect(reverse('presentation-items', args=(presentation.id, presentation.name)))
+            return HttpResponseRedirect(reverse('presentation-edit', args=(presentation.id, presentation.name)))
 
         return HttpResponseRedirect(request.get_full_path())
 
