@@ -54,7 +54,7 @@ def create(request):
                 request.session['selected_records'] = ()
             Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
                                     form.cleaned_data['tags'])
-            return HttpResponseRedirect(next)
+            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
         form = CreatePresentationForm()
 
