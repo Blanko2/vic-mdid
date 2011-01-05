@@ -18,7 +18,7 @@
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
-    {% include "master.css" %}
+    <link href="{% url ui-css 'master' %}" rel="stylesheet" type="text/css" media="screen">
 {% endcompress %}
 <!--[if IE]>
 {% compress css %}
