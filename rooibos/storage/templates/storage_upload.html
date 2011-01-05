@@ -88,7 +88,7 @@ $(document).ready(function() {
 
 <h2>Upload Media</h2>
 
-<form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="upload-control">{% csrf_token %}
+<form method="post" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="upload-control">
     {{ form.storage.label }} {{ form.storage }}<br />
     <span id="html-upload-control">{{ form.file.label }} {{ form.file }}<br /></span>
     <br /><input type="submit" value="Upload Media" id="upload-button" />

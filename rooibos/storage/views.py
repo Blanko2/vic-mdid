@@ -14,6 +14,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.views.decorators.cache import cache_control
+from django.views.decorators.csrf import csrf_exempt
 from models import Media, Storage, TrustedSubnet, ProxyUrl
 from rooibos.access import accessible_ids, accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
@@ -84,6 +85,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 
 
 
+@csrf_exempt
 @login_required
 def media_upload(request, recordid, record):
     available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True
@@ -248,7 +250,7 @@ def manage_storage(request, storageid=None, storagename=None):
                           context_instance=RequestContext(request))
 
 
-
+@csrf_exempt
 @login_required
 def import_files(request):
 
