@@ -143,6 +143,8 @@ WWW_AUTHENTICATION_REALM = "Please log in to access media from MDID at Your Univ
 
 CUSTOM_TRACKER_HTML = ""
 
+EXPOSE_TO_CONTEXT = ('STATIC_DIR', 'PRIMARY_COLOR', 'SECONDARY_COLOR', 'CUSTOM_TRACKER_HTML', 'ADMINS')
+
 additional_settings = [
 #    'apps.jmutube.settings_local',
 #    'apps.svohp.settings_local',
