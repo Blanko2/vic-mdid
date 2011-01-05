@@ -11,4 +11,5 @@ urlpatterns = patterns('',
     url(r'^options/$', options, name='ui-options'),
     url(r'^clear-selected/$', clear_selected_records, name='ui-clear-selected'),
     url(r'^delete-selected/$', delete_selected_records, name='ui-delete-selected'),
+    url(r'^report-problem/$', direct_to_template, {'template': 'ui_report_problem.html'}, name='ui-report-problem'),
 )
