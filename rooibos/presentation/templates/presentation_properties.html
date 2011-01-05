@@ -218,7 +218,7 @@ td.annotation-col textarea {
                 });
             },
             start: function(event, ui) {
-                disableMetadataBubble(true);
+                $("#lighttable .record-anchor[id*=record-id-]").qtip('hide');
                 if (!ui.item.hasClass('selected')) {
                     $("#lighttable div.slide").removeClass('selected');
                     ui.item.addClass('selected');
@@ -230,7 +230,6 @@ td.annotation-col textarea {
             },
             stop: function(event, ui) {
                 selected_elements.not(ui.item).show(100);
-                disableMetadataBubble(false);
             }
             }).show();
 
