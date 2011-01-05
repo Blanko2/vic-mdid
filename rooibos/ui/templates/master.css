@@ -869,15 +869,19 @@ div.metadata-subitem div.label {
 
 .record-preview div.metadata {
     font-size: x-small;
-    margin: 10px 0;
+    margin: 0;
 }
 
 .record-preview div.metadata div.label {
     width: 100px;
 }
 
-.record-preview div.metadata div.value{
+.record-preview div.metadata div.value {
     width: 230px;
+}
+
+.record-preview .altrow {
+    background-color: transparent;
 }
 
 div.fieldvalue-edit {

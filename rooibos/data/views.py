@@ -495,14 +495,13 @@ def data_import_file(request, file):
                               context_instance=RequestContext(request))
 
 
-@json_view
 def record_preview(request, id):
     record = Record.get_or_404(id, request.user)
-    return dict(html=render_to_string('data_previewrecord.html',
+    return render_to_response('data_previewrecord.html',
                               {'record': record,
                                'none': None,
                                },
-                              context_instance=RequestContext(request)))
+                              context_instance=RequestContext(request))
 
 @login_required
 def manage_collections(request):

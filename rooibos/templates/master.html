@@ -209,7 +209,9 @@
                 data: {'id': JSON.stringify(ids), 'checked': checked},
                 dataType: 'json',
                 success: function(r) {
-                    $("#basket-thumbs").html(r.basket);
+                    var basket_thumbs = $("#basket-thumbs");
+                    basket_thumbs.html(r.basket);
+                    add_metadata_popup(basket_thumbs);
                     $("#basket-header").html(r.header);
                     basket_scroll_arrows();
                 }
@@ -221,81 +223,42 @@
         }
 
 
-        // metadata bubble code
-        var disabledMetadataBubble = false;
-        var showMetadataBubbleTimeout;
-        var hideMetadataBubbleTimeout;
-        var metadataBubbleCache = Object();
-        function showMetadataBubble(anchor, id) {
-            if (disabledMetadataBubble) return;
-            clearTimeout(hideMetadataBubbleTimeout);
-            var bubble = $("#metadatabubble");
-            var height = 250;
-            var width = 340;
-            var w = $(window);
-            var left = anchor.offset().left + anchor.outerWidth() + 10;
-            var top = Math.max(anchor.offset().top - 10, w.scrollTop() + 5);
-            var aleft = left - 10;
-            var atop = top + 10;
-            var bg = '{% url static "images/bubblearrow-left.png" %}';
-            if (top + height + 25 > w.height() + w.scrollTop())
-                top = Math.max(w.height() + w.scrollTop() - height - 25, w.scrollTop() + 5);
-            if (left + width + 15 > w.width() + w.scrollLeft()) {
-                if (anchor.offset().left - width - 27 >= w.scrollLeft()) {
-                    left = anchor.offset().left - width - 22;
-                    aleft = left + width + 11;
-                    bg = '{% url static "images/bubblearrow-right.png" %}';
-                } else {
-                    left = w.width() - w.scrollLeft() - width - 20;
-                    aleft = left - 10;
-                }
-            }
-            var html = metadataBubbleCache[id] ?
-                metadataBubbleCache[id] :
-                "<img src='{% url static "images/loading.gif" %}' style='width: 16px; height: 16px; margin: 122px;' />";
-            bubble.html(html).css('left', left).css('top', top).show('fast');
-            $("#metadatabubble-arrow").css('background-image', 'url(' + bg + ')').css('left', aleft).css('top', atop).show('fast');
-            if (!metadataBubbleCache[id])
-                ajaxManager.add({
-                    type: 'GET',
-                    url: '{% url data-record-preview 0 %}'.replace('/0/', '/' + id + '/'),
-                    dataType: 'json',
-                    success: function(r) {
-                        metadataBubbleCache[id] = r.html;
-                        $("#metadatabubble").html(r.html);
+        function add_metadata_popup(context) {
+            $(".record-anchor[id*=record-id-]", context).each(function() {
+                var anchor = $(this);
+                var id = anchor.attr("id");
+                id = id.substring(id.lastIndexOf('-') + 1);
+                anchor.qtip({
+                    content: {
+                        url: '{% url data-record-preview 0 %}'.replace('/0/', '/' + id + '/')
+                    },
+                    show: {
+                        delay: 1000,
+                        solo: true
+                    },
+                    position: {
+                        corner: {
+                            tooltip: 'bottomLeft',
+                            target: 'topRight'
+                        },
+                        adjust: {
+                            screen: true,
+                        }
+                    },
+                    style: {
+                        border: {
+                            radius: 4
+                        },
+                        fontSize: 'smaller',
+                        tip: true,
+                        name: 'cream',
+                        width: 380
                     }
                 });
+            });
         }
 
-        function hideMetadataBubble() {
-            $("#metadatabubble,#metadatabubble-arrow").hide('fast');
-        }
-
-        function disableMetadataBubble(disable) {
-            disabledMetadataBubble = (disable == true)
-            if (disabledMetadataBubble) hideMetadataBubble();
-        }
-
-        function metadataBubbleTimeout(anchor, show) {
-            var id = anchor.attr("id");
-            id = id.substring(id.lastIndexOf('-') + 1);
-            clearTimeout(hideMetadataBubbleTimeout);
-            clearTimeout(showMetadataBubbleTimeout);
-            if (show)
-                showMetadataBubbleTimeout = setTimeout(function() { showMetadataBubble(anchor, id); }, 500);
-            else
-                hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
-        }
-
-        $(".record-anchor[id*=record-id-]").live('mouseenter mouseleave', function(event) {
-                metadataBubbleTimeout($(this), event.type == 'mouseenter');
-        });
-
-        $("#metadatabubble").hover(function() {
-            clearTimeout(hideMetadataBubbleTimeout);
-        }, function() {
-            hideMetadataBubbleTimeout = setTimeout(function() { hideMetadataBubble(); }, 100);
-        });
+        add_metadata_popup();
 
 
         function store_profile_setting(key, value) {
