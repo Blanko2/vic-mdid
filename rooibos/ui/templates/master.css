@@ -953,31 +953,6 @@ div.fieldvalue-edit div.narrow input {
     vertical-align: middle;
 }
 
-
-#metadatabubble {
-    position: absolute;
-    width: 340px;
-    height: 250px;
-    background-color: #FFFFDF;
-    display: none;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    border: solid 1px lightgrey;
-    overflow: hidden;
-    padding: 5px;
-    -moz-box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
-    -webkit-box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
-    box-shadow: 3px 3px 10px {{ colors.drop_shadow }};
-}
-
-#metadatabubble-arrow {
-    position: absolute;
-    width: 11px;
-    height: 22px;
-    display: none;
-    background: transparent;
-}
-
 #criteria input {
     width: 300px;
 }
