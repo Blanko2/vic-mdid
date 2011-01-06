@@ -120,6 +120,7 @@ td.annotation-col textarea {
             });
             $(".orderinput input").each(function(i, e) { $(e).val(i); });
             e.preventDefault();
+            add_metadata_popup($("#lighttable"));
         });
 
         $("#delete-button").click(function(e) {
@@ -259,9 +260,6 @@ td.annotation-col textarea {
 <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
 
 <ul class="actionbar">
-<li><input type="submit" name="update-properties" value="Update" /></li>
-<li><a href="{% url presentation-manage %}">Cancel</a></li>
-
 {% with usertags as actionbar_tags %}
 {% include 'ui_actionbar_tag_dropdown.html' %}
 {% endwith %}
@@ -285,6 +283,7 @@ td.annotation-col textarea {
 {{ form.fieldset.label_tag }}
 {{ form.fieldset }}
 {{ form.fieldset.errors }}
+
 </div>
 
 <div style="float: left;">
@@ -297,6 +296,11 @@ td.annotation-col textarea {
 {{ form.hide_default_data.label_tag }}
 {{ form.hide_default_data }}
 {{ form.hide_default_data.errors }}
+</div>
+
+<div class="row">
+<input type="submit" name="update-properties" value="Update" />
+<a href="{% url presentation-manage %}">Cancel</a>
 </div>
 
 </div>
