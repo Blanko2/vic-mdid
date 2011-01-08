@@ -22,6 +22,7 @@ from rooibos.util import safe_int, json_view
 from rooibos.util.models import OwnedWrapper
 from rooibos.contrib.tagging.models import Tag
 import django.contrib.auth
+from django.views.decorators.csrf import csrf_exempt
 
 
 @json_view
@@ -45,6 +46,7 @@ def collections(request, id=None):
     }
 
 
+@csrf_exempt
 @json_view
 def login(request):
     if request.method == 'POST':
