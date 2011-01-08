@@ -16,6 +16,9 @@ apps_showcases = list(s[5:].replace('.', '-') + '-showcase.html' for s in apps)
 # Cache static files
 serve = cache_control(max_age=365 * 24 * 3600)(serve)
 
+handler404 = getattr(settings, 'HANDLER404', handler404)
+handler500 = getattr(settings, 'HANDLER500', handler500)
+
 
 urls = [
     url(r'^$', main, {'HELP': 'frontpage'}, name='main'),
