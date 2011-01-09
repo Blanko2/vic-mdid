@@ -687,7 +687,7 @@ class MigratePresentationFolders(MigrateModel):
         return content_hash(row.Title)
 
     def update(self, instance, row):
-        tag, created = Tag.objects.get_or_create(name=row.Title)
+        tag, created = Tag.objects.get_or_create(name=row.Title.strip())
         instance.tag = tag
 
     def create_instance(self, row):
