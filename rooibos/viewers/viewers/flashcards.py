@@ -72,7 +72,10 @@ class FlashCards(object):
         return_url = request.GET.get('next', reverse('presentation-browse'))
         presentation = Presentation.get_by_id_for_request(id, request)
         if not presentation:
-            return HttpResponseRedirect(return_url)
+            if not request.user.is_authenticated():
+                return HttpResponseRedirect(reverse('login') + '?next=' + request.get_full_path())
+            else:
+                return HttpResponseRedirect(return_url)
 
         passwords = request.session.get('passwords', dict())
 

@@ -12,10 +12,10 @@ class ViewPresentation(object):
 
     title = "View"
     weight = 100
-    
+
     def __init__(self):
         pass
-    
+
     def analyze(self, obj, user):
         if not isinstance(obj, Presentation):
             return NO_SUPPORT
@@ -27,19 +27,22 @@ class ViewPresentation(object):
             return PARTIAL_SUPPORT
         else:
             return FULL_SUPPORT
-    
+
     def url(self):
         return url(r'^view/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.view, name='viewers-view')
-    
+
     def url_for_obj(self, obj):
         return reverse('viewers-view', kwargs={'id': obj.id, 'name': obj.name})
-    
+
     def view(self, request, id, name):
         return_url = request.GET.get('next', reverse('presentation-browse'))
         presentation = Presentation.get_by_id_for_request(id, request)
         if not presentation:
-            return HttpResponseRedirect(return_url)
-        
+            if not request.user.is_authenticated():
+                return HttpResponseRedirect(reverse('login') + '?next=' + request.get_full_path())
+            else:
+                return HttpResponseRedirect(return_url)
+
         return render_to_response('presentations/mediaviewer.html',
                                   {'presentation': presentation,
                                    'return_url': return_url,

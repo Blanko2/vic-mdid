@@ -72,11 +72,11 @@ class Presentation(models.Model):
                                                Q(groups__id__in=publish_permission.group_set.all()) |
                                                Q(is_superuser=True))
         q = Q(owner__in=valid_publishers) & Q(hidden=False)
-        if owner:
+        if owner and not owner.is_anonymous():
             return q | Q(owner=owner)
         else:
             return q
-        
+
     @staticmethod
     def get_by_id_for_request(id, request):
         p = Presentation.objects.filter(Presentation.published_Q(request.user),
