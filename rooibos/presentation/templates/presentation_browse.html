@@ -202,7 +202,7 @@
             {% if manage %}
             <input type="submit" name="add-selected-items-{{ presentation.id }}" value="Add selected items" />,
             {% endif %}
-            {% if not presentation.password or presentation.unlocked %}
+            {% if not presentation.password or presentation.unlocked or presentation.owner == request.user %}
             {% list_viewers presentation request.get_full_path %}
             {% else %}
             <a href="{% url presentation-password presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}">Unlock</a>

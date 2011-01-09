@@ -62,7 +62,7 @@ class Presentation(models.Model):
             return []
 
     def verify_password(self, request):
-        self.unlocked = (not self.password) or (request.session.get('passwords', dict()).get(self.id) == self.password)
+        self.unlocked = (self.owner == request.user) or (not self.password) or (request.session.get('passwords', dict()).get(self.id) == self.password)
         return self.unlocked
 
     @staticmethod
