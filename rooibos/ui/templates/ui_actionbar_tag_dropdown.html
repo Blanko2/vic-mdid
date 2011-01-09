@@ -1,17 +1,9 @@
-{% load ui %}
+
 <li><span class="dropdown-anchor">Tags <img src="{% url static 'images/down_arrow.png' %}" /></span>
-<input type="hidden" name="all_tags" value='{% for tag in actionbar_tags %}"{{ tag }}" {% endfor %}' />
-<div class="dropdown tags-dropdown">
-  <div style="max-height: 200px; overflow: auto;">
-  {% for tag in actionbar_tags %}
-  <input type="checkbox" name="update_tag_{{ tag|base32:"_" }}" value="true"
-    {% if tag in selected_tags %}checked="checked" {% endif %}/><span class="tag">{{ tag }}</span><br />
-  {% endfor %}
-  </div>
+  <div class="dropdown tags-dropdown">
+{% include "ui_tag_editor.html" %}
   <br />
-  Assign new tags:<br />
-  <input type="text" name="new_tags" /><br />
   <br />
   <input type="submit" name="update_tags" value="Update" style="float: right;" />
-</div>
+  </div>
 </li>

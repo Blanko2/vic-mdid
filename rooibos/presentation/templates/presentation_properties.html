@@ -260,12 +260,6 @@ td.annotation-col textarea {
 
 <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
 
-<ul class="actionbar">
-{% with usertags as actionbar_tags %}
-{% include 'ui_actionbar_tag_dropdown.html' %}
-{% endwith %}
-</ul>
-
 <div class="vertical" style="">
 
 <div style="float: left; clear: left;">
@@ -285,9 +279,6 @@ td.annotation-col textarea {
 {{ form.fieldset }}
 {{ form.fieldset.errors }}
 
-</div>
-
-<div style="float: left;">
 {% if perms.presentation.publish_presentations %}
 {{ form.hidden.label_tag }}
 {{ form.hidden }}
@@ -297,6 +288,16 @@ td.annotation-col textarea {
 {{ form.hide_default_data.label_tag }}
 {{ form.hide_default_data }}
 {{ form.hide_default_data.errors }}
+
+</div>
+
+<div style="float: left; margin-left: 20px;">
+
+    Tags:
+{% with usertags as actionbar_tags %}
+{% include 'ui_tag_editor.html' %}
+{% endwith %}
+
 </div>
 
 <div class="row">

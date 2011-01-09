@@ -141,8 +141,7 @@ def edit(request, id, name):
         add_selected_items(request, presentation)
         return self_page
 
-    if request.method == "POST" and (
-        request.POST.get('update-properties') or request.POST.get('update_tags')):
+    if request.method == "POST" and request.POST.get('update-properties'):
 
         update_actionbar_tags(request, presentation)
 
