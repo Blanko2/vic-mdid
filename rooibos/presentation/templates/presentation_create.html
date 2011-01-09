@@ -10,9 +10,14 @@
 {{ form.title }}
 {{ form.title.errors }}
 
-{{ form.tags.label_tag }}
-{{ form.tags }}
-{{ form.tags.errors }}
+
+<label>Tags</label>
+<div class="custom-input">
+{% with existing_tags as actionbar_tags %}
+{% include 'ui_tag_editor.html' %}
+{% endwith %}
+</div>
+
 
 {% if selected %}
     {{ form.add_selected.label_tag }}

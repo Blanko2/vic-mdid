@@ -593,7 +593,7 @@ html.js-enabled #basket-tab-pin {
     margin: 3px 3px;
 }
 
-.vertical input, .vertical select, .vertical textarea, .vertical label.inline, .vertical ul {
+.vertical input, .vertical select, .vertical textarea, .vertical label.inline, .vertical ul, .vertical .custom-input {
     display: block;
     float: left;
     margin: 3px;

@@ -17,7 +17,6 @@ from rooibos.contrib.tagging.forms import TagField
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
 from rooibos.access import filter_by_access, accessible_ids
-from rooibos.ui.forms import SplitTaggingField
 from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
 from rooibos.data.models import FieldSet, Record
@@ -39,8 +38,6 @@ def create(request):
 
     class CreatePresentationForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
-        tags = SplitTaggingField(label='Tags', choices=[(t, t) for t in existing_tags],
-                    required=False, add_label='Additional tags')
         add_selected = forms.BooleanField(label='Add selected records immediately', required=False, initial=True)
 
     if request.method == "POST":
@@ -52,8 +49,9 @@ def create(request):
                 for order,record in enumerate(selected):
                     PresentationItem.objects.create(presentation=presentation, record_id=record, order=order)
                 request.session['selected_records'] = ()
-            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-                                    form.cleaned_data['tags'])
+
+            update_actionbar_tags(request, presentation)
+
             return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
     else:
         form = CreatePresentationForm()
@@ -62,6 +60,7 @@ def create(request):
                           {'form': form,
                            'next': next,
                            'selected': selected,
+                           'existing_tags': existing_tags,
                            },
                           context_instance=RequestContext(request))
 
