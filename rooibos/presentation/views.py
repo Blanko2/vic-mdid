@@ -66,6 +66,15 @@ def create(request):
                           context_instance=RequestContext(request))
 
 
+def add_selected_items(request, presentation):
+    selected = request.session.get('selected_records', ())
+    records = Record.get_many(request.user, *selected)
+    c = presentation.items.count()
+    for record in records:
+        c += 1
+        presentation.items.create(record=record, order=c)
+
+
 @login_required
 def edit(request, id, name):
 
@@ -110,6 +119,9 @@ def edit(request, id, name):
             instance.annotation = self.cleaned_data['annotation']
             return instance
 
+    self_page = HttpResponseRedirect(
+        reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
+
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
                                            exclude=('presentation'), form=BaseOrderingForm)
     queryset = presentation.items.select_related('record').all()
@@ -121,11 +133,13 @@ def edit(request, id, name):
                 instance.presentation = presentation
                 instance.save()
             request.user.message_set.create(message="Changes to presentation items saved successfully.")
-            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
+            return self_page
     else:
         formset = OrderingFormSet(queryset=queryset)
 
-    contenttype = ContentType.objects.get_for_model(Presentation)
+    if request.method == 'POST' and request.POST.get('add-selected-items'):
+        add_selected_items(request, presentation)
+        return self_page
 
     if request.method == "POST" and (
         request.POST.get('update-properties') or request.POST.get('update_tags')):
@@ -146,7 +160,7 @@ def edit(request, id, name):
 #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
 #                                    form.cleaned_data['tags'])
             request.user.message_set.create(message="Changes to presentation saved successfully.")
-            return HttpResponseRedirect(reverse('presentation-edit', kwargs={'id': presentation.id, 'name': presentation.name}))
+            return self_page
     else:
         form = PropertiesForm(initial={'title': presentation.title,
                                'hidden': presentation.hidden,
@@ -157,6 +171,7 @@ def edit(request, id, name):
                                'hide_default_data': presentation.hide_default_data,
                                })
 
+    contenttype = ContentType.objects.get_for_model(Presentation)
     return render_to_response('presentation_properties.html',
                       {'presentation': presentation,
                        'contenttype': "%s.%s" % (contenttype.app_label, contenttype.model),
@@ -248,17 +263,9 @@ def browse(request, manage=False):
         # check for clicks on "add selected items" buttons
         for button in filter(lambda k: k.startswith('add-selected-items-'), request.POST.keys()):
             id = int(button[len('add-selected-items-'):])
-            selected = request.session.get('selected_records', ())
-            records = Record.get_many(request.user, *selected)
-
             presentation = get_object_or_404(Presentation.objects.filter(
                 id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
-
-            c = presentation.items.count()
-            for record in records:
-                c += 1
-                presentation.items.create(record=record, order=c)
-
+            add_selected_items(request, presentation)
             return HttpResponseRedirect(reverse('presentation-edit', args=(presentation.id, presentation.name)))
 
         return HttpResponseRedirect(request.get_full_path())

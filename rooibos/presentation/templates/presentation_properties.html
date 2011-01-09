@@ -1,6 +1,7 @@
 {% extends "master.html" %}
 {% load ui %}
 {% load access_control %}
+{% load viewers %}
 
 
 
@@ -377,6 +378,19 @@ td.annotation-col textarea {
 {% endvar %}
 
 {{ block.super }}
+
+  <div class="facet active-facet" id="presentation_sidebar_actions">
+    <div class="facet-header">Actions</div>
+    <div class="facet-body">
+        {% list_viewers presentation request.get_full_path "<br />" %}
+        <br />
+        <br />
+        <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
+        <input type="submit" name="add-selected-items" value="Add selected items" />
+        </form>
+    </div>
+  </div>
+
 
   <div class="facet active-facet" id="presentation_sidebar_permissions">
     <div class="facet-header">Permissions <a href="{% permissions_modify_url presentation %}"><img src="{% url static 'images/edit.png' %}" class="facet-button" /></a></div>
