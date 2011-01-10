@@ -9,7 +9,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
     $("#browse-forms select").change(function () { this.form.submit(); });
-    $("#browse-forms :submit").remove();    
+    $("#browse-forms :submit").remove();
 });
 </script>
 {% endblock %}
@@ -38,7 +38,7 @@ $(document).ready(function() {
         <form method="GET" action=".">
             <select name="f">
 {% for field in fields %}
-<option value="{{ field.name }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
+<option value="{{ field.id }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
 {% endfor %}
             </select>
             <input type="submit" value="Browse" />

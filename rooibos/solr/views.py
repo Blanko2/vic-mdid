@@ -492,7 +492,7 @@ def browse(request, id=None, name=None):
         raise Http404()
 
     if request.GET.has_key('f'):
-        field = get_object_or_404(Field, name=request.GET['f'], id__in=(f.id for f in fields))
+        field = get_object_or_404(Field, id=request.GET['f'], id__in=(f.id for f in fields))
     else:
         field = fields[0]
 
