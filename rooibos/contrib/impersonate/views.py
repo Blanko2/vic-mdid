@@ -28,7 +28,7 @@ def autocomplete_user(request):
     except ValueError:
         limit = 10
     if not query or not request.user.is_authenticated():
-        return ''
+        return HttpResponse(content='')
 
     current = get_real_user(request)
     available_users = get_available_users(current or request.user.username)
