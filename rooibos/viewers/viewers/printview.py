@@ -149,8 +149,7 @@ class PrintView(object):
             if image:
                 try:
                     i = flowables.Image(image,
-                                        width=1.5 * inch * (image.width or 100) / 100,
-                                        height=1.5 * inch * (image.height or 100) / 100)
+                                        width=1 * inch)
                     p = flowables.ParagraphAndImage(p, i)
                 except IOError:
                     pass
