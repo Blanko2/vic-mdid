@@ -120,7 +120,8 @@ class FlashCards(object):
             if record:
                 image = get_image_for_record(record, presentation.owner, 800, 800, passwords)
                 if image:
-                    p.drawImage(image, inch / 2, inch / 2, width=width / 2 - inch, height=height / 3 - inch)
+                    p.drawImage(image, inch / 2, inch / 2, width=width / 2 - inch, height=height / 3 - inch,
+                                preserveAspectRatio=True)
                 f = Frame(width / 2 + inch / 2, inch / 2,
                           width=width / 2 - inch, height = height / 3 - inch,
                           leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
