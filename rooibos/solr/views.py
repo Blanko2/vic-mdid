@@ -502,7 +502,7 @@ def browse(request, id=None, name=None):
         start = values.filter(value__lt=request.GET['s']).count() / 50 + 1
         return HttpResponseRedirect(reverse('solr-browse-collection',
                                             kwargs={'id': collection.id, 'name': collection.name}) +
-                                    "?f=%s&page=%s" % (field.name, start))
+                                    "?f=%s&page=%s" % (field.id, start))
 
     return render_to_response('browse.html',
                               {'collections': collections,

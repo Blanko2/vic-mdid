@@ -49,7 +49,7 @@ $(document).ready(function() {
 
 Jump to:
 {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
-<a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.name }}&amp;s={{ letter }}">{{ letter }}</a>
+<a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.id }}&amp;s={{ letter }}">{{ letter }}</a>
 {% endfor %}
 
 {% autopaginate values 50 %}
