@@ -151,7 +151,7 @@ a.help {
     float: left;
     list-style: none;
     padding: 0 5px;
-    border-left: solid {{ colors.topmenu_text }} thin;
+    border-left: solid {{ colors.topmenu_text }} 1px;
 }
 
 #topmenu ul li a {
@@ -178,7 +178,7 @@ html.js-enabled #header-bar {
     background-color: {{ colors.content_background }};
     margin: 0 21px;
     padding: 10px 10px 0 10px;
-    border: solid thin {{ colors.background_top_gradient }};
+    border: solid 1px {{ colors.background_top_gradient }};
     border-bottom: none;
 }
 
@@ -276,7 +276,7 @@ html.js-enabled #header ul ul {
 #header ul.menu li {
     float: none;
     height: auto !important;
-    border-top: thin solid {{ colors.dropdownmenu_separator }};
+    border-top: 1px solid {{ colors.dropdownmenu_separator }};
 }
 
 #header ul.menu li:first-child {
@@ -289,14 +289,14 @@ html.js-enabled #header ul ul {
 
 #content-wrapper {
     margin: 0 20px;
-    border: solid thin {{ colors.content_border_gradient1 }};
+    border: solid 1px {{ colors.content_border_gradient1 }};
     border-top: none;
     background-color: {{ colors.content_background }};
 }
 
 #content {
     padding: 200px 10px 15px 10px;
-    border: solid thin {{ colors.content_border_gradient2 }};
+    border: solid 1px {{ colors.content_border_gradient2 }};
     border-top: none;
     clear: both;
     color: {{ colors.content_color }};
@@ -315,7 +315,7 @@ html.js-enabled #content {
 #javascriptwarning {
     color: {{ colors.js_warning_text }};
     background-color: {{ colors.js_warning_background }};
-    border: thin solid {{ colors.js_warning_text }};
+    border: 1px solid {{ colors.js_warning_text }};
     padding: 0 4px;
     margin-left: 2px;
 }
@@ -370,7 +370,7 @@ html.js-enabled #basket-tab-pin {
     width: 50px;
     height: 50px;
     margin: 4px 2px 0 2px;
-    border: solid {{ colors.borders }} thin;
+    border: solid {{ colors.borders }} 1px;
 }
 
 #basket-menu {
@@ -440,7 +440,7 @@ html.js-enabled #basket-tab-pin {
 }
 
 .facet {
-    border: thin {{ colors.facet }} solid;
+    border: 1px {{ colors.facet }} solid;
     margin: 5px;
 }
 
@@ -497,7 +497,7 @@ html.js-enabled #basket-tab-pin {
 
 .record {
     float: left;
-    border: thin {{ colors.borders }} solid;
+    border: 1px {{ colors.borders }} solid;
     width: 225px;
     height: 102px;
     padding: 3px;
@@ -513,7 +513,7 @@ html.js-enabled #basket-tab-pin {
 }
 
 .record img {
-    border: thin {{ colors.borders }} solid;
+    border: 1px {{ colors.borders }} solid;
     position: absolute;
     max-width: 100px;
     overflow: hidden;
@@ -532,7 +532,7 @@ html.js-enabled #basket-tab-pin {
 .resultlist-list .record {
     float: none;
     border: none;
-    border-bottom: thin {{ colors.borders }} solid;
+    border-bottom: 1px {{ colors.borders }} solid;
     padding: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -577,7 +577,7 @@ html.js-enabled #basket-tab-pin {
 .removetag {
     color: white;
     text-decoration: none;
-    border-left: thin solid {{ colors.tag_text }};
+    border-left: 1px solid {{ colors.tag_text }};
     padding: 2px 0px 2px 4px;
     margin-left: 4px;
 }
@@ -632,7 +632,7 @@ ul.errorlist li {
 .multi-checkbox-list {
     max-height: 200px;
     overflow: auto;
-    border: thin solid {{ colors.borders }};
+    border: 1px solid {{ colors.borders }};
 }
 
 .multi-checkbox-list ul {
@@ -712,7 +712,7 @@ ul.errorlist li {
 
 #upload-progress {
     float: left;
-    border: solid thin {{ colors.borders }};
+    border: solid 1px {{ colors.borders }};
     padding: 2px;
     height: 10px;
     margin-top: 2px;
@@ -977,7 +977,7 @@ div.fieldvalue-edit div.narrow input {
 }
 
 #collection-overview .usage-agreement {
-    border: thin solid {{ colors.borders }};
+    border: 1px solid {{ colors.borders }};
     font-size: smaller;
     width: 80%;
     margin: 10px 0;
@@ -987,7 +987,7 @@ div.fieldvalue-edit div.narrow input {
 .powerpoint-theme {
     float: left;
     margin: 10px 10px 10px 0px;;
-    border: solid thin lightgrey;
+    border: solid 1px lightgrey;
     padding: 5px;
 }
 
@@ -1024,7 +1024,7 @@ div.fieldvalue-edit div.narrow input {
 .framed-thumbnails img {
     margin: 5px;
     padding: 1px;
-    border: solid thin {{ colors.borders }};
+    border: solid 1px {{ colors.borders }};
 }
 
 .framed-thumbnails.small img {
@@ -1039,30 +1039,34 @@ tr.middle-align td, tr.middle-align th {
 
 /* Action drop-down menus for lists */
 
-table.itemactions tr+tr td {
-  border-top: solid thin white;
-  border-bottom: solid thin white;
+table.itemactions {
+/*    border-collapse: collapse;*/
 }
 
-td.item-actions-menu {
+table.itemactions tr+tr td {
+  border-top: solid 1px white;
+  border-bottom: solid 1px white;
+}
+
+td.item-actions-menu img {
   display: none;
 }
 
-tr.actionrow-selected td.item-actions-menu, tr.actionrow-open td.item-actions-menu {
-  display: table-cell;
+tr.actionrow-selected td.item-actions-menu img, tr.actionrow-open td.item-actions-menu img {
+  display: inline;
 }
 
 
 tr.actionrow-selected td, tr.actionrow-open td {
-  border-top: solid thin  {{ PRIMARY_COLOR }} !important;
-  border-bottom: solid thin  {{ PRIMARY_COLOR }} !important;
+  border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
   background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
 }
 
 td.item-actions-menu div {
   display: none;
   position: absolute;
-  border: solid thin {{ PRIMARY_COLOR }};
+  border: solid 1px {{ PRIMARY_COLOR }};
   border-top-color: #f2f2f2;
   border-right: none;
   background-color: #f2f2f2;
@@ -1082,6 +1086,7 @@ td.item-actions-menu div ul li input {
     border: none;
     background: none;
     padding: 0;
+    margin-left: 0px;
     margin-left: -3px;
     cursor: pointer;
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
@@ -1101,7 +1106,7 @@ html.js-enabled td.item-actions {
 /* Actionbar */
 
 ul.actionbar {
-  border: solid thin {{ PRIMARY_COLOR }};
+  border: solid 1px {{ PRIMARY_COLOR }};
   border-left-color: lightgrey;
   border-right-color: lightgrey;
   height: 28px;
@@ -1125,7 +1130,7 @@ ul.actionbar li {
   float: left;
   padding: 0.2em 0.5em;
   height: 23px;
-  border-right: solid thin {{ PRIMARY_COLOR }};
+  border-right: solid 1px {{ PRIMARY_COLOR }};
 }
 
 ul.actionbar a {
@@ -1145,7 +1150,7 @@ ul.actionbar li > input, ul.actionbar li > button {
 ul.actionbar li div.dropdown {
   position: absolute;
   background: #f2f2f2;
-  border: solid thin {{ PRIMARY_COLOR }};
+  border: solid 1px {{ PRIMARY_COLOR }};
   padding: 0.5em;
   margin-top: 0.2em;
   -moz-box-shadow: 3px 3px 5px lightgrey;
