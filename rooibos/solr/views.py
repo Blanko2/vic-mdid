@@ -41,7 +41,7 @@ class SearchFacet(object):
 
     def clean_result(self, hits):
         # sort facet items and remove the ones that match all hits
-        self.facets = filter(lambda f: f[1] < hits, getattr(self, 'facets', []))
+        self.facets = filter(lambda f: f[1] < hits, getattr(self, 'facets', None) or [])
         self.facets = sorted(self.facets, key=lambda f: len(f) > 2 and f[2] or f[0])
 
     def or_available(self):
@@ -98,8 +98,9 @@ class CollectionSearchFacet(SearchFacet):
 
     def set_result(self, facets):
         result = []
-        for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
-            result.append((id, facets[str(id)], title))
+        if facets:
+            for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
+                result.append((id, facets[str(id)], title))
         super(CollectionSearchFacet, self).set_result(result)
 
     def display_value(self, value):
