@@ -42,9 +42,11 @@
                 success: function(r) {
                     var facets = $("#facets");
                     facets.hide();
-                    facets[0].innerHTML = r.html;
-                    process_facets();
-                    facets.slideDown(500);
+                    if (r.result != 'error') {
+                      facets[0].innerHTML = r.html;
+                      process_facets();
+                      facets.slideDown(500);
+                    }
                 }
             });
         {% endif %}
@@ -128,7 +130,10 @@
 
 <ul class="actionbar">
 
-<li><span class="dropdown-anchor">{{ hits|intcomma }} hit{{ hits|pluralize }} <img src="{% url static 'images/down_arrow.png' %}" /></span>
+{% if hits > -1 %}
+<li><span class="dropdown-anchor">{{ hits|intcomma }} hit{{ hits|pluralize }}
+{% if hits > 0 %}
+<img src="{% url static 'images/down_arrow.png' %}" /></span>
   <div class="dropdown">
         View:
     <select name="v" id="viewmode_dropdown">
@@ -145,8 +150,16 @@
     </select>
     <input type="submit" value="Go" id="sort_go_button" />
   </div>
+{% else %}
+  </span>
+{% endif %}
 </li>
+{% if hits > 0 %}
 <li><input id="submit_record_selections" type="submit" name="action" value="Select" /></li>
+{% endif %}
+
+{% endif %}
+
 
 {% if user.is_authenticated %}
 <li><span class="dropdown-anchor">Create <img src="{% url static 'images/down_arrow.png' %}" /></span>
@@ -199,6 +212,12 @@
 
 {% block content %}
 
+{% if hits == -1 %}
+
+Your search query is invalid.  Please go back and correct your search parameters.
+
+{% else %}
+
 {% if records %}
 <div id="resultlist" class="resultlist-{{ viewmode }}">
 {% for r in records %}
@@ -213,6 +232,8 @@
     <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
     {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
 </div>
+{% endif %}
+
 {% endif %}
 
 </form>

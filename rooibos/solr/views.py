@@ -11,6 +11,7 @@ from django.forms.formsets import formset_factory
 from django.db.models import Q
 from django.contrib.auth.models import User
 from . import SolrIndex
+from pysolr import SolrError
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
 from rooibos.data.models import Field, Collection, FieldValue
@@ -238,8 +239,13 @@ def run_search(user,
 
     return_facets = search_facets.keys() if produce_facets else []
 
-    (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=return_facets, facet_mincount=1, facet_limit=100)
+    try:
+        (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
+                                           facets=return_facets, facet_mincount=1, facet_limit=100)
+    except SolrError:
+        hits = -1
+        records = None
+        facets = dict()
 
     if produce_facets:
         for f in search_facets:
