@@ -28,7 +28,7 @@ class AccessTestCase(unittest.TestCase):
         self.assertEqual((False, False, True), get_effective_permissions(user, collection))
 
         AccessControl.objects.create(content_object=collection, user=user, read=True, manage=False)
-        self.assertEqual((True, False, False), get_effective_permissions(user, collection))
+        self.assertEqual((True, None, False), get_effective_permissions(user, collection))
 
 
     def testCheckAccess(self):
@@ -160,7 +160,7 @@ class AccessTestCase(unittest.TestCase):
 
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
         self.assertEqual(100, restrictions.get('width'))
-        self.assertEqual('yes', restrictions.get('download'))
+        self.assertFalse(restrictions.has_key('download'))
 
     def testRestrictionPrecendences(self):
         user = User.objects.create(username='test-restrprec')
@@ -183,6 +183,21 @@ class AccessTestCase(unittest.TestCase):
         (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
         self.assertEqual('xyz', restrictions.get('test'))
 
+    def testNoRestrictionsSpecified(self):
+        user = User.objects.create(username='test-norestspec')
+        usergroup1 = Group.objects.create(name='group-norestspec-1')
+        usergroup2 = Group.objects.create(name='group-norestspec-2')
+        storage = Storage.objects.create(name='test-norestspec')
+        user.groups.add(usergroup1)
+        user.groups.add(usergroup2)
+
+        AccessControl.objects.create(usergroup=usergroup1, content_object=storage, read=True,
+                                     restrictions=dict(width='800', height='800'))
+        AccessControl.objects.create(usergroup=usergroup2, content_object=storage, read=True)
+
+        (r, w, m, restrictions) = get_effective_permissions_and_restrictions(user, storage)
+        self.assertFalse(restrictions.has_key('height'))
+        self.assertFalse(restrictions.has_key('width'))
 
 class ExtendedGroupTestCase(unittest.TestCase):
 
