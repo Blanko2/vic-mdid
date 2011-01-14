@@ -19,7 +19,7 @@ def get_accesscontrols_for_object(model_instance):
     return aclist
 
 
-def get_effective_permissions_and_restrictions(user, model_instance):
+def get_effective_permissions_and_restrictions(user, model_instance, assume_authenticated=False):
     from models import AccessControl, ExtendedGroup
     user = user or AnonymousUser()
     if user.is_superuser:
@@ -28,7 +28,7 @@ def get_effective_permissions_and_restrictions(user, model_instance):
     if owner and owner == user:
         return (True, True, True, None)
     if not user.is_anonymous():
-        q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(usergroup__in=user.groups.all())
+        q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user, assume_authenticated)) | Q(usergroup__in=user.groups.all())
     else:
         q = Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(user=None, usergroup=None)
     model_type = ContentType.objects.get_for_model(model_instance)
@@ -68,8 +68,8 @@ def get_effective_permissions_and_restrictions(user, model_instance):
         return reduce_aclist(filter(lambda a: a.usergroup, aclist))
 
 
-def get_effective_permissions(user, model_instance):
-    return get_effective_permissions_and_restrictions(user, model_instance)[:3]
+def get_effective_permissions(user, model_instance, assume_authenticated=False):
+    return get_effective_permissions_and_restrictions(user, model_instance, assume_authenticated)[:3]
 
 
 def check_access(user, model_instance, read=True, write=False, manage=False, fail_if_denied=False):
