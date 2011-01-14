@@ -19,7 +19,7 @@ def get_accesscontrols_for_object(model_instance):
     return aclist
 
 
-def get_effective_permissions_and_restrictions(user, model_instance):
+def get_effective_permissions_and_restrictions(user, model_instance, assume_authenticated=False):
     from models import AccessControl, ExtendedGroup
     user = user or AnonymousUser()
     if user.is_superuser:
@@ -28,46 +28,48 @@ def get_effective_permissions_and_restrictions(user, model_instance):
     if owner and owner == user:
         return (True, True, True, None)
     if not user.is_anonymous():
-        q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(usergroup__in=user.groups.all())
+        q = Q(user=user) | Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user, assume_authenticated)) | Q(usergroup__in=user.groups.all())
     else:
         q = Q(usergroup__in=ExtendedGroup.objects.get_extra_groups(user)) | Q(user=None, usergroup=None)
     model_type = ContentType.objects.get_for_model(model_instance)
     aclist = AccessControl.objects.filter(q, object_id=model_instance.id, content_type__pk=model_type.id)
 
-    def reduce_by_filter(f):
+    def default_restrictions_precedences(a, b):
+        if a and b:
+            return a if a > b else b
+        else:
+            return None
+
+    def reduce_aclist(list):
         def combine(a, b):
             if a == False or (a == True and b == None): return a
             else: return b
         read = write = manage = None
-        restrictions = dict()
-        for ac in filter(f, aclist):
+        restrictions = None
+        for ac in list:
             read = combine(ac.read, read)
             write = combine(ac.write, write)
             manage = combine(ac.manage, manage)
-            if ac.restrictions:
-                for k, v in ac.restrictions.iteritems():
-                    func = restriction_precedences.get(k)
-                    if not restrictions.has_key(k):
-                        restrictions[k] = v
-                    elif func:
-                        restrictions[k] = func(restrictions[k], v)
-                    elif restrictions[k] < v:
-                        restrictions[k] = v
-        return (read, write, manage, restrictions)
+            r = ac.restrictions or dict()
+            if not restrictions:
+                restrictions = r
+                continue
+            for key in set(restrictions.keys()) | set(r.keys()):
+                func = restriction_precedences.get(key, default_restrictions_precedences)
+                restrictions[key] = func(restrictions.get(key), r.get(key))
+            restrictions = dict((k, v) for k, v in restrictions.iteritems() if v)
 
-    (gr, gw, gm, restrictions) = reduce_by_filter(lambda a: a.usergroup)
-    (ur, uw, um, urestrictions) = reduce_by_filter(lambda a: a.user)
+        return (read, write, manage, restrictions or dict())
 
-    restrictions.update(urestrictions)
-
-    return (ur or (ur == None and gr),
-            uw or (uw == None and gw),
-            um or (um == None and gm),
-            restrictions or None)
+    user_aclist = filter(lambda a: a.user, aclist)
+    if user_aclist:
+        return reduce_aclist(user_aclist)
+    else:
+        return reduce_aclist(filter(lambda a: a.usergroup, aclist))
 
 
-def get_effective_permissions(user, model_instance):
-    return get_effective_permissions_and_restrictions(user, model_instance)[:3]
+def get_effective_permissions(user, model_instance, assume_authenticated=False):
+    return get_effective_permissions_and_restrictions(user, model_instance, assume_authenticated)[:3]
 
 
 def check_access(user, model_instance, read=True, write=False, manage=False, fail_if_denied=False):

@@ -11,6 +11,7 @@ from django.forms.formsets import formset_factory
 from django.db.models import Q
 from django.contrib.auth.models import User
 from . import SolrIndex
+from pysolr import SolrError
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
 from rooibos.data.models import Field, Collection, FieldValue
@@ -40,7 +41,7 @@ class SearchFacet(object):
 
     def clean_result(self, hits):
         # sort facet items and remove the ones that match all hits
-        self.facets = filter(lambda f: f[1] < hits, getattr(self, 'facets', []))
+        self.facets = filter(lambda f: f[1] < hits, getattr(self, 'facets', None) or [])
         self.facets = sorted(self.facets, key=lambda f: len(f) > 2 and f[2] or f[0])
 
     def or_available(self):
@@ -97,8 +98,9 @@ class CollectionSearchFacet(SearchFacet):
 
     def set_result(self, facets):
         result = []
-        for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
-            result.append((id, facets[str(id)], title))
+        if facets:
+            for id, title in Collection.objects.filter(id__in=map(int, facets.keys())).values_list('id', 'title'):
+                result.append((id, facets[str(id)], title))
         super(CollectionSearchFacet, self).set_result(result)
 
     def display_value(self, value):
@@ -238,8 +240,13 @@ def run_search(user,
 
     return_facets = search_facets.keys() if produce_facets else []
 
-    (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
-                                       facets=return_facets, facet_mincount=1, facet_limit=100)
+    try:
+        (hits, records, facets) = s.search(query, sort=sort, rows=pagesize, start=(page - 1) * pagesize,
+                                           facets=return_facets, facet_mincount=1, facet_limit=100)
+    except SolrError:
+        hits = -1
+        records = None
+        facets = dict()
 
     if produce_facets:
         for f in search_facets:

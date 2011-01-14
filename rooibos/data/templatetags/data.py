@@ -23,7 +23,7 @@ class MetaDataNode(template.Node):
             fieldvalues[i].subitem = (fieldvalues[i].field == fieldvalues[i - 1].field and
                                       fieldvalues[i].group == fieldvalues[i - 1].group and
                                       fieldvalues[i].resolved_label == fieldvalues[i - 1].resolved_label)
-        
+
         return render_to_string('data_metadata.html',
                                 dict(values=fieldvalues),
                                 context_instance=context)
@@ -40,3 +40,16 @@ def metadata(parser, token):
         except ValueError:
             raise template.TemplateSyntaxError, "%r tag requires exactly one or two arguments" % token.contents.split()[0]
     return MetaDataNode(record, fieldset)
+
+
+@register.filter
+def fieldvalue(record, field):
+    print record
+    print field
+    if not record:
+        return ''
+    for v in record.get_fieldvalues(hidden=True):
+        print v.field.full_name
+        if v.field.full_name == field:
+            return v.value
+    return ''

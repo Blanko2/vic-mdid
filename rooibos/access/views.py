@@ -9,7 +9,7 @@ from django.contrib.auth.views import login as dj_login, logout as dj_logout
 from django.conf import settings
 from django import forms
 from models import AccessControl, update_membership_by_ip
-from . import check_access, get_effective_permissions, get_accesscontrols_for_object
+from . import check_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
 
 
 def login(request, *args, **kwargs):
@@ -43,7 +43,7 @@ def effective_permissions(request, app_label, model, id, name):
         acluser = User.objects.filter(username=username)
         if acluser:
             acluser = acluser[0]
-            acl = get_effective_permissions(acluser, object)
+            acl = get_effective_permissions_and_restrictions(acluser, object, assume_authenticated=True)
         else:
             request.user.message_set.create(message="No user with username '%s' exists." % username)
             acl = None
