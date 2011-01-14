@@ -492,7 +492,12 @@ def browse(request, id=None, name=None):
         raise Http404()
 
     if request.GET.has_key('f'):
-        field = get_object_or_404(Field, id=request.GET['f'], id__in=(f.id for f in fields))
+        try:
+            field = get_object_or_404(Field, id=request.GET['f'], id__in=(f.id for f in fields))
+        except ValueError:
+            # GET['f'] was text previously and external links exist that are no longer valid
+            return HttpResponseRedirect(reverse('solr-browse-collection',
+                                        kwargs={'id': collection.id, 'name': collection.name}))
     else:
         field = fields[0]
 
