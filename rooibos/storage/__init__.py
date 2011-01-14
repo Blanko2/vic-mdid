@@ -141,7 +141,13 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
         sp = m.storage.get_derivative_storage_path()
         if sp:
             if not os.path.exists(sp):
-                os.makedirs(sp)
+                try:
+                    os.makedirs(sp)
+                except:
+                    # check if directory exists now, if so another process may have created it
+                    if not os.path.exists(sp):
+                        # still does not exist, raise error
+                        raise
             path = os.path.join(sp, name)
 
             if not os.path.exists(path) or os.path.getsize(path) == 0:
@@ -205,4 +211,3 @@ def analyze_media(storage):
                 broken.append(media)
         extra = extra.keys()
     return broken, extra
-
