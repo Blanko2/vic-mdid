@@ -153,7 +153,7 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
 
     fields = {}
     for c in criteria:
-        if c in exclude:
+        if (c in exclude) or (':' not in c):
             continue
         (f, o) = c.split(':', 1)
         if f.startswith('-'):
