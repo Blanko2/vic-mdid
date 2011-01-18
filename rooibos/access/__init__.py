@@ -51,14 +51,13 @@ def get_effective_permissions_and_restrictions(user, model_instance, assume_auth
             write = combine(ac.write, write)
             manage = combine(ac.manage, manage)
             r = ac.restrictions or dict()
-            if not restrictions:
+            if restrictions == None:
                 restrictions = r
                 continue
             for key in set(restrictions.keys()) | set(r.keys()):
                 func = restriction_precedences.get(key, default_restrictions_precedences)
                 restrictions[key] = func(restrictions.get(key), r.get(key))
             restrictions = dict((k, v) for k, v in restrictions.iteritems() if v)
-
         return (read, write, manage, restrictions or dict())
 
     user_aclist = filter(lambda a: a.user, aclist)
