@@ -107,7 +107,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     if fieldsetform.is_valid():
         fieldset = fieldsetform.cleaned_data['fieldset']
     else:
-        fieldset = None
+        fieldset = FieldSet.objects.get(name='dc')
 
     collection_items = collectionformset = None
 
