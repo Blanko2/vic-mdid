@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, get_list_or_404, render_to_respo
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.utils import simplejson
+from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from models import *
 from forms import FieldSetChoiceField
@@ -332,7 +333,7 @@ def data_import(request):
 class DisplayOnlyTextWidget(forms.HiddenInput):
     def render(self, name, value, attrs):
         return super(DisplayOnlyTextWidget, self).render(name, value, attrs) + \
-            mark_safe(self.initial if hasattr(self, 'initial') else (value or u''))
+            mark_safe(conditional_escape(getattr(self, 'initial', value or u'')))
 
 
 @login_required
