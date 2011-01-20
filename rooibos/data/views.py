@@ -65,8 +65,6 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     readable_collections = list(accessible_ids_list(request.user, Collection))
     can_edit = request.user.is_authenticated()
 
-    next = request.GET.get('next')
-
     if id and name:
         record = Record.get_or_404(id, request.user)
         can_edit = can_edit and (
@@ -220,10 +218,15 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     if context:
                         instance.context = context
                     instance.save()
-                request.user.message_set.create(message="Changes to metadata saved successfully.")
-                url = next or reverse('data-record-edit-customize' if customize else 'data-record-edit',
-                                      kwargs=dict(id=record.id, name=record.name))
-                return HttpResponseRedirect(url)
+                request.user.message_set.create(message="Record saved successfully.")
+
+                url = reverse('data-record-edit-customize' if customize else 'data-record-edit',
+                              kwargs=dict(id=record.id, name=record.name))
+
+                next = request.GET.get('next',
+                       reverse('data-record', kwargs=dict(id=record.id, name=record.name)))
+
+                return HttpResponseRedirect(url if request.POST.has_key('save_and_continue') else next)
         else:
 
             if fieldset:
@@ -258,6 +261,10 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         q = Q() if record.owner == request.user or request.user.is_superuser else Q(hidden=False)
         collection_items = record.collectionitem_set.filter(q, collection__in=readable_collections)
 
+    from rooibos.storage.views import media_upload_form
+    UploadFileForm = media_upload_form(request)
+    upload_form = UploadFileForm()
+
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
@@ -269,8 +276,11 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'fv_formset': formset,
                                'c_formset': collectionformset,
                                'can_edit': can_edit,
-                               'next': next,
+                               'next': request.GET.get('next'),
                                'collection_items': collection_items,
+                               'upload_form': upload_form,
+                               'upload_url': (reverse('storage-media-upload', args=(record.id, record.name)) + "?sidebar")
+                                             if record.id else None,
                                },
                               context_instance=RequestContext(request))
 

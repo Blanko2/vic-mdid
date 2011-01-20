@@ -84,19 +84,25 @@ def retrieve_image(request, recordid, record, width=None, height=None):
         raise Http404()
 
 
-
-@csrf_exempt
-@login_required
-def media_upload(request, recordid, record):
+def media_upload_form(request):
     available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True
                                          ).values_list('name','title'))
-    record = Record.get_or_404(recordid, request.user)
 
     class UploadFileForm(forms.Form):
         storage = forms.ChoiceField(choices=available_storage)
         file = forms.FileField()
 
+    return UploadFileForm
+
+
+@csrf_exempt
+@login_required
+def media_upload(request, recordid, record):
+    record = Record.get_or_404(recordid, request.user)
+
     if request.method == 'POST':
+
+        UploadFileForm = media_upload_form(request)
 
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -112,18 +118,19 @@ def media_upload(request, recordid, record):
             media.save_file(file.name, file)
 
             if request.POST.get('swfupload') == 'true':
-                return HttpResponse(content='ok', mimetype='text/plain')
+                html = render_to_string('storage_import_file_response.html',
+                                 {'result': 'saved',
+                                  'record': record,
+                                  'sidebar': request.GET.has_key('sidebar'),
+                                  },
+                                 context_instance=RequestContext(request)
+                                 )
+                return HttpResponse(content=simplejson.dumps(dict(status='ok', html=html)),
+                                    mimetype='application/json')
 
-            next = request.GET.get('next')
-            return HttpResponseRedirect(next or '.')
+            return HttpResponseRedirect(request.GET.get('next', '.'))
     else:
-        form = UploadFileForm()
-
-    return render_to_response('storage_upload.html',
-                              {'record': record,
-                               'form': form,
-                               },
-                              context_instance=RequestContext(request))
+        return HttpResponseNotAllowed(['POST'])
 
 
 @add_content_length
@@ -375,7 +382,7 @@ def import_files(request):
         form = UploadFileForm()
 
     return render_to_response('storage_import_files.html',
-                              {'form': form,
+                              {'upload_form': form,
                                },
                               context_instance=RequestContext(request))
 

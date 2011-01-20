@@ -46,6 +46,11 @@
             });
     });
 </script>
+
+{% if record.id %}
+{% include "storage_upload_sidebar_js.html" %}
+{% endif %}
+
 {% endblock %}
 
 
@@ -174,13 +179,24 @@
     {% endfor %}
     </ul>
     {% endif %}
-    {% if can_edit %}
-        <a href="{% url storage-upload record.id, record.name %}?next={{ request.get_full_path|urlencode }}">Upload media</a>
-    {% endif %}
     </div>
 </div>
 {% endif %}
 {% endif %}
+
+
+<div class="facet active-facet" id="data_record_upload_media">
+    <div class="facet-header">Upload Media</div>
+    <div class="facet-body">
+{% if record.id %}
+{% include "storage_upload_sidebar.html" %}
+{% else %}
+Please save the record before uploading media.
+{% endif %}
+
+    </div>
+</div>
+
 
 {% endblock %}
 
@@ -272,7 +288,8 @@ Display metadata as: {{ fieldsetform.fieldset }}
 {% endif %}
 
 <div style="clear: left; padding: 20px 0;">
-<input type="submit" value="Submit Changes" />
+<input type="submit" value="Save" />
+<input type="submit" name="save_and_continue" value="Save and Continue Editing" />
 </div>
 
 
@@ -313,7 +330,12 @@ Display metadata as: {{ fieldsetform.fieldset }}
     {% endfor %}
         </div>
 
-        <input type="submit" value="Submit Changes" style="margin-top: 20px;" />
+
+<div style="clear: left; padding: 20px 0;">
+<input type="submit" value="Save" />
+<input type="submit" name="save_and_continue" value="Save and Continue Editing" />
+</div>
+
     </div>
 </form>
 {% endif %}
