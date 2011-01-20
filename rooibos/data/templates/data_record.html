@@ -248,40 +248,32 @@ Display metadata as: {{ fieldsetform.fieldset }}
 {% if c_formset %}
     {{ c_formset.management_form }}
 
-    <table style="margin-top: 20px;">
-        <tr>
-        <th>Collection Memberships</th>
-        <th style="text-align: center; width: 6em;">Member</th>
-        <th style="text-align: center; width: 6em;">{% if record.owner %}Shared{% else %}Visible{% endif %}</th>
-        </tr>
-        <tr>
-            <td colspan="3" style="padding: 0;">
-<div style="max-height: 200px; overflow: auto;">
-    <table>
-    {% for form in c_formset.forms %}
-    <tr class="{% cycle 'altrow' '' %}">
-        <td>
-            {{ form.id }}
-            {{ form.title }}
-        </td>
-        <td style="text-align: center; width: 6em;">
-            {{ form.member }}
-        </td>
-        <td style="text-align: center; width: 6em;">
-            {{ form.shared }}
-        </td>
-    </tr>
-    {% endfor %}
-    </table>
+<div id="collection-membership" style="margin-top: 20px;">
+
+    <div id="collection-membership-header">
+        <div>Collection Memberships</div>
+        <div>Member</div>
+        <div>{{ record.owner|yesno:"Shared,Visible" }}</div>
     </div>
 
-            </td>
-        </tr>
-    </table>
+    <div id="collection-membership-rows">
+    {% for form in c_formset.forms %}
+    <div class="{% cycle 'altrow' '' %}">
+        <div>{{ form.id }}{{ form.title }}</div>
+        <div>{{ form.member }}</div>
+        <div>{{ form.shared }}</div>
+        &nbsp;
+    </div>
+    {% endfor %}
+    </div>
+
+</div>
 
 {% endif %}
 
+<div style="clear: left; padding: 20px 0;">
 <input type="submit" value="Submit Changes" />
+</div>
 
 
     {{ fv_formset.management_form }}
