@@ -1,7 +1,6 @@
 from __future__ import with_statement
 from django.conf.urls.defaults import url
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.template import RequestContext

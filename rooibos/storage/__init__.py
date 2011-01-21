@@ -5,8 +5,7 @@ import logging
 import mimetypes
 import os
 from django.conf import settings
-from django.db import connection
-from django.db.models import Q, F
+from django.db.models import Q
 from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions, add_restriction_precedence
 from rooibos.data.models import Collection, Record, standardfield
 from models import Media, Storage
@@ -76,7 +75,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
     q = Q(mimetype__startswith='image/')
     if settings.FFMPEG_EXECUTABLE:
         # also support video and audio
-         q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
+        q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
 
     media = media.filter(q)
 
