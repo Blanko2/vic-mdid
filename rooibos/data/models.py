@@ -96,17 +96,25 @@ class Record(models.Model):
     owner = models.ForeignKey(User, null=True)
 
     @staticmethod
-    def get_many(user, *ids):
-        if user.is_superuser:
-            q = Q()
-        else:
-            q = ((Q(owner=user) if user.is_authenticated() else Q()) |
-                 Q(collection__id__in=accessible_ids(user, Collection)))
-        return Record.objects.filter(q, id__in=ids)
+    def filter_by_access(user, *ids):
+        records = Record.objects.filter(id__in=ids)
+        if not user or not user.is_superuser:
+            cq = Q(collectionitem__collection__in=accessible_ids(user, Collection),
+                   collectionitem__hidden=False)
+            mq = Q(collectionitem__collection__in=accessible_ids(user, Collection, write=True),
+                   owner=None)
+            oq = Q(owner=user) if user and not user.is_anonymous() else Q()
+            records = records.filter(cq | mq | oq)
+        return records.distinct()
+
+    @staticmethod
+    def filter_one_by_access(user, id):
+        record = Record.filter_by_access(user, id)
+        return record[0] if record else None
 
     @staticmethod
     def get_or_404(id, user):
-        return get_object_or_404(Record.get_many(user, id).distinct())
+        return get_object_or_404(Record.filter_by_access(user, id))
 
     @staticmethod
     def by_fieldvalue(fields, values):

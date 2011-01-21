@@ -1,6 +1,5 @@
 from django.conf import settings as _settings
 from rooibos.data.models import Record, Collection
-from rooibos.access import accessible_ids
 
 def settings(request):
     """
@@ -16,7 +15,7 @@ def selected_records(request):
 
     selected = request.session.get('selected_records', ())
     if selected:
-        records = Record.objects.filter(id__in=selected, collection__id__in=accessible_ids(request.user, Collection))[:200]
+        records = Record.filter_by_access(request.user, *selected)[:200]
     else:
         records = None
 

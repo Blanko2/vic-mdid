@@ -12,7 +12,7 @@ from django.utils import simplejson
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
-from rooibos.access import accessible_ids, filter_by_access
+from rooibos.access import filter_by_access
 from rooibos.contrib.tagging.models import Tag
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
@@ -152,7 +152,7 @@ def delete_selected_records(request):
 
     selected = list(request.session['selected_records'])
     deletable_items = []
-    for record in Record.objects.filter(id__in=selected):
+    for record in Record.filter_by_access(request.user, *selected):
         if record.deletable_by(request.user):
             deletable_items.append(record)
 
