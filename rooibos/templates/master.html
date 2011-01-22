@@ -18,7 +18,8 @@
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
-    <link href="{% url ui-css 'master' %}" rel="stylesheet" type="text/css" media="screen">
+    <!--link href="{% url ui-css 'master' %}" rel="stylesheet" type="text/css" media="screen">-->
+    {% include "master.css" %}
 {% endcompress %}
 <!--[if IE]>
 {% compress css %}
@@ -175,7 +176,7 @@
     var custom_process_facets = false;
 </script>
 {% block javascript %}
-<!--{ % compress js %}-->
+ {% compress js %}
     <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.1.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.7.2.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
@@ -510,7 +511,6 @@
               });
         });
     </script>
-<!--{ % endcompress %}-->
 
     <script type="text/javascript">
         $(document).ready(function()
@@ -539,6 +539,9 @@
             });
         });
     </script>
+
+{% endcompress %}
+
 
 {% endblock %}
 

@@ -10,7 +10,7 @@ from xml.etree.ElementTree import ElementTree
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch, HitCount
-from rooibos.util.BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 import cookielib
 import datetime
 
