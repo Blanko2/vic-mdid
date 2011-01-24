@@ -13,7 +13,7 @@ from django.conf import settings
 from rooibos.data.models import *
 from rooibos.storage.models import Media, ProxyUrl, Storage, TrustedSubnet
 from localfs import LocalFileSystemStorageSystem
-from rooibos.storage import get_thumbnail_for_record, get_image_for_record, match_up_media, analyze_records, analyze_media
+from rooibos.storage import get_thumbnail_for_record, get_media_for_record, get_image_for_record, match_up_media, analyze_records, analyze_media
 from rooibos.access.models import AccessControl
 from rooibos.access import get_effective_permissions
 from rooibos.presentation.models import Presentation, PresentationItem
@@ -511,3 +511,79 @@ class AnalyzeTestCase(unittest.TestCase):
         extra = sorted(extra)
         self.assertEqual('id_2.txt', extra[0])
         self.assertEqual(os.path.join('sub', 'id_99.txt'), extra[1])
+
+
+
+class GetMediaForRecordTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.collection = Collection.objects.create(title='GetMediaTest')
+        self.storage = Storage.objects.create(title='GetMediaTest', name='getmediatest', system='local', base=self.tempdir)
+        self.record = Record.objects.create(name='monalisa')
+        self.record.media_set.create(name='getmediatest', url='getmediatest', storage=self.storage)
+        CollectionItem.objects.create(collection=self.collection, record=self.record)
+        self.user = User.objects.create(username='getmediatest1')
+        self.owner_can_read = User.objects.create(username='getmediatest2')
+        self.owner_cant_read = User.objects.create(username='getmediatest3')
+        AccessControl.objects.create(user=self.owner_can_read, content_object=self.collection, read=True)
+        self.presentation_ok = Presentation.objects.create(title='GetMediaTest1', owner=self.owner_can_read)
+        self.presentation_ok.items.create(record=self.record, order=1)
+        self.presentation_hidden = Presentation.objects.create(title='GetMediaTest5', owner=self.owner_can_read, hidden=True)
+        self.presentation_hidden.items.create(record=self.record, order=1)
+        self.presentation_broken = Presentation.objects.create(title='GetMediaTest2', owner=self.owner_cant_read)
+        self.presentation_broken.items.create(record=self.record, order=1)
+        self.presentation_password = Presentation.objects.create(title='GetMediaTest3', owner=self.owner_can_read, password='test')
+        self.presentation_password.items.create(record=self.record, order=1)
+        self.presentation_no_record = Presentation.objects.create(title='GetMediaTest4', owner=self.owner_can_read)
+        AccessControl.objects.create(user=self.user, content_object=self.storage, read=True)
+
+    def tearDown(self):
+        self.presentation_ok.delete()
+        self.presentation_broken.delete()
+        self.user.delete()
+        self.owner_can_read.delete()
+        self.owner_cant_read.delete()
+        self.record.delete()
+        self.storage.delete()
+        self.collection.delete()
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def test_direct_access(self):
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.collection, read=True)
+        self.assertEqual(1, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.filter(user=self.user).delete()
+
+    def test_simple_presentation_access(self):
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.presentation_broken, read=True)
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.presentation_ok, read=True)
+        self.assertEqual(1, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.filter(user=self.user).delete()
+
+    def test_password_access(self):
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.presentation_password, read=True)
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        passwords = dict(((self.presentation_password.id, 'test'),))
+        self.assertEqual(1, get_media_for_record(self.record, user=self.user, passwords=passwords).count())
+        AccessControl.objects.filter(user=self.user).delete()
+
+    def test_presentation_must_contain_record(self):
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.presentation_no_record, read=True)
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.filter(user=self.user).delete()
+
+    def test_hidden_presentation_access(self):
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.create(user=self.user, content_object=self.presentation_hidden, read=True)
+        self.assertEqual(0, get_media_for_record(self.record, user=self.user).count())
+        self.presentation_hidden.hidden = False
+        self.presentation_hidden.save()
+        self.assertEqual(1, get_media_for_record(self.record, user=self.user).count())
+        AccessControl.objects.filter(user=self.user).delete()
+        self.presentation_hidden.hidden = True
+        self.presentation_hidden.save()
