@@ -4,10 +4,9 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from django.db.models import Q
 from rooibos.presentation.models import Presentation
 from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
-from rooibos.access import accessible_ids, filter_by_access
+from rooibos.access import filter_by_access
 from rooibos.storage import get_image_for_record
 from rooibos.data.models import Record, Collection
 from reportlab.pdfgen import canvas
@@ -109,13 +108,8 @@ class FlashCards(object):
             p.saveState()
             p.translate(0, height / 3 * (2 - index % 3))
 
-            try:
-                # retrieve record while making sure it's accessible to presentation owner
-                record = Record.objects.get(Q(owner=presentation.owner) |
-                                            Q(collection__in=filter_by_access(presentation.owner, Collection)),
-                                            id=item.record.id)
-            except Record.DoesNotExist:
-                record = None
+            # retrieve record while making sure it's accessible to presentation owner
+            record = Record.filter_one_by_access(presentation.owner, item.record.id)
 
             if record:
                 image = get_image_for_record(record, presentation.owner, 800, 800, passwords)

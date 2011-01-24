@@ -1,12 +1,12 @@
 from django.conf.urls.defaults import *
-from django.contrib.syndication.views import feed
+#from django.contrib.syndication.views import feed
 from django.views.generic.simple import direct_to_template
 from views import *
-from feeds import GroupFeed
-
-feeds = {
-    'collection': GroupFeed,
-}
+#from feeds import GroupFeed
+#
+#feeds = {
+#    'collection': GroupFeed,
+#}
 
 urlpatterns = patterns('',
     url(r'^collections/$', collections, name='data-collections'),
@@ -25,5 +25,5 @@ urlpatterns = patterns('',
     url(r'^record/new/personal/$', record, kwargs={'id': None, 'name': None, 'edit': True, 'personal': True}, name='data-record-new-personal'),
     url(r'^import/$', data_import, name='data-import'),
     url(r'^import/(?P<file>[\w\d]{32})/$', data_import_file, name='data-import-file'),
-    (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
+#    (r'^feeds/(?P<url>.*)/$', feed, {'feed_dict': feeds}),
 )

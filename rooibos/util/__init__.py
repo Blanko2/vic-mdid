@@ -1,5 +1,4 @@
 from django.contrib.sites.models import Site
-from django.db.models import Q
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils import simplejson

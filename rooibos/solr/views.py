@@ -286,7 +286,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     else:
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
     page = safe_int(request.GET.get('p', '1'), 1)
-    sort = request.GET.get('s', 'score desc').lower()
+    sort = request.GET.get('s', 'title_sort').lower()
     if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
 
     orquery = request.GET.get('or', None)
@@ -323,7 +323,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     q.pop('op', None)
     q.pop('v.x', None)
     q.pop('v.y', None)
-    q['s'] = q.get('s', 'score desc')
+    q['s'] = q.get('s', sort)
     q['v'] = q.get('v', 'thumb')
     q.setlist('c', criteria)
     hiddenfields = [('op', page)]
@@ -400,7 +400,6 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'orfacet': orfacet,
                            'orquery': orquery,
                            'sort': sort,
-                           'sortfields': fields,
                            'random': random.random(),
                            'viewmode': viewmode,
                            'federated_search_query': reduce(federated_search_query, criteria, keywords),

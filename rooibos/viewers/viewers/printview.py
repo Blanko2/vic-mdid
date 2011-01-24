@@ -4,10 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from django.db.models import Q
 from rooibos.presentation.models import Presentation
 from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
-from rooibos.access import accessible_ids, filter_by_access
 from rooibos.storage import get_image_for_record
 from rooibos.data.models import Record, Collection
 from reportlab.pdfgen import canvas

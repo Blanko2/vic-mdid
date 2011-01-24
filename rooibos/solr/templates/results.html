@@ -131,9 +131,9 @@
 <ul class="actionbar">
 
 {% if hits > -1 %}
-<li><span class="dropdown-anchor">{{ hits|intcomma }} hit{{ hits|pluralize }}
+<li>{{ hits|intcomma }} hit{{ hits|pluralize }}</li>
 {% if hits > 0 %}
-<img src="{% url static 'images/down_arrow.png' %}" /></span>
+<li><span class="dropdown-anchor">Display <img src="{% url static 'images/down_arrow.png' %}" /></span>
   <div class="dropdown">
         View:
     <select name="v" id="viewmode_dropdown">
@@ -144,17 +144,11 @@
     <select name="s" id="sort_dropdown">
         <option value="score desc"{% ifequal sort "score" %} selected="selected"{% endifequal %}>Score</option>
         <option value="random_{{ random }}"{% ifequal sort "random" %} selected="selected"{% endifequal %}>Random</option>
-{% for f in sortfields %}
-        <option value="{{ f.name }}_sort"{% ifequal sort f.name %} selected="selected"{% endifequal %}>{{ f.label }}</option>
-{% endfor %}
+        <option value="title_sort"{% ifequal sort "title" %} selected="selected"{% endifequal %}>Title</option>
     </select>
     <input type="submit" value="Go" id="sort_go_button" />
   </div>
-{% else %}
-  </span>
-{% endif %}
 </li>
-{% if hits > 0 %}
 <li><input id="submit_record_selections" type="submit" name="action" value="Select" /></li>
 {% endif %}
 

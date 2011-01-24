@@ -10,7 +10,6 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django.views.decorators.cache import cache_control
 from rooibos.access import filter_by_access
-from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.data.models import Collection, CollectionItem, DisplayFieldValue, Field, FieldSet, FieldSetField, FieldValue, MetadataStandard, Record
 from rooibos.presentation.models import Presentation
 from rooibos.solr.views import *
@@ -124,7 +123,6 @@ def api_search(request, id=None, name=None):
 @json_view
 def record(request, id, name):
     record = Record.get_or_404(id, request.user)
-#    media = Media.objects.select_related().filter(record=record, storage__id__in=accessible_ids(request.user, Storage))
     return dict(record=_record_as_json(record, owner=request.user))
 
 

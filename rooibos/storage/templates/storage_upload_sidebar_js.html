@@ -1,0 +1,12 @@
+{% load ui %}
+
+<script type="text/javascript">
+
+function update_form_parameters(control) {
+	control.swfupload('removePostParam', '{{ upload_form.storage.name }}');
+	control.swfupload('addPostParam', '{{ upload_form.storage.name }}', $("#{{ upload_form.storage.auto_id }}").val());
+}
+
+</script>
+
+{% include "storage_upload_js.html" %}

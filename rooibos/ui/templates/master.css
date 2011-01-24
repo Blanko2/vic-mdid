@@ -1166,4 +1166,32 @@ html.js-enabled ul.actionbar li .dropdown-anchor {
     cursor: pointer;
 }
 
+
+#collection-membership {
+    margin-top: 20px;
+}
+
+#collection-membership-rows {
+    clear: left;
+    width: 34em;
+    max-height: 200px;
+    overflow: auto;
+}
+
+#collection-membership-rows div div:first-child, #collection-membership-header div:first-child {
+    clear: left;
+    float: left;
+    width: 20em;
+}
+
+#collection-membership-rows div div+div, #collection-membership-header div+div {
+    float: left;
+    width: 6em;
+    text-align: center;
+}
+
+#collection-membership-header {
+    font-weight: bold;
+}
+
 </style>

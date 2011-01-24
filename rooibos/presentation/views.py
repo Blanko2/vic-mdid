@@ -67,7 +67,7 @@ def create(request):
 
 def add_selected_items(request, presentation):
     selected = request.session.get('selected_records', ())
-    records = Record.get_many(request.user, *selected)
+    records = Record.filter_by_access(request.user, *selected)
     c = presentation.items.count()
     for record in records:
         c += 1
