@@ -19,11 +19,11 @@
             padding: 0 3px 0 5px;
             font-family: serif;
         }
-{% if edit %}        
+{% if edit %}
         #transcript div {
             padding-left: 60px;
         }
-        
+
         #transcript input {
             margin: 0px 5px -5px -60px;
             position: relative;
@@ -31,11 +31,11 @@
             width: 55px;
             font-size: 60%;
         }
-        
+
         #transcript span {
             color: grey;
-        }        
-{% endif %}        
+        }
+{% endif %}
     </style>
 {% endblock %}
 
@@ -156,7 +156,7 @@
 {{ block.super }}
 
 {% if next %}
-<div class="facet active-facet" id="data_record_thumbnail">
+<div class="facet active-facet" id="audiotextsync_back">
     <div class="facet-header">Record</div>
     <div class="facet-body">
         <a href="{{ next }}">Return to record</a>
