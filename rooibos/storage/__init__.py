@@ -6,6 +6,7 @@ import mimetypes
 import os
 from django.conf import settings
 from django.db.models import Q
+from django.contrib.auth.models import User
 from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions, add_restriction_precedence
 from rooibos.data.models import Collection, Record, standardfield
 from models import Media, Storage
@@ -39,33 +40,39 @@ def get_media_for_record(record, user=None, passwords={}):
     or indirectly through presentations.
     A user always must have access to the storage where the media is stored.
     """
-
-    if hasattr(record, 'id'):
-        recordid = record.id
-    else:
-        recordid = record
-
-    if user:
-        ownercheck = Q(record__owner=user) if user.is_authenticated() and not user.is_superuser else Q()
-    else:
-        ownercheck = Q(record__owner=None)
-
-    # get available media objects
-    # Has access to collection containing record and to storage containing media
     from rooibos.presentation.models import Presentation
-    media = Media.objects.filter(
-        Q(record__collection__id__in=accessible_ids(user, Collection)) # record is accessible
-        | ownercheck # or record is accessible via owner
-        | Q(   # or presentation containing the record is accessible
-            Q(record__presentationitem__presentation__password=None) |
-            Q(record__presentationitem__presentation__in=Presentation.check_passwords(passwords)),
-            record__presentationitem__presentation__id__in=accessible_ids(user, Presentation)
-        ),
-        storage__id__in=accessible_ids(user, Storage),  # storage always must be accessible
-        record__id=recordid
-    )
 
-    return media
+    record_id = getattr(record, 'id', record)
+    record = Record.filter_one_by_access(user, record_id)
+
+    if not record:
+        # Try to get to record through an accessible presentation -
+        # own presentations don't count, since it's already established that owner
+        # doesn't have access to the record.
+        pw_q = Q(
+            # Presentation must not have password
+            Q(password=None) |
+            # or must know password
+            Q(id__in=Presentation.check_passwords(passwords))
+        )
+        access_q = Q(
+            # Must have access to presentation
+            id__in=accessible_ids(user, Presentation),
+            # and presentation must not be archived
+            hidden=False
+        )
+        accessible_presentations = Presentation.objects.filter(
+            pw_q, access_q, items__record__id=record_id)
+        # Now get all the presentation owners so we can check if any of them have access
+        # to the record
+        owners = User.objects.filter(id__in=accessible_presentations.values('owner'))
+        if not any(Record.filter_one_by_access(owner, record_id) for owner in owners):
+            return Media.objects.none()
+
+    return Media.objects.filter(
+        record__id=record_id,
+        storage__id__in=accessible_ids(user, Storage),
+        )
 
 
 def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):

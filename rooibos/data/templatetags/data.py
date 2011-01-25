@@ -44,12 +44,9 @@ def metadata(parser, token):
 
 @register.filter
 def fieldvalue(record, field):
-    print record
-    print field
     if not record:
         return ''
     for v in record.get_fieldvalues(hidden=True):
-        print v.field.full_name
         if v.field.full_name == field:
             return v.value
     return ''
