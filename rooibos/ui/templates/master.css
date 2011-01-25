@@ -508,6 +508,10 @@ html.js-enabled #basket-tab-pin {
     position: relative;
 }
 
+.record.notitle {
+    width: 140px;
+}
+
 .record a {
     text-decoration: none;
 }

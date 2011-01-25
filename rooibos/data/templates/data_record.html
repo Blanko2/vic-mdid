@@ -60,8 +60,8 @@
 {% if record.id %}
 <div class="facet active-facet" id="data_record_thumbnail">
     <div class="facet-header">Thumbnail</div>
-    <div class="facet-body" style="text-align: center;">
-        <img src="{{ record.get_thumbnail_url }}" alt="{{ record.title|default:"Untitled" }}" />
+    <div class="facet-body">
+        {% record record "True" "thumb" "True" %}
     </div>
 </div>
 {% endif %}
@@ -138,7 +138,7 @@
 <div class="facet active-facet" id="data_record_parent">
     <div class="facet-header">Parent record</div>
     <div class="facet-body">
-    {% record record.parent 'selectable' %}
+        {% record record "True" "thumb" "True" %}
     </div>
 </div>
 {% endif %}
@@ -148,7 +148,7 @@
     <div class="facet-header">Child records</div>
     <div class="facet-body" style="max-height: 400px; overflow: auto;">
         {% for child in record.record_set.all %}
-            {% record child 'selectable' %}
+        {% record record "True" "thumb" "True" %}
         {% endfor %}
     </div>
 </div>

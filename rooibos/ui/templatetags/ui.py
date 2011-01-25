@@ -14,8 +14,9 @@ from base64 import b32encode, b64encode
 register = template.Library()
 
 @register.inclusion_tag('ui_record.html', takes_context=True)
-def record(context, record, selectable=False, viewmode="thumb"):
+def record(context, record, selectable=False, viewmode="thumb", notitle=False):
     return {'record': record,
+            'notitle': notitle,
             'selectable': selectable,
             'selected': record.id in context['request'].session.get('selected_records', ()),
             'viewmode': viewmode,
