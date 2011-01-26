@@ -5,6 +5,8 @@ LOGGING_OUTPUT_ENABLED = DEBUG
 DATABASE_ENGINE = 'sqlite3'
 DATABASE_NAME = 'test.sqlite'
 
+CACHE_BACKEND = 'dummy://'
+
 remove_settings = ['DATABASE_OPTIONS']
 
 import tempfile
