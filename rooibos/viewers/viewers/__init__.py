@@ -8,5 +8,5 @@ from printview import PrintView
 from audiotextsync import AudioTextSync
 from mediaplayer import MediaPlayer, EmbeddedMediaPlayer
 
-if getattr(settings, 'MEGAZINE_VIEWER'):
+if getattr(settings, 'MEGAZINE_VIEWER', False):
     from megazine import MegazinePlayer
