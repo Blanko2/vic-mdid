@@ -145,6 +145,12 @@ CUSTOM_TRACKER_HTML = ""
 
 EXPOSE_TO_CONTEXT = ('STATIC_DIR', 'PRIMARY_COLOR', 'SECONDARY_COLOR', 'CUSTOM_TRACKER_HTML', 'ADMINS')
 
+# The Megazine viewer is using a third party component that has commercial
+# licensing requirements.  Before enabling the component here please make
+# sure you are not violating the agreements listed in static/megazine/COPYING.
+MEGAZINE_VIEWER = False
+
+
 additional_settings = [
 #    'apps.jmutube.settings_local',
 #    'apps.svohp.settings_local',
