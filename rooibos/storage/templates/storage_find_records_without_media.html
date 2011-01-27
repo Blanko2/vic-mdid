@@ -44,7 +44,7 @@ collection that do not have at least one media object from the selected storage 
 {% if analyzed %}
 
 <h3 style="margin-top: 20px;">{{ identifiers|length|intcomma }} Identifier{{ identifiers|length|pluralize }}
-of {{ records|length|intcomma }} Record{{ records|length|pluralize }} without Media</h3>
+for {{ records|length|intcomma }} Record{{ records|length|pluralize }} without Media</h3>
 
 {% ifnotequal records|length identifiers|length %}
 <div>Note: Not all unique identifiers could be found.  This could be caused by incomplete metadata or
