@@ -79,7 +79,10 @@ def retrieve_image(request, recordid, record, width=None, height=None):
                             content_object=Record.objects.get(id=recordid),
                             data=dict(width=width, height=height))
     try:
-        return HttpResponse(content=file(path, 'rb').read(), mimetype='image/jpeg')
+        response = HttpResponse(content=file(path, 'rb').read(), mimetype='image/jpeg')
+        if request.GET.has_key('forcedl'):
+            response["Content-Disposition"] = "attachment; filename=%s.jpg" % record
+        return response
     except IOError:
         logging.error("IOError: %s" % path)
         raise Http404()
