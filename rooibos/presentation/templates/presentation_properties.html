@@ -133,6 +133,15 @@ td.annotation-col textarea {
             e.preventDefault();
         });
 
+		$("#select-button").click(function(e) {
+			var ids = [];
+            $("#lighttable div.slide.selected").each(function(i, e) {
+				ids.push($("input[name$=-record]", e).val());
+            });
+			recordSelection(ids, true);
+            e.preventDefault();
+        });
+
         function markHidden() {
             $("#lighttable div.slide").removeClass('hidden').has("input[id$=hidden]:checked").addClass('hidden');
         }
@@ -321,11 +330,12 @@ td.annotation-col textarea {
 <ul class="actionbar">
 <li><input type="submit" name="update-items" value="Save" /></li>
 <li><a href=".">Discard changes</a></li>
-<li class="secondary">Selected Items:</li>
+<li class="secondary">Highlighted Items:</li>
 <li class="secondary"><button id="show-button">Show</button></li>
 <li class="secondary"><button id="hide-button">Hide</button></li>
 <li class="secondary"><button id="duplicate-button">Duplicate</button></li>
 <li class="secondary"><button id="delete-button">Delete</button></li>
+<li class="secondary"><button id="select-button">Add to Selected Items</button></li>
 </ul>
 
 
