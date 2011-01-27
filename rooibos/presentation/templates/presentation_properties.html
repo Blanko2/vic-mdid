@@ -94,7 +94,7 @@ td.annotation-col textarea {
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
             var thumbnail = $(".thumbnail-col a", e).children();
-            var title = $("<div class='title'>").text($(".title-col", e).text());
+            var title = $("<div class='title'>").html($(".title-col", e).html());
             var order = $(".order-col", e).children().hide();
             var controls = $(".controls", e).children().hide();
             var annotation = $(".annotation-col", e).children().hide();
@@ -350,7 +350,7 @@ td.annotation-col textarea {
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
         <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
-        <td class="title-col">{{ form.instance.record.title }}</td>
+        <td class="title-col"><a href="{% url data-record form.instance.record.id, form.instance.record.name %}" target="record_view">{{ form.instance.record.title }}</a></td>
         <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
         <td class="annotation-col">{{ form.annotation }}<br />
             <a class="customize" href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Customize record for this presentation</a></td>
