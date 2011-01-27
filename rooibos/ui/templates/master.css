@@ -46,7 +46,7 @@
 <style type='text/css'>
 
 #branding {
-    background: url({% url static 'images/jmu_logo.png' %}) no-repeat bottom right;
+
     width: 107px;
     height: 50px;
     float: right;
@@ -183,7 +183,7 @@ html.js-enabled #header-bar {
 }
 
 #header {
-    background: {{ colors.header_background }};
+    background: {{ colors.header_background }} url({% url static 'images/jmu_logo.png' %}) no-repeat right 3px;
     color: {{ colors.menu_text }};
     font-size: 18pt;
     height: 50px;
@@ -196,7 +196,7 @@ html.js-enabled #header-bar {
 #header ul li {
     position: relative;
     float: left;
-    padding: 4px 20px;
+    padding: 4px 40px 4px 20px;
     list-style: none;
     border-top: solid 5px {{ colors.header_background }};
 }
@@ -277,6 +277,7 @@ html.js-enabled #header ul ul {
     float: none;
     height: auto !important;
     border-top: 1px solid {{ colors.dropdownmenu_separator }};
+    padding: 4px 4px 4px 16px;
 }
 
 #header ul.menu li:first-child {

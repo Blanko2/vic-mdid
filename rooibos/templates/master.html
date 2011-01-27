@@ -4,6 +4,8 @@
 {% load humanize %}
 {% load compress %}
 {% load userprofile %}
+{% load access_control %}
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -18,7 +20,6 @@
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
-    <!--link href="{% url ui-css 'master' %}" rel="stylesheet" type="text/css" media="screen">-->
     {% include "master.css" %}
 {% endcompress %}
 <!--[if IE]>
@@ -109,7 +110,6 @@
         <div class="spacer">
             <div id="header">
                 <a href="{% url main %}" id="logo"></a>
-                <div id="branding"></div>
                 <ul>
                     <li><a href="{% url solr-search %}">Discover</a>
                         <ul class="menu">
@@ -122,9 +122,13 @@
                     {% if user.is_authenticated %}
                     <li><a href="{% url presentation-manage %}">Organize</a>
                         <ul class="menu">
-                            <li><a href="{% url presentation-manage %}">Presentations</a></li>
-                            <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Favorites</a></li>
-                            <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Content</a></li>
+                            <li><a href="{% url presentation-manage %}">Your Presentations</a></li>
+                            <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
+                            <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
+                            {% if user|accessible_objects:"data.Collection,r"|length %}
+                            <li><a href="{% url data-record-new-personal %}">Create Item</a></li>
+                            {% endif %}
+                            <li><a href="{% url presentation-create %}">Create Presentation</a></li>
                         </ul>
                     </li>
                     {% endif %}
@@ -322,7 +326,7 @@
 
         $(document).ready(function() {
             var timeouts = Object();
-            var resetwidth = function() { $(this).width($(this).parent().width() + 30); };
+            var resetwidth = function() { $(this).width($(this).parent().width() + 50); };
             $("#header ul.menu").each(resetwidth).hide();
             $("#header>ul>li:has(ul)").mouseenter(function() {
                 clearTimeout(timeouts[$(this)]);
