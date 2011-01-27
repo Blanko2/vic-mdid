@@ -48,9 +48,7 @@ def create(request):
             presentation = Presentation.objects.create(title=form.cleaned_data['title'],
                                                        owner=request.user)
             if form.cleaned_data['add_selected']:
-                for order,record in enumerate(selected):
-                    PresentationItem.objects.create(presentation=presentation, record_id=record, order=order)
-                request.session['selected_records'] = ()
+                add_selected_items(request, presentation)
 
             if form.cleaned_data['auth_access']:
                 g = ExtendedGroup.objects.filter(type=AUTHENTICATED_GROUP)
@@ -79,6 +77,7 @@ def add_selected_items(request, presentation):
     for record in records:
         c += 1
         presentation.items.create(record=record, order=c)
+    request.session['selected_records'] = ()
 
 
 @login_required
