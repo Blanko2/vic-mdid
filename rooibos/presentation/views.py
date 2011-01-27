@@ -130,7 +130,7 @@ def edit(request, id, name):
 
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
                                            exclude=('presentation'), form=BaseOrderingForm)
-    queryset = presentation.items.select_related('record').all()
+    queryset = presentation.items.select_related('record', 'presentation').all()
     if request.method == 'POST' and request.POST.get('update-items'):
         formset = OrderingFormSet(request.POST, queryset=queryset)
         if formset.is_valid():

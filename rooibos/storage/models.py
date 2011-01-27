@@ -8,7 +8,7 @@ import Image
 import os
 import uuid
 from rooibos.contrib.ipaddr import IP
-from rooibos.util import unique_slug, cached_property, clear_cached_properties
+from rooibos.util import unique_slug
 from rooibos.data.models import Record
 from rooibos.access import sync_access, get_effective_permissions_and_restrictions
 import multimedia

@@ -2,7 +2,6 @@ import unittest
 from models import Collection, CollectionItem, Record, Field, get_system_field
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
-from rooibos.util import clear_cached_properties
 from rooibos.access.models import AccessControl
 from spreadsheetimport import SpreadsheetImport
 from cStringIO import StringIO

@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rooibos.access import accessible_ids, check_access
-from rooibos.util import unique_slug, cached_property, clear_cached_properties
+from rooibos.util import unique_slug, get_cached_value
 import logging
 import random
 
@@ -148,7 +148,6 @@ class Record(models.Model):
     def save(self, force_update_name=False, **kwargs):
         unique_slug(self, slug_literal='r-%s' % random.randint(1000000, 9999999),
                     slug_field='name', check_current_slug=kwargs.get('force_insert') or force_update_name)
-        self._clear_cached_items()
         super(Record, self).save(kwargs)
 
     def get_fieldvalues(self, owner=None, context=None, fieldset=None, hidden=False, include_context_owner=False,
@@ -202,22 +201,19 @@ class Record(models.Model):
 
     @property
     def title(self):
-        if not getattr(self, "_cached_title", None):
-            titlefield = Field.objects.get(standard__prefix='dc', name='title')
+        def get_title():
+            titlefields = standardfield_ids('title', equiv=True)
             titles = self.fieldvalue_set.filter(
-                Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields()),
+                field__in=titlefields,
                 owner=None,
                 context_type=None,
                 hidden=False)
-            self._cached_title = None if not titles else titles[0].value
-        return self._cached_title
+            return titles[0].value if titles else None
+        return get_cached_value('record-%d-title' % self.id, get_title) if self.id else None
 
     @property
     def shared(self):
         return bool(self.collectionitem_set.filter(hidden=False).count()) if self.owner else None
-
-    def _clear_cached_items(self):
-        clear_cached_properties(self, 'title', 'thumbnail')
 
     def deletable_by(self, user):
         return (
@@ -410,3 +406,14 @@ def standardfield(field, standard='dc', equiv=False):
         return Field.objects.filter(Q(id=f.id) | Q(id__in=f.get_equivalent_fields()))
     else:
         return f
+
+
+def standardfield_ids(field, standard='dc', equiv=False):
+    def get_ids():
+        f = Field.objects.get(standard__prefix=standard, name=field)
+        if equiv:
+            ids = Field.objects.filter(Q(id=f.id) | Q(id__in=f.get_equivalent_fields())).values_list('id', flat=True)
+        else:
+            ids = [f.id]
+        return ids
+    return get_cached_value('standardfield_ids-%s-%s-%s' % (field, standard, equiv), get_ids)
