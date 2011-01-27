@@ -69,6 +69,7 @@
     <div id="basket-menu">
         <a href="{% url solr-selected %}">Explore</a><br />
         <a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a><br />
+        <a href="." id="basket-refresh">Refresh</a><br />
     </div>
     <div id="basket-scroll-right"></div>
     <div id="basket-scroll-left"></div>
@@ -396,6 +397,11 @@
             });
             $("#basket-content").css('overflow', 'hidden');
             basket_scroll_arrows();
+
+            $("#basket-refresh").click(function() {
+                recordSelection(0);
+                return false;
+            });
 
             bindSelectRecordCheckboxes();
 
