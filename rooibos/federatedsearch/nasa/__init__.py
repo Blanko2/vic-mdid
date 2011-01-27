@@ -5,7 +5,7 @@ from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GR
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 from rooibos.federatedsearch.models import FederatedSearch, HitCount
 from rooibos.storage.models import *
-from rooibos.util.BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 from rooibos.workers.models import JobInfo
 from urllib import urlencode
 import datetime
