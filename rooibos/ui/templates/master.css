@@ -46,7 +46,7 @@
 <style type='text/css'>
 
 #branding {
-    background: url({% url static 'images/jmu_logo.png' %}) no-repeat bottom right;
+
     width: 107px;
     height: 50px;
     float: right;
@@ -183,7 +183,7 @@ html.js-enabled #header-bar {
 }
 
 #header {
-    background: {{ colors.header_background }};
+    background: {{ colors.header_background }} url({% url static 'images/jmu_logo.png' %}) no-repeat right 3px;
     color: {{ colors.menu_text }};
     font-size: 18pt;
     height: 50px;
@@ -196,7 +196,7 @@ html.js-enabled #header-bar {
 #header ul li {
     position: relative;
     float: left;
-    padding: 4px 20px;
+    padding: 4px 40px 4px 20px;
     list-style: none;
     border-top: solid 5px {{ colors.header_background }};
 }
@@ -277,6 +277,7 @@ html.js-enabled #header ul ul {
     float: none;
     height: auto !important;
     border-top: 1px solid {{ colors.dropdownmenu_separator }};
+    padding: 4px 4px 4px 16px;
 }
 
 #header ul.menu li:first-child {
@@ -351,7 +352,11 @@ html.js-enabled #content {
     height: 11px;
 }
 
-html.js-enabled #basket-tab-pin {
+#basket-refresh {
+    display: none;
+}
+
+html.js-enabled #basket-tab-pin, html.js-enabled #basket-refresh {
     display: inline;
 }
 
@@ -506,6 +511,10 @@ html.js-enabled #basket-tab-pin {
     font-size: smaller;
     background-color: {{ colors.shaded_background }};
     position: relative;
+}
+
+.record.notitle {
+    width: 140px;
 }
 
 .record a {
@@ -868,7 +877,7 @@ div.metadata-subitem div.label {
 }
 
 .record-preview div.metadata {
-    font-size: x-small;
+    font-size: small;
     margin: 0;
 }
 

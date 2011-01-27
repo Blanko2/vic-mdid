@@ -125,24 +125,13 @@ def guess_extension(mimetype):
     return x
 
 
-def cached_property(instance, key, query):
-    value = None
-    if instance.id:
-        key = '-'.join((instance._meta.db_table, str(instance.id), key))
-        value = cache.get(key)
+def get_cached_value(key, func, cache_duration=600):
+    value = cache.get(key)
     if not value:
-        try:
-            value = query()
-        except:
-            pass
-        if instance.id and value:
-            cache.set(key, value)
+        value = func()
+        if value:
+            cache.set(key, value, cache_duration)
     return value
-
-def clear_cached_properties(instance, *keys):
-    if instance.id:
-        for key in keys:
-            cache.delete('-'.join((instance._meta.db_table, str(instance.id), key)))
 
 
 def xfilter(func, iterator):

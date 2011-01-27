@@ -22,6 +22,7 @@ from rooibos.storage.models import ProxyUrl
 from rooibos.data.models import FieldSet, Record
 from rooibos.data.forms import FieldSetChoiceField
 from rooibos.ui.actionbar import update_actionbar_tags
+from rooibos.access.models import ExtendedGroup, AUTHENTICATED_GROUP, AccessControl
 from models import Presentation, PresentationItem
 import logging
 import base64
@@ -39,6 +40,7 @@ def create(request):
     class CreatePresentationForm(forms.Form):
         title = forms.CharField(label='Title', max_length=Presentation._meta.get_field('title').max_length)
         add_selected = forms.BooleanField(label='Add selected records immediately', required=False, initial=True)
+        auth_access = forms.BooleanField(label='Allow access to authenticated users', required=False, initial=True)
 
     if request.method == "POST":
         form = CreatePresentationForm(request.POST)
@@ -46,9 +48,12 @@ def create(request):
             presentation = Presentation.objects.create(title=form.cleaned_data['title'],
                                                        owner=request.user)
             if form.cleaned_data['add_selected']:
-                for order,record in enumerate(selected):
-                    PresentationItem.objects.create(presentation=presentation, record_id=record, order=order)
-                request.session['selected_records'] = ()
+                add_selected_items(request, presentation)
+
+            if form.cleaned_data['auth_access']:
+                g = ExtendedGroup.objects.filter(type=AUTHENTICATED_GROUP)
+                g = g[0] if g else ExtendedGroup.objects.create(type=AUTHENTICATED_GROUP, name='Authenticated Users')
+                AccessControl.objects.create(content_object=presentation, usergroup=g, read=True)
 
             update_actionbar_tags(request, presentation)
 
@@ -72,6 +77,7 @@ def add_selected_items(request, presentation):
     for record in records:
         c += 1
         presentation.items.create(record=record, order=c)
+    request.session['selected_records'] = ()
 
 
 @login_required
@@ -123,7 +129,7 @@ def edit(request, id, name):
 
     OrderingFormSet = modelformset_factory(PresentationItem, extra=0, can_delete=True,
                                            exclude=('presentation'), form=BaseOrderingForm)
-    queryset = presentation.items.select_related('record').all()
+    queryset = presentation.items.select_related('record', 'presentation').all()
     if request.method == 'POST' and request.POST.get('update-items'):
         formset = OrderingFormSet(request.POST, queryset=queryset)
         if formset.is_valid():

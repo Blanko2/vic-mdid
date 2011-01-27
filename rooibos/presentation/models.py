@@ -4,7 +4,7 @@ from django.contrib.contenttypes import generic
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
-from rooibos.data.models import Record, FieldSet, FieldValue, standardfield
+from rooibos.data.models import Record, FieldSet, FieldValue, standardfield, standardfield_ids
 from rooibos.storage.models import Media
 from rooibos.util import unique_slug
 from rooibos.access import accessible_ids
@@ -99,16 +99,16 @@ class PresentationItem(models.Model):
 
     @property
     def title(self):
-        titlefield = standardfield('title')
-        q = Q(field=titlefield) | Q(field__in=titlefield.get_equivalent_fields())
+        titlefields = standardfield_ids('title', equiv=True)
+        q = Q(field__in=titlefields)
         fv = self.get_fieldvalues(q=q)
         return None if not fv else fv[0].value
 
     def _annotation_filter(self):
-        return dict(owner=self.presentation.owner,
+        return dict(owner=self.presentation.owner_id,
                     context_id=self.id,
                     context_type=ContentType.objects.get_for_model(PresentationItem),
-                    field=standardfield('description'),
+                    field__in=standardfield_ids('description'),
                     record=self.record)
 
     def annotation_getter(self):

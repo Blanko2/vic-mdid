@@ -91,10 +91,17 @@ td.annotation-col textarea {
 
     $(document).ready(function() {
 
+		var unsaved_changes = false;
+		$(window).bind('beforeunload', function() {
+			if (unsaved_changes)
+				return 'You have unsaved changes in your presentation that will be lost if you continue.';
+		});
+
+
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
             var thumbnail = $(".thumbnail-col a", e).children();
-            var title = $("<div class='title'>").text($(".title-col", e).text());
+            var title = $("<div class='title'>").html($(".title-col", e).html());
             var order = $(".order-col", e).children().hide();
             var controls = $(".controls", e).children().hide();
             var annotation = $(".annotation-col", e).children().hide();
@@ -122,6 +129,7 @@ td.annotation-col textarea {
             $(".orderinput input").each(function(i, e) { $(e).val(i); });
             e.preventDefault();
             add_metadata_popup($("#lighttable"));
+			unsaved_changes = true;
         });
 
         $("#delete-button").click(function(e) {
@@ -130,6 +138,16 @@ td.annotation-col textarea {
                 $("input[id$=DELETE]", e).attr('checked', true);
             });
             $("#lighttable-buttons button").attr('disabled', true);
+            e.preventDefault();
+			unsaved_changes = true;
+        });
+
+		$("#select-button").click(function(e) {
+			var ids = [];
+            $("#lighttable div.slide.selected").each(function(i, e) {
+				ids.push($("input[name$=-record]", e).val());
+            });
+			recordSelection(ids, true);
             e.preventDefault();
         });
 
@@ -143,10 +161,15 @@ td.annotation-col textarea {
                 $("input[id$=hidden]", e).attr('checked', hide);
             });
             markHidden();
+			unsaved_changes = true;
         }
 
         $("#show-button").click(function(e) { showHide(false); e.preventDefault(); });
         $("#hide-button").click(function(e) { showHide(true); e.preventDefault(); });
+
+		$("#lighttable-annotation textarea").change(function() {
+			unsaved_changes = true;
+		})
 
         var last_selected;
 
@@ -167,7 +190,10 @@ td.annotation-col textarea {
             }
         }
 
-        $("#items-form").submit(selectionChanged);
+        $("#items-form").submit(function() {
+			selectionChanged();
+			unsaved_changes = false;
+		});
 
         var firstselection;
 
@@ -218,6 +244,7 @@ td.annotation-col textarea {
                 ui.item.unbind('click').one("click", function (e) {
                     e.stopImmediatePropagation(); $(this).click(select_slide);
                 });
+				unsaved_changes = true;
             },
             start: function(event, ui) {
                 $("#lighttable .record-anchor[id*=record-id-]").qtip('hide');
@@ -238,11 +265,6 @@ td.annotation-col textarea {
         $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 200)); }).resize();
 
         $("#lighttable-annotation").show().children().attr('disabled', true);
-
-        $("a.customize").live('click', function(e) {
-            if (!confirm('This action will discard any changes you have made since the last save.'))
-                e.preventDefault();
-        });
 
         if (window.location.hash && window.location.hash.match(/^#s/)) {
             $("#lighttable div.slide").has("input[id$=-id][value=" + window.location.hash.substring(2) + "]").addClass('selected');
@@ -321,11 +343,12 @@ td.annotation-col textarea {
 <ul class="actionbar">
 <li><input type="submit" name="update-items" value="Save" /></li>
 <li><a href=".">Discard changes</a></li>
-<li class="secondary">Selected Items:</li>
+<li class="secondary">Highlighted Items:</li>
 <li class="secondary"><button id="show-button">Show</button></li>
 <li class="secondary"><button id="hide-button">Hide</button></li>
 <li class="secondary"><button id="duplicate-button">Duplicate</button></li>
 <li class="secondary"><button id="delete-button">Delete</button></li>
+<li class="secondary"><button id="select-button">Add to Selected Items</button></li>
 </ul>
 
 
@@ -350,7 +373,7 @@ td.annotation-col textarea {
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
         <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
-        <td class="title-col">{{ form.instance.record.title }}</td>
+        <td class="title-col"><a href="{% url data-record form.instance.record.id, form.instance.record.name %}" target="record_view">{{ form.instance.record.title }}</a></td>
         <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
         <td class="annotation-col">{{ form.annotation }}<br />
             <a class="customize" href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Customize record for this presentation</a></td>

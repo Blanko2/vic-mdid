@@ -25,6 +25,11 @@
     {{ form.add_selected.errors }}
 {% endif %}
 
+{{ form.auth_access.label_tag }}
+{{ form.auth_access }}
+{{ form.auth_access.errors }}
+
+
 <div class="row">
     <input type="submit" value="Create" />
     {% if next %}
