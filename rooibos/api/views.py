@@ -1,6 +1,5 @@
 from datetime import datetime
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.core import serializers
 from django.db.models import Q
@@ -20,7 +19,7 @@ from rooibos.ui import update_record_selection
 from rooibos.util import safe_int, json_view
 from rooibos.util.models import OwnedWrapper
 from rooibos.contrib.tagging.models import Tag
-import django.contrib.auth
+import rooibos.auth
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -51,9 +50,9 @@ def login(request):
     if request.method == 'POST':
         username = request.POST["username"]
         password = request.POST["password"]
-        user = authenticate(username=username, password=password)
+        user = rooibos.auth.authenticate(username=username, password=password)
         if (user is not None) and user.is_active:
-            django.contrib.auth.login(request, user)
+            rooibos.auth.login(request, user)
             return dict(result='ok',
                         sessionid=request.session.session_key,
                         userid=user.id)
@@ -65,7 +64,7 @@ def login(request):
 
 @json_view
 def logout(request):
-    django.contrib.auth.logout(request)
+    rooibos.auth.logout(request)
     return dict(result='ok')
 
 

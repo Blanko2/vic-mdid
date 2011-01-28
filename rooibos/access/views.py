@@ -8,12 +8,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.views import login as dj_login, logout as dj_logout
 from django.conf import settings
 from django import forms
+from django.core.urlresolvers import reverse
 from models import AccessControl, update_membership_by_ip
 from . import check_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
 
 
-def login(request, *args, **kwargs):
-    response = dj_login(request, *args, **kwargs)
+def login(request, login_url=None, *args, **kwargs):
+    try:
+        response = dj_login(request, *args, **kwargs)
+    except ValueError:
+        # Certain values in the database password field can cause a ValueError
+        # in that case, return a redirect back to the login page
+        return HttpResponseRedirect((login_url or reverse('login')) + '?' + request.GET.urlencode())
     if type(response) == HttpResponseRedirect:
         # Successful login, add user to IP based groups
         update_membership_by_ip(request.user, request.META['REMOTE_ADDR'])
