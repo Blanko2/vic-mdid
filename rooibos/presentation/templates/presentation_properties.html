@@ -270,6 +270,10 @@ td.annotation-col textarea {
             $("#lighttable div.slide").has("input[id$=-id][value=" + window.location.hash.substring(2) + "]").addClass('selected');
             selectionChanged();
         }
+
+		$("#presentation_sidebar_actions a").each(function() {
+			addCopyLinkIcon($(this));
+		});
     });
 </script>
 {% endblock %}

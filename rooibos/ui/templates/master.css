@@ -1203,4 +1203,10 @@ html.js-enabled ul.actionbar li .dropdown-anchor {
     font-weight: bold;
 }
 
+
+img.item-action-link {
+    margin-left: 5px !important;
+    cursor: pointer;
+}
+
 </style>

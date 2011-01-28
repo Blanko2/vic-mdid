@@ -328,6 +328,49 @@
             $(".facet .facet-body .facet-line .facet-exclude").css('visibility', 'hidden');
         };
 
+        function addCopyLinkIcon(item) {
+            if (!item.attr('href')) return;
+            var host = window.location.href.substring(0, window.location.href.length - window.location.pathname.length);
+            var url = host + item.attr('href').replace(/\?.+/, '');
+            var link = $("<img class='item-action-link' src='{% url static 'images/link.png' %}' />");
+            link.qtip({
+                content: "Copy and paste this URL to link to this item:<br /><input type='text' style='width: 285px;' readonly='readonly' value='" + url + "' />",
+                show: {
+                    delay: 0,
+                    solo: true,
+                    when: {
+                        event: 'click'
+                    }
+                },
+                hide: {
+                    delay: 250,
+                    fixed: true,
+                    when: {
+                        event: 'unfocus'
+                    }
+                },
+                position: {
+                    corner: {
+                        tooltip: 'bottomLeft',
+                        target: 'topRight'
+                    },
+                    adjust: {
+                        screen: true
+                    }
+                },
+                style: {
+                    border: {
+                        radius: 4
+                    },
+                    fontSize: 'smaller',
+                    tip: false,
+                    name: 'cream',
+                    width: 320
+                }
+            });
+            link.insertAfter(item);
+        }
+
         $(document).ready(function() {
             var timeouts = Object();
             var resetwidth = function() { $(this).width($(this).parent().width() + 50); };
@@ -419,20 +462,22 @@
             $(".autocomplete-group").autocomplete('{% url api-autocomplete-group %}', {});
             $(".impersonation-autocomplete").autocomplete('{% url impersonation-autocomplete-user %}', {});
 
-
             setTimeout(function() { $("#messages").css('visibility', 'hidden'); }, 8000);
-
 
             // convert list of actions to row drop-down menu
             $("table.itemactions tr+tr").each(function() {
-              var r = $(this);
-              var c = $("<td class='item-actions-menu'><img src='{% url static 'images/down_arrow.png' %}' /><" + "/td>");
-              var u = $("<ul><" + "/ul>");
-              $("td.item-actions a, td.item-actions input", r).each(function() { u.append($("<li><" + "/li>").append($(this))); });
-              if (!u.children().length) u.append($("<li>No actions available<" + "/li>"));
-              r.append(c.append($("<div><" + "/div>").append(u)));
+                var r = $(this);
+                var c = $("<td class='item-actions-menu'><img src='{% url static 'images/down_arrow.png' %}' /><" + "/td>");
+                var u = $("<ul><" + "/ul>");
+                $("td.item-actions a, td.item-actions input", r).each(function() {
+                    var item = $(this);
+                    var li = $("<li><" + "/li>").append(item);
+                    u.append(li);
+                    addCopyLinkIcon(item);
+                });
+                if (!u.children().length) u.append($("<li>No actions available<" + "/li>"));
+                r.append(c.append($("<div><" + "/div>").append(u)));
             });
-
 
             $(document).click(function() {
                 $("table.itemactions tr.actionrow-open").removeClass('actionrow-open');
