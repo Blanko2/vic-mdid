@@ -161,7 +161,14 @@ def delete_selected_records(request):
             if record.id in selected: selected.remove(record.id)
             record.delete()
         request.session['selected_records'] = selected
-        return HttpResponseRedirect(request.GET.get('next', reverse('solr-selected')))
+
+        from rooibos.middleware import HistoryMiddleware
+        return HttpResponseRedirect(
+            request.GET.get('next',
+                HistoryMiddleware.go_back(
+                    request,
+                    to_before=reverse('ui-delete-selected'),
+                    default=reverse('solr-selected'))))
 
     return render_to_response('ui_delete_selected.html',
                               {

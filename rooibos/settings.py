@@ -71,6 +71,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'rooibos.storage.middleware.StorageCleanupOnStart',
+    'rooibos.middleware.HistoryMiddleware',
 )
 
 ROOT_URLCONF = 'rooibos.urls'

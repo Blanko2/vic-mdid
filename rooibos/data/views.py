@@ -54,7 +54,14 @@ def record_delete(request, id, name):
         if record.editable_by(request.user):
             record.delete()
             request.user.message_set.create(message="Record deleted successfully.")
-            return HttpResponseRedirect(reverse('solr-search'))
+
+            from rooibos.middleware import HistoryMiddleware
+            return HttpResponseRedirect(HistoryMiddleware.go_back(
+                request,
+                to_before=reverse('data-record', kwargs=dict(id=id, name=name)),
+                default=reverse('solr-search')
+            ))
+
     return HttpResponseRedirect(reverse('data-record', kwargs=dict(id=id, name=name)))
 
 
