@@ -1,5 +1,6 @@
 {% load ui %}
 
+{% if upload_form %}
 <script type="text/javascript">
 
 function update_form_parameters(control) {
@@ -10,3 +11,4 @@ function update_form_parameters(control) {
 </script>
 
 {% include "storage_upload_js.html" %}
+{% endif %}

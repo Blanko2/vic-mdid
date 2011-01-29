@@ -185,6 +185,7 @@
 {% endif %}
 
 
+{% if upload_form %}
 <div class="facet active-facet" id="data_record_upload_media">
     <div class="facet-header">Upload Media</div>
     <div class="facet-body">
@@ -193,10 +194,9 @@
 {% else %}
 Please save the record before uploading media.
 {% endif %}
-
     </div>
 </div>
-
+{% endif %}
 
 {% endblock %}
 

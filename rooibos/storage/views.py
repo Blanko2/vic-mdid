@@ -89,8 +89,9 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 
 
 def media_upload_form(request):
-    available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True
-                                         ).values_list('name','title'))
+    available_storage = filter_by_access(request.user, Storage, write=True).values_list('name','title')
+    if not available_storage:
+        return None
 
     class UploadFileForm(forms.Form):
         storage = forms.ChoiceField(choices=available_storage)
@@ -107,6 +108,8 @@ def media_upload(request, recordid, record):
     if request.method == 'POST':
 
         UploadFileForm = media_upload_form(request)
+        if not UploadFileForm:
+            raise Http404()
 
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():

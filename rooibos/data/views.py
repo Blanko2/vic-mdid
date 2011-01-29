@@ -263,7 +263,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     from rooibos.storage.views import media_upload_form
     UploadFileForm = media_upload_form(request)
-    upload_form = UploadFileForm()
+    upload_form = UploadFileForm() if UploadFileForm else None
 
     return render_to_response('data_record.html',
                               {'record': record,
