@@ -89,8 +89,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     media = Media.objects.select_related().filter(record=record,
                                                   storage__id__in=accessible_ids(request.user, Storage))
-    # Only list media that is downloadable
-    media = filter(lambda m: m.is_downloadable_by(request.user), media)
+    # Only list media that is downloadable or editable
+    for m in media:
+        # Calculate permissions and store with object for later use in template
+        m.downloadable_in_template =  m.is_downloadable_by(request.user)
+        m.editable_in_template = m.editable_by(request.user)
+    media = filter(lambda m: m.downloadable_in_template or m.editable_in_template, media)
 
     edit = edit and request.user.is_authenticated()
 

@@ -10,7 +10,7 @@ import uuid
 from rooibos.contrib.ipaddr import IP
 from rooibos.util import unique_slug
 from rooibos.data.models import Record
-from rooibos.access import sync_access, get_effective_permissions_and_restrictions
+from rooibos.access import sync_access, get_effective_permissions_and_restrictions, check_access
 import multimedia
 
 class Storage(models.Model):
@@ -208,6 +208,10 @@ class Media(models.Model):
             return False
         else:
             return r
+
+    def editable_by(self, user):
+        return self.record.editable_by(user) and check_access(user, self.storage, write=True)
+
 
 
 

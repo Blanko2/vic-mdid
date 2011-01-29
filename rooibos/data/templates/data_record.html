@@ -44,6 +44,9 @@
                 formatResult: function(row, pos, num) { return decodeURIComponent(row); },
                 });
             });
+        $("form.delete-media-form").submit(function() {
+            return confirm("Are you sure you want to delete this media?");
+        });
     });
 </script>
 
@@ -170,10 +173,19 @@
     <ul>
     {% for m in media %}
         <li>
+            {% if m.downloadable_in_template %}
             <a href="{{ m.get_absolute_url }}">{{ m.name }}</a>
+            {% else %}
+            {{ m.name }}
+            {% endif %}
             {{ m.mimetype }}
             {% if m.width and m.height %}
                 {{ m.width }}x{{ m.height }}
+            {% endif %}
+            {% if m.editable_in_template %}
+            <form class="delete-media-form" method="POST" action="{% url storage-media-delete m.id, m.name %}?next={{ request.get_full_path }}">
+                <input type="submit" value="Delete Media" />
+            </form>
             {% endif %}
         </li>
     {% endfor %}

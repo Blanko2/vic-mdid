@@ -142,6 +142,18 @@ def media_upload(request, recordid, record):
         return HttpResponseNotAllowed(['POST'])
 
 
+@login_required
+def media_delete(request, mediaid, medianame):
+    media = get_object_or_404(Media, id=mediaid)
+    if not media.editable_by(request.user):
+        raise Http404()
+    if request.method == 'POST':
+        media.delete()
+        return HttpResponseRedirect(request.GET.get('next', '.'))
+    else:
+        return HttpResponseNotAllowed(['POST'])
+
+
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
