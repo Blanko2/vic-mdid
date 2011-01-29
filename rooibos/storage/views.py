@@ -89,7 +89,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 
 
 def media_upload_form(request):
-    available_storage = filter_by_access(request.user, Storage, write=True).values_list('name','title')
+    available_storage = filter_by_access(request.user, Storage, write=True).order_by('title').values_list('name','title')
     if not available_storage:
         return None
 
@@ -140,7 +140,6 @@ def media_upload(request, recordid, record):
             return HttpResponseRedirect(request.GET.get('next', '.'))
     else:
         return HttpResponseNotAllowed(['POST'])
-
 
 @login_required
 def media_delete(request, mediaid, medianame):
