@@ -44,6 +44,9 @@
                 formatResult: function(row, pos, num) { return decodeURIComponent(row); },
                 });
             });
+        $("form.delete-record-form").submit(function() {
+            return confirm("Are you sure you want to delete this record?");
+        });
         $("form.delete-media-form").submit(function() {
             return confirm("Are you sure you want to delete this media?");
         });
@@ -96,7 +99,7 @@
   {% add_tags_form record "suggested" "Suggest" %}
 {% endifequal %}{% endif %}
 {% if can_edit and record.id and not fv_formset %}
-    <form method="post" action="{% url data-record-delete record.id, record.name %}">{% csrf_token %}
+    <form class="delete-record-form" method="post" action="{% url data-record-delete record.id, record.name %}">{% csrf_token %}
         <input type="submit" name="delete_record" value="Delete Record" />
     </form>
 {% endif %}
