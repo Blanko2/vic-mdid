@@ -51,7 +51,7 @@ def collections(request):
 def record_delete(request, id, name):
     if request.method == 'POST':
         record = Record.get_or_404(id, request.user)
-        if record.deletable_by(request.user):
+        if record.editable_by(request.user):
             record.delete()
             request.user.message_set.create(message="Record deleted successfully.")
             return HttpResponseRedirect(reverse('solr-search'))
@@ -67,11 +67,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     if id and name:
         record = Record.get_or_404(id, request.user)
-        can_edit = can_edit and (
-            # checks if current user is owner:
-            check_access(request.user, record, write=True) or
-            # or if user has write access to collection:
-            accessible_ids(request.user, record.collection_set, write=True).count() > 0)
+        can_edit = can_edit and record.editable_by(request.user)
     else:
         if writable_collections or (personal and readable_collections):
             record = Record()
@@ -261,9 +257,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         q = Q() if record.owner == request.user or request.user.is_superuser else Q(hidden=False)
         collection_items = record.collectionitem_set.filter(q, collection__in=readable_collections)
 
-    from rooibos.storage.views import media_upload_form
-    UploadFileForm = media_upload_form(request)
-    upload_form = UploadFileForm() if UploadFileForm else None
+    if can_edit:
+        from rooibos.storage.views import media_upload_form
+        UploadFileForm = media_upload_form(request)
+        upload_form = UploadFileForm() if UploadFileForm else None
+    else:
+        upload_form = None
 
     return render_to_response('data_record.html',
                               {'record': record,

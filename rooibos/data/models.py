@@ -215,7 +215,7 @@ class Record(models.Model):
     def shared(self):
         return bool(self.collectionitem_set.filter(hidden=False).count()) if self.owner else None
 
-    def deletable_by(self, user):
+    def editable_by(self, user):
         return (
             # checks if user is owner:
             check_access(user, self, write=True) or

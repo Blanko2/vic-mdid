@@ -153,7 +153,7 @@ def delete_selected_records(request):
     selected = list(request.session['selected_records'])
     deletable_items = []
     for record in Record.filter_by_access(request.user, *selected):
-        if record.deletable_by(request.user):
+        if record.editable_by(request.user):
             deletable_items.append(record)
 
     if request.method == 'POST':

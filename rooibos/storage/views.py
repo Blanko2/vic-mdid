@@ -104,6 +104,8 @@ def media_upload_form(request):
 @login_required
 def media_upload(request, recordid, record):
     record = Record.get_or_404(recordid, request.user)
+    if not record.editable_by(request.user):
+        raise Http404()
 
     if request.method == 'POST':
 
