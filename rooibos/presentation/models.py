@@ -105,10 +105,10 @@ class PresentationItem(models.Model):
         return None if not fv else fv[0].value
 
     def _annotation_filter(self):
-        return dict(owner=self.presentation.owner_id,
+        return dict(owner=self.presentation.owner,
                     context_id=self.id,
                     context_type=ContentType.objects.get_for_model(PresentationItem),
-                    field__in=standardfield_ids('description'),
+                    field=standardfield('description'),
                     record=self.record)
 
     def annotation_getter(self):
