@@ -3,7 +3,7 @@ var clip;
 {% if streaming_server and streaming_media %}
 clip = {
     clip: {
-        autoPlay: false,
+        autoPlay: {{ autoplay|yesno:"true,false" }},
         url: '{{ streaming_media|escapejs }}',
         provider: 'influxis',
         scaling: 'fit'
@@ -28,7 +28,7 @@ clip = {
 {% else %}
 clip = {
     clip: {
-        autoPlay: false,
+        autoPlay: {{ autoplay|yesno:"true,false" }},
         url: '{{ delivery_url|escapejs }}'
         {% if audio %} ,
         type: 'audio'
