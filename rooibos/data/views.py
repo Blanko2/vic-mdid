@@ -18,7 +18,7 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from models import *
 from forms import FieldSetChoiceField
-from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list, check_access
+from rooibos.access import filter_by_access, accessible_ids, check_access
 from rooibos.presentation.models import Presentation
 from rooibos.storage.models import Media, Storage
 from rooibos.userprofile.views import load_settings, store_settings
@@ -68,8 +68,8 @@ def record_delete(request, id, name):
 def record(request, id, name, contexttype=None, contextid=None, contextname=None,
            edit=False, customize=False, personal=False):
 
-    writable_collections = list(accessible_ids_list(request.user, Collection, write=True))
-    readable_collections = list(accessible_ids_list(request.user, Collection))
+    writable_collections = list(accessible_ids(request.user, Collection, write=True))
+    readable_collections = list(accessible_ids(request.user, Collection))
     can_edit = request.user.is_authenticated()
 
     if id and name:
@@ -360,7 +360,7 @@ class DisplayOnlyTextWidget(forms.HiddenInput):
 def data_import_file(request, file):
 
     available_collections = filter_by_access(request.user, Collection)
-    writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
+    writable_collection_ids = accessible_ids(request.user, Collection, write=True)
     if not available_collections:
         raise Http404
     available_fieldsets = FieldSet.for_user(request.user)

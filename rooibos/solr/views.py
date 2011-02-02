@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from . import SolrIndex
 from pysolr import SolrError
-from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
+from rooibos.access import filter_by_access, accessible_ids
 from rooibos.util import safe_int, json_view
 from rooibos.data.models import Field, Collection, FieldValue
 from rooibos.storage.models import Storage
@@ -196,7 +196,7 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         query = 'id:(%s) AND %s' % (' '.join(map(str, selected or [-1])), query)
 
     if not user.is_superuser:
-        collections = ' '.join(map(str, accessible_ids_list(user, Collection)))
+        collections = ' '.join(map(str, accessible_ids(user, Collection)))
         c = []
         if collections: c.append('collections:(%s)' % collections)
         if user.id: c.append('owner:%s' % user.id)
@@ -222,7 +222,7 @@ def run_search(user,
                remove=None,
                produce_facets=False):
 
-    available_storage = accessible_ids_list(user, Storage)
+    available_storage = accessible_ids(user, Storage)
     exclude_facets = ['identifier']
     fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
 
@@ -282,9 +282,9 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     viewmode = request.GET.get('v', 'thumb')
     if viewmode == 'list':
-        pagesize = max(min(safe_int(request.GET.get('ps', '100'), 100), 200), 5)
-    else:
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
+    else:
+        pagesize = max(min(safe_int(request.GET.get('ps', '30'), 30), 50), 5)
     page = safe_int(request.GET.get('p', '1'), 1)
     sort = request.GET.get('s', 'title_sort').lower()
     if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
