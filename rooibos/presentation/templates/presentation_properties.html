@@ -427,11 +427,13 @@ td.annotation-col textarea {
     </div>
   </div>
 
+{% if user.is_superuser %}
   <div class="facet active-facet" id="presentation_sidebar_effective_permissions">
     <div class="facet-header">Effective Permissions</div>
     <div class="facet-body">
         {% effective_permissions_form presentation %}
     </div>
   </div>
+{% endif %}
 
 {% endblock %}
