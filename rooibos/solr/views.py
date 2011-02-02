@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from . import SolrIndex
 from pysolr import SolrError
+import socket
 from rooibos.access import filter_by_access, accessible_ids, accessible_ids_list
 from rooibos.util import safe_int, json_view
 from rooibos.data.models import Field, Collection, FieldValue
@@ -245,6 +246,10 @@ def run_search(user,
                                            facets=return_facets, facet_mincount=1, facet_limit=100)
     except SolrError:
         hits = -1
+        records = None
+        facets = dict()
+    except socket.error:
+        hits = 0
         records = None
         facets = dict()
 
