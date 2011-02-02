@@ -127,9 +127,9 @@ def guess_extension(mimetype):
 
 def get_cached_value(key, func, cache_duration=600):
     value = cache.get(key)
-    if not value:
+    if value == None:
         value = func()
-        if value:
+        if value != None:
             cache.set(key, value, cache_duration)
     return value
 

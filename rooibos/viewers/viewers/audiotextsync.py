@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.template import RequestContext
-from rooibos.access import accessible_ids, accessible_ids_list, check_access, filter_by_access
+from rooibos.access import check_access, filter_by_access
 from rooibos.data.models import Record, Collection, standardfield, get_system_field
 from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
 from rooibos.storage.models import Storage

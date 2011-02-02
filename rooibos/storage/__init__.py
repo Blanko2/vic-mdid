@@ -76,23 +76,18 @@ def get_media_for_record(record, user=None, passwords={}):
 
 
 def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
-
     media = get_media_for_record(record, user, passwords)
-
     q = Q(mimetype__startswith='image/')
     if settings.FFMPEG_EXECUTABLE:
         # also support video and audio
         q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
 
-    media = media.filter(q)
+    media = media.select_related('storage').filter(q)
 
     if not media:
         return None
-
     map(lambda m: m.identify(lazy=True), media)
-
     media = sorted(media, _imgsizecmp, reverse=True)
-
     # find matching media
     last = None
     for m in media:
@@ -163,8 +158,8 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                         f.write(output)
                 else:
                     return None
-
             return path
+
         else:
             return None
 

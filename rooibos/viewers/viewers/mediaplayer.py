@@ -134,5 +134,6 @@ class EmbeddedMediaPlayer(MediaPlayer):
                                    'streaming_media': streaming_media,
                                    'audio': selectedmedia.mimetype.startswith('audio/'),
                                    'server_url': server,
+                                   'autoplay': request.GET.has_key('autoplay'),
                                    },
                                   context_instance=RequestContext(request))

@@ -14,8 +14,9 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.contenttypes.models import ContentType
 from models import Media, Storage, TrustedSubnet, ProxyUrl
-from rooibos.access import accessible_ids_list, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
+from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
 from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records
@@ -156,13 +157,13 @@ def media_delete(request, mediaid, medianame):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
-    record = Record.get_or_404(id, request.user)
-    filename = get_thumbnail_for_record(record, request.user, crop_to_square=request.GET.has_key('square'))
-
+    filename = get_thumbnail_for_record(id, request.user, crop_to_square=request.GET.has_key('square'))
     if filename:
         Activity.objects.create(event='media-thumbnail',
                                 request=request,
-                                content_object=record,
+                                content_type=ContentType.objects.get_for_model(Record),
+                                object_id=id,
+                                #content_object=record,
                                 data=dict(square=int(request.GET.has_key('square'))))
         try:
             return HttpResponse(content=open(filename, 'rb').read(), mimetype='image/jpeg')
@@ -283,7 +284,7 @@ def import_files(request):
 
     available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True).order_by('title').values_list('id', 'title'))
     available_collections = get_list_or_404(filter_by_access(request.user, Collection))
-    writable_collection_ids = accessible_ids_list(request.user, Collection, write=True)
+    writable_collection_ids = accessible_ids(request.user, Collection, write=True)
 
     class UploadFileForm(forms.Form):
         collection = forms.ChoiceField(choices=((c.id, '%s%s' % ('*' if c.id in writable_collection_ids else '', c.title)) for c in sorted(available_collections, key=lambda c: c.title)))

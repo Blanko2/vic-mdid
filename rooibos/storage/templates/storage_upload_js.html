@@ -30,6 +30,8 @@ $(document).ready(function() {
 		})
 		.bind('fileQueueError', function(event, file, errorCode, message){
 			$('#log').append('<li>File queue error - '+message+'<'+'/li>');
+			var div = $("<div class='upload-failed'>" + file.name + " cannot be uploaded (" + message + ")<"+"/div>");
+			$('#upload-queue').append(div);
 		})
 		.bind('fileDialogStart', function(event){
 			$('#log').append('<li>File dialog start<'+'/li>');

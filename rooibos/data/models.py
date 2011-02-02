@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 from rooibos.access import accessible_ids, check_access
 from rooibos.util import unique_slug, get_cached_value
 import logging
@@ -97,20 +98,60 @@ class Record(models.Model):
 
     @staticmethod
     def filter_by_access(user, *ids):
-        records = Record.objects.filter(id__in=ids)
-        if not user or not user.is_superuser:
-            cq = Q(collectionitem__collection__in=accessible_ids(user, Collection),
-                   collectionitem__hidden=False)
-            mq = Q(collectionitem__collection__in=accessible_ids(user, Collection, write=True),
-                   owner=None)
-            oq = Q(owner=user) if user and not user.is_anonymous() else Q()
-            records = records.filter(cq | mq | oq)
-        return records.distinct()
+        records = Record.objects.distinct()
+
+        ids = map(int, ids)
+
+        if user:
+
+            if user.is_superuser:
+                return records.filter(id__in=ids)
+
+            accessible_records = cache.get_many(
+                ['record-access-%d-%d' % (user.id or 0, id) for id in ids]
+            )
+
+            allowed_ids = filter(None, map(lambda (k, v): int(k.rsplit('-', 1)[1]) if v else None,
+                                           accessible_records.iteritems()))
+            denied_ids = filter(None, map(lambda (k, v): int(k.rsplit('-', 1)[1]) if not v else None,
+                                          accessible_records.iteritems()))
+
+            to_check = [id for id in ids if not id in allowed_ids and not id in denied_ids]
+
+            if not to_check:
+                return records.filter(id__in=allowed_ids)
+
+        else:
+            allowed_ids = []
+            to_check = ids
+
+        cq = Q(collectionitem__collection__in=accessible_ids(user, Collection),
+               collectionitem__hidden=False)
+        mq = Q(collectionitem__collection__in=accessible_ids(user, Collection, write=True),
+               owner=None)
+        oq = Q(owner=user) if user and not user.is_anonymous() else Q()
+        records = records.filter(cq | mq | oq)
+
+        checked = records.filter(id__in=to_check).values_list('id', flat=True)
+
+        allowed_ids.extend(checked)
+
+        if user:
+            cache.set_many(
+                dict(
+                        ('record-access-%d-%d' % (user.id or 0, id), id in checked) for id in to_check
+                    )
+                )
+
+        return records.filter(id__in=allowed_ids)
+
 
     @staticmethod
     def filter_one_by_access(user, id):
-        record = Record.filter_by_access(user, id)
-        return record[0] if record else None
+        try:
+            return Record.filter_by_access(user, id).get()
+        except ObjectDoesNotExist:
+            return None
 
     @staticmethod
     def get_or_404(id, user):
@@ -220,7 +261,7 @@ class Record(models.Model):
             # checks if user is owner:
             check_access(user, self, write=True) or
             # or if user has write access to collection:
-            accessible_ids(user, self.collection_set, write=True).count() > 0)
+            len(accessible_ids(user, self.collection_set, write=True)) > 0)
 
 
 class MetadataStandard(models.Model):
