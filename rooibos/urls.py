@@ -4,6 +4,8 @@ from django.conf import settings
 from django.views.generic.simple import direct_to_template
 from django.views.static import serve
 from django.views.decorators.cache import cache_control
+from django.http import HttpResponseServerError
+from django.template import loader, RequestContext
 from rooibos.ui.views import main
 from rooibos.access.views import login, logout
 
@@ -16,9 +18,17 @@ apps_showcases = list(s[5:].replace('.', '-') + '-showcase.html' for s in apps)
 # Cache static files
 serve = cache_control(max_age=365 * 24 * 3600)(serve)
 
-handler404 = getattr(settings, 'HANDLER404', handler404)
-handler500 = getattr(settings, 'HANDLER500', handler500)
+def handler500_with_context(request):
+    template = loader.get_template('500.html')
+    return HttpResponseServerError(template.render(RequestContext(request)))
 
+handler404 = getattr(settings, 'HANDLER404', handler404)
+handler500 = getattr(settings, 'HANDLER500', handler500_with_context)
+
+
+def raise_exception():
+    raise Exception()
+    
 
 urls = [
     url(r'^$', main, {'HELP': 'frontpage'}, name='main'),
@@ -53,6 +63,8 @@ urls = [
     url(r'^favicon.ico$', serve, {'document_root': settings.STATIC_DIR, 'path': 'images/favicon.ico'}),
     url(r'^robots.txt$', serve, {'document_root': settings.STATIC_DIR, 'path': 'robots.txt'}),
     url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_DIR}, name='static'),
+    
+    url(r'^exception/$', raise_exception),
     ]
 
 for app in apps:
