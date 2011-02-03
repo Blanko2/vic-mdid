@@ -2,6 +2,9 @@
 var clip;
 {% if streaming_server and streaming_media %}
 clip = {
+{% if flowplayer_key %}
+    key: '{{ flowplayer_key }}',
+{% endif %}
     clip: {
         autoPlay: {{ autoplay|yesno:"true,false" }},
         url: '{{ streaming_media|escapejs }}',
@@ -27,6 +30,9 @@ clip = {
 };
 {% else %}
 clip = {
+{% if flowplayer_key %}
+    key: '{{ flowplayer_key }}',
+{% endif %}
     clip: {
         autoPlay: {{ autoplay|yesno:"true,false" }},
         url: '{{ delivery_url|escapejs }}'
@@ -55,7 +61,8 @@ function insert_flowplayer() {
     var e = document.getElementById("player-{{ record.id }}-{{ selectedmedia.id }}");
     e.style.width = "{{ selectedmedia.width|default:"520" }}px";
     e.style.height = "{% if audio %}30{% else %}{{ selectedmedia.height|default:"330" }}{% endif %}px";
-    flowplayer("player-{{ record.id }}-{{ selectedmedia.id }}", "{{ server_url }}{% url static 'flowplayer/flowplayer-3.2.4.swf' %}", clip);
+    flowplayer("player-{{ record.id }}-{{ selectedmedia.id }}", 
+        "{{ server_url }}{% if flowplayer_key %}{% url static 'flowplayer/flowplayer.commercial-3.2.5.swf' %}{% else %}{% url static 'flowplayer/flowplayer-3.2.5.swf' %}{% endif %}", clip);
 }
 
 if (typeof(flowplayer) == "function") {

@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from django.conf.urls.defaults import url
 from django.core.urlresolvers import reverse
+from django.conf import settings
 from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponse, Http404,  HttpResponseRedirect, HttpResponseForbidden
 from django.template import RequestContext
@@ -78,6 +79,7 @@ class MediaPlayer(object):
                                    'streaming_server': streaming_server,
                                    'streaming_media': streaming_media,
                                    'audio': selectedmedia.mimetype.startswith('audio/'),
+                                   'flowplayer_key': getattr(settings, "FLOWPLAYER_KEY", None),
                                    },
                                   context_instance=RequestContext(request))
 
@@ -135,5 +137,6 @@ class EmbeddedMediaPlayer(MediaPlayer):
                                    'audio': selectedmedia.mimetype.startswith('audio/'),
                                    'server_url': server,
                                    'autoplay': request.GET.has_key('autoplay'),
+                                   'flowplayer_key': getattr(settings, "FLOWPLAYER_KEY", None),
                                    },
                                   context_instance=RequestContext(request))
