@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q
 from django.forms.formsets import formset_factory
 from django.forms.models import modelformset_factory
@@ -549,12 +550,33 @@ def manage_collection(request, id=None, name=None):
             collection.hidden = True
 
     class CollectionForm(forms.ModelForm):
+
+        class UserField(forms.CharField):
+
+            widget=forms.TextInput(attrs={'class': 'autocomplete-user'})
+
+            def prepare_value(self, value):
+                try:
+                    if not value or getattr(self, "_invalid_user", False):
+                        return value
+                    return User.objects.get(id=value).username
+                except ValueError:
+                    return value
+                except ObjectDoesNotExist:
+                    return None
+
+            def to_python(self, value):
+                try:
+                    return User.objects.get(username=value) if value else None
+                except ObjectDoesNotExist:
+                    self._invalid_user = True
+                    raise ValidationError('User not found')
+
+
         children = forms.ModelMultipleChoiceField(queryset=filter_by_access(request.user, Collection).exclude(id=collection.id),
                                                   widget=forms.CheckboxSelectMultiple,
                                                   required=False)
-        owner = forms.ModelChoiceField(queryset=User.objects,
-            widget=forms.Select if request.user.is_superuser else forms.HiddenInput,
-                                   required=False)
+        owner = UserField(widget=None if request.user.is_superuser else forms.HiddenInput, required=False)
 
         def clean_owner(self):
             if not request.user.is_superuser:
