@@ -7,6 +7,7 @@ from rooibos.solr.models import SolrIndexUpdates
 from rooibos.solr import SolrIndex
 from rooibos.access.models import AccessControl
 from xml.etree.ElementTree import ElementTree
+from xml.parsers.expat import ExpatError
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch, HitCount
@@ -78,8 +79,11 @@ class ArtstorSearch(FederatedSearch):
         )
         response = opener.open(urllib2.Request(url))
 
-        results = ElementTree(file=response)
-        total = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords') or 0
+        try:
+            results = ElementTree(file=response)
+            total = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords') or 0
+        except ExpatError:
+            total = 0
         if not total:
             return None
 
