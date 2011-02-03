@@ -110,7 +110,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
 
     fieldsetform = FieldSetForm(request.GET)
     if fieldsetform.is_valid():
-        fieldset = fieldsetform.cleaned_data['fieldset']
+        fieldset = FieldSet.for_user(request.user).get(id=fieldsetform.cleaned_data['fieldset']) if fieldsetform.cleaned_data['fieldset'] else None
     else:
         fieldset = FieldSet.objects.get(name='dc')
 

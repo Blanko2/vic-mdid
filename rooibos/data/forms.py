@@ -20,4 +20,4 @@ class FieldSetChoiceField(forms.ChoiceField):
 
     def clean(self, value):
         value = super(FieldSetChoiceField, self).clean(value)
-        return None if not value or value == '0' else FieldSet.for_user(self._for_user).get(id=value)
+        return None if not value or value == '0' else int(value)

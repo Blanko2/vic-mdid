@@ -158,7 +158,7 @@ def edit(request, id, name):
                 presentation.hidden = form.cleaned_data['hidden']
             presentation.description = form.cleaned_data['description']
             presentation.password = form.cleaned_data['password']
-            presentation.fieldset = form.cleaned_data['fieldset']
+            presentation.fieldset = FieldSet.for_user(request.user).get(id=form.cleaned_data['fieldset']) if form.cleaned_data['fieldset'] else None
             presentation.hide_default_data = form.cleaned_data['hide_default_data']
             presentation.save()
 #            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
