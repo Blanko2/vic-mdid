@@ -128,6 +128,9 @@
                             {% if user|accessible_objects:"data.Collection,r"|length %}
                             <li><a href="{% url data-record-new-personal %}">Create Item</a></li>
                             {% endif %}
+                            {% if user|accessible_objects:"data.Collection,rw"|length %}
+                            <li><a href="{% url data-record-new %}">Create Collection Item</a></li>
+                            {% endif %}
                             <li><a href="{% url presentation-create %}">Create Presentation</a></li>
                         </ul>
                     </li>
