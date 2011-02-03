@@ -99,27 +99,34 @@ class FlickrSearch(FederatedSearch):
         if not query:
             return None
         cc_licenses = ','.join(self.get_cc_licenses())
-        results = self.flickr.flickr_call(method='flickr.photos.search',
-                                          text=query,
-                                          api_key=settings.FLICKR_KEY,
-                                          format='xmlnode',
-                                          page=page,
-                                          per_page=pagesize,
-                                          extras='url_t,license,owner_name',
-                                          license=cc_licenses,
-                                          sort=sort)
+        try:
+            results = self.flickr.flickr_call(method='flickr.photos.search',
+                                              text=query,
+                                              api_key=settings.FLICKR_KEY,
+                                              format='xmlnode',
+                                              page=page,
+                                              per_page=pagesize,
+                                              extras='url_t,license,owner_name',
+                                              license=cc_licenses,
+                                              sort=sort)
 
-        images = [
-            dict(flickr_id=image['id'],
-                 title=image['title'] or 'Untitled',
-                 thumb_url=image['url_t'],
-                 record_url="http://www.flickr.com/photos/%s/%s" % (image['owner'], image['id']),
-                 license=self.get_license(image['license']),
-                 owner=image['ownername'],
-                 )
-            for image in results.photos[0].photo
-        ] if hasattr(results.photos[0], 'photo') else []
-        return dict(records=images, hits=int(results.photos[0]['total']))
+            images = [
+                dict(flickr_id=image['id'],
+                     title=image['title'] or 'Untitled',
+                     thumb_url=image['url_t'],
+                     record_url="http://www.flickr.com/photos/%s/%s" % (image['owner'], image['id']),
+                     license=self.get_license(image['license']),
+                     owner=image['ownername'],
+                     )
+                for image in results.photos[0].photo
+            ] if hasattr(results.photos[0], 'photo') else []
+
+            hits = int(results.photos[0]['total'])
+        except urllib2.HTTPError:
+            images = []
+            hits = 0
+
+        return dict(records=images, hits=hits)
 
 
     def create_record(self, remote_id):
