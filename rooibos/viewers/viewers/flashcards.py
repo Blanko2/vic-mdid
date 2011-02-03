@@ -104,6 +104,12 @@ class FlashCards(object):
             p.drawString(0, 0, 'Fold here')
             p.restoreState()
 
+        def getParagraph(*args, **kwargs):
+            try:
+                return Paragraph(*args, **kwargs)
+            except (AttributeError, IndexError):
+                return None
+
         def drawCard(index, item):
             p.saveState()
             p.translate(0, height / 3 * (2 - index % 3))
@@ -120,14 +126,15 @@ class FlashCards(object):
                           width=width / 2 - inch, height = height / 3 - inch,
                           leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
                 data = []
-                data.append(Paragraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']))
+                data.append(getParagraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']))
                 values = item.get_fieldvalues(owner=request.user)
                 for value in values:
                     v = value.value if len(value.value) < 100 else value.value[:100] + '...'
-                    data.append(Paragraph('<b>%s:</b> %s' % (value.resolved_label, v), styles['Data']))
+                    data.append(getParagraph('<b>%s:</b> %s' % (value.resolved_label, v), styles['Data']))
                 annotation = item.annotation
                 if annotation:
-                    data.append(Paragraph('<b>%s:</b> %s' % ('Annotation', annotation), styles['Data']))
+                    data.append(getParagraph('<b>%s:</b> %s' % ('Annotation', annotation), styles['Data']))
+                data = filter(None, data)
                 f.addFromList(data, p)
                 if data:
                     p.setFont('Helvetica', 8)
