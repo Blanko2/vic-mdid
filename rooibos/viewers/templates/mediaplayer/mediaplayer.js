@@ -1,3 +1,5 @@
+{% load ui %}
+
 (function() {
 var clip;
 {% if streaming_server and streaming_media %}
@@ -13,7 +15,7 @@ clip = {
     },
     plugins: {
         influxis: {
-            url: "{{ server_url }}{% url static 'flowplayer/flowplayer.rtmp-3.2.3.swf' %}",
+            url: "{{ server_url }}{% url static 'flowplayer/flowplayer.rtmp-*.swf'|fileversion %}",
             netConnectionUrl: '{{ streaming_server|escapejs }}'
             {% if audio %} ,
             durationFunc: 'getStreamLength'
@@ -45,7 +47,7 @@ clip = {
     {% if audio %} ,
     plugins: {
         audio: {
-            url: "{{ server_url }}{% url static 'flowplayer/flowplayer.audio-3.2.1.swf' %}"
+            url: "{{ server_url }}{% url static 'flowplayer/flowplayer.audio-*.swf'|fileversion %}"
         },
         controls: {
             fullscreen: false,
@@ -61,15 +63,15 @@ function insert_flowplayer() {
     var e = document.getElementById("player-{{ record.id }}-{{ selectedmedia.id }}");
     e.style.width = "{{ selectedmedia.width|default:"520" }}px";
     e.style.height = "{% if audio %}30{% else %}{{ selectedmedia.height|default:"330" }}{% endif %}px";
-    flowplayer("player-{{ record.id }}-{{ selectedmedia.id }}", 
-        "{{ server_url }}{% if flowplayer_key %}{% url static 'flowplayer/flowplayer.commercial-3.2.5.swf' %}{% else %}{% url static 'flowplayer/flowplayer-3.2.5.swf' %}{% endif %}", clip);
+    flowplayer("player-{{ record.id }}-{{ selectedmedia.id }}",
+        "{{ server_url }}{% if flowplayer_key %}{% url static 'flowplayer/flowplayer.commercial-*.swf'|fileversion %}{% else %}{% url static 'flowplayer/flowplayer-*.swf'|fileversion %}{% endif %}", clip);
 }
 
 if (typeof(flowplayer) == "function") {
     insert_flowplayer();
 } else {
     var e = document.createElement("script");
-    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer-3.2.4.min.js' %}";
+    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer-*.min.js'|fileversion %}";
     e.type = "text/javascript";
     e.onreadystatechange = insert_flowplayer;
     e.onload = insert_flowplayer;
