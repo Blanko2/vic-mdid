@@ -150,6 +150,10 @@ EXPOSE_TO_CONTEXT = ('STATIC_DIR', 'PRIMARY_COLOR', 'SECONDARY_COLOR', 'CUSTOM_T
 # sure you are not violating the agreements listed in static/megazine/COPYING.
 MEGAZINE_VIEWER = False
 
+# To use a commercial licensed flowplayer, enter your flowplayer key here
+# and add the flowplayer.commercial-3.x.x.swf file to the
+# rooibos/static/flowplayer directory
+FLOWPLAYER_KEY = ""
 
 additional_settings = [
 #    'apps.jmutube.settings_local',
