@@ -33,15 +33,20 @@ class HistoryMiddleware:
     def process_response(self, request, response):
         # Keep track of most recent URLs to allow going back after certain operations
         # (e.g. deleting a record)
-        if (request.user
-            and request.user.is_authenticated()
-            and not request.is_ajax()
-            and response.status_code == 200
-            and response.get('Content-Type', '').startswith('text/html')
-            ):
-            history = request.session.get('page-history', [])
-            history.insert(0, request.get_full_path())
-            request.session['page-history'] = history[:10]
+        try:
+            if (request.user
+                and request.user.is_authenticated()
+                and not request.is_ajax()
+                and response.status_code == 200
+                and response.get('Content-Type', '').startswith('text/html')
+                ):
+                history = request.session.get('page-history', [])
+                history.insert(0, request.get_full_path())
+                request.session['page-history'] = history[:10]
+        except:
+            # for some reason, with some clients, on some pages,
+            # request.session does not exist and request.user throws an error
+            pass
 
         return response
 
