@@ -1,5 +1,18 @@
 {% extends "master.html" %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+
+  $(document).ready(function() {
+    var login = $("#{{ form.username.auto_id }}");
+    if (!login.val()) login.focus();
+  });
+
+</script>
+{% endblock %}
+
+
 {% block content %}
 
 <h1>Log in</h1>
