@@ -99,7 +99,7 @@ def edit(request, id, name):
                                       widget=forms.Textarea(attrs={'rows': 5}), required=False)
         password = forms.CharField(label='Password', required=False,
                                    max_length=Presentation._meta.get_field('password').max_length)
-        fieldset = FieldSetChoiceField(label='Field set', user=request.user)
+        fieldset = FieldSetChoiceField(label='Field set', user=presentation.owner)
         hide_default_data = forms.BooleanField(label='Hide default data', required=False)
 
 
@@ -154,21 +154,18 @@ def edit(request, id, name):
         if form.is_valid():
             presentation.title = form.cleaned_data['title']
             presentation.name = None
-            if request.user.has_perm('presentation.publish_presentations'):
+            if presentation.owner.has_perm('presentation.publish_presentations'):
                 presentation.hidden = form.cleaned_data['hidden']
             presentation.description = form.cleaned_data['description']
             presentation.password = form.cleaned_data['password']
-            presentation.fieldset = FieldSet.for_user(request.user).get(id=form.cleaned_data['fieldset']) if form.cleaned_data['fieldset'] else None
+            presentation.fieldset = FieldSet.for_user(presentation.owner).get(id=form.cleaned_data['fieldset']) if form.cleaned_data['fieldset'] else None
             presentation.hide_default_data = form.cleaned_data['hide_default_data']
             presentation.save()
-#            Tag.objects.update_tags(OwnedWrapper.objects.get_for_object(user=request.user, object=presentation),
-#                                    form.cleaned_data['tags'])
             request.user.message_set.create(message="Changes to presentation saved successfully.")
             return self_page
     else:
         form = PropertiesForm(initial={'title': presentation.title,
                                'hidden': presentation.hidden,
-#                               'tags': tags,
                                'description': presentation.description,
                                'hidden': presentation.hidden,
                                'fieldset': presentation.fieldset.id if presentation.fieldset else None,
@@ -197,7 +194,7 @@ def browse(request, manage=False):
     if manage and not request.user.is_authenticated():
         raise Http404()
 
-    presenter = request.user if manage else request.GET.get('presenter')
+    presenter = request.GET.get('presenter')
     tags = filter(None, request.GET.getlist('t'))
     remove_tag = request.GET.get('rt')
     if remove_tag and remove_tag in tags:
@@ -237,11 +234,12 @@ def browse(request, manage=False):
 
     if manage:
         qv = Q()
+        qid = Q(id__in=accessible_ids(request.user, Presentation, write=True, manage=True))
     else:
         qv = Presentation.published_Q()
+        qid = Q(id__in=accessible_ids(request.user, Presentation))
 
-    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv,
-                                                                        id__in=accessible_ids(request.user, Presentation)).order_by('title')
+    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv, qid).order_by('title')
 
     if request.method == "POST":
 
