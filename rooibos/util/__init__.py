@@ -133,6 +133,9 @@ def get_cached_value(key, func, cache_duration=600):
             cache.set(key, value, cache_duration)
     return value
 
+def clear_cached_values(*keys):
+    cache.delete_many(keys)
+
 
 def xfilter(func, iterator):
     """Iterative version of builtin 'filter'."""

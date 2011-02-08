@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rooibos.access import accessible_ids, check_access
-from rooibos.util import unique_slug, get_cached_value
+from rooibos.util import unique_slug, get_cached_value, clear_cached_values
 import logging
 import random
 
@@ -263,6 +263,9 @@ class Record(models.Model):
             # or if user has write access to collection:
             len(accessible_ids(user, self.collection_set, write=True)) > 0)
 
+    def _clear_cache(self):
+        clear_cached_values('record-%d-title' % self.id)
+
 
 class MetadataStandard(models.Model):
     title = models.CharField(max_length=100)
@@ -390,6 +393,7 @@ class FieldValue(models.Model):
     def save(self, **kwargs):
         self.index_value = self.value[:32] if self.value != None else None
         super(FieldValue, self).save(kwargs)
+        self.record._clear_cache()
 
     def __unicode__(self):
         return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
