@@ -1,6 +1,6 @@
 from django import template
 from django.template.loader import render_to_string
-from impersonate.functions import get_real_user, get_available_users
+from impersonate.functions import get_real_user, get_available_users, can_impersonate_others
 from django.template import RequestContext
 
 register = template.Library()
@@ -28,3 +28,9 @@ class ImpersonationFormNode(template.Node):
 @register.tag
 def impersonation_form(parser, token):
     return ImpersonationFormNode()
+
+
+
+@register.filter(name='can_realuser_impersonate_others')
+def can_realuser_impersonate_others_filter(request):
+    return can_impersonate_others(get_real_user(request) or request.user)

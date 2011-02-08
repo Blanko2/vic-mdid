@@ -19,6 +19,7 @@ from rooibos.util.models import OwnedWrapper
 from rooibos.solr.views import run_search
 from rooibos.context_processors import selected_records as ctx_selected_records
 from rooibos.presentation.models import Presentation
+from rooibos.userprofile.views import load_settings, store_settings
 import random
 
 
@@ -63,10 +64,11 @@ def select_record(request):
     request.session['selected_records'] = selected
 
     context = ctx_selected_records(request)
+    rc = RequestContext(request)
 
     return dict(
-        basket=render_to_string('ui_basket.html', context),
-        header=render_to_string('ui_basket_header.html', context),
+        basket=render_to_string('ui_basket.html', context, context_instance=rc),
+        header=render_to_string('ui_basket_header.html', context, context_instance=rc),
         )
 
 
@@ -136,8 +138,30 @@ def manage(request):
 
 @login_required
 def options(request):
+
+    option_defaults = dict(
+        basket_thumbnails='square',
+    )
+
+    class UserInterfaceForm(forms.Form):
+        basket_thumbnails = forms.ChoiceField(choices=[('square', 'Square'), ('normal', 'Normal'),])
+
+    if request.method == "POST":
+        ui_form = UserInterfaceForm(request.POST)
+        if ui_form.is_valid():
+            for key in option_defaults.keys():
+                store_settings(request.user, 'options_%s' % key, ui_form.cleaned_data[key])
+            request.user.message_set.create(message="Updated settings have been saved.")
+            return HttpResponseRedirect(request.get_full_path())
+    else:
+        initial = option_defaults.copy()
+        initial.update(dict((key[8:], val[0])
+            for (key, val) in load_settings(request.user, filter='options_').iteritems()))
+        ui_form = UserInterfaceForm(initial)
+
     return render_to_response('ui_options.html',
                               {
+                                'ui_form': ui_form,
                               },
                               context_instance=RequestContext(request))
 
