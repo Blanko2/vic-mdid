@@ -97,7 +97,6 @@ td.annotation-col textarea {
 				return 'You have unsaved changes in your presentation that will be lost if you continue.';
 		});
 
-
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
             var thumbnail = $(".thumbnail-col a", e).children();
@@ -247,7 +246,6 @@ td.annotation-col textarea {
 				unsaved_changes = true;
             },
             start: function(event, ui) {
-                $("#lighttable .record-anchor[id*=record-id-]").qtip('hide');
                 if (!ui.item.hasClass('selected')) {
                     $("#lighttable div.slide").removeClass('selected');
                     ui.item.addClass('selected');
@@ -262,7 +260,7 @@ td.annotation-col textarea {
             }
             }).show();
 
-        $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 200)); }).resize();
+        $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 250)); }).resize();
 
         $("#lighttable-annotation").show().children().attr('disabled', true);
 
@@ -284,9 +282,13 @@ td.annotation-col textarea {
 
 <h1>{{ presentation.title }}</h1>
 
+{% if formset.forms %}
+<a href="#sort_and_annotate">Sort and annotate records</a>
+{% endif %}
+
 <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
 
-<div class="vertical" style="">
+<div class="vertical" style="margin-top: 20px;">
 
 <div style="float: left; clear: left;">
 {{ form.title.label_tag }}
@@ -338,7 +340,7 @@ td.annotation-col textarea {
 
 {% if formset.forms %}
 
-<h2 style="clear: both; padding-top: 50px;">Sort and annotate records</h2>
+<h2 style="clear: both; padding-top: 50px;"><a name="sort_and_annotate" href="#sort_and_annotate">Sort and annotate records</a></h2>
 
 
 <form method="POST" action="" id="items-form">{% csrf_token %}
@@ -376,7 +378,7 @@ td.annotation-col textarea {
     <tbody>
 {% for form in formset.forms %}
     <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
-        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
+        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor no-metadata-popup" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
         <td class="title-col"><a href="{% url data-record form.instance.record.id, form.instance.record.name %}" target="record_view">{{ form.instance.record.title }}</a></td>
         <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
         <td class="annotation-col">{{ form.annotation }}<br />
