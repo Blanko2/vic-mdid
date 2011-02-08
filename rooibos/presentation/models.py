@@ -48,10 +48,10 @@ class Presentation(models.Model):
         return [i.record for i in self.items.all()]
 
     def visible_item_count(self):
-        return self.items.filter(hidden=False).count()
+        return len(filter(lambda i: not i.hidden, self.cached_items()))
 
     def hidden_item_count(self):
-        return self.items.filter(hidden=True).count()
+        return len(filter(lambda i: i.hidden, self.cached_items()))
 
     @staticmethod
     def check_passwords(passwords):

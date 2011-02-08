@@ -110,7 +110,7 @@
 
 {% block content-top %}
 
-{% autopaginate presentations 25 %}
+{% autopaginate presentations 50 %}
 
 <h1>{{ manage|yesno:"Manage,Browse" }} Presentations</h1>
 
@@ -147,7 +147,7 @@
 
 {% block content %}
 
-{% autopaginate presentations 25 %}
+{% autopaginate presentations 50 %}
 
 {% if presentations %}
 
@@ -228,6 +228,7 @@
 {% endfor %}
 </table>
 
+{% paginate %}
 
 {% else %}
 No presentations available.
