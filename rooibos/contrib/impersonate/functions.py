@@ -49,3 +49,7 @@ def get_available_users(realusername):
         return User.objects.filter(
             Q(impersonated_set__group__user__username=realusername) | Q(groups__impersonated_set__group__user__username=realusername)
             ).distinct().order_by('username')
+
+
+def can_impersonate_others(realusername):
+    return get_available_users(realusername).exists()

@@ -9,6 +9,7 @@ from rooibos.contrib.tagging.models import Tag
 from rooibos.data.models import Record
 from rooibos.util.models import OwnedWrapper
 from rooibos.userprofile.models import UserProfile
+from rooibos.userprofile.views import load_settings
 
 register = template.Library()
 
@@ -43,3 +44,12 @@ def profile_settings(parser, token):
         tag_name = token.contents
         filter = None
     return ProfileSettingsNode(filter)
+
+
+@register.filter
+def profile_setting(user, setting):
+    if user and user.is_authenticated():
+        settings = load_settings(user, filter=setting)
+        return settings.get(setting, [None])[0]
+    else:
+        return None
