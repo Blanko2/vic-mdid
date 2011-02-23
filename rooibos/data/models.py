@@ -9,7 +9,9 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rooibos.access import accessible_ids, check_access
-from rooibos.util import unique_slug, get_cached_value, clear_cached_values
+from rooibos.access.models import AccessControl
+from rooibos.util import unique_slug
+from rooibos.util.caching import get_cached_value, cache_get, cache_get_many, cache_set, cache_set_many
 import logging
 import random
 
@@ -107,14 +109,14 @@ class Record(models.Model):
             if user.is_superuser:
                 return records.filter(id__in=ids)
 
-            accessible_records = cache.get_many(
-                ['record-access-%d-%d' % (user.id or 0, id) for id in ids]
+            accessible_records = cache_get_many(
+                ['record-access-%d-%d' % (user.id or 0, id) for id in ids],
+                model_dependencies=[Record, Collection, AccessControl]
             )
+            accessible_record_ids = map(lambda (k, v): (int(k.rsplit('-', 1)[1]), v), accessible_records.iteritems())
 
-            allowed_ids = filter(None, map(lambda (k, v): int(k.rsplit('-', 1)[1]) if v else None,
-                                           accessible_records.iteritems()))
-            denied_ids = filter(None, map(lambda (k, v): int(k.rsplit('-', 1)[1]) if not v else None,
-                                          accessible_records.iteritems()))
+            allowed_ids = [k for k, v in accessible_record_ids if v == 't']
+            denied_ids  = [k for k, v in accessible_record_ids if v == 'f']
 
             to_check = [id for id in ids if not id in allowed_ids and not id in denied_ids]
 
@@ -137,11 +139,11 @@ class Record(models.Model):
         allowed_ids.extend(checked)
 
         if user:
-            cache.set_many(
-                dict(
-                        ('record-access-%d-%d' % (user.id or 0, id), id in checked) for id in to_check
+            cache_update = dict(
+                        ('record-access-%d-%d' % (user.id or 0, id), 't' if id in checked else 'f')
+                         for id in to_check
                     )
-                )
+            cache_set_many(cache_update, model_dependencies=[Record, Collection, AccessControl])
 
         return records.filter(id__in=allowed_ids)
 
@@ -250,7 +252,10 @@ class Record(models.Model):
                 context_type=None,
                 hidden=False)
             return titles[0].value if titles else None
-        return get_cached_value('record-%d-title' % self.id, get_title) if self.id else None
+        return get_cached_value('record-%d-title' % self.id,
+                                get_title,
+                                model_dependencies=[Field, FieldValue],
+                                ) if self.id else None
 
     @property
     def shared(self):
@@ -263,8 +268,6 @@ class Record(models.Model):
             # or if user has write access to collection:
             len(accessible_ids(user, self.collection_set, write=True)) > 0)
 
-    def _clear_cache(self):
-        clear_cached_values('record-%d-title' % self.id)
 
 
 class MetadataStandard(models.Model):
@@ -393,7 +396,6 @@ class FieldValue(models.Model):
     def save(self, **kwargs):
         self.index_value = self.value[:32] if self.value != None else None
         super(FieldValue, self).save(kwargs)
-        self.record._clear_cache()
 
     def __unicode__(self):
         return "%s%s%s=%s" % (self.resolved_label, self.refinement and '.', self.refinement, self.value)
@@ -461,4 +463,6 @@ def standardfield_ids(field, standard='dc', equiv=False):
         else:
             ids = [f.id]
         return ids
-    return get_cached_value('standardfield_ids-%s-%s-%s' % (field, standard, equiv), get_ids)
+    return get_cached_value('standardfield_ids-%s-%s-%s' % (field, standard, equiv),
+                            get_ids,
+                            model_dependencies=[Field])

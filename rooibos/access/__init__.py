@@ -1,9 +1,9 @@
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User, Group
 from django.shortcuts import _get_queryset
-from rooibos.util import get_cached_value
+from rooibos.util.caching import get_cached_value
 import md5
 
 
@@ -11,6 +11,9 @@ restriction_precedences = dict()
 
 
 def add_restriction_precedence(setting, func):
+    from models import AccessControl
+    from rooibos.util.caching import invalidate_model_cache
+    invalidate_model_cache(AccessControl)
     restriction_precedences[setting] = func
 
 
@@ -78,7 +81,7 @@ def get_effective_permissions_and_restrictions(user, model_instance, assume_auth
         else:
             return reduce_aclist(filter(lambda a: a.usergroup, aclist))
 
-    return get_cached_value(key, calculate)
+    return get_cached_value(key, calculate, model_dependencies=[model_type, AccessControl, User])
 
 
 def get_effective_permissions(user, model_instance, assume_authenticated=False):
@@ -127,17 +130,15 @@ def filter_by_access(user, queryset, read=True, write=False, manage=False):
     return queryset.filter(build_query(read=read), build_query(write=write), build_query(manage=manage)).distinct()
 
 
-def accessible_ids(user, queryset, read=True, write=False, manage=False, cache=True):
-    if cache:
-        queryset = _get_queryset(queryset)
-        key = 'accessible_ids-%d-%s-%d%d%d' % (user.id if user and user.id else 0,
-                                               md5.new(str(queryset.query)).hexdigest(),
-                                               read, write, manage)
-        def get_ids():
-            return list(filter_by_access(user, queryset, read, write, manage).values_list('id', flat=True))
-        return get_cached_value(key, get_ids)
-    else:
-        return filter_by_access(user, queryset, read, write, manage).values_list('id', flat=True)
+def accessible_ids(user, queryset, read=True, write=False, manage=False):
+    from models import AccessControl
+    queryset = _get_queryset(queryset)
+    key = 'accessible_ids-%d-%s-%d%d%d' % (user.id if user and user.id else 0,
+                                           md5.new(str(queryset.query)).hexdigest(),
+                                           read, write, manage)
+    def get_ids():
+        return list(filter_by_access(user, queryset, read, write, manage).values_list('id', flat=True))
+    return get_cached_value(key, get_ids, model_dependencies=[queryset.model, AccessControl])
 
 
 def sync_access(from_instance, to_instance):

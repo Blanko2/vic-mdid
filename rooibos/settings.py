@@ -70,7 +70,7 @@ MIDDLEWARE_CLASSES = (
     'djangologging.middleware.SuppressLoggingOnAjaxRequestsMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
-    'rooibos.storage.middleware.StorageCleanupOnStart',
+    'rooibos.storage.middleware.StorageOnStart',
     'rooibos.middleware.HistoryMiddleware',
 )
 

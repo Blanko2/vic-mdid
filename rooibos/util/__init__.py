@@ -125,18 +125,6 @@ def guess_extension(mimetype):
     return x
 
 
-def get_cached_value(key, func, cache_duration=600):
-    value = cache.get(key)
-    if value == None:
-        value = func()
-        if value != None:
-            cache.set(key, value, cache_duration)
-    return value
-
-def clear_cached_values(*keys):
-    cache.delete_many(keys)
-
-
 def xfilter(func, iterator):
     """Iterative version of builtin 'filter'."""
     iterator = iter(iterator)

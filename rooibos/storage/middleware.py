@@ -2,7 +2,7 @@ from django.core.exceptions import MiddlewareNotUsed
 import logging
 from models import Storage, Media
 
-class StorageCleanupOnStart:
+class StorageOnStart:
 
     def __init__(self):
 
@@ -18,11 +18,20 @@ class StorageCleanupOnStart:
                 storage_ids.append(storage.derivative)
             for storage in Storage.objects.filter(id__in=storage_ids):
                 storage.delete()
-            logging.info("Derivative storage cleanup completed")
         except Exception, ex:
             # Clean up failed, log exception and continue
             logging.error("Derivative storage cleanup failed: %s" % ex)
             pass
+
+        from rooibos.access import add_restriction_precedence
+
+        def download_precedence(a, b):
+            if a == 'yes' or b == 'yes':
+                return 'yes'
+            if a == 'only' or b == 'only':
+                return 'only'
+            return 'no'
+        add_restriction_precedence('download', download_precedence)
 
         # Only need to run once
         raise MiddlewareNotUsed

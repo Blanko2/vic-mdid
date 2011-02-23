@@ -7,18 +7,11 @@ import os
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
-from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions, add_restriction_precedence
+from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions
 from rooibos.data.models import Collection, Record, standardfield
 from models import Media, Storage
 
 
-def download_precedence(a, b):
-    if a == 'yes' or b == 'yes':
-        return 'yes'
-    if a == 'only' or b == 'only':
-        return 'only'
-    return 'no'
-add_restriction_precedence('download', download_precedence)
 
 mimetypes.init([os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'mime.types'))])
 
