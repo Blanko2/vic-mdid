@@ -77,12 +77,12 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         record = Record.get_or_404(id, request.user)
         can_edit = can_edit and record.editable_by(request.user)
     else:
-        if writable_collections or (personal and readable_collections):
+        if request.user.is_authenticated() and (writable_collections or (personal and readable_collections)):
             record = Record()
             if personal:
                 record.owner = request.user
         else:
-            return HttpResponseForbidden()
+            raise Http404()
 
     if record.owner:
         valid_collections = set(readable_collections) | set(writable_collections)
