@@ -574,7 +574,7 @@ html.js-enabled #basket-tab-pin, html.js-enabled #basket-refresh {
     -moz-border-radius: 3px;
     padding: 2px 4px 2px 5px;
     white-space: nowrap;
-    line-height: 1.8em;
+    line-height: 2em;
 }
 
 .tag.secondary {

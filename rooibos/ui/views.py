@@ -76,9 +76,13 @@ def select_record(request):
 def add_tags(request, type, id):
     if request.method <> 'POST':
         return HttpResponseNotAllowed(['POST'])
-    tags = parse_tag_input(request.POST.get('tags'))
+    tags = request.POST.get('tags')
+    if '"' in tags:
+        new_tags = parse_tag_input(tags)
+    else:
+        new_tags = filter(None, map(lambda s: s.strip(), tags.split(',')))
     ownedwrapper = OwnedWrapper.objects.get_for_object(user=request.user, type=type, object_id=id)
-    for tag in tags:
+    for tag in new_tags:
         Tag.objects.add_tag(ownedwrapper, '"%s"' % tag)
     return HttpResponseRedirect(request.GET.get('next') or '/')
 
