@@ -147,7 +147,10 @@ class PowerPointGenerator:
                 e = e.parentNode.parentNode
                 embedId = e.getElementsByTagName('a:blip')[0].getAttribute('r:embed')
 
-                width, height = Image.open(image).size
+                try:
+                    width, height = Image.open(image).size
+                except IOError:
+                    width, height = None, None
                 if width and height:
                     offset = e.getElementsByTagName('a:off')[0]
                     extent = e.getElementsByTagName('a:ext')[0]
