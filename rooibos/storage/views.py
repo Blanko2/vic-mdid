@@ -139,6 +139,9 @@ def media_upload(request, recordid, record):
                                     mimetype='application/json')
 
             return HttpResponseRedirect(request.GET.get('next', '.'))
+        else:
+            # Invalid form submission
+            raise Http404()
     else:
         return HttpResponseNotAllowed(['POST'])
 
