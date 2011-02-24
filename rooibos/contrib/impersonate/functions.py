@@ -43,7 +43,11 @@ def can_impersonate(realusername, username):
 
 
 def get_available_users(realusername):
-    if User.objects.get(username=realusername).is_superuser:
+    try:
+        user = User.objects.get(username=realusername)
+    except User.DoesNotExist:
+        return User.objects.none()
+    if user.is_superuser:
         return User.objects.exclude(username=realusername).order_by('username')
     else:
         return User.objects.filter(
