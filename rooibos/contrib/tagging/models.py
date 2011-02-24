@@ -61,7 +61,7 @@ class TagManager(models.Manager):
         tag_name = tag_names[0]
         if settings.FORCE_LOWERCASE_TAGS:
             tag_name = tag_name.lower()
-        tag, created = self.get_or_create(name=tag_name)
+        tag, created = self.get_or_create(name=tag_name[:50])
         ctype = ContentType.objects.get_for_model(obj)
         TaggedItem._default_manager.get_or_create(
             tag=tag, content_type=ctype, object_id=obj.pk)
