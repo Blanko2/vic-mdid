@@ -59,7 +59,10 @@ class MediaPlayer(object):
     def view(self, request, id, name, template='mediaplayer/mediaplayer.html'):
         record, media = self._get_record_and_media(request, id)
 
-        selectedmedia = media[int(request.GET.get('media', 0))]
+        try:
+            selectedmedia = media[int(request.GET.get('media', 0))]
+        except ValueError:
+            selectedmedia = 0
         delivery_url = selectedmedia.get_delivery_url()
         streaming_server = None
         streaming_media = None
