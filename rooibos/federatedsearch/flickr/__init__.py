@@ -122,7 +122,7 @@ class FlickrSearch(FederatedSearch):
             ] if hasattr(results.photos[0], 'photo') else []
 
             hits = int(results.photos[0]['total'])
-        except urllib2.HTTPError:
+        except (urllib2.HTTPError, urllib2.URLError, flickrapi.FlickrError):
             images = []
             hits = 0
 
