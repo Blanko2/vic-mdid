@@ -152,6 +152,9 @@ class OwnedTagSearchFacet(SearchFacet):
 
 def _generate_query(search_facets, user, collection, criteria, keywords, selected, *exclude):
 
+    # add owned tag facet
+    search_facets['ownedtag'] = OwnedTagSearchFacet()
+
     fields = {}
     for c in criteria:
         if (c in exclude) or (':' not in c):
@@ -164,11 +167,10 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
         # create exact match criteria on the fly if needed
         if fname.endswith('_s') and not search_facets.has_key(fname):
             search_facets[fname] = ExactValueSearchFacet(fname)
-        # add owned tag facet
-        search_facets['ownedtag'] = OwnedTagSearchFacet()
 
-        o = search_facets[fname].process_criteria(o, user)
-        fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
+        if search_facets.has_key(fname):
+            o = search_facets[fname].process_criteria(o, user)
+            fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
 
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
                  fields.iteritems())
@@ -358,15 +360,23 @@ def search(request, id=None, name=None, selected=False, json=False):
     def readable_criteria(c):
         (f, o) = c.split(':', 1)
         negated = f.startswith('-')
-        return dict(facet=c,
-                    term=search_facets[f[1 if negated else 0:]].display_value(o),
-                    label=search_facets[f[1 if negated else 0:]].label,
-                    negated=negated,
-                    or_available=not negated and search_facets[f].or_available())
+        f = f[1 if negated else 0:]
+        if search_facets.has_key(f):
+            return dict(facet=c,
+                        term=search_facets[f].display_value(o),
+                        label=search_facets[f].label,
+                        negated=negated,
+                        or_available=not negated and search_facets[f].or_available())
+        else:
+            return dict(facet=c,
+                        term=o,
+                        label='Unknown criteria',
+                        negated=negated,
+                        or_available=False)
 
     def federated_search_query(q, c):
         (f, o) = c.split(':', 1)
-        if f.startswith('-'):
+        if f.startswith('-') or not search_facets.has_key(f):
             # can't negate in federated search
             return q
         v = search_facets[f].federated_search_query(o)
