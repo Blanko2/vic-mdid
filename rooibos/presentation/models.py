@@ -73,7 +73,7 @@ class Presentation(models.Model):
                                                Q(is_superuser=True))
         q = Q(owner__in=valid_publishers) & Q(hidden=False)
         if owner and not owner.is_anonymous():
-            return q | Q(owner=owner)
+            return q | Q(id__in=accessible_ids(owner, Presentation, manage=True))
         else:
             return q
 
