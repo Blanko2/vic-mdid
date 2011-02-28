@@ -142,17 +142,22 @@ class PrintView(object):
             annotation = item.annotation
             if annotation:
                 text.append('<b>%s</b>: %s<br />' % ('Annotation', annotation))
-            p = Paragraph(''.join(text), styles['Normal'])
-            image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords)
-            if image:
-                try:
-                    i = flowables.Image(image,
-                                        width=1 * inch)
-                    p = flowables.ParagraphAndImage(p, i)
-                except IOError:
-                    pass
-            content.append(flowables.KeepTogether(
-                [Paragraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']), p]))
+            try:
+                p = Paragraph(''.join(text), styles['Normal'])
+            except (AttributeError, KeyError, IndexError):
+                # this sometimes triggers an error in reportlab
+                p = None
+            if p:
+                image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords)
+                if image:
+                    try:
+                        i = flowables.Image(image,
+                                            width=1 * inch)
+                        p = flowables.ParagraphAndImage(p, i)
+                    except IOError:
+                        pass
+                content.append(flowables.KeepTogether(
+                    [Paragraph('%s/%s' % (index + 1, len(items)), styles['SlideNumber']), p]))
 
         first_template = PageTemplate(id='First',
                                       frames=[column_frame(inch / 2), column_frame(width / 2 + 0.25 * inch)],
