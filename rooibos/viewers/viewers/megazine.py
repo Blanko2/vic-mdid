@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from django.conf import settings
 from django.conf.urls.defaults import url
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
@@ -23,6 +24,10 @@ class MegazinePlayer(object):
         pass
 
     def analyze(self, obj, user):
+        if not getattr(settings, 'MEGAZINE_PUBLIC_KEY', None):
+            import logging
+            logging.debug("Megazine key not found")
+            return NO_SUPPORT
         if not isinstance(obj, Presentation):
             return NO_SUPPORT
         items = obj.cached_items()
@@ -67,5 +72,6 @@ class MegazinePlayer(object):
 
         return render_to_response('megazine/megazine-content.mz3',
                                   {'items': items,
+                                   'licensekey': getattr(settings, 'MEGAZINE_PUBLIC_KEY', None),
                                    },
                                   context_instance=RequestContext(request))

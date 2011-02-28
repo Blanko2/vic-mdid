@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE book SYSTEM "http://www.megazine3.de/megazine2.dtd">
-<book pagewidth="500" pageheight="800" bgcolor="0xf0f0f0">
+<book pagewidth="500" pageheight="800" bgcolor="0xf0f0f0" licensekey="{{ licensekey }}">
 <!--
 	Replace the <book> tag above with this one to have all common plugins loaded (all except elementids, googleanalytics, password, printpdf, search and sidebar).
 <book plugins="anchors, backgroundsounds, batchpages, bookmarks, console, gallery, help, javascript, keyboardnavigation, links, navigationbar, options, overlays, pdflinks, print, slideshow, swfaddress, titles">

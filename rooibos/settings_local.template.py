@@ -146,9 +146,10 @@ CUSTOM_TRACKER_HTML = ""
 EXPOSE_TO_CONTEXT = ('STATIC_DIR', 'PRIMARY_COLOR', 'SECONDARY_COLOR', 'CUSTOM_TRACKER_HTML', 'ADMINS')
 
 # The Megazine viewer is using a third party component that has commercial
-# licensing requirements.  Before enabling the component here please make
-# sure you are not violating the agreements listed in static/megazine/COPYING.
-MEGAZINE_VIEWER = False
+# licensing requirements.  To enable the component you need to enter your
+# license key, which is available for free for educational institutions.
+# See static/megazine/COPYING.
+MEGAZINE_PUBLIC_KEY = ""
 
 # To use a commercial licensed flowplayer, enter your flowplayer key here
 # and add the flowplayer.commercial-3.x.x.swf file to the
