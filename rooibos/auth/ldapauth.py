@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import ldap
 from baseauth import BaseAuthenticationBackend
+import logging
 
 class LdapAuthenticationBackend(BaseAuthenticationBackend):
     def authenticate(self, username=None, password=None):
@@ -35,7 +36,7 @@ class LdapAuthenticationBackend(BaseAuthenticationBackend):
                     continue
                 return user
             except ldap.LDAPError, error_message:
-                pass
+                logging.debug('LDAP error: %s' % error_message)
             finally:
                 if l:
                     l.unbind_s()
