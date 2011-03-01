@@ -21,10 +21,11 @@ DATABASE_OPTIONS = {
     'charset': 'utf8',
 }
 
-# Settings for Microsoft SQL Server
+# Settings for Microsoft SQL Server (use the appropriate driver setting)
 #DATABASE_ENGINE = 'sql_server.pyodbc'
 #DATABASE_OPTIONS= {
-#    'driver': 'SQL Native Client',
+#    'driver': 'SQL Native Client',             # FOR SQL SERVER 2005
+#    'driver': 'SQL Server Native Client 10.0', # FOR SQL SERVER 2008
 #    'MARS_Connection': True,
 #}
 
