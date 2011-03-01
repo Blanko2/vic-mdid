@@ -112,7 +112,10 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     fieldsetform = FieldSetForm(request.GET)
     if fieldsetform.is_valid():
         fieldset = FieldSet.for_user(request.user).get(id=fieldsetform.cleaned_data['fieldset']) if fieldsetform.cleaned_data['fieldset'] else None
+    elif id and name:
+        fieldset = None
     else:
+        # Creating new record, use DC fieldset by default
         fieldset = FieldSet.objects.get(name='dc')
 
     collection_items = collectionformset = None
