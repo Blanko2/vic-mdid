@@ -15,6 +15,7 @@ from django.utils import simplejson
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.contenttypes.models import ContentType
+from django.template.defaultfilters import filesizeformat
 from models import Media, Storage, TrustedSubnet, ProxyUrl
 from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
@@ -89,13 +90,25 @@ def retrieve_image(request, recordid, record, width=None, height=None):
         raise Http404()
 
 
+def make_storage_select_choice(storage, user):
+    limit = storage.get_upload_limit(user)
+    if limit != settings.UPLOAD_LIMIT:
+        slimit = ' (unlimited)' if limit == 0 else ' (max %s)' % filesizeformat(limit * 1024)
+    else:
+        slimit = ''
+    return ('%s,%s' % (storage.id, limit),
+            '%s%s' % (storage.title, slimit))
+
+
 def media_upload_form(request):
-    available_storage = filter_by_access(request.user, Storage, write=True).order_by('title').values_list('name','title')
+    available_storage = filter_by_access(request.user, Storage, write=True).order_by('title')
     if not available_storage:
         return None
 
+    choices = [make_storage_select_choice(s, request.user) for s in available_storage]
+
     class UploadFileForm(forms.Form):
-        storage = forms.ChoiceField(choices=available_storage)
+        storage = forms.ChoiceField(choices=choices)
         file = forms.FileField()
 
     return UploadFileForm
@@ -117,9 +130,14 @@ def media_upload(request, recordid, record):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
 
-            storage = Storage.objects.get(name=form.cleaned_data['storage'])
+            storage = Storage.objects.get(id=form.cleaned_data['storage'].split(',')[0])
             file = request.FILES['file']
             mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
+
+            limit = storage.get_upload_limit(request.user)
+            if limit > 0 and file.size > limit:
+                request.user.message_set.create(message="The uploaded file is too large.")
+                return HttpResponseRedirect(request.GET.get('next', reverse('main')))
 
             media = Media.objects.create(record=record,
                                          name=os.path.splitext(file.name)[0],
@@ -138,7 +156,7 @@ def media_upload(request, recordid, record):
                 return HttpResponse(content=simplejson.dumps(dict(status='ok', html=html)),
                                     mimetype='application/json')
 
-            return HttpResponseRedirect(request.GET.get('next', '.'))
+            return HttpResponseRedirect(request.GET.get('next', reverse('main')))
         else:
             # Invalid form submission
             raise Http404()
@@ -285,13 +303,15 @@ def manage_storage(request, storageid=None, storagename=None):
 @login_required
 def import_files(request):
 
-    available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True).order_by('title').values_list('id', 'title'))
+    available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True).order_by('title'))
     available_collections = get_list_or_404(filter_by_access(request.user, Collection))
     writable_collection_ids = accessible_ids(request.user, Collection, write=True)
 
+    storage_choices = choices = [make_storage_select_choice(s, request.user) for s in available_storage]
+
     class UploadFileForm(forms.Form):
         collection = forms.ChoiceField(choices=((c.id, '%s%s' % ('*' if c.id in writable_collection_ids else '', c.title)) for c in sorted(available_collections, key=lambda c: c.title)))
-        storage = forms.ChoiceField(choices=available_storage)
+        storage = forms.ChoiceField(choices=storage_choices)
         file = forms.FileField()
         create_records = forms.BooleanField(required=False)
         replace_files = forms.BooleanField(required=False, label='Replace files of same type')
@@ -306,7 +326,6 @@ def import_files(request):
                 if not int(cleaned_data['collection']) in writable_collection_ids:
                     self._errors['collection'] = ErrorList(["Can only add personal records to selected collection"])
                     del cleaned_data['collection']
-                    return cleaned_data
             return cleaned_data
 
 
@@ -320,64 +339,69 @@ def import_files(request):
             personal_records = form.cleaned_data['personal_records']
 
             collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True if not personal_records else None))
-            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage']), write=True))
+            storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage'].split(',')[0]), write=True))
             file = request.FILES['file']
 
-            mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
-
-            owner = request.user if personal_records else None
-            id = os.path.splitext(file.name)[0]
-
-            # find record by identifier
-            titlefield = standardfield('title')
-            idfield = standardfield('identifier')
-            idfields = standardfield('identifier', equiv=True)
-
-            # Match identifiers that are either full file name (with extension) or just base name match
-            records = Record.by_fieldvalue(idfields, (id, file.name)).filter(collection=collection, owner=owner)
-            result = "File skipped."
-            record = None
-
-            if len(records) == 1:
-                # Matching record found
-                record = records[0]
-                media = record.media_set.filter(storage=storage, mimetype=mimetype)
-                if len(media) == 0:
-                    # No media yet
-                    media = Media.objects.create(record=record,
-                                                 name=id,
-                                                 storage=storage,
-                                                 mimetype=mimetype)
-                    media.save_file(file.name, file)
-                    result = "File added (Identifier '%s')." % id
-                elif replace_files:
-                    # Replace existing media
-                    media = media[0]
-                    media.delete_file()
-                    media.save_file(file.name, file)
-                    result = "File replaced (Identifier '%s')." % id
-                else:
-                    result = "File skipped, media files already attached."
-            elif len(records) == 0:
-                # No matching record found
-                if create_records:
-                    # Create a record
-                    record = Record.objects.create(name=id, owner=owner)
-                    CollectionItem.objects.create(collection=collection, record=record)
-                    FieldValue.objects.create(record=record, field=idfield, value=id, order=0)
-                    FieldValue.objects.create(record=record, field=titlefield, value=id, order=1)
-                    media = Media.objects.create(record=record,
-                                                 name=id,
-                                                 storage=storage,
-                                                 mimetype=mimetype)
-                    media.save_file(file.name, file)
-                    result = "File added to new record (Identifier '%s')." % id
-                else:
-                    result = "File skipped, no matching record found (Identifier '%s')." % id
+            limit = storage.get_upload_limit(request.user)
+            if limit > 0 and file.size > limit:
+                result = "The uploaded file is too large."
             else:
-                result = "File skipped, multiple matching records found (Identifier '%s')." % id
-                # Multiple matching records found
-                pass
+
+                mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
+
+                owner = request.user if personal_records else None
+                id = os.path.splitext(file.name)[0]
+
+                # find record by identifier
+                titlefield = standardfield('title')
+                idfield = standardfield('identifier')
+                idfields = standardfield('identifier', equiv=True)
+
+                # Match identifiers that are either full file name (with extension) or just base name match
+                records = Record.by_fieldvalue(idfields, (id, file.name)).filter(collection=collection, owner=owner)
+                result = "File skipped."
+                record = None
+
+                if len(records) == 1:
+                    # Matching record found
+                    record = records[0]
+                    media = record.media_set.filter(storage=storage, mimetype=mimetype)
+                    if len(media) == 0:
+                        # No media yet
+                        media = Media.objects.create(record=record,
+                                                     name=id,
+                                                     storage=storage,
+                                                     mimetype=mimetype)
+                        media.save_file(file.name, file)
+                        result = "File added (Identifier '%s')." % id
+                    elif replace_files:
+                        # Replace existing media
+                        media = media[0]
+                        media.delete_file()
+                        media.save_file(file.name, file)
+                        result = "File replaced (Identifier '%s')." % id
+                    else:
+                        result = "File skipped, media files already attached."
+                elif len(records) == 0:
+                    # No matching record found
+                    if create_records:
+                        # Create a record
+                        record = Record.objects.create(name=id, owner=owner)
+                        CollectionItem.objects.create(collection=collection, record=record)
+                        FieldValue.objects.create(record=record, field=idfield, value=id, order=0)
+                        FieldValue.objects.create(record=record, field=titlefield, value=id, order=1)
+                        media = Media.objects.create(record=record,
+                                                     name=id,
+                                                     storage=storage,
+                                                     mimetype=mimetype)
+                        media.save_file(file.name, file)
+                        result = "File added to new record (Identifier '%s')." % id
+                    else:
+                        result = "File skipped, no matching record found (Identifier '%s')." % id
+                else:
+                    result = "File skipped, multiple matching records found (Identifier '%s')." % id
+                    # Multiple matching records found
+                    pass
 
             if request.POST.get('swfupload') == 'true':
                 html = render_to_string('storage_import_file_response.html',

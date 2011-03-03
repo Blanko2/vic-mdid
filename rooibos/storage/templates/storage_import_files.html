@@ -4,7 +4,6 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
-
 function update_form_parameters(control) {
 	control.swfupload('removePostParam', '{{ upload_form.collection.name }}');
 	control.swfupload('removePostParam', '{{ upload_form.storage.name }}');
@@ -16,6 +15,8 @@ function update_form_parameters(control) {
 	control.swfupload('addPostParam', '{{ upload_form.create_records.name }}', $("#{{ upload_form.create_records.auto_id }}").attr("checked") ? "on" : "");
 	control.swfupload('addPostParam', '{{ upload_form.personal_records.name }}', $("#{{ upload_form.personal_records.auto_id }}").attr("checked") ? "on" : "");
 	control.swfupload('addPostParam', '{{ upload_form.replace_files.name }}', $("#{{ upload_form.replace_files.auto_id }}").attr("checked") ? "on" : "");
+	var limit = $("#{{ upload_form.storage.auto_id }}").val().split(',')[1];
+	control.swfupload('setFileSizeLimit', limit);
 }
 
 </script>
