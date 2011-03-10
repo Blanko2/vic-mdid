@@ -460,6 +460,29 @@
 
             bindSelectRecordCheckboxes();
 
+            // drag and drop records to basket
+
+            $("#basket-content").droppable({
+                accept: ".record-anchor[id*=record-id-]",
+                activeClass: "dragging",
+                hoverClass: "hovering",
+                drop: function(event, ui) {
+                    var id = ui.draggable.attr("id");
+                    id = id.substring(id.lastIndexOf('-') + 1);
+                    recordSelection(id, true);
+                    ui.draggable.parents(".record").find("input.record-select").attr('checked', true);
+                }
+            });
+
+            $(".record-anchor[id^=record-id-]").draggable({
+                containment: 'window',
+                helper: 'clone',
+                appendTo: 'body',
+                scroll: false
+            });
+
+            // end basket features
+
             if (!custom_process_facets) process_facets();
             $(".autocomplete-user").autocomplete('{% url api-autocomplete-user %}', {});
             $(".autocomplete-group").autocomplete('{% url api-autocomplete-group %}', {});
