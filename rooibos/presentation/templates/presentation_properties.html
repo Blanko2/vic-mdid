@@ -244,6 +244,7 @@ td.annotation-col textarea {
                     e.stopImmediatePropagation(); $(this).click(select_slide);
                 });
 				unsaved_changes = true;
+				selectionChanged();
             },
             start: function(event, ui) {
                 if (!ui.item.hasClass('selected')) {
@@ -257,6 +258,7 @@ td.annotation-col textarea {
             },
             stop: function(event, ui) {
                 selected_elements.not(ui.item).show(100);
+				selectionChanged();
             }
             }).show();
 
