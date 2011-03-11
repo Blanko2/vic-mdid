@@ -254,9 +254,7 @@ def browse(request, manage=False):
             ids = map(int, request.POST.getlist('h'))
             Presentation.objects.filter(owner=request.user, id__in=ids).delete()
 
-        if request.POST.get('keywords_go'):
-            get['kw'] = request.POST.get('kw')
-            return HttpResponseRedirect(request.path + '?' + get.urlencode())
+        get['kw'] = request.POST.get('kw') or keywords
 
         if request.POST.get('update_tags'):
             ids = map(int, request.POST.getlist('h'))
@@ -270,7 +268,7 @@ def browse(request, manage=False):
             add_selected_items(request, presentation)
             return HttpResponseRedirect(reverse('presentation-edit', args=(presentation.id, presentation.name)))
 
-        return HttpResponseRedirect(request.get_full_path())
+        return HttpResponseRedirect(request.path + '?' + get.urlencode())
 
 
     active_tags = tags
