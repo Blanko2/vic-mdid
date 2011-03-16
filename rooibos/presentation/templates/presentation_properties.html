@@ -69,7 +69,7 @@ html.js-enabled #items {
 }
 
 #lighttable-annotation textarea {
-    height: 40px;
+    height: 100px;
     width: 600px;
     vertical-align: top;
 }
@@ -244,6 +244,7 @@ td.annotation-col textarea {
                     e.stopImmediatePropagation(); $(this).click(select_slide);
                 });
 				unsaved_changes = true;
+				selectionChanged();
             },
             start: function(event, ui) {
                 if (!ui.item.hasClass('selected')) {
@@ -257,6 +258,7 @@ td.annotation-col textarea {
             },
             stop: function(event, ui) {
                 selected_elements.not(ui.item).show(100);
+				selectionChanged();
             }
             }).show();
 
@@ -340,15 +342,17 @@ td.annotation-col textarea {
 
 {% if formset.forms %}
 
-<h2 style="clear: both; padding-top: 50px;"><a name="sort_and_annotate" href="#sort_and_annotate">Sort and annotate records</a></h2>
+<h2 style="clear: both; padding-top: 50px;">Sort and annotate records</h2>
 
 
 <form method="POST" action="" id="items-form">{% csrf_token %}
 {{ formset.management_form }}
 
+<a name="sort_and_annotate" href="#sort_and_annotate"></a>
+
 <ul class="actionbar">
 <li><input type="submit" name="update-items" value="Save" /></li>
-<li><a href=".">Discard changes</a></li>
+<li><a href=".">Undo changes</a></li>
 <li class="secondary">Highlighted Items:</li>
 <li class="secondary"><button id="show-button">Show</button></li>
 <li class="secondary"><button id="hide-button">Hide</button></li>

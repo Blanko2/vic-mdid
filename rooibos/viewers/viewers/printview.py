@@ -151,8 +151,8 @@ class PrintView(object):
                 image = get_image_for_record(item.record, presentation.owner, 100, 100, passwords)
                 if image:
                     try:
-                        i = flowables.Image(image,
-                                            width=1 * inch)
+                        i = flowables.Image(image, kind='proportional',
+                                            width=1 * inch, height=1 * inch)
                         p = flowables.ParagraphAndImage(p, i)
                     except IOError:
                         pass
