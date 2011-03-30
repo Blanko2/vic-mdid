@@ -36,7 +36,7 @@ def main(request):
 
     (hits, records, search_facets, orfacet, query, fields) = run_search(
         request.user,
-        criteria=['mimetype:image/jpeg'],
+        criteria=['mimetype:image/jpeg', '-owner:[* TO *]'],
         sort='random_%d asc' % random.randint(100000, 999999),
         page=1,
         pagesize=8,
