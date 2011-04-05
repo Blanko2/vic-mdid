@@ -344,8 +344,8 @@ def import_files(request):
             record = None
 
             limit = storage.get_upload_limit(request.user)
-            if limit > 0 and file.size > limit:
-                result = "The uploaded file is too large."
+            if limit > 0 and file.size > limit * 1024:
+                result = "The uploaded file is too large (%d>%d)." % (file.size, limit * 1024)
             else:
 
                 mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
