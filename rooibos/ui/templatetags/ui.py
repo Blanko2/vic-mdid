@@ -57,8 +57,9 @@ class OwnedTagsForObjectNode(template.Node):
         object = self.object.resolve(context)
         user = self.user.resolve(context)
         if self.include:
-            ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
-            context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
+            if not user.is_anonymous():
+                ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
+                context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
         else:
             qs = OwnedWrapper.objects.filter(object_id=object.id, content_type=OwnedWrapper.t(object.__class__))
             if not user.is_anonymous():
