@@ -10,6 +10,9 @@ clip = {
     clip: {
         autoPlay: {{ autoplay|yesno:"true,false" }},
         url: '{{ streaming_media|escapejs }}',
+{% if idevice_streaming_url %}
+        ipadUrl: '{{ idevice_streaming_url }}',
+{% endif %}
         provider: 'influxis',
         scaling: 'fit'
     },
