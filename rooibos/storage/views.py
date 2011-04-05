@@ -341,6 +341,7 @@ def import_files(request):
             collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True if not personal_records else None))
             storage = get_object_or_404(filter_by_access(request.user, Storage.objects.filter(id=form.cleaned_data['storage'].split(',')[0]), write=True))
             file = request.FILES['file']
+            record = None
 
             limit = storage.get_upload_limit(request.user)
             if limit > 0 and file.size > limit:
@@ -360,7 +361,6 @@ def import_files(request):
                 # Match identifiers that are either full file name (with extension) or just base name match
                 records = Record.by_fieldvalue(idfields, (id, file.name)).filter(collection=collection, owner=owner)
                 result = "File skipped."
-                record = None
 
                 if len(records) == 1:
                     # Matching record found
