@@ -408,11 +408,11 @@ html.js-enabled #basket-tab-pin, html.js-enabled #basket-refresh {
     margin: 0 5px;
 }
 
-#basket-content.dragging {
+.dragging {
     background-color: {{ colors.messages }};
 }
 
-#basket-content.hovering {
+.hovering {
     background-color: {{ PRIMARY_COLOR }};
 }
 

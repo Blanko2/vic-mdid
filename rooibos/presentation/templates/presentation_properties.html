@@ -210,6 +210,40 @@ td.annotation-col textarea {
             e.stopPropagation();
         }
 
+		function convert_to_slide(item) {
+			var record_url = item.attr('href');
+			var image = item.children('img');
+			var id = image.attr("id");
+			id = id.substring(id.lastIndexOf('-') + 1);
+			recordSelection(id, false);
+			var title = image.attr("alt");
+			var idx = parseInt($("#id_form-TOTAL_FORMS").val());
+			$("#id_form-TOTAL_FORMS").val(idx + 1);
+			var copy = $("#lighttable div.slide").eq(0).clone();
+			copy.attr('id', 'slide' + idx).removeClass('selected');
+			// fix customize link
+			customize_url = $("a.customize", copy).attr('href');
+			// TODO: this relies on specific URLs, should not be hardcoded
+			customize_url = customize_url.substring(customize_url.indexOf('/edit/') + 1)
+			$("a.customize", copy).attr('href', record_url + customize_url);
+			// fix title
+			$("div.title a", copy).attr('href', record_url).text(title);
+			// fix thumbnail
+			$("img", copy).attr('alt', title).attr('src', image.attr('src')).attr('id', 'item-' + idx + image.attr('id').substring(6));
+			// fix form inputs
+			$("input,textarea", copy).each(function(i, e) {
+				var input = $(e);
+				var name = input.attr('name', input.attr('name').replace(/[0-9]+/, idx)).attr('id', 'id_' + input.attr('name')).attr('name');
+				if (name.match(/-id$/)) input.val('');
+				else if (name.match(/-record$/)) input.val(id);
+				else if (name.match(/-annotation$/)) input.val('');
+				else if (name.match(/-hidden$/)) input.attr('checked', false);
+				else if (name.match(/-DELETE$/)) input.attr('checked', false);
+			});
+			item.replaceWith(copy);
+			copy.show();
+		}
+
         var selected_elements;
 
         $("#lighttable div.slide").disableSelection().live('click', select_slide).css('cursor', 'move');
@@ -246,6 +280,10 @@ td.annotation-col textarea {
 				unsaved_changes = true;
 				selectionChanged();
             },
+			receive: function(event, ui) {
+				// received a dragged item from the basket
+				convert_to_slide($("#lighttable a.ui-draggable"));
+			},
             start: function(event, ui) {
                 if (!ui.item.hasClass('selected')) {
                     $("#lighttable div.slide").removeClass('selected');
@@ -261,6 +299,19 @@ td.annotation-col textarea {
 				selectionChanged();
             }
             }).show();
+
+		$("#basket-thumbs").bind('update', function() {
+			$("#basket-thumbs a").draggable({
+				scroll: true,
+				helper: 'clone',
+				revert: 'invalid',
+				appendTo: 'body',
+				cursor: 'move',
+				cursorAt: {left: 50, top: 50},
+				connectToSortable: '#lighttable'
+			});
+			$("#lighttable").sortable('refresh');
+		}).trigger('update');
 
         $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 250)); }).resize();
 

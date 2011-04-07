@@ -226,6 +226,7 @@
                     add_metadata_popup(basket_thumbs);
                     $("#basket-header").html(r.header);
                     basket_scroll_arrows();
+                    $("#basket-thumbs").trigger('update');
                 }
             });
         }
@@ -463,7 +464,7 @@
             // drag and drop records to basket
 
             $("#basket-content").droppable({
-                accept: ".record-anchor[id*=record-id-]",
+                accept: "#content-wrapper .record-anchor[id*=record-id-]",
                 activeClass: "dragging",
                 hoverClass: "hovering",
                 drop: function(event, ui) {
@@ -474,7 +475,7 @@
                 }
             });
 
-            $(".record-anchor[id^=record-id-]").draggable({
+            $("#content-wrapper .record-anchor[id^=record-id-]").draggable({
                 containment: 'window',
                 helper: 'clone',
                 appendTo: 'body',
