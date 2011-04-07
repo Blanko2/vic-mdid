@@ -71,7 +71,10 @@
     <div id="basket-menu">
         <a href="{% url solr-selected %}">Explore</a><br />
         <a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a><br />
-        <a href="." id="basket-refresh">Refresh</a><br />
+        {% recent_presentation request.user as presentation %}
+        {% if presentation %}
+        <a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a><br />
+        {% endif %}
     </div>
     <div id="basket-scroll-right"></div>
     <div id="basket-scroll-left"></div>

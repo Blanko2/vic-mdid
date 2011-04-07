@@ -333,6 +333,8 @@ td.annotation-col textarea {
 
 {% block content %}
 
+{% store_recent_presentation request.user presentation %}
+
 <h1>{{ presentation.title }}</h1>
 
 {% if formset.forms %}
