@@ -66,6 +66,7 @@ class MediaPlayer(object):
         delivery_url = selectedmedia.get_delivery_url()
         streaming_server = None
         streaming_media = None
+        idevice_streaming_url = None
         if delivery_url.startswith('rtmp://'):
             try:
                 streaming_server, prot, streaming_media_no_prot = re.split('/(mp[34]:)', delivery_url)
