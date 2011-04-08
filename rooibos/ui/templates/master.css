@@ -1019,17 +1019,29 @@ div.fieldvalue-edit div.narrow input {
     background-color: {{ colors.other_user_icons }};
 }
 
-.owner-icon {
+.info-icon {
     position: absolute;
     bottom: 2px;
     right: 2px;
+    border: none !important;
+    display: none;
+}
+
+html.js-enabled .info-icon {
+    display: inline;
+}
+
+.owner-icon {
+    position: absolute;
+    bottom: 2px;
+    right: 18px;
     border: none !important;
 }
 
 .shared-icon {
     position: absolute;
     bottom: 2px;
-    right: 18px;
+    right: 34px;
     border: none !important;
 }
 
