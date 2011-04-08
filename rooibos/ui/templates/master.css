@@ -1045,6 +1045,17 @@ html.js-enabled .info-icon {
     border: none !important;
 }
 
+#preview-dialog {
+    padding: 10px;
+    text-align: center;
+    background: grey center 20px no-repeat url({% url static 'images/loading.gif' %});
+}
+
+#preview-dialog .info-icon {
+    bottom: 60px;
+    right: 5px;
+}
+
 #external-results {
     display: none;
 }

@@ -66,6 +66,8 @@
     </div>
 {% endblock %}
 
+<div id="preview-dialog"></div>
+
 {% block basket %}
 <div id="basket-content">
     <div id="basket-menu">
@@ -538,6 +540,7 @@
                 return false;
             });
 
+
             // actionbar functions
 
               $(document).click(function() {
@@ -630,6 +633,71 @@
     </script>
 
 {% endcompress %}
+
+    <script type="text/javascript">
+
+        $(document).ready(function()
+        {
+           // pop-up preview
+            var media_url = "{% url storage-retrieve-image 0, 0, 640, 480 %}";
+            var thumb_url = "{% url storage-thumbnail 0, 0 %}";
+
+            function preview_dialog(a, img) {
+                var dialog = $("#preview-dialog");
+                dialog.dialog("destroy").empty();
+                var img_src = img.attr('src').substring(thumb_url.indexOf('/0/0/'));
+                var qs_index = img_src.indexOf('?');
+                if (qs_index > 0) img_src = img_src.substring(0, qs_index);
+                var url = media_url.replace(/\/0\/0\//, img_src);
+                dialog.append($("<img />").attr('src', url));
+                dialog.dialog({
+                    buttons: {
+                        "Close": function() {
+                            $(this).dialog("close");
+                        },
+                        "Go to Record": function() {
+                            window.open(a.attr('href'), 'record_view');
+                        }
+                    },
+                    draggable: false,
+                    height: 600,
+                    modal: true,
+                    resizable: false,
+                    title: img.attr('alt'),
+                    width: 700
+                });
+
+                var info = $('<img src="{% url static 'images/info.png' %}" alt="Information" class="info-icon metadata-anchor" />');
+                info.attr('id', 'preview-record-id' + img.attr('id').substring(img.attr('id').lastIndexOf('-')));
+                add_metadata_popup(dialog.append(info));
+            }
+
+            $("div.record a img.record-anchor").parent("a").click(function(e) {
+                var a = $(this);
+                var img = $("img.record-anchor", a);
+                preview_dialog(a, img)
+                e.preventDefault();
+            });
+
+            $("#basket-thumbs").bind('update', function() {
+                $("#basket-thumbs a img.record-anchor").parent("a").click(function(e) {
+                    var a = $(this);
+                    var img = $("img.record-anchor", a);
+                    preview_dialog(a, img)
+                    e.preventDefault();
+                });
+            }).trigger('update');;
+
+            $("#lighttable div.slide div.title a").live('click', function(e) {
+                var a = $(this);
+                var img = $("img.record-anchor", a.parent().parent());
+                preview_dialog(a, img)
+                e.preventDefault();
+            });
+
+        });
+
+    </script>
 
 
 {% endblock %}
