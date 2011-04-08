@@ -649,6 +649,7 @@
                 var qs_index = img_src.indexOf('?');
                 if (qs_index > 0) img_src = img_src.substring(0, qs_index);
                 var url = media_url.replace(/\/0\/0\//, img_src);
+                var id = img.attr('id').substring(img.attr('id').lastIndexOf('-') + 1);
                 dialog.append($("<img />").attr('src', url));
                 dialog.dialog({
                     buttons: {
@@ -657,6 +658,9 @@
                         },
                         "Go to Record": function() {
                             window.open(a.attr('href'), 'record_view');
+                        },
+                        "Select": function() {
+                            recordSelection(id, true);
                         }
                     },
                     draggable: false,
@@ -668,7 +672,7 @@
                 });
 
                 var info = $('<img src="{% url static 'images/info.png' %}" alt="Information" class="info-icon metadata-anchor" />');
-                info.attr('id', 'preview-record-id' + img.attr('id').substring(img.attr('id').lastIndexOf('-')));
+                info.attr('id', 'preview-record-id-' + id);
                 add_metadata_popup(dialog.append(info));
             }
 
