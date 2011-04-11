@@ -15,7 +15,7 @@ from pysolr import SolrError
 from rooibos.access import filter_by_access, accessible_ids
 import socket
 from rooibos.util import safe_int, json_view
-from rooibos.data.models import Field, Collection, FieldValue
+from rooibos.data.models import Field, Collection, FieldValue, Record
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 import re
@@ -32,6 +32,9 @@ class SearchFacet(object):
 
     def process_criteria(self, criteria, *args, **kwargs):
         return criteria
+
+    def process_name(self, name):
+        return name
 
     def set_result(self, facets):
         # break down dicts into tuples
@@ -68,6 +71,33 @@ class OwnerSearchFacet(SearchFacet):
 
     def federated_search_query(self, value):
         return ''
+
+class RelatedToSearchFacet(SearchFacet):
+
+    def display_value(self, value):
+        record = Record.objects.filter(id=value)
+        value = record[0].title if record else value
+        return super(RelatedToSearchFacet, self).display_value(value)
+
+    def set_result(self, facets):
+        self.facets = ()
+
+    def federated_search_query(self, value):
+        return ''
+
+    def or_available(self):
+        return False
+
+    def process_criteria(self, criteria, user, *args, **kwargs):
+        presentations = []
+        record = Record.objects.filter(id=criteria)
+        if record:
+            return '|'.join(map(str, record[0].presentationitem_set.all().distinct().values_list('presentation_id', flat=True)))
+        else:
+            return '-1'
+
+    def process_name(self, name):
+        return 'presentations'
 
 class StorageSearchFacet(SearchFacet):
 
@@ -170,7 +200,7 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
 
         if search_facets.has_key(fname):
             o = search_facets[fname].process_criteria(o, user)
-            fields.setdefault(f, []).append('(' + o.replace('|', ' OR ') + ')')
+            fields.setdefault(search_facets[fname].process_name(f), []).append('(' + o.replace('|', ' OR ') + ')')
 
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
                  fields.iteritems())
@@ -234,6 +264,7 @@ def run_search(user,
     search_facets.append(StorageSearchFacet('mimetype', 'Media type', available_storage))
     search_facets.append(CollectionSearchFacet('allcollections', 'Collection'))
     search_facets.append(OwnerSearchFacet('owner', 'Owner'))
+    search_facets.append(RelatedToSearchFacet('related_to', 'Related to'))
     # convert to dictionary
     search_facets = dict((f.name, f) for f in search_facets)
 

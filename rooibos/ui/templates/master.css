@@ -1045,6 +1045,13 @@ html.js-enabled .info-icon {
     border: none !important;
 }
 
+.related-icon {
+    position: absolute;
+    bottom: 18px;
+    right: 2px;
+    border: none !important;
+}
+
 #preview-dialog {
     padding: 10px;
     text-align: center;
