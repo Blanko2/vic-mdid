@@ -22,6 +22,7 @@
         $(".record-select").each(function (i) { ids[i] = this.value; }).val(ids);
         recordSelection(ids, true);
     }
+
     $(document).ready(function() {
         $("#submit_record_selections").replaceWith($("<input type='button' value='Select all on page'>").click(selectAllOnPage));
 
@@ -31,6 +32,36 @@
     {% if not facets %}
         $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
     {% endif %}
+
+        $("#resultlist div.record a img.record-anchor").parent("a").unbind('click').click(function(e) {
+            var a = $(this);
+            var img = $("img.record-anchor", a);
+            var prev = function() { return a.parent("div.record").prev("div.record").children("a").first() };
+            var next = function() { return a.parent("div.record").next("div.record").children("a").first() };
+            if (!prev().length) prev = function() {
+                // on first record on this page, see if there is a previous page
+                var link = $("#navigate-previous-page").clone();
+                link.click(function() { window.location = link.attr('href') + '#preview-last'; });
+                return link;
+            }
+            if (!next().length) next = function() {
+                // on last record on this page, see if there is a next page
+                var link = $("#navigate-next-page").clone();
+                link.click(function() { window.location = link.attr('href') + '#preview-first'; });
+                return link;
+            }
+            preview_dialog(a, img, prev, next)
+            e.preventDefault();
+        });
+
+        if (location.hash == '#preview-first') {
+            $("#resultlist div.record a img.record-anchor").parent("a").first().click();
+        }
+
+        if (location.hash == '#preview-last') {
+            $("#resultlist div.record a img.record-anchor").parent("a").last().click();
+        }
+
     });
 
     $(window).load(function() {
@@ -210,9 +241,9 @@ Your search query is invalid.  Please go back and correct your search parameters
 
 {% if pages %}
 <div style="text-align: center; clear: both;">
-    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
+    {% if prev_page %}<a id="navigate-previous-page" href="{{ prev_page }}">Previous</a>{% endif %}
     <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
-    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
+    {% if next_page %}<a id="navigate-next-page" href="{{ next_page }}">Next</a>{% endif %}
 </div>
 {% endif %}
 

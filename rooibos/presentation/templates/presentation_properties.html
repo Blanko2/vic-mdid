@@ -325,6 +325,16 @@ td.annotation-col textarea {
 		$("#presentation_sidebar_actions a").each(function() {
 			addCopyLinkIcon($(this));
 		});
+
+		$("#lighttable div.slide div.title a").live('click', function(e) {
+			var a = $(this);
+			var img = $("img.record-anchor", a.parent().parent());
+			var prev = function() { return a.parents("div.slide").prev("div.slide").children("div.title").children("a") };
+			var next = function() { return a.parents("div.slide").next("div.slide").children("div.title").children("a") };
+			preview_dialog(a, img, prev, next)
+			e.preventDefault();
+		});
+
     });
 </script>
 {% endblock %}
