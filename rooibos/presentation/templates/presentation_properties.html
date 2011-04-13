@@ -2,91 +2,12 @@
 {% load ui %}
 {% load access_control %}
 {% load viewers %}
-
-
-
-{% block stylesheets %}
-{{ block.super }}
-<style type="text/css">
-
-html.js-enabled #items {
-    display: none;
-}
-
-#lighttable {
-    border: solid 2px lightgrey;
-    padding: 5px;
-    overflow: scroll;
-    user-select: none; /* CSS3 */
-    -moz-user-select: none; /* Gecko (Firefox) */
-    -khtml-user-select:none; /* Webkit (Safari, Chrome) */
-}
-
-#lighttable div.slide, .lighttable-placeholder {
-    float: left;
-    margin: 5px;
-    background-color: lightgrey;
-    padding: 8px;
-    -moz-border-radius: 3px;
-    width: 100px;
-    height: 115px;
-}
-
-.lighttable-placeholder {
-    background-color: {{ PRIMARY_COLOR }};
-}
-
-#lighttable div.slide.selected {
-    background-color: {{ PRIMARY_COLOR }};
-}
-
-#lighttable div.slide.hidden div.title {
-    font-style: italic;
-}
-
-#lighttable div.slide.hidden div.title:before {
-    content: "[Hidden] ";
-}
-
-#lighttable div.slide.hidden img {
-    filter: alpha(opacity=30);
-	-moz-opacity: 0.3;
-	-khtml-opacity: 0.3;
-	opacity: 0.3;
-}
-
-#lighttable div.slide div.title {
-    font-size: xx-small;
-    width: 100px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-#lighttable-annotation {
-    border: solid 2px lightgrey;
-    border-top: none;
-    padding: 5px;
-}
-
-#lighttable-annotation textarea {
-    height: 100px;
-    width: 600px;
-    vertical-align: top;
-}
-
-td.annotation-col textarea {
-    height: 30px;
-    width: 200px;
-}
-
-</style>
-{% endblock %}
-
-
+{% load compress %}
 
 
 {% block javascript %}
 {{ block.super }}
+{% compress js %}
 <script type="text/javascript">
 
     $(document).ready(function() {
@@ -337,6 +258,7 @@ td.annotation-col textarea {
 
     });
 </script>
+{% endcompress %}
 {% endblock %}
 
 

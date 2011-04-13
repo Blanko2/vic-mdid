@@ -69,6 +69,7 @@
 <div id="preview-dialog" style="display: none;"></div>
 
 {% block basket %}
+{% spaceless %}
 <div id="basket-content">
     <div id="basket-menu">
         <a href="{% url solr-selected %}">Explore</a><br />
@@ -89,10 +90,11 @@
     <img src="{% url static 'images/pin_up.png' %}" id="basket-tab-pin" title="Click to keep open or automatically hide" />
     {% endif %}
 </div>
-
+{% endspaceless %}
 {% endblock %}
 
 {% block header %}
+{% spaceless %}
     <div id="topmenu">
         <ul>
             {% if user.is_authenticated %}
@@ -159,6 +161,7 @@
             </div>
         </div>
     </div>
+{% endspaceless %}
 {% endblock %}
 
 <!--
@@ -185,7 +188,7 @@
 {% endif %}
 
 <script type="text/javascript">
-    var profile_settings = {% profile_settings %};
+    var profile_settings = {% profile_settings ui %};
     var custom_process_facets = false;
 </script>
 {% block javascript %}
@@ -632,8 +635,6 @@
         });
     </script>
 
-{% endcompress %}
-
     <script type="text/javascript">
 
         // pop-up preview
@@ -701,6 +702,7 @@
 
     </script>
 
+{% endcompress %}
 
 {% endblock %}
 
