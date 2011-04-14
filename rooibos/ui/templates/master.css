@@ -77,6 +77,11 @@ body.master {
     min-width: 970px;
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
     padding-bottom: 80px;
+    line-height: normal;
+}
+
+#content {
+    font-size: 133.3%;
 }
 
 img {
@@ -326,7 +331,7 @@ html.js-enabled #content {
     border: solid 5px {{ colors.basket_text }};
     color: {{ colors.basket_text }};
     font-weight: bolder;
-    font-size: smaller;
+    font-size: 1.1em;
     border-bottom: none;
     width: 160px;
     position: fixed;
@@ -367,7 +372,7 @@ html.js-enabled #basket-tab-pin, html.js-enabled #basket-refresh {
     border-top: solid {{ colors.basket_text }} 5px;
     height: 60px;
     width: 100%;
-    font-size: smaller;
+    font-size: 1.1em;
     overflow: scroll;
 }
 
@@ -1059,7 +1064,7 @@ html.js-enabled .info-icon {
 }
 
 #preview-dialog .info-icon {
-    bottom: 60px;
+    bottom: 5px;
     right: 5px;
 }
 
@@ -1321,5 +1326,8 @@ td.annotation-col textarea {
     width: 200px;
 }
 
+.ui-widget-overlay {
+    opacity: 0.5;
+}
 
 </style>
