@@ -135,7 +135,7 @@ def media_upload(request, recordid, record):
             mimetype = mimetypes.guess_type(file.name)[0] or file.content_type
 
             limit = storage.get_upload_limit(request.user)
-            if limit > 0 and file.size > limit:
+            if limit > 0 and file.size > limit * 1024:
                 request.user.message_set.create(message="The uploaded file is too large.")
                 return HttpResponseRedirect(request.GET.get('next', reverse('main')))
 
