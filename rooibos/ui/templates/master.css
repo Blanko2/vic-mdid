@@ -64,7 +64,7 @@
 
 {% if debug %}
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
-        z-index: 1000; position: absolute; right: 32px; top: 83px;
+        z-index: 1000; position: absolute; right: 23px; top: 23px;
         -moz-opacity: .7; opacity: .7;}
 {% endif %}
 
@@ -1165,6 +1165,10 @@ ul.actionbar .pagination {
   float: right;
   clear: none;
   border: none;
+}
+
+ul.actionbar .pagination a {
+    color: {{ colors.links }};
 }
 
 ul.actionbar .secondary {

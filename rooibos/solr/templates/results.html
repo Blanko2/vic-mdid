@@ -4,6 +4,7 @@
 {% load humanize %}
 {% load solr %}
 {% load access_control %}
+{% load pagination_tags %}
 
 
 {% block javascript %}
@@ -207,13 +208,10 @@
 {% endif %}
 -->
 
-{% if pages %}
 <li class="pagination">
-    {% if prev_page %}<a href="{{ prev_page }}">Previous</a>{% endif %}
-    <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
-    {% if next_page %}<a href="{{ next_page }}">Next</a>{% endif %}
+    {% autopaginate pagination_helper pagesize %}
+    {% paginate 3 %}
 </li>
-{% endif %}
 
 </ul>
 
@@ -239,16 +237,19 @@ Your search query is invalid.  Please go back and correct your search parameters
 </div>
 {% endif %}
 
-{% if pages %}
 <div style="text-align: center; clear: both;">
-    {% if prev_page %}<a id="navigate-previous-page" href="{{ prev_page }}">Previous</a>{% endif %}
-    <span style="padding: 0 20px;">Page {{ page|intcomma }} of {{ pages|intcomma }}</span>
-    {% if next_page %}<a id="navigate-next-page" href="{{ next_page }}">Next</a>{% endif %}
+{% autopaginate pagination_helper pagesize %}
+{% paginate %}
 </div>
-{% endif %}
 
 {% endif %}
 
 </form>
+
+<div style="display: none;">
+    <!-- navigation links for preview dialog -->
+    {% if prev_page %}<a id="navigate-previous-page" href="{{ prev_page }}">Previous</a>{% endif %}
+    {% if next_page %}<a id="navigate-next-page" href="{{ next_page }}">Next</a>{% endif %}
+</div>
 
 {% endblock %}
