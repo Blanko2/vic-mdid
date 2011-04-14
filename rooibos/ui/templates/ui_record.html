@@ -17,6 +17,6 @@
     {% endif %}
     {% endif %}
     {% if record.solr_presentation_ids %}
-    <a href="{% url solr-search %}?c=related_to:{{ record.id }}"><img src="{% url static 'images/related.png' %}" alt="See related [+{{ record.solr_presentation_ids|length }}]" title="See related [+{{ record.solr_presentation_ids|length }}]" class="related-icon" /></a>
+    <a href="{% url solr-search %}?c=presentations:{{ record.id }}"><img src="{% url static 'images/related.png' %}" alt="See related [+{{ record.solr_presentation_ids|length }}]" title="See related [+{{ record.solr_presentation_ids|length }}]" class="related-icon" /></a>
     {% endif %}
 </div>
