@@ -977,7 +977,7 @@
         },
         getHTML: function (o, l) {
             o = i({}, o);
-            var n = '<object width="' + o.width + '" height="' + o.height + '" id="' + o.id + '" name="' + o.id + '"';
+            var n = '<object wmode="opaque" width="' + o.width + '" height="' + o.height + '" id="' + o.id + '" name="' + o.id + '"';
             if (o.cachebusting) {
                 o.src += ((o.src.indexOf("?") != -1 ? "&" : "?") + Math.random())
             }
@@ -1008,7 +1008,7 @@
                 p = p.slice(0, -1);
                 n += '<param name="flashvars" value=\'' + p + "' />"
             }
-            n += "</object>";
+            n += "<param name='wmode' value='opaque' /></object>";
             return n
         },
         isSupported: function (f) {

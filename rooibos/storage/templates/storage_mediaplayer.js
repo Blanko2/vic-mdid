@@ -63,10 +63,10 @@ clip = {
 {% endif %}
 
 function insert_flowplayer() {
-    var e = document.getElementById("player-{{ record.id }}-{{ selectedmedia.id }}");
+    var e = document.getElementById("{{ anchor_id }}");
     e.style.width = "{{ selectedmedia.width|default:"520" }}px";
     e.style.height = "{% if audio %}30{% else %}{{ selectedmedia.height|default:"330" }}{% endif %}px";
-    $f("player-{{ record.id }}-{{ selectedmedia.id }}",
+    $f("{{ anchor_id }}",
         "{{ server_url }}{% if flowplayer_key %}{% url static 'flowplayer/flowplayer.commercial-*.swf'|fileversion %}{% else %}{% url static 'flowplayer/flowplayer-*.swf'|fileversion %}{% endif %}", clip).ipad();
 }
 
@@ -74,7 +74,7 @@ if (typeof(flowplayer) == "function") {
     insert_flowplayer();
 } else {
     var e = document.createElement("script");
-    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer-*.min.js'|fileversion %}";
+    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer-*.modified.js'|fileversion %}";
     e.type = "text/javascript";
     document.getElementsByTagName("head")[0].appendChild(e);
     var e = document.createElement("script");

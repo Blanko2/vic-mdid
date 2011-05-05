@@ -1,0 +1,96 @@
+{% extends "master.html" %}
+
+{% block sidebar %}
+{{ block.super }}
+
+{% if next %}
+<div class="facet active-facet" id="viewer_options">
+    <div class="facet-header">Options</div>
+    <div class="facet-body">
+        <a href="{{ next }}">Return to previous page</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>{{ viewer.obj.title }}</h1>
+
+<div style="clear: both;">
+
+{{ embed_code }}
+
+</div>
+
+
+{% if options_form %}
+
+<div class="popup-section">
+<h2 style="margin-top: 20px;">Options</h2>
+<div>
+<form action="{{ request.path }}" method="get">
+	<input type="hidden" name="next" value="{{ next }}" />
+<table>
+	{{ options_form.as_table }}
+	<tr>
+		<td></td>
+		<td><input type="submit" value="Update" /></td>
+	</tr>
+</table>
+</form>
+</div>
+</div>
+
+{% endif %}
+
+<div class="popup-section">
+<h2 style="margin-top: 20px;">Embed this viewer</h2>
+<div>
+To embed this viewer on another web site, copy and paste the HTML code below:<br />
+
+<textarea id="embed_code" style="width: 95%; height: 150px; white-space: nowrap; overflow: auto;" wrap="off">
+{{ embed_code|escape }}
+</textarea>
+</div>
+</div>
+
+{% endblock %}
+
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#embed_code").focus(function() { $(this).select(); });
+	$("div.popup-section").each(function(i, e) {
+		var d = $("h2", e).next().dialog({
+			autoOpen: false,
+		    title: $("h2", e).text(),
+			height: 'auto',
+			width: 700,
+			modal: true
+		});
+		$("#viewer_options div.facet-body").append('<br />').append(
+			$("<a href=''></" + "a>").text($("h2", e).text()).click(function(event) {
+				d.dialog('open');
+				event.preventDefault();
+			})
+		);
+	});
+
+});
+</script>
+{% endblock %}
+
+
+{% block stylesheets %}
+{{ block.super }}
+<style type="text/css">
+	html.js-enabled div.popup-section {
+		display: none;
+	}
+</style>
+{% endblock %}
