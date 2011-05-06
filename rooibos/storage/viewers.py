@@ -51,7 +51,7 @@ class MediaPlayer(Viewer):
                                          media.storage.title)
 
         def media_choices():
-            return (('', ''),) + tuple((media.id, media_label(media))
+            return (('', 'default'),) + tuple((media.id, media_label(media))
                 for media in _supported_media(self.obj, self.user))
 
         class OptionsForm(forms.Form):

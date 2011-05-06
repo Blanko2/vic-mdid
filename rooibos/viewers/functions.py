@@ -25,7 +25,7 @@ class Viewer(object):
     def embed_code(self, request, options):
         return render_to_string(self.embed_template,
                                 {
-                                    'divid': str(uuid.uuid4())[-12:],
+                                    'divid': 'v' + str(uuid.uuid4())[-12:],
                                     'obj': self.obj,
                                     'options': options,
                                     'request': request,
