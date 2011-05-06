@@ -1,9 +1,8 @@
 from django import forms
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
 from rooibos.access import get_effective_permissions_and_restrictions, filter_by_access
 from rooibos.viewers import register_viewer, Viewer
 from rooibos.data.models import Record
@@ -28,14 +27,15 @@ def _supported_media(obj, user):
 
 
 def _check_playable(user, media):
-     restrictions = get_effective_permissions_and_restrictions(user, media.storage)[3]
-     return not restrictions or restrictions.get('download') != 'only'
+    restrictions = get_effective_permissions_and_restrictions(user, media.storage)[3]
+    return not restrictions or restrictions.get('download') != 'only'
 
 
 class MediaPlayer(Viewer):
 
     title = "Media Player"
     weight = 20
+    is_embeddable = True
 
     def get_options_form(self):
 
@@ -106,14 +106,14 @@ class MediaPlayer(Viewer):
 
 
 @register_viewer('mediaplayer', MediaPlayer)
-def mediaplayer(obj, user, objid=None):
-        if obj:
-            if not isinstance(obj, Record):
-                return None
-        else:
-            try:
-                obj = Record.get_or_404(objid, user)
-            except Http404:
-                return None
-        media = _supported_media(obj, user)
-        return MediaPlayer(obj, user) if any(_check_playable(user, m) for m in media) else None
+def mediaplayer(obj, request, objid=None):
+    if obj:
+        if not isinstance(obj, Record):
+            return None
+    else:
+        try:
+            obj = Record.get_or_404(objid, request.user)
+        except Http404:
+            return None
+    media = _supported_media(obj, request.user)
+    return MediaPlayer(obj, request.user) if any(_check_playable(request.user, m) for m in media) else None

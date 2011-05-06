@@ -19,11 +19,17 @@
 
 <h1>{{ viewer.obj.title }}</h1>
 
+{% if viewer.is_embeddable %}
 <div style="clear: both;">
 
 {{ embed_code }}
 
 </div>
+{% else %}
+
+{{ viewer.title }} cannot be displayed on this page.
+
+{% endif %}
 
 
 {% if options_form %}
@@ -46,6 +52,7 @@
 
 {% endif %}
 
+{% if viewer.is_embeddable %}
 <div class="popup-section">
 <h2 style="margin-top: 20px;">Embed this viewer</h2>
 <div>
@@ -56,6 +63,8 @@ To embed this viewer on another web site, copy and paste the HTML code below:<br
 </textarea>
 </div>
 </div>
+{% endif %}
+
 
 {% endblock %}
 

@@ -30,7 +30,7 @@ register = template.Library()
 
 @register.inclusion_tag('viewers_list.html', takes_context=True)
 def list_viewers(context, obj, next_url=None, separator=', '):
-    viewers = get_viewers_for_object(obj, user=context['request'].user)
+    viewers = get_viewers_for_object(obj, context['request'])
     viewers = sorted(viewers, key=lambda v: getattr(v, 'weight', 0), reverse=True)
 
     return {'obj': obj,

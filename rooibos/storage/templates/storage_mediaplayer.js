@@ -1,6 +1,6 @@
 {% load ui %}
-
 (function() {
+{% include "viewers_loadscripts.js" %}
 var clip;
 {% if streaming_server and streaming_media %}
 clip = {
@@ -73,15 +73,9 @@ function insert_flowplayer() {
 if (typeof(flowplayer) == "function") {
     insert_flowplayer();
 } else {
-    var e = document.createElement("script");
-    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer-*.modified.js'|fileversion %}";
-    e.type = "text/javascript";
-    document.getElementsByTagName("head")[0].appendChild(e);
-    var e = document.createElement("script");
-    e.src = "{{ server_url }}{% url static 'flowplayer/flowplayer.ipad-*.min.js'|fileversion %}";
-    e.type = "text/javascript";
-    e.onreadystatechange = insert_flowplayer;
-    e.onload = insert_flowplayer;
-    document.getElementsByTagName("head")[0].appendChild(e);
+    load_scripts([
+        "{{ server_url }}{% url static 'flowplayer/flowplayer-*.modified.js'|fileversion %}",
+        "{{ server_url }}{% url static 'flowplayer/flowplayer.ipad-*.min.js'|fileversion %}"
+        ], insert_flowplayer);
 }
 })();

@@ -7,6 +7,7 @@ import uuid
 class Viewer(object):
 
     embed_template = 'viewers_embed.html'
+    is_embeddable = False
 
     def __init__(self, obj, user, options=None):
         self.user = user
@@ -18,11 +19,11 @@ class Viewer(object):
             'viewer': self.name,
             'objid': self.obj.id,
         }
-        if urltype == 'shell':
-            kwargs['name'] = self.obj.name
         return reverse('viewers-viewer-%s' % urltype, kwargs=kwargs)
 
     def embed_code(self, request, options):
+        if not self.is_embeddable:
+            return None
         return render_to_string(self.embed_template,
                                 {
                                     'divid': 'v' + str(uuid.uuid4())[-12:],
@@ -32,6 +33,11 @@ class Viewer(object):
                                     'url': self.url('script'),
                                 })
 
+    def get_options_form(self):
+        return None
+
+    def embed_script(self, request):
+        return None
 
 
 
@@ -59,8 +65,8 @@ def register_viewer(name, cls):
     return register
 
 
-def get_viewers_for_object(obj, user):
-    viewers = (viewer(obj, user)
+def get_viewers_for_object(obj, request):
+    viewers = (viewer(obj, request)
                for viewer in get_registered_viewers().values())
     return (viewer for viewer in viewers if viewer)
 
