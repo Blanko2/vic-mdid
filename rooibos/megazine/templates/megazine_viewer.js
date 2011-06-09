@@ -7,7 +7,7 @@ var flashvars = {
     //basePath: "http://www.example.com/megazine/",
 
     /* Used to pass the name of the xml file to use. Path is RELATIVE to basePath, or, if not set, to the megazine.swf file. */
-    xmlFile: "{{ server_url }}{% url megazine-content presentation.id %}"
+    xmlFile: "{{ server_url }}{% url megazine-content presentation.id %}?width={{ width }}"
 
     /* When set to true, log messages are printed to the JavaScript console (using the console.log() function) */
     //logToJsConsole: "true"
@@ -15,6 +15,7 @@ var flashvars = {
 var params = {
     /* Determines whether to enable transparency (show HTML background). Not recommended (slow). Use book/background instead. */
     //wmode: "transparent",
+    wmode: "opaque",
     menu: "false",
     /* Necessary for proper scaling of the content. */
     scale: "noScale",
@@ -34,8 +35,8 @@ var attributes = {
 function insert_megazine() {
     swfobject.embedSWF("{{ server_url }}{% url static 'megazine/preloader.swf' %}",
                        "{{ anchor_id }}",
-                       "100%",
-                       "1000",
+                       "{{ width }}",
+                       "{{ height }}",
                        "9.0.115",
                        "{{ server_url }}{% url static 'js/expressInstall.swf' %}",
                        flashvars,
