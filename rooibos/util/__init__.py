@@ -134,14 +134,16 @@ def xfilter(func, iterator):
             yield next
 
 
-def create_symlink(file, symlink):
-    if hasattr(os, 'symlink'):
+def create_link(file, link, hard=False):
+    func = 'link' if hard else 'symlink'
+    if hasattr(os, func):
         # Linux, use built-in function
         try:
-            os.symlink(file, symlink)
+            getattr(os, func)(file, symlink)
             return True
         except OSError:
             return False
     else:
         # Windows, use mklink
-        return 0 == os.system("mklink \"%s\" \"%s\"" % (symlink, file))
+        return 0 == os.system("mklink %s \"%s\" \"%s\"" %
+                              ('/H' if hard else '', symlink, file))
