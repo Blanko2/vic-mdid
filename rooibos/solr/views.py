@@ -317,7 +317,7 @@ def search(request, id=None, name=None, selected=False, json=False):
         pagesize = max(min(safe_int(request.GET.get('ps', '50'), 50), 100), 5)
     else:
         pagesize = max(min(safe_int(request.GET.get('ps', '30'), 30), 50), 5)
-    page = safe_int(request.GET.get('p', '1'), 1)
+    page = safe_int(request.GET.get('page', '1'), 1)
     sort = request.GET.get('s', 'title_sort').lower()
     if not sort.endswith(" asc") and not sort.endswith(" desc"): sort += " asc"
 
@@ -351,7 +351,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     q.pop('or', None)
     q.pop('rem', None)
     q.pop('action', None)
-    q.pop('p', None)
+    q.pop('page', None)
     q.pop('op', None)
     q.pop('v.x', None)
     q.pop('v.y', None)
@@ -373,10 +373,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     next_page_url = None
 
     if page > 1:
-        q['p'] = page - 1
+        q['page'] = page - 1
         prev_page_url = "%s?%s" % (url, q.urlencode())
     if page < (hits - 1) / pagesize + 1:
-        q['p'] = page + 1
+        q['page'] = page + 1
         next_page_url = "%s?%s" % (url, q.urlencode())
 
     q.pop('s', None)
@@ -429,6 +429,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'hits': hits,
                            'page': page,
                            'pages': (hits - 1) / pagesize + 1,
+                           'pagesize': pagesize,
                            'prev_page': prev_page_url,
                            'next_page': next_page_url,
                            'reset_url': url,
@@ -443,6 +444,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'random': random.random(),
                            'viewmode': viewmode,
                            'federated_search_query': reduce(federated_search_query, criteria, keywords),
+                           'pagination_helper': [None] * hits,
                            },
                           context_instance=RequestContext(request))
 
@@ -478,7 +480,7 @@ def search_facets(request, id=None, name=None, selected=False):
     q.pop('or', None)
     q.pop('rem', None)
     q.pop('action', None)
-    q.pop('p', None)
+    q.pop('page', None)
     q.pop('op', None)
     q.setlist('c', criteria)
     qurl = q.urlencode()

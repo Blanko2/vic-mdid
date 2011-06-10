@@ -19,7 +19,7 @@
     <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
-    <link href="{% url static 'jquery/jquery-ui-themeroller.css' %}" rel="stylesheet" type="text/css" media="screen">
+    <link href="{% url static 'jquery/jquery-ui-*.css'|fileversion %}" rel="stylesheet" type="text/css" media="screen">
     {% include "master.css" %}
 {% endcompress %}
 <!--[if IE]>
@@ -66,7 +66,7 @@
     </div>
 {% endblock %}
 
-<div id="preview-dialog" style="display: none;"></div>
+<div id="preview-dialog" style="display: none;" class="ui-corner-all"></div>
 
 {% block basket %}
 {% spaceless %}
@@ -193,18 +193,18 @@
 </script>
 {% block javascript %}
  {% compress js %}
-    <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.1.js' %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.7.2.custom.min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery-*.js'|fileversion %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery-ui-*.js'|fileversion %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.hoverIntent.minified.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.ajaxmanager.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.autocomplete.pack.js' %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-1.4.2-min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-*.js'|fileversion %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.multicheckbox.js' %}"></script>
     <script type="text/javascript" src="{% url static 'swfupload/swfupload.js' %}"></script>
     <script type="text/javascript" src="{% url static 'swfupload/plugins/swfupload.cookies.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.swfupload.js' %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-1.0.0-rc3.min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-*.js'|fileversion %}"></script>
     <script type="text/javascript">
         var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
     </script>
