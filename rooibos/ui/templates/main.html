@@ -125,7 +125,7 @@
         <h2>Announcements</h2>
 
         {% get_comment_list for flatpages.flatpage 1 as comments %}
-        {% for comment in comments %}
+        {% for comment in comments reversed %}
             {{ comment.comment|safe|linebreaks }}
             <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
         {% endfor %}

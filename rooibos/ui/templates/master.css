@@ -844,6 +844,7 @@ ul.errorlist li {
     font-size: x-small;
     font-style: italic;
     padding-top: 0.5em;
+    padding-bottom: 0.7em;
 }
 
 #loginform label {
