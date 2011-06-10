@@ -149,11 +149,11 @@ def create_link(file, link, hard=False):
     if hasattr(os, func):
         # Linux, use built-in function
         try:
-            getattr(os, func)(file, symlink)
+            getattr(os, func)(file, link)
             return True
         except OSError:
             return False
     else:
         # Windows, use mklink
         return 0 == os.system("mklink %s \"%s\" \"%s\"" %
-                              ('/H' if hard else '', symlink, file))
+                              ('/H' if hard else '', link, file))
