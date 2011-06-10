@@ -16,7 +16,7 @@ from rooibos.storage import get_thumbnail_for_record
 from rooibos.storage.models import Storage, Media
 from rooibos.storage.views import create_proxy_url_if_needed
 from rooibos.ui import update_record_selection
-from rooibos.util import safe_int, json_view
+from rooibos.util import safe_int, json_view, must_revalidate
 from rooibos.util.models import OwnedWrapper
 from rooibos.contrib.tagging.models import Tag
 import rooibos.auth
@@ -150,7 +150,7 @@ def presentations_for_current_user(request):
     }
 
 
-@cache_control(no_cache=True)
+@must_revalidate
 @json_view
 def presentation_detail(request, id):
     p = Presentation.get_by_id_for_request(id, request)
@@ -182,7 +182,7 @@ def presentation_detail(request, id):
             )
 
 
-@cache_control(no_cache=True)
+@must_revalidate
 @json_view
 def keep_alive(request):
     return dict(user=request.user.username if request.user else '')

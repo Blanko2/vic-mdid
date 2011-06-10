@@ -4,11 +4,21 @@ from django.http import HttpResponse
 from django.utils import simplejson
 from django.core.mail import mail_admins
 from django.utils.translation import ugettext as _
+from django.utils.decorators import wraps
 import sys
 import mimetypes
 import logging
 import os
 
+# Decorator to solve issues with IE/SSL/Flash caching
+def must_revalidate(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        response = func(*args, **kwargs)
+        response["Cache-Control"] = "bogus"  #"no-cache, must-revalidate, no-store"
+        response["Pragma"] = "bogus"  #"no-cache"
+        return response
+    return wrapper
 
 def json_view(func):
     # http://www.djangosnippets.org/snippets/622/
@@ -48,7 +58,7 @@ def json_view(func):
                         'text': msg}
 
         json = simplejson.dumps(response)
-        return HttpResponse(json, mimetype='application/json')
+        return HttpResponse(json, mimetype='text/plain') # mimetype='application/json')
     return wrap
 
 
