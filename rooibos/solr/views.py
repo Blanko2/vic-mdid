@@ -307,7 +307,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     # get parameters relevant for search
     criteria = request.GET.getlist('c')
     remove = request.GET.get('rem', None)
-    if remove: criteria.remove(remove)
+    if remove and remove in criteria: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
 
     # get parameters relevant for view
