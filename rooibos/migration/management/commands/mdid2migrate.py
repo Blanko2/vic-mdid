@@ -282,7 +282,7 @@ class MigrateUsers(MigrateModel):
             instance.set_unusable_password()
         instance.last_name = row.Name[:30]
         instance.first_name = row.FirstName[:30]
-        instance.email = row.Email[:75]
+        instance.email = row.Email[:75] if row.Email else None
         instance.is_superuser = instance.is_staff = row.Administrator
 
     def create_instance(self, row):
