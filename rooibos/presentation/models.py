@@ -53,6 +53,17 @@ class Presentation(models.Model):
     def hidden_item_count(self):
         return len(filter(lambda i: i.hidden, self.cached_items()))
 
+    def duplicate(self):
+        dup = Presentation()
+        dup.title = self.title
+        dup.owner = self.owner
+        dup.hidden = self.hidden
+        dup.description = self.description
+        dup.password = self.password
+        dup.fieldset = self.fieldset
+        dup.hide_default_data = self.hide_default_data
+        return dup
+
     @staticmethod
     def check_passwords(passwords):
         if passwords:
@@ -148,6 +159,15 @@ class PresentationItem(models.Model):
         super(PresentationItem, self).save(*args, **kwargs)
         if hasattr(self, '_saved_annotation'):
             self.annotation = self._saved_annotation
+
+    def duplicate(self):
+        dup = PresentationItem()
+        dup.record = self.record
+        dup.hidden = self.hidden
+        dup.type = self.type
+        dup.order = self.order
+        dup.annotation = self.annotation
+        return dup
 
     def get_fieldvalues(self, owner=None, hidden=False, include_context_owner=True, q=None):
         return self.record.get_fieldvalues(owner=owner,

@@ -404,6 +404,9 @@
         {% list_viewers presentation request.get_full_path "<br />" %}
         <br />
         <br />
+        <form action="{% url presentation-duplicate presentation.id, presentation.name %}" method="POST">{% csrf_token %}
+        <input type="submit" name="duplicate-presentation" value="Duplicate presentation" />
+        </form>
         <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
         <input type="submit" name="add-selected-items" value="Add selected items" />
         </form>

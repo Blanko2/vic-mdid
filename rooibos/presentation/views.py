@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.db import backend
 from django.contrib.auth.models import Permission
 from django import forms
+from django.views.decorators.http import require_POST
 from rooibos.contrib.tagging.models import Tag, TaggedItem
 from rooibos.contrib.tagging.forms import TagField
 from rooibos.contrib.tagging.utils import parse_tag_input
@@ -24,6 +25,7 @@ from rooibos.data.forms import FieldSetChoiceField
 from rooibos.ui.actionbar import update_actionbar_tags
 from rooibos.access.models import ExtendedGroup, AUTHENTICATED_GROUP, AccessControl
 from models import Presentation, PresentationItem
+from functions import duplicate_presentation
 import logging
 import base64
 
@@ -345,3 +347,13 @@ def password(request, id, name):
                            'next': request.GET.get('next', reverse('presentation-browse')),
                            },
                           context_instance=RequestContext(request))
+
+
+@require_POST
+@login_required
+def duplicate(request, id, name):
+    presentation = get_object_or_404(Presentation.objects.filter(
+        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+    dup = duplicate_presentation(presentation, request.user)
+    return HttpResponseRedirect(reverse('presentation-edit',
+                                        args=(dup.id, dup.name)))
