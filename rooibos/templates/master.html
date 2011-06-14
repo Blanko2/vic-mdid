@@ -129,7 +129,7 @@
                     {% if user.is_authenticated %}
                     <li><a href="{% url presentation-manage %}">Organize</a>
                         <ul class="menu">
-                            <li><a href="{% url presentation-manage %}">Your Presentations</a></li>
+                            <li><a href="{% url presentation-manage %}?presenter={{ user.username }}">Your Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
                             <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
                             {% if user|accessible_objects:"data.Collection,r"|length %}
