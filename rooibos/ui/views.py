@@ -9,6 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
 from django.utils import simplejson
+from django.contrib.auth.forms import AuthenticationForm
+from django.views.decorators.csrf import csrf_protect
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
@@ -31,7 +33,7 @@ def css(request, stylesheet):
                               context_instance=RequestContext(request),
                               mimetype='text/css')
 
-
+@csrf_protect
 def main(request):
 
     (hits, records, search_facets, orfacet, query, fields) = run_search(
@@ -45,9 +47,13 @@ def main(request):
     order = range(1, 8)
     random.shuffle(order)
 
+    request.session.set_test_cookie()
+    form = AuthenticationForm()
+
     return render_to_response('main.html',
                               {'records': records,
-                               'order': [0] + order},
+                               'order': [0] + order,
+                               'login_form': form},
                               context_instance=RequestContext(request))
 
 
