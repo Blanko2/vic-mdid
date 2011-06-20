@@ -36,9 +36,16 @@ def css(request, stylesheet):
 @csrf_protect
 def main(request):
 
+    criteria = ['mimetype:image/jpeg', '-owner:[* TO *]']
+    try:
+        criteria.append('allcollections:%d' %
+                        Collection.objects.get(name='front-page-content').id)
+    except Collection.DoesNotExist:
+        pass
+
     (hits, records, search_facets, orfacet, query, fields) = run_search(
         request.user,
-        criteria=['mimetype:image/jpeg', '-owner:[* TO *]'],
+        criteria=criteria,
         sort='random_%d asc' % random.randint(100000, 999999),
         page=1,
         pagesize=8,
