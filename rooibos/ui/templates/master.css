@@ -64,7 +64,7 @@
 
 {% if debug %}
 #stats { background-color: #ddd; font-size: 65%; padding: 5px;
-        z-index: 1000; position: absolute; right: 23px; top: 23px;
+        z-index: 1000; position: absolute; left: 0px; top: 0px;
         -moz-opacity: .7; opacity: .7;}
 {% endif %}
 
@@ -188,7 +188,7 @@ html.js-enabled #header-bar {
 }
 
 #header {
-    background: {{ colors.header_background }} url({% url static 'images/jmu_logo.png' %}) no-repeat right 3px;
+    background-color: {{ colors.header_background }};
     color: {{ colors.menu_text }};
     font-size: 18pt;
     height: 50px;
@@ -309,7 +309,7 @@ html.js-enabled #header ul ul {
 }
 
 html.js-enabled #content {
-    padding-top: 98px;
+    padding-top: 83px;
 }
 
 #footer {
@@ -326,71 +326,27 @@ html.js-enabled #content {
     margin-left: 2px;
 }
 
-#basket-tab {
-    background: {{ colors.basket_background }};
-    border: solid 5px {{ colors.basket_text }};
-    color: {{ colors.basket_text }};
-    font-weight: bolder;
-    font-size: 1.1em;
-    border-bottom: none;
-    width: 160px;
-    position: fixed;
-    bottom: 60px;
-    left: 50px;
-    text-align: right;
-    padding-right: 4px;
-}
-
-#basket-tab-icon {
-    float: left;
-    width: 13px;
-    height: 11px;
-    margin: 3px 0 0 5px;
-    background: {{ colors.basket_text }} url({% url static 'images/basket_icon.png' %}) no-repeat;
-}
-
-#basket-tab-pin {
-    display: none;
-    cursor: pointer;
-    background-color: {{ colors.basket_text }};
-    width: 11px;
-    height: 11px;
-}
-
-#basket-refresh {
-    display: none;
-}
-
-html.js-enabled #basket-tab-pin, html.js-enabled #basket-refresh {
-    display: inline;
-}
-
 #basket-content {
-    position: fixed;
-    bottom: 0;
     background-color: {{ colors.basket_background }};
-    border-top: solid {{ colors.basket_text }} 5px;
     height: 60px;
     width: 100%;
-    font-size: 1.1em;
+    font-size: 0.8em;
     overflow: scroll;
+    display: none;
+}
+
+html.basket-open #basket-content {
+    display: block;
+}
+
+html.js-enabled #basket-content {
+    overflow: hidden;
 }
 
 #basket-thumbs img {
     height: 50px;
     margin: 4px 2px 0 2px;
     border: solid {{ colors.borders }} 1px;
-}
-
-#basket-menu {
-    float: right;
-    padding-right: 10px;
-}
-
-#basket-menu a {
-    float: right;
-    padding-right: 10px;
-    text-decoration: none;
 }
 
 #basket-scroll-left {

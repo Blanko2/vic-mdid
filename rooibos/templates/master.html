@@ -11,6 +11,10 @@
 <head>
     <script type="text/javascript">
         document.documentElement.className = 'js-enabled';
+        var profile_settings = {% profile_settings ui %};
+        var basket_open = profile_settings['ui_basket_open'] == 'true';
+        if (basket_open) document.documentElement.className = 'js-enabled basket-open';
+        var custom_process_facets = false;
     </script>
     <title>MDID{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" href="{% url static 'images/favicon.ico' %}" />
@@ -35,6 +39,22 @@
 {% block raw-content %}
     <div id="content-wrapper">
         <div id="content">
+
+
+
+
+{% block basket %}
+{% spaceless %}
+<div id="basket-content">
+    <div id="basket-scroll-right"></div>
+    <div id="basket-scroll-left"></div>
+    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
+</div>
+{% endspaceless %}
+{% endblock %}
+
+<div style="height: 15px;"></div>
+
 
 {% if messages %}
 <div id="messages">
@@ -68,30 +88,7 @@
 
 <div id="preview-dialog" style="display: none;" class="ui-corner-all"></div>
 
-{% block basket %}
-{% spaceless %}
-<div id="basket-content">
-    <div id="basket-menu">
-        <a href="{% url solr-selected %}">Explore</a><br />
-        <a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a><br />
-        {% recent_presentation request.user as presentation %}
-        {% if presentation %}
-        <a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a><br />
-        {% endif %}
-    </div>
-    <div id="basket-scroll-right"></div>
-    <div id="basket-scroll-left"></div>
-    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
-</div>
-<div id="basket-tab">
-    <div id="basket-tab-icon"></div>
-    <span id="basket-header">{% include "ui_basket_header.html" %}</span>
-    {% if user.is_authenticated %}
-    <img src="{% url static 'images/pin_up.png' %}" id="basket-tab-pin" title="Click to keep open or automatically hide" />
-    {% endif %}
-</div>
-{% endspaceless %}
-{% endblock %}
+
 
 {% block header %}
 {% spaceless %}
@@ -117,6 +114,19 @@
         <div class="spacer">
             <div id="header">
                 <a href="{% url main %}" id="logo"></a>
+                <ul style="float: right;">
+                    <li><div id="basket-header"
+                    style="background: url({% url static "images/basket.png" %})
+                    no-repeat; font-size: 0.6em; width: 32px; height: 32px; text-align: center; padding-top: 10px;"
+                              >{% include "ui_basket_header.html" %}</div>
+                        <ul class="menu">
+                            <li><a id="basket-toggle" href="#">Hide</a></li>
+                            <li><a href="{% url solr-selected %}">Explore</a></li>
+                            <li><a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
                 <ul>
                     <li><a href="{% url solr-search %}">Discover</a>
                         <ul class="menu">
@@ -129,6 +139,10 @@
                     {% if user.is_authenticated %}
                     <li><a href="{% url presentation-manage %}">Organize</a>
                         <ul class="menu">
+                            {% recent_presentation request.user as presentation %}
+                            {% if presentation %}
+                            <li><a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a></li>
+                            {% endif %}
                             <li><a href="{% url presentation-manage %}?presenter={{ user.username }}">Your Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
                             <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
@@ -187,10 +201,6 @@
 <div id="stats"><!-- STATS: Total: %(totTime).2fs <br/>Python: %(pyTime).2fs <br/>DB: %(dbTime).2fs <br/>Queries: %(queries)d --></div>
 {% endif %}
 
-<script type="text/javascript">
-    var profile_settings = {% profile_settings ui %};
-    var custom_process_facets = false;
-</script>
 {% block javascript %}
 {% compress js %}
     <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.4.min.js' %}"></script>
@@ -214,9 +224,14 @@
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
 
     <script type="text/javascript">
+        function basket_imgs_first_row_top() {
+            return ($("#basket-thumbs img:visible:first").position() || Object({top: 0})).top;
+        }
+
         function basket_scroll_arrows() {
             $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
-            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 50); }).length > 0) ? "visible" : "hidden");
+            var first_row_top = basket_imgs_first_row_top();
+            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > first_row_top); }).length > 0) ? "visible" : "hidden");
         }
 
         function recordSelection(ids, checked) {
@@ -401,57 +416,45 @@
 
             $("#quicksearch").hint();
 
-            // Basket features
-            var basket_open = profile_settings['ui_basket_open'] == 'true';
-            var baskettimeout;
             function hideBasket(immediate) {
                 if (basket_open) return;
-                clearTimeout(baskettimeout);
-                var basket_height = $("#basket-content").css('height');
-                if (immediate == "immediate") {
-                    $("#basket-content").css('bottom', "-" + basket_height);
-                    $("#basket-tab").css('bottom', '0');
-                } else baskettimeout = setTimeout(function() {
-                    $("#basket-content").animate({ bottom: "-" + basket_height }, 500);
-                    $("#basket-tab").animate({ bottom: 0 }, 500);
-                    }, 500);
+                $("#basket-toggle").text("Show");
+                if (immediate)
+                    $("#basket-content").hide();
+                else
+                    $("#basket-content").slideUp();
             }
             function showBasket() {
-                clearTimeout(baskettimeout);
-                var basket_height = $("#basket-content").css('height');
-                baskettimeout = setTimeout(function() {
-                    $("#basket-content").animate({ bottom: 0 }, 500);
-                    $("#basket-tab").animate({ bottom: basket_height }, 500);
-                }, 200);
+                $("#basket-toggle").text("Hide");
+                $("#basket-content").slideDown();
+                basket_scroll_arrows();
             }
-            $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
-            $("#basket-tab-pin").click(function() {
+
+            $("#basket-toggle").click(function(e) {
+                e.preventDefault();
                 basket_open = !basket_open;
                 store_profile_setting('ui_basket_open', basket_open);
-                $("#basket-tab-pin").attr("src", basket_open ? "{% url static 'images/pin_down.png' %}" : "{% url static 'images/pin_up.png' %}");
+                if (basket_open) showBasket(); else hideBasket();
             });
-            if (basket_open)
-                $("#basket-tab-pin").attr("src", "{% url static 'images/pin_down.png' %}");
-            else {
-                if (jQuery.browser.safari)
-                    // need to do this in load event, otherwise Safari does not have CSS info for basket height yet
-                    $(window).load(function() { hideBasket('immediate'); });
-                else
-                    hideBasket('immediate');
+
+            if (!basket_open) {
+                hideBasket(true);
             }
             $("#basket-scroll-right").click(function() {
-                if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > 50); }).length > 0) {
+                var first_row_top = basket_imgs_first_row_top();
+                if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > first_row_top); }).length > 0) {
                     var last = 0;
-                    $("#basket-thumbs img:visible").filter(function() { return ($(this).position().top < 50); }).each(
+                    $("#basket-thumbs img:visible").filter(function() { return ($(this).position().top <= first_row_top); }).each(
                         function(i) { $(this).delay(20 * i).hide(0); last = i; });
                     setTimeout(basket_scroll_arrows, (last + 1) * 20);
                 }
             });
             $("#basket-scroll-left").click(function() {
+                var first_row_top = basket_imgs_first_row_top();
                 if ($("#basket-thumbs img:hidden").length > 0) {
                     var first = $("#basket-thumbs img:visible:first");
                     function scroll_left() {
-                        if (first.position().top < 50 && $("#basket-thumbs img:hidden:last").show().length == 1)
+                        if (first.position().top <= first_row_top && $("#basket-thumbs img:hidden:last").show().length == 1)
                             setTimeout(scroll_left, 20);
                         else
                             basket_scroll_arrows();
@@ -459,13 +462,7 @@
                     scroll_left();
                 }
             });
-            $("#basket-content").css('overflow', 'hidden');
             basket_scroll_arrows();
-
-            $("#basket-refresh").click(function() {
-                recordSelection(0);
-                return false;
-            });
 
             bindSelectRecordCheckboxes();
 
