@@ -480,6 +480,34 @@
                 }
             });
 
+            var $window = $(window);
+
+            function keepAtTop(element, offset) {
+                element = $(element).css("position", "relative");
+                offset = offset || 0;
+                var originalTop = 0;
+                function getOriginalTop() {
+                    if (originalTop) return originalTop;
+                    if (element.is(":hidden")) return 0;
+                    originalTop = element.offset().top;
+                    return originalTop;
+                }
+                $window.scroll(function() {
+                    if (element.is(":hidden")) return;
+                    var otop = getOriginalTop();
+                    var top = element.offset().top;
+                    var scrollTop = $window.scrollTop();
+                    if (scrollTop > otop - offset) {
+                        element.css("top", (scrollTop - otop + offset) + "px");
+                    } else {
+                        element.css("top", "0px");
+                    }
+                });
+            }
+
+            keepAtTop($("#basket-content"));
+
+
             $("#content-wrapper .record-anchor[id^=record-id-]").draggable({
                 containment: 'window',
                 helper: 'clone',
