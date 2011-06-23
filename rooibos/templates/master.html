@@ -398,6 +398,22 @@
             link.insertAfter(item);
         }
 
+        function keepAtTop(element, not_past) {
+            if (!keepAtTop.elements) keepAtTop.elements = Array();
+            keepAtTop.elements.push(element.css("position", "relative").css("top", "0").css('z-index', 100 - keepAtTop.elements.length));
+            keepAtTop.$window = $(window).scroll(function() {
+                if (element.is(":hidden")) return;
+                var offset = 0;
+                $.each(keepAtTop.elements, function(i, e) {
+                    if (e != element) offset += e.is(":visible") ? e.height() : 0;
+                    else return false;
+                });
+                var min = keepAtTop.$window.scrollTop() + offset - element.offset().top + parseInt(element.css("top"));
+                var max = not_past ? not_past.offset().top + not_past.height() - element.height() - element.offset().top + parseInt(element.css("top")) : $(document).height();
+                element.css("top", Math.min(max, Math.max(min, 0)) + "px");
+            });
+        }
+
         $(document).ready(function() {
             var timeouts = Object();
             var resetwidth = function() { $(this).width($(this).parent().width() + 50); };
@@ -479,31 +495,6 @@
                     ui.draggable.parents(".record").find("input.record-select").attr('checked', true);
                 }
             });
-
-            var $window = $(window);
-
-            function keepAtTop(element, offset) {
-                element = $(element).css("position", "relative");
-                offset = offset || 0;
-                var originalTop = 0;
-                function getOriginalTop() {
-                    if (originalTop) return originalTop;
-                    if (element.is(":hidden")) return 0;
-                    originalTop = element.offset().top;
-                    return originalTop;
-                }
-                $window.scroll(function() {
-                    if (element.is(":hidden")) return;
-                    var otop = getOriginalTop();
-                    var top = element.offset().top;
-                    var scrollTop = $window.scrollTop();
-                    if (scrollTop > otop - offset) {
-                        element.css("top", (scrollTop - otop + offset) + "px");
-                    } else {
-                        element.css("top", "0px");
-                    }
-                });
-            }
 
             keepAtTop($("#basket-content"));
 
