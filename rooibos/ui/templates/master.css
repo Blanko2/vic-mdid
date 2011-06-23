@@ -54,7 +54,7 @@
 
 #logo {
     background: url({% url static 'images/mdid_logo.png' %}) no-repeat bottom left;
-    width: 180px;
+    width: 150px;
     height: 50px;
     display: block;
     float: left;
@@ -241,7 +241,7 @@ html.js-enabled #header .search span {
     font-size: large;
     background-color: {{ colors.content_background }};
     color: {{ colors.headings }};
-    width: 120px;
+    width: 100px;
     height: 23px;
     border: solid {{ colors.links }} 2px;
     border-right-width: 1px;
