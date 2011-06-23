@@ -59,14 +59,12 @@ def main(request):
 
 @json_view
 def select_record(request):
-    selected = request.session.get('selected_records', ())
+    selected = list(request.session.get('selected_records', ()))
     if request.method == "POST":
         ids = simplejson.loads(request.POST.get('id', '[]'))
-        checked = request.POST.get('checked') == 'true'
-        if checked:
-            selected = set(selected) | set(ids)
-        else:
-            selected = set(selected) - set(ids)
+        [selected.remove(id) for id in ids if id in selected]
+        if request.POST.get('checked') == 'true':
+            selected.extend(ids)
     request.session['selected_records'] = selected
 
     context = ctx_selected_records(request)
