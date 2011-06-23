@@ -592,6 +592,10 @@ html.js-enabled #basket-content {
     margin: 3px 3px 3px 124px;
 }
 
+.vertical br {
+    clear: left;
+}
+
 ul.errorlist {
     margin: 0;
 }
@@ -1119,7 +1123,7 @@ ul.actionbar {
   border-right-color: lightgrey;
   height: 28px;
   margin: 0 0 20px 0;
-  background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+  background: url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x white;
   clear: left;
 }
 
@@ -1220,7 +1224,6 @@ html.js-enabled #items {
 #lighttable {
     border: solid 2px lightgrey;
     padding: 5px;
-    overflow: scroll;
     user-select: none; /* CSS3 */
     -moz-user-select: none; /* Gecko (Firefox) */
     -khtml-user-select:none; /* Webkit (Safari, Chrome) */
@@ -1267,6 +1270,7 @@ html.js-enabled #items {
 }
 
 #lighttable-annotation {
+    clear: left;
     border: solid 2px lightgrey;
     border-top: none;
     padding: 5px;

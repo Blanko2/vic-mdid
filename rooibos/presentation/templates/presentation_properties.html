@@ -204,6 +204,8 @@
 			receive: function(event, ui) {
 				// received a dragged item from the basket
 				convert_to_slide($("#lighttable a.ui-draggable"));
+				// fix in case slide got dropped behind trailing <br> element
+				$("#lighttable>br").appendTo($("#lighttable"));
 			},
             start: function(event, ui) {
                 if (!ui.item.hasClass('selected')) {
@@ -234,8 +236,6 @@
 			$("#lighttable").sortable('refresh');
 		}).trigger('update');
 
-        $(window).resize(function() { $("#lighttable").css('max-height', Math.max(250, $(window).height() - 250)); }).resize();
-
         $("#lighttable-annotation").show().children().attr('disabled', true);
 
         if (window.location.hash && window.location.hash.match(/^#s/)) {
@@ -256,6 +256,8 @@
 			e.preventDefault();
 		});
 
+		keepAtTop($("#lighttable-actionbar"), $("#lighttable"));
+
     });
 </script>
 {% endcompress %}
@@ -263,15 +265,80 @@
 
 
 
-{% block content %}
+{% block content-top %}
 
 {% store_recent_presentation request.user presentation %}
 
 <h1>{{ presentation.title }}</h1>
 
+
+
+
+<!-- Lighttable -->
 {% if formset.forms %}
-<a href="#sort_and_annotate">Sort and annotate records</a>
+
+
+
+<form method="POST" action="" id="items-form">{% csrf_token %}
+{{ formset.management_form }}
+
+<ul class="actionbar" id="lighttable-actionbar">
+<li><input type="submit" name="update-items" value="Save" /></li>
+<li><a href=".">Undo changes</a></li>
+<li class="secondary">Highlighted Items:</li>
+<li class="secondary"><button id="show-button">Show</button></li>
+<li class="secondary"><button id="hide-button">Hide</button></li>
+<li class="secondary"><button id="duplicate-button">Duplicate</button></li>
+<li class="secondary"><button id="delete-button">Delete</button></li>
+<li class="secondary"><button id="select-button">Add to Selected Items</button></li>
+</ul>
+
+
+<div id="lighttable" style="display: none; clear: both;"></div>
+<div id="lighttable-annotation" style="display: none;">
+    Annotation: <textarea name="annotation"></textarea>
+    <span id="customize-link"></span>
+</div>
+
+<table id="items" summary="Included records" class="list">
+    <thead>
+    <tr>
+        <th></th>
+        <th>Title</th>
+        <th><span class="orderinput">Order</span></th>
+        <th>Annotation</th>
+        <th>Hidden</th>
+        <th>Remove</th>
+    </tr>
+    </thead>
+    <tbody>
+{% for form in formset.forms %}
+    <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
+        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
+        <td class="title-col"><a href="{% url data-record form.instance.record.id, form.instance.record.name %}" target="record_view">{{ form.instance.record.title }}</a></td>
+        <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
+        <td class="annotation-col">{{ form.annotation }}<br />
+            <a class="customize" href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Customize record for this presentation</a></td>
+        <td class="controls">{{ form.hidden }}</td>
+        <td class="controls delete">{{ form.DELETE }}</td>
+    </tr>
+{% endfor %}
+    </tbody>
+</table>
+
+</form>
+
 {% endif %}
+<!-- end Lighttable -->
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<h2 style="padding-top: 50px;">Properties</h2>
+
 
 <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
 
@@ -324,64 +391,6 @@
 
 </form>
 
-
-{% if formset.forms %}
-
-<h2 style="clear: both; padding-top: 50px;">Sort and annotate records</h2>
-
-
-<form method="POST" action="" id="items-form">{% csrf_token %}
-{{ formset.management_form }}
-
-<a name="sort_and_annotate" href="#sort_and_annotate"></a>
-
-<ul class="actionbar">
-<li><input type="submit" name="update-items" value="Save" /></li>
-<li><a href=".">Undo changes</a></li>
-<li class="secondary">Highlighted Items:</li>
-<li class="secondary"><button id="show-button">Show</button></li>
-<li class="secondary"><button id="hide-button">Hide</button></li>
-<li class="secondary"><button id="duplicate-button">Duplicate</button></li>
-<li class="secondary"><button id="delete-button">Delete</button></li>
-<li class="secondary"><button id="select-button">Add to Selected Items</button></li>
-</ul>
-
-
-<div id="lighttable" style="display: none; clear: both;"></div>
-<div id="lighttable-annotation" style="display: none;">
-    Annotation: <textarea name="annotation"></textarea>
-    <span id="customize-link"></span>
-</div>
-
-<table id="items" summary="Included records" class="list">
-    <thead>
-    <tr>
-        <th></th>
-        <th>Title</th>
-        <th><span class="orderinput">Order</span></th>
-        <th>Annotation</th>
-        <th>Hidden</th>
-        <th>Remove</th>
-    </tr>
-    </thead>
-    <tbody>
-{% for form in formset.forms %}
-    <tr class="sortable{% cycle "" " altrow" %} framed-thumbnails small middle-align">
-        <td class="thumbnail-col">{{ form.id }}{{ form.record }}<a name="s{{ form.instance.id }}" href="{{ form.instance.record.get_absolute_url }}"><img src="{{ form.instance.record.get_thumbnail_url }}?square" alt="{{ form.instance.record.title }}" class="record-anchor" id="item-{{ forloop.counter }}-record-id-{{ form.instance.record.id }}" /></a></td>
-        <td class="title-col"><a href="{% url data-record form.instance.record.id, form.instance.record.name %}" target="record_view">{{ form.instance.record.title }}</a></td>
-        <td class="order-col"><span class="orderinput">{{ form.order }} {{ form.order.errors }}</span></td>
-        <td class="annotation-col">{{ form.annotation }}<br />
-            <a class="customize" href="{% url data-record-edit-context form.instance.record.id, form.instance.record.name, contenttype, presentation.id, presentation.name %}?next={{ request.get_full_path|urlencode }}%23s{{ form.instance.id }}">Customize record for this presentation</a></td>
-        <td class="controls">{{ form.hidden }}</td>
-        <td class="controls delete">{{ form.DELETE }}</td>
-    </tr>
-{% endfor %}
-    </tbody>
-</table>
-
-</form>
-
-{% endif %}
 
 {% endblock %}
 
