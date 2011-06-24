@@ -1263,7 +1263,7 @@ html.js-enabled #items {
 }
 
 #lighttable div.slide div.title {
-    font-size: xx-small;
+    font-size: small;
     width: 100px;
     overflow: hidden;
     white-space: nowrap;
