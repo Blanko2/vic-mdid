@@ -478,6 +478,21 @@
                     scroll_left();
                 }
             });
+
+            $("#basket-thumbs img").live('mouseover', function(event) {
+                var $this = $(this);
+                $("#basket-unselect").remove();
+                var b = $("<input type='checkbox' id='basket-unselect' checked='checked' style='position: absolute; z-index: 1000;'>");
+                b.appendTo($("#basket-thumbs")).offset($this.offset()).click(function() {
+                    var id = $($this).attr("id");
+                    id = id.substring(id.lastIndexOf('-') + 1);
+                    recordSelection(id, false);
+                });
+            });
+            $("#basket-thumbs").bind('mouseleave', function(event) {
+                $("#basket-unselect").remove();
+            });
+
             basket_scroll_arrows();
 
             bindSelectRecordCheckboxes();
