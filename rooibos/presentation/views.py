@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, QueryDict
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
@@ -24,6 +24,7 @@ from rooibos.data.models import FieldSet, Record
 from rooibos.data.forms import FieldSetChoiceField
 from rooibos.ui.actionbar import update_actionbar_tags
 from rooibos.access.models import ExtendedGroup, AUTHENTICATED_GROUP, AccessControl
+from rooibos.userprofile.views import load_settings, store_settings
 from models import Presentation, PresentationItem
 from functions import duplicate_presentation
 import logging
@@ -197,6 +198,15 @@ def browse(request, manage=False):
     if manage and not request.user.is_authenticated():
         raise Http404()
 
+    if request.user.is_authenticated() and not request.GET.items():
+        # retrieve past settings
+        qs = load_settings(request.user, filter='presentation_browse_querystring')
+        if qs.has_key('presentation_browse_querystring'):
+            return HttpResponseRedirect('%s?%s' % (
+                reverse('presentation-manage' if manage else 'presentation-browse'),
+                qs['presentation_browse_querystring'][0],
+                ))
+
     presenter = request.GET.get('presenter')
     tags = filter(None, request.GET.getlist('t'))
     remove_tag = request.GET.get('rt')
@@ -305,6 +315,11 @@ def browse(request, manage=False):
 
     presenters = User.objects.filter(presentation__in=presentations) \
                      .annotate(presentations=Count('presentation')).order_by('last_name', 'first_name')
+
+    if request.user.is_authenticated() and presentations:
+        # save current settings
+        querystring = request.GET.urlencode()
+        store_settings(request.user, 'presentation_browse_querystring', querystring)
 
     return render_to_response('presentation_browse.html',
                           {'manage': manage,

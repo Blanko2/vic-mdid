@@ -143,7 +143,7 @@
                             {% if presentation %}
                             <li><a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a></li>
                             {% endif %}
-                            <li><a href="{% url presentation-manage %}?presenter={{ user.username }}">Your Presentations</a></li>
+                            <li><a href="{% url presentation-manage %}">Your Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
                             <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
                             {% if user|accessible_objects:"data.Collection,r"|length %}

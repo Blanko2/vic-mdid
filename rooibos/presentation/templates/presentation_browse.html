@@ -59,6 +59,11 @@
   <div class="facet" id="presentations_sidebar_presenters">
     <div class="facet-header">Presenters</div>
     <div class="facet-body">
+      {% if request.user %}
+      <div class="facet-line">
+        <a href="{{ refine.url }}presenter={{ request.user.username|urlencode }}">{% if request.user.last_name %}{{ request.user.last_name }}, {{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}</a>
+      </div>
+      {% endif %}
     {% for presenter in presenters %}
         <div class="facet-line">
             <a href="{{ refine.url }}presenter={{ presenter.username|urlencode }}">{% if presenter.last_name %}{{ presenter.last_name }}, {{ presenter.first_name }}{% else %}{{ presenter.username }}{% endif %}</a>
