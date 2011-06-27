@@ -1114,6 +1114,10 @@ html.js-enabled td.item-actions {
   display: none;
 }
 
+tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
+    display: table-cell;
+}
+
 
 /* Actionbar */
 
@@ -1289,6 +1293,11 @@ td.annotation-col textarea {
 
 .ui-widget-overlay {
     opacity: 0.5;
+}
+
+
+.wide-table {
+    font-size: 90%;
 }
 
 </style>

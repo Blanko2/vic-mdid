@@ -356,8 +356,8 @@
         };
 
         function addCopyLinkIcon(item) {
-            if (!item.attr('href')) return;
-            var host = window.location.href.substring(0, window.location.href.length - window.location.pathname.length);
+            if (!item.attr('href') || item.hasClass('nocopylink')) return;
+            var host = window.location.href.substring(0, window.location.href.length - window.location.pathname.length - window.location.search.length);
             var url = host + item.attr('href').replace(/\?.+/, '');
             var link = $("<img class='item-action-link' src='{% url static 'images/link.png' %}' />");
             link.qtip({
@@ -537,8 +537,10 @@
                 var u = $("<ul><" + "/ul>");
                 $("td.item-actions a, td.item-actions input", r).each(function() {
                     var item = $(this);
-                    var li = $("<li><" + "/li>").append(item);
-                    u.append(li);
+                    if (!item.hasClass('item-action-important')) {
+                        var li = $("<li><" + "/li>").append(item);
+                        u.append(li);
+                    }
                     addCopyLinkIcon(item);
                 });
                 if (!u.children().length) u.append($("<li>No actions available<" + "/li>"));
