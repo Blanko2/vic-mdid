@@ -301,7 +301,7 @@ html.js-enabled #header ul ul {
 }
 
 #content {
-    padding: 200px 10px 15px 10px;
+    padding: 300px 10px 15px 10px;
     border: solid 1px {{ colors.content_border_gradient2 }};
     border-top: none;
     clear: both;
@@ -332,15 +332,15 @@ html.js-enabled #content {
     width: 100%;
     font-size: 0.8em;
     overflow: scroll;
+}
+
+html.js-enabled #basket-content {
+    overflow: hidden;
     display: none;
 }
 
 html.basket-open #basket-content {
     display: block;
-}
-
-html.js-enabled #basket-content {
-    overflow: hidden;
 }
 
 #basket-thumbs img {
