@@ -31,7 +31,10 @@
         $("#sort_go_button").hide();
         $("#external-results").show().html("<div style='text-align: center;'>Loading <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
     {% if not facets %}
-        $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
+        $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>").show();
+    {% else %}
+        process_facets();
+        $("#facets").show();
     {% endif %}
 
         $("#resultlist div.record a img.record-anchor").parent("a").unbind('click').click(function(e) {
@@ -141,8 +144,8 @@
     </div>
 {% endif %}
 
-<div id="facets">
-{% include "results_facets.html" %}
+<div id="facets" style="display: none;">
+{{ facets|default:"" }}
 </div>
 
 <div style="text-align: center; margin-top: 20px;">

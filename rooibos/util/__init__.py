@@ -9,6 +9,7 @@ import sys
 import mimetypes
 import logging
 import os
+import hashlib
 
 # Decorator to solve issues with IE/SSL/Flash caching
 def must_revalidate(func):
@@ -157,3 +158,10 @@ def create_link(file, link, hard=False):
         # Windows, use mklink
         return 0 == os.system("mklink %s \"%s\" \"%s\"" %
                               ('/H' if hard else '', link, file))
+
+
+def calculate_hash(*args):
+    hash = hashlib.md5()
+    for arg in args:
+        hash.update(repr(arg))
+    return hash.hexdigest()

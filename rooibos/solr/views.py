@@ -14,7 +14,7 @@ from . import SolrIndex
 from pysolr import SolrError
 from rooibos.access import filter_by_access, accessible_ids
 import socket
-from rooibos.util import safe_int, json_view
+from rooibos.util import safe_int, json_view, calculate_hash
 from rooibos.data.models import Field, Collection, FieldValue, Record
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
@@ -407,15 +407,13 @@ def search(request, id=None, name=None, selected=False, json=False):
         v = search_facets[f].federated_search_query(o)
         return v if not q else '%s %s' % (q, v)
 
-    # sort facets by label
-    facets = sorted(search_facets.values(), key=lambda f: f.label)
-
-    # clean facet items
-    for f in facets:
-        f.clean_result(hits)
-
-    # remove facets with only no filter options
-    facets = filter(lambda f: len(f.facets) > 0, facets)
+    hash = calculate_hash(getattr(user, 'id', 0),
+                          collection,
+                          criteria,
+                          keywords,
+                          selected,
+                          remove)
+    facets = cache.get('search_facets_html_%s' % hash)
 
     sort = sort.startswith('random') and 'random' or sort.split()[0]
     sort = sort.endswith('_sort') and sort[:-5] or sort
@@ -457,7 +455,7 @@ def search_facets(request, id=None, name=None, selected=False):
     # get parameters relevant for search
     criteria = request.GET.getlist('c')
     remove = request.GET.get('rem', None)
-    if remove: criteria.remove(remove)
+    if remove and remove in criteria: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
 
     user = request.user
@@ -496,12 +494,23 @@ def search_facets(request, id=None, name=None, selected=False):
     # remove facets with only no filter options
     facets = filter(lambda f: len(f.facets) > 0, facets)
 
-    return dict(html=render_to_string('results_facets.html',
+    html = render_to_string('results_facets.html',
                           {
                            'limit_url': limit_url,
                            'facets': facets
                            },
-                          context_instance=RequestContext(request)))
+                          context_instance=RequestContext(request))
+
+    hash = calculate_hash(getattr(user, 'id', 0),
+                          collection,
+                          criteria,
+                          keywords,
+                          selected,
+                          remove)
+
+    cache.set('search_facets_html_%s' % hash, html, 300)
+
+    return dict(html=html)
 
 
 @json_view
