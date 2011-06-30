@@ -219,7 +219,7 @@
         <td class="item-actions">
             {% if manage %}
             <a href="{% url presentation-edit presentation.id, presentation.name %}" class="nocopylink item-action-important">Edit</a>
-            <input type="submit" name="add-selected-items-{{ presentation.id }}" value="Add selected items" />
+            <input type="submit" name="add-selected-items-{{ presentation.id }}" value="Add selected items" class=" item-action-important" />
             {% endif %}
             {% if not presentation.password or presentation.unlocked or presentation.owner == request.user %}
             {% list_viewers presentation request.get_full_path ' ' %}
