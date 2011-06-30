@@ -248,7 +248,8 @@
                     basket_thumbs.html(r.basket);
                     add_metadata_popup(basket_thumbs);
                     $("#basket-header").html(r.header);
-                    basket_scroll_arrows();
+                    // set up scroll arrows after a delay to give Safari time to load thumbnails first
+                    setTimeout(basket_scroll_arrows, 1000);
                     $("#basket-thumbs").trigger('update');
                 }
             });
