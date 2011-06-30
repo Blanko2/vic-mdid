@@ -1094,7 +1094,7 @@ td.item-actions-menu div ul li a {
   text-decoration: none;
 }
 
-td.item-actions-menu div ul li input {
+td.item-actions-menu div ul li input, td.item-actions input {
     border: none;
     background: none;
     padding: 0;
@@ -1104,6 +1104,10 @@ td.item-actions-menu div ul li input {
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
     font-size: 100%;
     color: {{ colors.links }};
+}
+
+td.item-actions input {
+    text-decoration: underline;
 }
 
 tr.actionrow-open td.item-actions-menu div {
@@ -1227,6 +1231,7 @@ html.js-enabled #items {
 
 #lighttable {
     border: solid 2px lightgrey;
+    border-top: none;
     padding: 5px;
     user-select: none; /* CSS3 */
     -moz-user-select: none; /* Gecko (Firefox) */
@@ -1276,8 +1281,8 @@ html.js-enabled #items {
 #lighttable-annotation {
     clear: left;
     border: solid 2px lightgrey;
-    border-top: none;
     padding: 5px;
+    background-color: {{ colors.content_background }};
 }
 
 #lighttable-annotation textarea {

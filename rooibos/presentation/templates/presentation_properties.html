@@ -257,6 +257,7 @@
 		});
 
 		keepAtTop($("#lighttable-actionbar"), $("#lighttable"));
+		keepAtTop($("#lighttable-annotation"), $("#lighttable"));
 
     });
 </script>
@@ -268,6 +269,10 @@
 {% block content-top %}
 
 {% store_recent_presentation request.user presentation %}
+
+{% if formset.forms %}
+<a href="#properties" style="float: right;">Jump to Properties</a>
+{% endif %}
 
 <h1>{{ presentation.title }}</h1>
 
@@ -285,20 +290,25 @@
 <ul class="actionbar" id="lighttable-actionbar">
 <li><input type="submit" name="update-items" value="Save" /></li>
 <li><a href=".">Undo changes</a></li>
-<li class="secondary">Highlighted Items:</li>
+<li class="secondary">Highlighted:</li>
 <li class="secondary"><button id="show-button">Show</button></li>
 <li class="secondary"><button id="hide-button">Hide</button></li>
 <li class="secondary"><button id="duplicate-button">Duplicate</button></li>
 <li class="secondary"><button id="delete-button">Delete</button></li>
-<li class="secondary"><button id="select-button">Add to Basket</button></li>
+<li><button id="select-button">Add to Basket</button></li>
+<li class="secondary">
+	<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
+	<input type="submit" name="add-selected-items" value="Add All from Basket" />
+	</form>
+</li>
 </ul>
 
 
-<div id="lighttable" style="display: none; clear: both;"></div>
-<div id="lighttable-annotation" style="display: none;">
+<div id="lighttable-annotation" style="display: none; clear: both;">
     Annotation: <textarea name="annotation"></textarea>
     <span id="customize-link"></span>
 </div>
+<div id="lighttable" style="display: none; clear: both;"></div>
 
 <table id="items" summary="Included records" class="list">
     <thead>
@@ -337,7 +347,7 @@
 
 {% block content %}
 
-<h2 style="padding-top: 50px;">Properties</h2>
+<h2 id="properties" style="padding-top: 60px;">Properties</h2>
 
 
 <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
@@ -415,9 +425,6 @@
         <br />
         <form action="{% url presentation-duplicate presentation.id, presentation.name %}" method="POST">{% csrf_token %}
         <input type="submit" name="duplicate-presentation" value="Duplicate presentation" />
-        </form>
-        <form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
-        <input type="submit" name="add-selected-items" value="Add selected items" />
         </form>
     </div>
   </div>
