@@ -18,6 +18,7 @@ from rooibos.util import safe_int, json_view, calculate_hash
 from rooibos.data.models import Field, Collection, FieldValue, Record
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
+from rooibos.federatedsearch.views import sidebar_api_raw
 import re
 import copy
 import random
@@ -399,7 +400,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                         negated=negated,
                         or_available=False)
 
-    def federated_search_query(q, c):
+    def reduce_federated_search_query(q, c):
         (f, o) = c.split(':', 1)
         if f.startswith('-') or not search_facets.has_key(f):
             # can't negate in federated search
@@ -417,6 +418,9 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     sort = sort.startswith('random') and 'random' or sort.split()[0]
     sort = sort.endswith('_sort') and sort[:-5] or sort
+
+    federated_search_query = reduce(reduce_federated_search_query, criteria, keywords)
+    federated_search = sidebar_api_raw(request, federated_search_query) if federated_search_query else None
 
     return render_to_response('results.html',
                           {'criteria': map(readable_criteria, criteria),
@@ -441,7 +445,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'sort': sort,
                            'random': random.random(),
                            'viewmode': viewmode,
-                           'federated_search_query': reduce(federated_search_query, criteria, keywords),
+                           'federated_search': federated_search,
+                           'federated_search_query': federated_search_query,
                            'pagination_helper': [None] * hits,
                            },
                           context_instance=RequestContext(request))

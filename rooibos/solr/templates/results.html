@@ -29,7 +29,10 @@
 
         $("#sort_dropdown, #viewmode_dropdown").change(function() { $("#explore-form").submit(); })
         $("#sort_go_button").hide();
-        $("#external-results").show().html("<div style='text-align: center;'>Loading <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
+    {% if not federated_search.cache_hit %}
+        $("#external-results").html("<div style='text-align: center;'>Loading <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>");
+    {% endif %}
+        $("#external-results").show();
     {% if not facets %}
         $("#facets").html("<div style='text-align: center;'>Loading facets <img src='{% url static 'images/loading.gif' %}' alt='Loading' /><\/div>").show();
     {% else %}
@@ -85,7 +88,7 @@
                 }
             });
         {% endif %}
-        {% if federated_search_query %}
+        {% if not federated_search.cache_hit and federated_search_query %}
         ajaxManager.add({
             type: 'GET',
             url: '{% url federatedsearch-sidebar-api %}?q={{ federated_search_query|urlencode }}',
@@ -109,7 +112,9 @@
   <div class="facet active-facet" id="results_sidebar_external">
     <div class="facet-header">Additional Content</div>
     <div class="facet-body" id="external-results">
-
+{% if federated_search.cache_hit %}
+  {{ federated_search.html }}
+{% endif %}
     </div>
   </div>
 {% endif %}
