@@ -177,6 +177,10 @@
         <option value="score desc"{% ifequal sort "score" %} selected="selected"{% endifequal %}>Score</option>
         <option value="random_{{ random }}"{% ifequal sort "random" %} selected="selected"{% endifequal %}>Random</option>
         <option value="title_sort"{% ifequal sort "title" %} selected="selected"{% endifequal %}>Title</option>
+        <option value="creator_sort"{% ifequal sort "creator" %} selected="selected"{% endifequal %}>Creator</option>
+        <option value="date_sort"{% ifequal sort "date" %} selected="selected"{% endifequal %}>Date</option>
+        <option value="format_sort"{% ifequal sort "format" %} selected="selected"{% endifequal %}>Format</option>
+        <option value="identifier_sort"{% ifequal sort "identifier" %} selected="selected"{% endifequal %}>Identifier</option>
     </select>
     <input type="submit" value="Go" id="sort_go_button" />
   </div>
