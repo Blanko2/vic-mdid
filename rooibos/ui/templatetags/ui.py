@@ -134,9 +134,7 @@ def recent_presentation(parser, token):
 
 @register.simple_tag
 def store_recent_presentation(user, presentation):
-    print "TEST"
     store_settings(user, RECENT_PRESENTATION, presentation.id)
-    print "TEST2"
     return ''
 
 
