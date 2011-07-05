@@ -297,9 +297,7 @@
 <li class="secondary"><button id="delete-button">Delete</button></li>
 <li><button id="select-button">Add to Basket</button></li>
 <li class="secondary">
-	<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
 	<input type="submit" name="add-selected-items" value="Add All from Basket" />
-	</form>
 </li>
 </ul>
 
