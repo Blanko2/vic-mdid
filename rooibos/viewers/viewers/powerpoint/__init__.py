@@ -31,6 +31,14 @@ PROCESS_FILES = {
 }
 
 
+def standalone(xml):
+    parts = xml.split('?>', 1)
+    if parts[0].startswith('<?xml '):
+        xml = parts[0] + ' standalone="yes"?>' + parts[1]
+    print xml[:80]
+    return xml
+
+
 class PowerPointGenerator:
 
     def __init__(self, presentation, user):
@@ -120,8 +128,6 @@ class PowerPointGenerator:
             if annotation:
                 appendText('Annotation: %s' % annotation)
 
-            test = xn.toxml(encoding="UTF-8")
-
             # update the slide number in notes
             e = filter(lambda e: e.getAttribute('type') == 'slidenum', xn.getElementsByTagName('a:fld'))[0]
             e.getElementsByTagName('a:t').item(0).firstChild.nodeValue = n
@@ -138,8 +144,8 @@ class PowerPointGenerator:
                 # add image to outfile
                 with file(image, 'rb') as f:
                     content = f.read()
-                name = 'rooibos%s.jpg' % n
-                self.additional_content_types.setdefault('image/jpeg', 'jpg')
+                name = 'image%s.jpg' % n
+                self.additional_content_types.setdefault('image/jpeg;jpg', None)
                 outfile.writestr('ppt/media/' + name, content)
 
                 # find image placeholder
@@ -197,10 +203,10 @@ class PowerPointGenerator:
             else:
                 self.remove_placeholder_image = False
 
-            outfile.writestr('ppt/slides/slide%s.xml' % n, x.toxml(encoding="UTF-8"))
-            outfile.writestr('ppt/slides/_rels/slide%s.xml.rels' % n, xr.toxml())
-            outfile.writestr('ppt/notesSlides/notesSlide%s.xml' % n, xn.toxml(encoding="UTF-8"))
-            outfile.writestr('ppt/notesSlides/_rels/notesSlide%s.xml.rels' % n, xnr.toxml())
+            outfile.writestr('ppt/slides/slide%s.xml' % n, standalone(x.toxml(encoding="UTF-8")))
+            outfile.writestr('ppt/slides/_rels/slide%s.xml.rels' % n, standalone(xr.toxml(encoding="UTF-8")))
+            outfile.writestr('ppt/notesSlides/notesSlide%s.xml' % n, standalone(xn.toxml(encoding="UTF-8")))
+            outfile.writestr('ppt/notesSlides/_rels/notesSlide%s.xml.rels' % n, standalone(xnr.toxml(encoding="UTF-8")))
 
     def _process_content_types(self, outfile):
         x = xml.dom.minidom.parseString(self.content_types)
@@ -215,13 +221,14 @@ class PowerPointGenerator:
             x.firstChild.appendChild(e)
         for e in x.getElementsByTagName('Default'):
             # remove additional content types that already exist
-            self.additional_content_types.pop(e.getAttribute('ContentType'), None)
+            self.additional_content_types.pop('%s;%s' % (e.getAttribute('ContentType'), e.getAttribute('Extension')), None)
         for c in self.additional_content_types:
             e = x.createElement('Default')
-            e.setAttribute('ContentType', c)
-            e.setAttribute('Extension', self.additional_content_types[c])
+            ct, ex = c.split(';')
+            e.setAttribute('ContentType', ct)
+            e.setAttribute('Extension', ex)
             x.firstChild.appendChild(e)
-        outfile.writestr('[Content_Types].xml', x.toxml())
+        outfile.writestr('[Content_Types].xml', standalone(x.toxml(encoding="UTF-8")))
 
     def _title_slide(self, name, content, outfile):
         x = xml.dom.minidom.parseString(content)
@@ -230,9 +237,9 @@ class PowerPointGenerator:
             if t == 'title':
                 t = self.presentation.title
             elif t == 'description':
-                t = self.presentation.description or ''
+                t = self.presentation.description or '[description]'
             e.firstChild.nodeValue = t
-        outfile.writestr(name, x.toxml())
+        outfile.writestr(name, standalone(x.toxml(encoding="UTF-8")))
 
     def _record_slide(self, name, content, outfile):
         self.slide_template = content
@@ -245,7 +252,7 @@ class PowerPointGenerator:
 
     def _title_slide_notes(self, name, content, outfile):
         x = xml.dom.minidom.parseString(content)
-        outfile.writestr(name, x.toxml())
+        outfile.writestr(name, standalone(x.toxml(encoding="UTF-8")))
 
     def _record_slide_notes_rels(self, name, content, outfile):
         self.slide_notes_rel_template = content
@@ -259,7 +266,7 @@ class PowerPointGenerator:
             e.setAttribute('id', str(maxid + n))
             e.setAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'r:id', 'rooibosId%s' % n)
             p.appendChild(e)
-        outfile.writestr(name, x.toxml())
+        outfile.writestr(name, standalone(x.toxml(encoding="UTF-8")))
 
     def _presentation_rels(self, name, content, outfile):
         x = xml.dom.minidom.parseString(content)
@@ -270,7 +277,7 @@ class PowerPointGenerator:
             e.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide')
             e.setAttribute('Target', 'slides/slide%s.xml' % n)
             p.appendChild(e)
-        outfile.writestr(name, x.toxml())
+        outfile.writestr(name, standalone(x.toxml(encoding="UTF-8")))
 
     def _content_types(self, name, content, outfile):
         self.content_types = content
