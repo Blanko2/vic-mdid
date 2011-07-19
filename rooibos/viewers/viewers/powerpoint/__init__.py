@@ -35,7 +35,6 @@ def standalone(xml):
     parts = xml.split('?>', 1)
     if parts[0].startswith('<?xml '):
         xml = parts[0] + ' standalone="yes"?>' + parts[1]
-    print xml[:80]
     return xml
 
 
