@@ -29,11 +29,25 @@ def accumulate(event=None, from_date=None, until_date=None, object=None):
             content_type=data['content_type'],
             object_id=data['object_id'],
             date=data['date'],
-            event=data['event'],
-            defaults=dict(count=data['count'], final=data['date'] < today))
+            event=data['event'])
+        accumulated.final = data['date'] < today
+        accumulated.count = data['count']
         accumulated.save()
         rows.append(accumulated)
     return rows
+
+
+def assure_accumulation(from_date, until_date=None, events=None, callback=None):
+    activity = AccumulatedActivity.objects.filter(final=False, date__gte=from_date)
+    if until_date:
+        activity = activity.filter(date__lt=until_date)
+    check = activity.distinct().values_list('date', 'event')
+    if events:
+        check = check.filter(event__in=events)
+    for step, (date, event) in enumerate(check):
+        if callback:
+            callback(date, event, step, len(check))
+        accumulate(event=event, from_date=date, until_date=date + timedelta(1))
 
 
 def get_history(event, from_date, until_date=None, object=None, acc=False):
@@ -82,4 +96,3 @@ def get_registered_statistics():
 def register_statistics(func):
     registered_statistics.append(func)
     return func
-
