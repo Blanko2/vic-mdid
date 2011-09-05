@@ -658,6 +658,9 @@ class MigratePresentations(MigrateModel):
         self.users = MigrateModel.instance_maps['user']
         self.need_instance_map = True
 
+    def hash(self, row):
+        return content_hash(row.Title, row.UserID, row.Description, row.ArchiveFlag, row.AccessPassword)
+
     def update(self, instance, row):
         instance.title = row.Title
         instance.owner = self.users[str(row.UserID)]
