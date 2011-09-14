@@ -1,4 +1,5 @@
 from optparse import make_option
+from itertools import chain
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 from rooibos.storage.models import Storage
@@ -23,18 +24,28 @@ class Command(BaseCommand):
         make_option('--users', '-u', dest='users',
                     help='Comma-separated list of usernames for group ' +
                     '(removes all others)'),
-        make_option('--adduser', '-a', dest='adduser', action='append',
-                    help='Add user to group (repeat for multiple users)'),
-        make_option('--removeuser', '-r', dest='removeuser', action='append',
-                    help='Remove user from group (repeat for multiple users)'),
+        make_option('--adduser', '-a', dest='addusers', action='append',
+                    help='Add user(s) to group (comma-separated list ' +
+                    'or repeated argument'),
+        make_option('--removeuser', '-r', dest='removeusers', action='append',
+                    help='Remove user(s) from group (comma-separated list ' +
+                    'or repeated argument'),
     )
     help = "Creates groups, manages memberships and optionally creates " + \
            "associated storage and collection"
 
 
-    def handle(self, usergroup, storagepath, storageurlbase,
-               storageserverbase, createcollection, collectiongroup,
-               users, adduser, removeuser, *args, **kwargs):
+    def handle(self, *args, **kwargs):
+
+        usergroup = kwargs.get('usergroup')
+        storagepath = kwargs.get('storagepath')
+        storageurlbase = kwargs.get('storageurlbase')
+        storageserverbase = kwargs.get('storageserverbase')
+        createcollection = kwargs.get('createcollection')
+        collectiongroup = kwargs.get('collectiongroup')
+        users = kwargs.get('users')
+        addusers = kwargs.get('addusers')
+        removeusers = kwargs.get('removeusers')
 
         def message(msg):
             if kwargs.has_key('output'):
@@ -51,7 +62,7 @@ class Command(BaseCommand):
 
 
         def process_users(users, action):
-            for username in users:
+            for username in chain(*(u.split(',') for u in users)):
                 try:
                     action(User.objects.get(username=username))
                 except User.DoesNotExist:
@@ -59,11 +70,11 @@ class Command(BaseCommand):
 
         if users:
             group.user_set.clear()
-            process_users(users.split(','), group.user_set.add)
-        if adduser:
-            process_users(adduser, group.user_set.add)
-        if removeuser:
-            process_users(removeuser, group.user_set.remove)
+            process_users([users], group.user_set.add)
+        if addusers:
+            process_users(addusers, group.user_set.add)
+        if removeusers:
+            process_users(removeusers, group.user_set.remove)
 
 
         if createcollection:

@@ -16,16 +16,14 @@ class TestManageGroupCommand(TestCase):
 
     def test_no_parameters(self):
         output = []
-        Command().handle(None, None, None, None, None,
-                         [], [], output=output)
+        Command().handle(output=output)
         self.assertEqual(1, len(output))
 
     def test_simple_group(self):
         output = []
         group = Group.objects.filter(name='test_simple_group')
         self.assertEqual(0, len(group))
-        Command().handle('test_simple_group', None, None, None, None,
-                         [], [], output=output)
+        Command().handle(usergroup='test_simple_group', output=output)
         group = Group.objects.filter(name='test_simple_group')
         self.assertEqual(1, len(group))
         self.assertEqual(0, len(output))
@@ -35,10 +33,10 @@ class TestManageGroupCommand(TestCase):
         group = Group.objects.create(name='test_simple_group_members')
         group.user_set.add(self.user1)
         group.user_set.add(self.user3)
-        Command().handle('test_simple_group_members', None, None, None,
-                         ','.join([self.user1.username, self.user2.username,
+        Command().handle(usergroup='test_simple_group_members',
+                         users=','.join([self.user1.username, self.user2.username,
                                    'this-user-does-not-exist']),
-                         [], [], output=output)
+                         output=output)
         self.assertEqual(2, len(group.user_set.all()))
         self.assertEqual(1, len(output))
 
@@ -46,9 +44,13 @@ class TestManageGroupCommand(TestCase):
         output = []
         group = Group.objects.create(name='test_add_group_members')
         group.user_set.add(self.user1)
-        group.user_set.add(self.user2)
-        Command().handle('test_add_group_members', None, None, None, None,
-                         [self.user1.username, self.user3.username], [],
+        Command().handle(usergroup='test_add_group_members',
+                         addusers=[self.user1.username, self.user3.username],
+                         output=output)
+        self.assertEqual(2, len(group.user_set.all()))
+        self.assertEqual(0, len(output))
+        Command().handle(usergroup='test_add_group_members',
+                         addusers=[','.join([self.user2.username, self.user3.username])],
                          output=output)
         self.assertEqual(3, len(group.user_set.all()))
         self.assertEqual(0, len(output))
@@ -58,8 +60,8 @@ class TestManageGroupCommand(TestCase):
         group = Group.objects.create(name='test_remove_group_members')
         group.user_set.add(self.user1)
         group.user_set.add(self.user2)
-        Command().handle('test_remove_group_members', None, None, None, None,
-                         [], [self.user1.username, self.user3.username],
+        Command().handle(usergroup='test_remove_group_members',
+                         removeusers=[self.user1.username, self.user3.username],
                          output=output)
         self.assertEqual(1, len(group.user_set.all()))
         self.assertEqual(0, len(output))
