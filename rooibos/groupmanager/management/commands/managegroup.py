@@ -12,6 +12,10 @@ class Command(BaseCommand):
                     help='Name of user group to be managed'),
         make_option('--storage', '-s', dest='storagepath',
                     help='Create storage at specified path'),
+        make_option('--storageurlbase', dest='storageurlbase',
+                    help='Storage URL base'),
+        make_option('--storageserverbase', dest='storageserverbase',
+                    help='Storage server base'),
         make_option('--collection', '-c', dest='createcollection',
                     action='store_true', help='Create collection'),
         make_option('--collectiongroup', '-g', dest='collectiongroup',
@@ -28,7 +32,8 @@ class Command(BaseCommand):
            "associated storage and collection"
 
 
-    def handle(self, usergroup, storagepath, createcollection, collectiongroup,
+    def handle(self, usergroup, storagepath, storageurlbase,
+               storageserverbase, createcollection, collectiongroup,
                users, adduser, removeuser, *args, **kwargs):
 
         def message(msg):
@@ -98,6 +103,8 @@ class Command(BaseCommand):
                 defaults=dict(
                     system='local',
                     base=storagepath,
+                    urlbase=storageurlbase,
+                    deliverybase=storageserverbase,
                 )
             )
             AccessControl.objects.get_or_create(
