@@ -30,6 +30,10 @@ class Command(BaseCommand):
         make_option('--removeuser', '-r', dest='removeusers', action='append',
                     help='Remove user(s) from group (comma-separated list ' +
                     'or repeated argument'),
+        make_option('--createusers', dest='createusers', action='store_true',
+                    help='Create missing user accounts. If specified, list ' +
+                    'users as username:email:firstname:lastname:password ' +
+                    'with anything other than username being optional')
     )
     help = "Creates groups, manages memberships and optionally creates " + \
            "associated storage and collection"
@@ -46,6 +50,7 @@ class Command(BaseCommand):
         users = kwargs.get('users')
         addusers = kwargs.get('addusers')
         removeusers = kwargs.get('removeusers')
+        createusers = kwargs.get('createusers')
 
         def message(msg):
             if kwargs.has_key('output'):
@@ -61,12 +66,21 @@ class Command(BaseCommand):
         group, created = Group.objects.get_or_create(name=usergroup)
 
 
-        def process_users(users, action):
-            for username in chain(*(u.split(',') for u in users)):
+        def process_users(users, action, create=True):
+            for data in chain(*(u.split(',') for u in users)):
+                user, email, first, last, pwd = (data + '::::').split(':')[:5]
                 try:
-                    action(User.objects.get(username=username))
+                    action(User.objects.get(username=user))
                 except User.DoesNotExist:
-                    message("User '%s' not found, ignored." % username)
+                    if not createusers or not create:
+                        message("User '%s' not found, ignored." % user)
+                    else:
+                        newuser = User(username=user, email=email,
+                                       first_name=first, last_name=last)
+                        if pwd:
+                            newuser.set_password(pwd)
+                        newuser.save()
+                        action(newuser)
 
         if users:
             group.user_set.clear()
@@ -74,7 +88,7 @@ class Command(BaseCommand):
         if addusers:
             process_users(addusers, group.user_set.add)
         if removeusers:
-            process_users(removeusers, group.user_set.remove)
+            process_users(removeusers, group.user_set.remove, create=False)
 
 
         if createcollection:
