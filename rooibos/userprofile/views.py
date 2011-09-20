@@ -28,9 +28,8 @@ def store_settings(user, key, value):
         profile = UserProfile.objects.create(user=user)
 
     if key and value:
-        setting, created = profile.preferences.get_or_create(setting=key)
-        setting.value = value
-        setting.save()
+        profile.preferences.filter(setting=key).delete()
+        profile.preferences.create(setting=key, value=value)
         return True
 
     return False
