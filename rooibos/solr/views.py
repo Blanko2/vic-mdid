@@ -303,7 +303,8 @@ def run_search(user,
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
 
-    update_record_selection(request)
+    if request.GET.get('form_submitted') == '1' or request.method == "POST":
+        update_record_selection(request)
 
     # get parameters relevant for search
     criteria = request.GET.getlist('c')
