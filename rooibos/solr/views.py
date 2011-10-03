@@ -421,7 +421,8 @@ def search(request, id=None, name=None, selected=False, json=False):
     sort = sort.endswith('_sort') and sort[:-5] or sort
 
     federated_search_query = reduce(reduce_federated_search_query, criteria, keywords)
-    federated_search = sidebar_api_raw(request, federated_search_query) if federated_search_query else None
+    federated_search = sidebar_api_raw(
+        request, federated_search_query, cached_only=True) if federated_search_query else None
 
     return render_to_response('results.html',
                           {'criteria': map(readable_criteria, criteria),
