@@ -1230,7 +1230,7 @@ html.js-enabled #items {
 }
 
 #lighttable {
-    border: solid 2px lightgrey;
+    border: solid 1px lightgrey;
     border-top: none;
     padding: 5px;
     user-select: none; /* CSS3 */
@@ -1280,7 +1280,7 @@ html.js-enabled #items {
 
 #lighttable-annotation {
     clear: left;
-    border: solid 2px lightgrey;
+    border: solid 1px lightgrey;
     padding: 5px;
     background-color: {{ colors.content_background }};
 }
