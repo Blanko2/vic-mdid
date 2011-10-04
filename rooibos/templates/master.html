@@ -402,17 +402,35 @@
 
         function keepAtTop(element, not_past) {
             if (!keepAtTop.elements) keepAtTop.elements = Array();
-            keepAtTop.elements.push(element.css("position", "relative").css("top", "0").css('z-index', 100 - keepAtTop.elements.length));
+            keepAtTop.elements.push(
+                element.css("position", "relative").css("top", "0").css('z-index',
+                100 - keepAtTop.elements.length).css("left", "0"));
+            var placeholder = $("<div>").css("height", element.outerHeight(true)).insertBefore(element).hide();
             keepAtTop.$window = $(window).scroll(function() {
                 if (element.is(":hidden")) return;
+                var not_past_bottom = not_past ? not_past.offset().top + not_past.height() : Number.MAX_VALUE;
                 var offset = 0;
                 $.each(keepAtTop.elements, function(i, e) {
                     if (e != element) offset += e.is(":visible") ? e.height() : 0;
                     else return false;
                 });
-                var min = keepAtTop.$window.scrollTop() + offset - element.offset().top + parseInt(element.css("top"));
-                var max = not_past ? not_past.offset().top + not_past.height() - element.height() - element.offset().top + parseInt(element.css("top")) : $(document).height();
-                element.css("top", Math.min(max, Math.max(min, 0)) + "px");
+                if (element.css("position") != "fixed") {
+                    var top = element.offset().top;
+                    // check to see if element is now too far up
+                    if (top < keepAtTop.$window.scrollTop() + offset &&
+                        keepAtTop.$window.scrollTop() + offset + element.height() < not_past_bottom) {
+                        element.css("position", "fixed").css("top", offset + "px").css("width", "100%");
+                        placeholder.show();
+                    }
+                } else {
+                    var top = placeholder.offset().top;
+                    // check if element can go back into its normal position
+                    if (top >= keepAtTop.$window.scrollTop() + offset ||
+                        element.offset().top + element.height() >= not_past_bottom) {
+                        element.css("position", "relative").css("top", "0").css("width", "auto");
+                        placeholder.hide();
+                    }
+                }
             });
         }
 

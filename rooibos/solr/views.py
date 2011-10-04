@@ -303,7 +303,8 @@ def run_search(user,
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
 
-    update_record_selection(request)
+    if request.GET.get('form_submitted') == '1' or request.method == "POST":
+        update_record_selection(request)
 
     # get parameters relevant for search
     criteria = request.GET.getlist('c')
@@ -420,7 +421,8 @@ def search(request, id=None, name=None, selected=False, json=False):
     sort = sort.endswith('_sort') and sort[:-5] or sort
 
     federated_search_query = reduce(reduce_federated_search_query, criteria, keywords)
-    federated_search = sidebar_api_raw(request, federated_search_query) if federated_search_query else None
+    federated_search = sidebar_api_raw(
+        request, federated_search_query, cached_only=True) if federated_search_query else None
 
     return render_to_response('results.html',
                           {'criteria': map(readable_criteria, criteria),
@@ -596,13 +598,16 @@ def fieldvalue_autocomplete(request):
     if not collections:
         raise Http404()
     query = request.GET.get('q', '').lower()
-    limit = min(int(request.GET.get('limit', '10')), 100)
-    field = request.GET.get('field')
-    q = field and Q(field__id=field) or Q()
-    values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
-        .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
-    #print values.query.as_sql()
-    values = '\n'.join(urlquote(v) for v in values)
+    if len(query) >= 2:
+        limit = min(int(request.GET.get('limit', '10')), 100)
+        field = request.GET.get('field')
+        q = field and Q(field__id=field) or Q()
+        values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
+            .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
+        #print values.query.as_sql()
+        values = '\n'.join(urlquote(v) for v in values)
+    else:
+        values = ''
     return HttpResponse(content=values)
 
 
