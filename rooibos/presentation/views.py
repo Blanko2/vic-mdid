@@ -268,6 +268,9 @@ def browse(request, manage=False):
             Presentation.objects.filter(owner=request.user, id__in=ids).delete()
 
         get['kw'] = request.POST.get('kw') or keywords
+        if get['kw'] != request.POST.get('okw') and get.has_key('page'):
+            # user entered keywords, reset page counter
+            del get['page']
 
         if request.POST.get('update_tags'):
             ids = map(int, request.POST.getlist('h'))

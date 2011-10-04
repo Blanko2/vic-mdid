@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block raw-content %}
-<form action="{{ request.get_full_url }}" method="POST">{% csrf_token %}
+<form action="{{ request.get_full_path }}" method="POST">{% csrf_token %}
 {{ block.super }}
 </form>
 {% endblock %}
@@ -32,6 +32,7 @@
   <div class="facet active-facet" id="presentations_sidebar_keywords">
     <div class="facet-header">Keywords</div>
     <div class="facet-body">
+        <input type="hidden" name="okw" value="{{ keywords }}"/>
         <input type="text" id="keywords" name="kw" value="{{ keywords }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" name="keywords_go" />
     </div>
   </div>
