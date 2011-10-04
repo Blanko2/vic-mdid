@@ -598,13 +598,16 @@ def fieldvalue_autocomplete(request):
     if not collections:
         raise Http404()
     query = request.GET.get('q', '').lower()
-    limit = min(int(request.GET.get('limit', '10')), 100)
-    field = request.GET.get('field')
-    q = field and Q(field__id=field) or Q()
-    values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
-        .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
-    #print values.query.as_sql()
-    values = '\n'.join(urlquote(v) for v in values)
+    if len(query) >= 2:
+        limit = min(int(request.GET.get('limit', '10')), 100)
+        field = request.GET.get('field')
+        q = field and Q(field__id=field) or Q()
+        values = FieldValue.objects.filter(q, record__collection__in=collections, index_value__istartswith=query) \
+            .values_list('value', flat=True).distinct()[:limit] #.order_by('value')
+        #print values.query.as_sql()
+        values = '\n'.join(urlquote(v) for v in values)
+    else:
+        values = ''
     return HttpResponse(content=values)
 
 
