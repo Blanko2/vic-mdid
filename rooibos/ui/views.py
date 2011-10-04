@@ -11,6 +11,7 @@ from django.views.decorators.cache import cache_control
 from django.utils import simplejson
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_protect
+from django.conf import settings
 from rooibos.util import json_view
 from rooibos.data.models import Record, Collection
 from rooibos.storage.models import Storage
@@ -57,10 +58,15 @@ def main(request):
     request.session.set_test_cookie()
     form = AuthenticationForm()
 
+    login_url = (('https' if getattr(settings, 'SSL_PORT') else 'http') +
+            '://' + request.META['HTTP_HOST'] + reverse('login'))
+
     return render_to_response('main.html',
                               {'records': records,
                                'order': [0] + order,
-                               'login_form': form},
+                               'login_form': form,
+                               'login_url': login_url,
+                               },
                               context_instance=RequestContext(request))
 
 
