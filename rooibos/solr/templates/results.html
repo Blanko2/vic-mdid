@@ -190,6 +190,8 @@
         <option value="date_sort"{% ifequal sort "date" %} selected="selected"{% endifequal %}>Date</option>
         <option value="format_sort"{% ifequal sort "format" %} selected="selected"{% endifequal %}>Format</option>
         <option value="identifier_sort"{% ifequal sort "identifier" %} selected="selected"{% endifequal %}>Identifier</option>
+        <option value="created desc"{% ifequal sort "created" %} selected="selected"{% endifequal %}>Record creation</option>
+        <option value="modified desc"{% ifequal sort "modified" %} selected="selected"{% endifequal %}>Last modified</option>
     </select>
     <input type="submit" value="Go" id="sort_go_button" />
   </div>
