@@ -55,6 +55,21 @@ class SearchFacet(object):
     def federated_search_query(self, value):
         return value.replace('|', ' ')
 
+class RecordDateSearchFacet(SearchFacet):
+
+    def or_available(self):
+        return False
+
+    def federated_search_query(self, value):
+        return ''
+
+    def display_value(self, value):
+        match = re.match(r'\[NOW-(\d+)DAYS TO \*\]', value)
+        if match:
+            return "Within last %s days" % match.group(1)
+        else:
+            return value
+
 class OwnerSearchFacet(SearchFacet):
 
     def display_value(self, value):
@@ -260,6 +275,8 @@ def run_search(user,
     search_facets.append(CollectionSearchFacet('allcollections', 'Collection'))
     search_facets.append(OwnerSearchFacet('owner', 'Owner'))
     search_facets.append(RelatedToSearchFacet('presentations', 'Related to'))
+    search_facets.append(RecordDateSearchFacet('modified', 'Last modified'))
+    search_facets.append(RecordDateSearchFacet('created', 'Record created'))
     # convert to dictionary
     search_facets = dict((f.name, f) for f in search_facets)
 
@@ -450,6 +467,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'federated_search': federated_search,
                            'federated_search_query': federated_search_query,
                            'pagination_helper': [None] * hits,
+                           'has_record_created_criteria': any(f.startswith('created:') for f in criteria),
+                           'has_last_modified_criteria': any(f.startswith('modified:') for f in criteria),
                            },
                           context_instance=RequestContext(request))
 
