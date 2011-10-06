@@ -28,10 +28,11 @@ handler500 = getattr(settings, 'HANDLER500', handler500_with_context)
 
 def raise_exception():
     raise Exception()
-    
+
 
 urls = [
-    url(r'^$', main, {'HELP': 'frontpage'}, name='main'),
+    # main page needs SSL because of embedded login form, otherwise CSRF fails
+    url(r'^$', main, {'HELP': 'frontpage', 'SSL': True}, name='main'),
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
     url(r'^showcases/', direct_to_template, {'HELP': 'showcases',
                                              'template': 'showcases.html',
@@ -63,7 +64,7 @@ urls = [
     url(r'^favicon.ico$', serve, {'document_root': settings.STATIC_DIR, 'path': 'images/favicon.ico'}),
     url(r'^robots.txt$', serve, {'document_root': settings.STATIC_DIR, 'path': 'robots.txt'}),
     url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_DIR}, name='static'),
-    
+
     url(r'^exception/$', raise_exception),
     ]
 

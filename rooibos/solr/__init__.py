@@ -189,6 +189,9 @@ class SolrIndex():
             for tag in ownedwrapper.taggeditem.select_related('tag').all().values_list('tag__name', flat=True):
                 doc.setdefault('tag', []).append(tag)
                 doc.setdefault('ownedtag', []).append('%s-%s' % (ownedwrapper.user.id, tag))
+        # Creation and modification dates
+        doc['created'] = record.created
+        doc['modified'] = record.modified
         return doc
 
     def _clean_string(self, s):
