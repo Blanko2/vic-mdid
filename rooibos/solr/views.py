@@ -64,9 +64,12 @@ class RecordDateSearchFacet(SearchFacet):
         return ''
 
     def display_value(self, value):
-        match = re.match(r'\[NOW-(\d+)DAYS TO \*\]', value)
+        match = re.match(r'\[NOW-(\d+)DAYS? TO \*\]', value)
         if match:
-            return "Within last %s days" % match.group(1)
+            return "Within last %s day%s" % (
+                match.group(1),
+                's' if int(match.group(1)) != 1 else '',
+                )
         else:
             return value
 
