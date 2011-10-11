@@ -15,8 +15,12 @@
 		var unsaved_changes = false;
 		$(window).bind('beforeunload', function() {
 			if (unsaved_changes)
-				return 'You have unsaved changes in your presentation that will be lost if you continue.';
+				return 'You made changes to your presentation slides that will be lost if you continue.';
 		});
+		function mark_unsaved_changes(saved) {
+			unsaved_changes = (saved != 'saved');
+			$('#update-items').css('font-weight', unsaved_changes ? 'bolder' : '');
+		}
 
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
@@ -49,7 +53,7 @@
             $(".orderinput input").each(function(i, e) { $(e).val(i); });
             e.preventDefault();
             add_metadata_popup($("#lighttable"));
-			unsaved_changes = true;
+			mark_unsaved_changes();
         });
 
         $("#delete-button").click(function(e) {
@@ -59,7 +63,7 @@
             });
             $("#lighttable-buttons button").attr('disabled', true);
             e.preventDefault();
-			unsaved_changes = true;
+			mark_unsaved_changes();
         });
 
 		$("#select-button").click(function(e) {
@@ -81,14 +85,14 @@
                 $("input[id$=hidden]", e).attr('checked', hide);
             });
             markHidden();
-			unsaved_changes = true;
+			mark_unsaved_changes();
         }
 
         $("#show-button").click(function(e) { showHide(false); e.preventDefault(); });
         $("#hide-button").click(function(e) { showHide(true); e.preventDefault(); });
 
 		$("#lighttable-annotation textarea").change(function() {
-			unsaved_changes = true;
+			mark_unsaved_changes();
 		})
 
         var last_selected;
@@ -112,7 +116,7 @@
 
         $("#items-form").submit(function() {
 			selectionChanged();
-			unsaved_changes = false;
+			mark_unsaved_changes('saved');
 		});
 
         var firstselection;
@@ -198,7 +202,7 @@
                 ui.item.unbind('click').one("click", function (e) {
                     e.stopImmediatePropagation(); $(this).click(select_slide);
                 });
-				unsaved_changes = true;
+				mark_unsaved_changes();
 				selectionChanged();
             },
 			receive: function(event, ui) {
@@ -288,7 +292,7 @@
 {{ formset.management_form }}
 
 <ul class="actionbar" id="lighttable-actionbar">
-<li><input type="submit" name="update-items" value="Save" /></li>
+<li><input type="submit" name="update-items" id='update-items' value="Save" /></li>
 <li><a href=".">Undo changes</a></li>
 <li class="secondary">Highlighted:</li>
 <li class="secondary"><button id="show-button">Show</button></li>
