@@ -108,12 +108,16 @@ class PresentationItem(models.Model):
     type = models.CharField(max_length=16, blank=True)
     order = models.SmallIntegerField()
 
+    def title_from_fieldvalues(self, fieldvalues):
+        titlefields = standardfield_ids('title', equiv=True)
+        for fv in fieldvalues:
+            if fv.field_id in titlefields:
+                return fv.value
+        return None
+
     @property
     def title(self):
-        titlefields = standardfield_ids('title', equiv=True)
-        q = Q(field__in=titlefields)
-        fv = self.get_fieldvalues(q=q)
-        return None if not fv else fv[0].value
+        return self.title_from_fieldvalues(self.get_fieldvalues())
 
     def _annotation_filter(self):
         return dict(owner=self.presentation.owner,
