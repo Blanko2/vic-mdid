@@ -89,10 +89,13 @@ def _records_as_json(records, owner=None, context=None, process_url=lambda url: 
 
 
 def _presentation_item_as_json(item, owner=None, process_url=lambda url: url):
+
+    fieldvalues = item.get_fieldvalues(owner=owner)
+
     data = dict(
                 id=item.record.id,
                 name=item.record.name,
-                title=item.title or 'Untitled',
+                title=item.title_from_fieldvalues(fieldvalues) or 'Untitled',
                 thumbnail=process_url(item.record.get_thumbnail_url()),
                 image=process_url(item.record.get_image_url()),
                 metadata=[
@@ -100,7 +103,7 @@ def _presentation_item_as_json(item, owner=None, process_url=lambda url: url):
                         label=value.resolved_label,
                         value=value.value
                         )
-                    for value in item.get_fieldvalues(owner=owner)
+                    for value in fieldvalues
                 ]
             )
     annotation = item.annotation

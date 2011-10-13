@@ -64,9 +64,12 @@ class RecordDateSearchFacet(SearchFacet):
         return ''
 
     def display_value(self, value):
-        match = re.match(r'\[NOW-(\d+)DAYS TO \*\]', value)
+        match = re.match(r'\[NOW-(\d+)DAYS? TO \*\]', value)
         if match:
-            return "Within last %s days" % match.group(1)
+            return "Within last %s day%s" % (
+                match.group(1),
+                's' if int(match.group(1)) != 1 else '',
+                )
         else:
             return value
 
@@ -320,8 +323,20 @@ def run_search(user,
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
 
-    if request.GET.get('form_submitted') == '1' or request.method == "POST":
+    if request.method == "POST":
         update_record_selection(request)
+        # redirect to get request with updated parameters
+        q = request.GET.copy()
+        q.update(request.POST)
+        q = clean_record_selection_vars(q)
+        for i, v in q.items():
+            if i != 'c':
+                q[i] = v  # replace multiple values with last one except for criteria ('c')
+        q.pop('v.x', None)
+        q.pop('v.y', None)
+        q.pop('x', None)
+        q.pop('y', None)
+        return HttpResponseRedirect(request.path + '?' + q.urlencode())
 
     # get parameters relevant for search
     criteria = request.GET.getlist('c')
@@ -374,20 +389,25 @@ def search(request, id=None, name=None, selected=False, json=False):
     q.pop('op', None)
     q.pop('v.x', None)
     q.pop('v.y', None)
+    q.pop('x', None)
+    q.pop('y', None)
     q['s'] = q.get('s', sort)
     q['v'] = q.get('v', 'thumb')
     q.setlist('c', criteria)
     hiddenfields = [('op', page)]
-    for f in q:
-        if f != 'kw':
-            for l in q.getlist(f):
-                hiddenfields.append((f, l))
+    #for f in q:
+    #    if f != 'kw':
+    #        for l in q.getlist(f):
+    #            hiddenfields.append((f, l))
     qurl = q.urlencode()
     q.setlist('c', filter(lambda c: c != orquery, criteria))
     qurl_orquery = q.urlencode()
     limit_url = "%s?%s%s" % (url, qurl, qurl and '&' or '')
     limit_url_orquery = "%s?%s%s" % (url, qurl_orquery, qurl_orquery and '&' or '')
     facets_url = "%s?%s%s" % (furl, qurl, qurl and '&' or '')
+
+    form_url = "%s?%s" % (url, q.urlencode())
+
     prev_page_url = None
     next_page_url = None
 
@@ -398,8 +418,6 @@ def search(request, id=None, name=None, selected=False, json=False):
         q['page'] = page + 1
         next_page_url = "%s?%s" % (url, q.urlencode())
 
-    q.pop('s', None)
-    form_url = "%s?%s" % (url, q.urlencode())
 
     def readable_criteria(c):
         (f, o) = c.split(':', 1)

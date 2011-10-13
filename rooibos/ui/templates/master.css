@@ -1115,11 +1115,11 @@ tr.actionrow-open td.item-actions-menu div {
 }
 
 html.js-enabled td.item-actions {
-  display: none;
+  visibility: hidden;
 }
 
 tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
-    display: table-cell;
+    visibility: visible;
 }
 
 
@@ -1220,7 +1220,6 @@ html.js-enabled ul.actionbar li .dropdown-anchor {
 
 
 img.item-action-link {
-    margin-left: 5px !important;
     cursor: pointer;
 }
 

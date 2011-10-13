@@ -528,6 +528,9 @@
                     id = id.substring(id.lastIndexOf('-') + 1);
                     recordSelection(id, true);
                     ui.draggable.parents(".record").find("input.record-select").attr('checked', true);
+                },
+                activate: function(event, ui) {
+                    ui.helper.css('z-index', '10001');
                 }
             });
 
