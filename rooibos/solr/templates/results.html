@@ -187,8 +187,7 @@
 
 {% block content-top %}
 
-<form method="GET" action="{{ form_url }}" id="explore-form">
-<input type="hidden" name="form_submitted" value="1" />
+<form method="POST" action="{{ form_url }}" id="explore-form">
 {% for f,v in hiddenfields %}
 <input type="hidden" name="{{ f }}" value="{{ v }}" />
 {% endfor %}

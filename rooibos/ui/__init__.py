@@ -50,14 +50,8 @@ signals.post_syncdb.connect(create_user_fixtures, sender=auth_app)
 
 
 def update_record_selection(request):
-    if request.method == 'GET':
-        was_selected = map(int, request.GET.getlist('sr'))
-        new_selected = map(int, request.GET.getlist('r'))
-    elif request.method == 'POST':
-        was_selected = map(int, request.POST.getlist('sr'))
-        new_selected = map(int, request.POST.getlist('r'))
-    else:
-        return
+    was_selected = map(int, request.REQUEST.getlist('sr'))
+    new_selected = map(int, request.REQUEST.getlist('r'))
     selected = list(request.session.get('selected_records', ()))
 
     remove = [id for id in was_selected if id not in new_selected]
