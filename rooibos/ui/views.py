@@ -72,7 +72,7 @@ def select_record(request):
         [selected.remove(id) for id in ids if id in selected]
         if request.POST.get('checked') == 'true':
             selected.extend(ids)
-    request.session['selected_records'] = selected
+        request.session['selected_records'] = selected
 
     context = ctx_selected_records(request)
     rc = RequestContext(request)

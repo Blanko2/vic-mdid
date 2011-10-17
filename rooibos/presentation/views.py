@@ -355,6 +355,7 @@ def password(request, id, name):
         form = PasswordForm(request.POST)
         if form.is_valid():
             request.session.setdefault('passwords', dict())[presentation.id] = form.cleaned_data.get('password')
+            request.session.modified = True
             return HttpResponseRedirect(request.GET.get('next', reverse('presentation-browse')))
     else:
         form = PasswordForm()
