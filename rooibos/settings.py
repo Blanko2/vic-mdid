@@ -23,7 +23,8 @@ USE_I18N = False
 
 USE_ETAGS = False
 
-SESSION_SAVE_EVERY_REQUEST = True
+# When set to True, may cause problems with basket functionality
+SESSION_SAVE_EVERY_REQUEST = False
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
