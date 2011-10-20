@@ -25,7 +25,10 @@ class MetaDataNode(template.Node):
                                       fieldvalues[i].resolved_label == fieldvalues[i - 1].resolved_label)
 
         return render_to_string('data_metadata.html',
-                                dict(values=fieldvalues),
+                                dict(
+                                    values=fieldvalues,
+                                    record=record,
+                                ),
                                 context_instance=context)
 
 

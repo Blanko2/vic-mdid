@@ -293,7 +293,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'next': request.GET.get('next'),
                                'collection_items': collection_items,
                                'upload_form': upload_form,
-                               'upload_url': (reverse('storage-media-upload', args=(record.id, record.name)) + "?sidebar")
+                               'upload_url': ("%s?sidebar&next=%s" % (reverse('storage-media-upload', args=(record.id, record.name)), request.get_full_path()))
                                              if record.id else None,
                                },
                               context_instance=RequestContext(request))

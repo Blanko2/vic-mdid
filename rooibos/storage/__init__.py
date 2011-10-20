@@ -44,7 +44,7 @@ def get_media_for_record(record, user=None, passwords={}):
         # doesn't have access to the record.
         pw_q = Q(
             # Presentation must not have password
-            Q(password=None) |
+            Q(password=None) | Q(password='') |
             # or must know password
             Q(id__in=Presentation.check_passwords(passwords))
         )

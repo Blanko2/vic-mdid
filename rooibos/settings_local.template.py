@@ -157,6 +157,16 @@ MEGAZINE_PUBLIC_KEY = ""
 # rooibos/static/flowplayer directory
 FLOWPLAYER_KEY = ""
 
+# MDID uses some Yahoo APIs that require an application key
+# You can get one at https://developer.apps.yahoo.com/dashboard/createKey.html
+YAHOO_APPLICATION_ID = ""
+
+
+# By default, video delivery links are created as symbolic links. Some streaming
+# servers (e.g. Wowza) don't deliver those, so hard links are required.
+HARD_VIDEO_DELIVERY_LINKS = False
+
+
 additional_settings = [
 #    'apps.jmutube.settings_local',
 #    'apps.svohp.settings_local',

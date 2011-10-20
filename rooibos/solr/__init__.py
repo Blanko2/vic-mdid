@@ -22,14 +22,21 @@ class SolrIndex():
 
     def search(self, q, sort=None, start=None, rows=None, facets=None, facet_limit=-1, facet_mincount=0, fields=None):
         if not fields:
-            fields = ['id']
-        elif not 'id' in fields:
+            fields = []
+        if not 'id' in fields:
             fields.append('id')
+        if not 'presentations' in fields:
+            fields.append('presentations')
         conn = Solr(settings.SOLR_URL)
         result = conn.search(q, sort=sort, start=start, rows=rows,
                              facets=facets, facet_limit=facet_limit, facet_mincount=facet_mincount, fields=fields)
         ids = [int(r['id']) for r in result]
         records = Record.objects.in_bulk(ids)
+        for r in result:
+            record = records.get(int(r['id']))
+            presentations = r.get('presentations')
+            if record and presentations:
+                record.solr_presentation_ids = presentations
         return (result.hits, filter(None, map(lambda i: records.get(i), ids)), result.facets)
 
     def clear(self):
@@ -171,6 +178,7 @@ class SolrIndex():
         # Combine the direct parents with (great-)grandparents
         doc['collections'] = list(reduce(lambda x, y: set(x) | set(y), [self.parent_groups[p] for p in parents], parents))
         doc['allcollections'] = list(reduce(lambda x, y: set(x) | set(y), [self.parent_groups[p] for p in all_parents], all_parents))
+        doc['presentations'] = record.presentationitem_set.all().distinct().values_list('presentation_id', flat=True)
         if record.owner_id:
             doc['owner'] = record.owner_id
         for m in media:
@@ -181,6 +189,9 @@ class SolrIndex():
             for tag in ownedwrapper.taggeditem.select_related('tag').all().values_list('tag__name', flat=True):
                 doc.setdefault('tag', []).append(tag)
                 doc.setdefault('ownedtag', []).append('%s-%s' % (ownedwrapper.user.id, tag))
+        # Creation and modification dates
+        doc['created'] = record.created
+        doc['modified'] = record.modified
         return doc
 
     def _clean_string(self, s):

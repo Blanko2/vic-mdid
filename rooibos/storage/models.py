@@ -102,6 +102,17 @@ class Storage(models.Model):
         storage = self.storage_system
         return storage.get_files() if storage and hasattr(storage, 'get_files') else []
 
+    def get_upload_limit(self, user):
+        if user.is_superuser:
+            return 0
+        r, w, m, restrictions = get_effective_permissions_and_restrictions(user, self)
+        if restrictions:
+            try:
+                return int(restrictions['uploadlimit'])
+            except (ValueError, KeyError):
+                pass
+        return settings.UPLOAD_LIMIT
+
 
 class Media(models.Model):
     record = models.ForeignKey(Record)

@@ -8,8 +8,10 @@ from django.utils import simplejson
 from django.conf import settings
 from rooibos.contrib.tagging.models import Tag
 from rooibos.data.models import Record, Collection
+from rooibos.presentation.models import Presentation
 from rooibos.util.models import OwnedWrapper
 from rooibos.access import filter_by_access
+from rooibos.userprofile.views import load_settings, store_settings
 from base64 import b32encode, b64encode
 import os
 import glob
@@ -57,8 +59,9 @@ class OwnedTagsForObjectNode(template.Node):
         object = self.object.resolve(context)
         user = self.user.resolve(context)
         if self.include:
-            ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
-            context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
+            if not user.is_anonymous():
+                ownedwrapper = OwnedWrapper.objects.get_for_object(user, object)
+                context[self.var_name] = Tag.objects.get_for_object(ownedwrapper)
         else:
             qs = OwnedWrapper.objects.filter(object_id=object.id, content_type=OwnedWrapper.t(object.__class__))
             if not user.is_anonymous():
@@ -98,6 +101,41 @@ def tag(context, tag, object=None, removable=False, styles=None):
             'styles': styles,
             'request': context['request'],
             }
+
+
+# Keep track of most recently edited presentation
+
+RECENT_PRESENTATION = 'ui_recent_presentation'
+
+class RecentPresentationNode(template.Node):
+    def __init__(self, user, var_name):
+        self.user = user
+        self.var_name = var_name
+    def render(self, context):
+        user = self.user.resolve(context)
+        values = load_settings(user, RECENT_PRESENTATION)
+        presentation = None
+        if values.has_key(RECENT_PRESENTATION):
+            presentation = filter_by_access(user, Presentation, manage=True).filter(id=values[RECENT_PRESENTATION][0])
+        context[self.var_name] = presentation[0] if presentation else None
+        return ''
+
+@register.tag
+def recent_presentation(parser, token):
+    try:
+        tag_name, arg = token.contents.split(None, 1)
+    except ValueError:
+        raise template.TemplateSyntaxError, "%r tag requires arguments" % token.contents.split()[0]
+    m = re.search(r'(.*?) as (\w+)', arg)
+    if not m:
+        raise template.TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
+    user, var_name = m.groups()
+    return RecentPresentationNode(Variable(user), var_name)
+
+@register.simple_tag
+def store_recent_presentation(user, presentation):
+    store_settings(user, RECENT_PRESENTATION, presentation.id)
+    return ''
 
 
 # The following is based on http://www.djangosnippets.org/snippets/829/

@@ -66,10 +66,14 @@ class MediaPlayer(object):
         delivery_url = selectedmedia.get_delivery_url()
         streaming_server = None
         streaming_media = None
+        idevice_streaming_url = None
         if delivery_url.startswith('rtmp://'):
             try:
-                streaming_server, prot, streaming_media = re.split('/(mp[34]:)', delivery_url)
-                streaming_media = prot + re.sub(r'\.mp3$', '', streaming_media)
+                streaming_server, prot, streaming_media_no_prot = re.split('/(mp[34]:)', delivery_url)
+                streaming_media = prot + re.sub(r'\.mp3$', '', streaming_media_no_prot)
+
+                idevice_streaming_url = 'http%s/%s/playlist.m3u8' % (streaming_server[4:], streaming_media_no_prot)
+
             except ValueError:
                 pass
 
@@ -81,6 +85,7 @@ class MediaPlayer(object):
                                    'delivery_url': delivery_url,
                                    'streaming_server': streaming_server,
                                    'streaming_media': streaming_media,
+                                   'idevice_streaming_url': idevice_streaming_url,
                                    'audio': selectedmedia.mimetype.startswith('audio/'),
                                    'flowplayer_key': getattr(settings, "FLOWPLAYER_KEY", None),
                                    },
@@ -114,14 +119,17 @@ class EmbeddedMediaPlayer(MediaPlayer):
         delivery_url = selectedmedia.get_delivery_url()
         streaming_server = None
         streaming_media = None
-
+        idevice_streaming_url = None
         server = (('https' if request.META.get('HTTPS', 'off') == 'on' else 'http') +
             '://' + request.META['HTTP_HOST'])
 
         if delivery_url.startswith('rtmp://'):
             try:
-                streaming_server, prot, streaming_media = re.split('/(mp[34]:)', delivery_url)
-                streaming_media = prot + re.sub(r'\.mp3$', '', streaming_media)
+            	streaming_server, prot, streaming_media_no_prot = re.split('/(mp[34]:)', delivery_url)
+                streaming_media = prot + re.sub(r'\.mp3$', '', streaming_media_no_prot)
+                
+                idevice_streaming_url = 'http%s/%s/playlist.m3u8' % (streaming_server[4:], streaming_media_no_prot)
+                
             except ValueError:
                 pass
         if not '://' in delivery_url:
@@ -137,6 +145,7 @@ class EmbeddedMediaPlayer(MediaPlayer):
                                    'delivery_url': delivery_url,
                                    'streaming_server': streaming_server,
                                    'streaming_media': streaming_media,
+                                   'idevice_streaming_url': idevice_streaming_url,
                                    'audio': selectedmedia.mimetype.startswith('audio/'),
                                    'server_url': server,
                                    'autoplay': request.GET.has_key('autoplay'),
