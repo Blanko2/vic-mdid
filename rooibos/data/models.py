@@ -14,6 +14,7 @@ from rooibos.util import unique_slug
 from rooibos.util.caching import get_cached_value, cache_get, cache_get_many, cache_set, cache_set_many
 import logging
 import random
+import types
 
 
 class Collection(models.Model):
@@ -165,7 +166,7 @@ class Record(models.Model):
             fields = iter(fields)
         except TypeError:
             fields = [fields]
-        if not isinstance(values, (list, tuple)):
+        if not isinstance(values, (list, tuple, types.GeneratorType)):
             values = [values]
 
         index_values = [value[:32] for value in values]

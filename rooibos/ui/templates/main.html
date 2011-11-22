@@ -132,11 +132,18 @@
     <div class="column announcements">
 
         <h2>Announcements</h2>
+        {% if perms.comments.add_comment %}
+            <div style="margin-bottom: 10px;"><a href="{% url ui-announcement-new %}">Create new announcement</a></div>
+        {% endif %}
 
         {% get_comment_list for flatpages.flatpage 1 as comments %}
+
         {% for comment in comments reversed %}
             {{ comment.comment|safe|linebreaks }}
-            <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.</div>
+            <div class="byline">Posted {{ comment.submit_date|naturalday }} by {{ comment.user }}.
+            {% if perms.comments.change_comment %}<a href="{% url ui-announcement-edit comment.id %}">Edit</a>{% endif %}
+            {% if perms.comments.delete_comment %}<a href="{% url ui-announcement-delete comment.id %}">Delete</a>{% endif %}
+            </div>
         {% endfor %}
 
     </div>

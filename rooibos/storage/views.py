@@ -20,7 +20,7 @@ from models import Media, Storage, TrustedSubnet, ProxyUrl
 from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
-from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records
+from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records, find_record_by_identifier
 from rooibos.util import json_view
 from rooibos.statistics.models import Activity
 import logging
@@ -315,6 +315,8 @@ def import_files(request):
         file = forms.FileField()
         create_records = forms.BooleanField(required=False)
         replace_files = forms.BooleanField(required=False, label='Replace files of same type')
+        multiple_files = forms.BooleanField(required=False,
+                                                   label='Allow multiple files of same type')
         personal_records = forms.BooleanField(required=False)
 
         def clean(self):
@@ -336,6 +338,7 @@ def import_files(request):
 
             create_records = form.cleaned_data['create_records']
             replace_files = form.cleaned_data['replace_files']
+            multiple_files = form.cleaned_data['multiple_files']
             personal_records = form.cleaned_data['personal_records']
 
             collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True if not personal_records else None))
@@ -356,17 +359,18 @@ def import_files(request):
                 # find record by identifier
                 titlefield = standardfield('title')
                 idfield = standardfield('identifier')
-                idfields = standardfield('identifier', equiv=True)
 
                 # Match identifiers that are either full file name (with extension) or just base name match
-                records = Record.by_fieldvalue(idfields, (id, file.name)).filter(collection=collection, owner=owner)
+                records = find_record_by_identifier((id, file.name,), collection,
+                    owner=owner, ignore_suffix=multiple_files)
                 result = "File skipped."
 
                 if len(records) == 1:
                     # Matching record found
                     record = records[0]
                     media = record.media_set.filter(storage=storage, mimetype=mimetype)
-                    if len(media) == 0:
+                    media_same_id = media.filter(name=id)
+                    if len(media) == 0 or (len(media_same_id) == 0 and multiple_files):
                         # No media yet
                         media = Media.objects.create(record=record,
                                                      name=id,
@@ -374,8 +378,14 @@ def import_files(request):
                                                      mimetype=mimetype)
                         media.save_file(file.name, file)
                         result = "File added (Identifier '%s')." % id
+                    elif len(media_same_id) > 0 and multiple_files:
+                        # Replace existing media with same name and mimetype
+                        media = media_same_id[0]
+                        media.delete_file()
+                        media.save_file(file.name, file)
+                        result = "File replaced (Identifier '%s')." % id
                     elif replace_files:
-                        # Replace existing media
+                        # Replace existing media with same mimetype
                         media = media[0]
                         media.delete_file()
                         media.save_file(file.name, file)

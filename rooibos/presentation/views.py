@@ -209,6 +209,9 @@ def browse(request, manage=False):
 
     presenter = request.GET.get('presenter')
     tags = filter(None, request.GET.getlist('t'))
+    untagged = 1 if request.GET.get('ut') else 0
+    if untagged:
+        tags = []
     remove_tag = request.GET.get('rt')
     if remove_tag and remove_tag in tags:
         tags.remove(remove_tag)
@@ -217,6 +220,10 @@ def browse(request, manage=False):
     get.setlist('t', tags)
     if get.has_key('rt'):
         del get['rt']
+    if untagged:
+        get['ut'] = '1'
+    elif get.has_key('ut'):
+        del get['ut']
 
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
@@ -224,7 +231,12 @@ def browse(request, manage=False):
     else:
         existing_tags = ()
 
-    if tags:
+
+    if untagged and request.user.is_authenticated():
+        qs = TaggedItem.objects.filter(content_type=OwnedWrapper.t(OwnedWrapper)).values('object_id').distinct()
+        qs = OwnedWrapper.objects.filter(user=request.user, content_type=OwnedWrapper.t(Presentation), id__in=qs).values('object_id')
+        q = ~Q(id__in=qs)
+    elif tags:
         qs = OwnedWrapper.objects.filter(content_type=OwnedWrapper.t(Presentation))
         # get list of matching IDs for each individual tag, since tags may be attached by different owners
         ids = [list(TaggedItem.objects.get_by_model(qs, '"%s"' % tag).values_list('object_id', flat=True)) for tag in tags]
@@ -267,7 +279,7 @@ def browse(request, manage=False):
             ids = map(int, request.POST.getlist('h'))
             Presentation.objects.filter(owner=request.user, id__in=ids).delete()
 
-        get['kw'] = request.POST.get('kw') or keywords
+        get['kw'] = request.POST.get('kw')
         if get['kw'] != request.POST.get('okw') and get.has_key('page'):
             # user entered keywords, reset page counter
             del get['page']
@@ -327,6 +339,7 @@ def browse(request, manage=False):
     return render_to_response('presentation_browse.html',
                           {'manage': manage,
                            'tags': tags if len(tags) > 0 else None,
+                           'untagged': untagged,
                            'usertags': usertags if len(usertags) > 0 else None,
                            'active_tags': active_tags,
                            'active_presenter': presenter,
