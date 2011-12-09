@@ -194,7 +194,7 @@ class MigrateModel(object):
                             h.content_hash = hash
                             h.save()
                             self.updated += 1
-                        except IntegrityError, ex:
+                        except (IntegrityError, pyodbc.IntegrityError), ex:
                             logging.error("Integrity error: %s %s" % (self.model_name, self.key(row)))
                             logging.error(ex)
                             self.errors += 1
