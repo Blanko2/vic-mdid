@@ -275,16 +275,22 @@ class Record(models.Model):
     def shared(self):
         return bool(self.collectionitem_set.filter(hidden=False).count()) if self.owner else None
 
-    def editable_by(self, user):
+    def _check_permission_for_user(self, user, **permissions):
         # checks if user is owner or has ACL access
-        if check_access(user, self, write=True):
+        if check_access(user, self, **permissions):
             return True
         # if record does not have individual ACL...
         if len(_records_with_individual_acl_by_ids([self.id])) > 0:
             return False
         # ...check collection access
-        return len(accessible_ids(user, self.collection_set, write=True)) > 0
-        
+        return len(accessible_ids(user, self.collection_set, **permissions)) > 0
+
+    def editable_by(self, user):
+        return self._check_permission_for_user(user, write=True)
+
+    def manageable_by(self, user):
+        return self._check_permission_for_user(user, manage=True)
+
 
 class MetadataStandard(models.Model):
     title = models.CharField(max_length=100)
