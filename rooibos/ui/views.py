@@ -51,7 +51,9 @@ def main(request):
         pagesize=8,
         produce_facets=False)
 
-    order = range(1, 8)
+    records = [Record.objects.get(id=23753), Record.objects.get(id=23753)]
+
+    order = range(1, len(records))
     random.shuffle(order)
 
     request.session.set_test_cookie()

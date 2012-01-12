@@ -15,7 +15,7 @@
  '{{ record.get_absolute_url }}',
  {% with record.collection_set.all.0 as collection %}
  '{{ collection.title|escapejs }}',
- '{% url solr-search-collection collection.id, collection.name %}',
+ '{% if collection %}{% url solr-search-collection collection.id, collection.name %}{% endif %}',
  {% endwith %}
  ]{% if not forloop.last %},{% endif %}
 {% endfor %}
@@ -41,7 +41,7 @@
 
         function autoAdvance() {
             clearInterval(interval);
-            interval = setInterval(function() { index = (index + 1) % 8; nextImage(order[index]); }, 10000);
+            interval = setInterval(function() { index = (index + 1) % order.length; nextImage(order[index]); }, 10000);
         }
 
         $(window).load(function () {
@@ -102,7 +102,7 @@
     <div id="image-preview-reload"><a href=".">Load new images</a></div>
     {% with records.0.collection_set.all.0 as collection %}
     <div class="image-title"><a href="{{ records.0.get_absolute_url }}">{{ records.0.title }}</a></div>
-    <div class="image-subtitle"><a href="{% url solr-search-collection collection.id, collection.name %}">{{ collection.title }}</a></div>
+    <div class="image-subtitle"><a href="{% if collection %}{% url solr-search-collection collection.id, collection.name %}{% endif %}">{{ collection.title }}</a></div>
     {% endwith %}
 
     {% endif %}
