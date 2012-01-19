@@ -90,7 +90,7 @@ class CollectionItem(models.Model):
         return "Record %s Collection %s%s" % (self.record_id, self.collection_id, 'hidden' if self.hidden else '')
 
 class Record(models.Model):
-    created = models.DateTimeField(default=datetime.now())
+    created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     name = models.SlugField(max_length=50, unique=True)
     parent = models.ForeignKey('self', null=True)
