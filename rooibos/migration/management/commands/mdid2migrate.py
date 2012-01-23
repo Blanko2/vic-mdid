@@ -1043,6 +1043,8 @@ class Command(BaseCommand):
             conn = pyodbc.connect('DRIVER={SQL Server};%s' % connection)
         elif servertype == "MYSQL":
             conn = pyodbc.connect('DRIVER={MySQL};%s' % connection)
+        elif servertype == "CUSTOM":
+            conn = pyodbc.connect(connection)
         else:
             print "Unsupported database type"
             return
