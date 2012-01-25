@@ -51,8 +51,6 @@ def main(request):
         pagesize=8,
         produce_facets=False)
 
-    records = [Record.objects.get(id=23753), Record.objects.get(id=23753)]
-
     order = range(1, len(records))
     random.shuffle(order)
 
