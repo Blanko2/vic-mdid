@@ -194,7 +194,7 @@ class MigrateModel(object):
                             h.content_hash = hash
                             h.save()
                             self.updated += 1
-                        except IntegrityError, ex:
+                        except (IntegrityError, pyodbc.IntegrityError), ex:
                             logging.error("Integrity error: %s %s" % (self.model_name, self.key(row)))
                             logging.error(ex)
                             self.errors += 1
@@ -1043,6 +1043,8 @@ class Command(BaseCommand):
             conn = pyodbc.connect('DRIVER={SQL Server};%s' % connection)
         elif servertype == "MYSQL":
             conn = pyodbc.connect('DRIVER={MySQL};%s' % connection)
+        elif servertype == "CUSTOM":
+            conn = pyodbc.connect(connection)
         else:
             print "Unsupported database type"
             return

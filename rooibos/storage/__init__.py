@@ -109,7 +109,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
 
         def derivative_image(master, width, height):
             if not master.file_exists():
-                logging.error('Image derivative failed for media %d, cannot find file' % master.id)
+                logging.error('Image derivative failed for media %d, cannot find file "%s"' % (master.id, master.get_absolute_file_path()))
                 return None, (None, None)
             import ImageFile
             ImageFile.MAXBLOCK = 16 * 1024 * 1024

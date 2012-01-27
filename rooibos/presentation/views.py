@@ -259,12 +259,12 @@ def browse(request, manage=False):
 
     if manage:
         qv = Q()
-        qid = Q(id__in=accessible_ids(request.user, Presentation, write=True, manage=True))
+        presentations = filter_by_access(request.user, Presentation, write=True, manage=True)
     else:
         qv = Presentation.published_Q()
-        qid = Q(id__in=accessible_ids(request.user, Presentation))
+        presentations = filter_by_access(request.user, Presentation)
 
-    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv, qid).order_by('title')
+    presentations = presentations.select_related('owner').filter(q, qp, qk, qv).order_by('title')
 
     if request.method == "POST":
 
