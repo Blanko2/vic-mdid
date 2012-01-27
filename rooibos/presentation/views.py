@@ -86,8 +86,8 @@ def add_selected_items(request, presentation):
 @login_required
 def edit(request, id, name):
 
-    presentation = get_object_or_404(Presentation.objects.filter(
-        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+    presentation = get_object_or_404(filter_by_access(
+        request.user, Presentation, write=True, manage=True).filter(id=id))
     existing_tags = [t.name for t in Tag.objects.usage_for_model(
         OwnedWrapper, filters=dict(user=request.user, content_type=OwnedWrapper.t(Presentation)))]
     tags = Tag.objects.get_for_object(
@@ -259,12 +259,12 @@ def browse(request, manage=False):
 
     if manage:
         qv = Q()
-        qid = Q(id__in=accessible_ids(request.user, Presentation, write=True, manage=True))
+        presentations = filter_by_access(request.user, Presentation, write=True, manage=True)
     else:
         qv = Presentation.published_Q()
-        qid = Q(id__in=accessible_ids(request.user, Presentation))
+        presentations = filter_by_access(request.user, Presentation)
 
-    presentations = Presentation.objects.select_related('owner').filter(q, qp, qk, qv, qid).order_by('title')
+    presentations = presentations.select_related('owner').filter(q, qp, qk, qv).order_by('title')
 
     if request.method == "POST":
 
@@ -291,8 +291,8 @@ def browse(request, manage=False):
         # check for clicks on "add selected items" buttons
         for button in filter(lambda k: k.startswith('add-selected-items-'), request.POST.keys()):
             id = int(button[len('add-selected-items-'):])
-            presentation = get_object_or_404(Presentation.objects.filter(
-                id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+            presentation = get_object_or_404(
+                filter_by_access(request.user, Presentation, write=True, manage=True).filter(id=id))
             add_selected_items(request, presentation)
             return HttpResponseRedirect(reverse('presentation-edit', args=(presentation.id, presentation.name)))
 
@@ -351,9 +351,9 @@ def browse(request, manage=False):
 
 def password(request, id, name):
 
-    presentation = get_object_or_404(Presentation.objects.filter(Presentation.published_Q(request.user),
-                                id=id,
-                                id__in=accessible_ids(request.user, Presentation)))
+    presentation = get_object_or_404(
+        filter_by_access(request.user, Presentation).filter(
+        Presentation.published_Q(request.user), id=id))
 
     class PasswordForm(forms.Form):
         password = forms.CharField(widget=forms.PasswordInput)
