@@ -95,6 +95,7 @@ $(document).ready(function() {
         <div>
 {% if can_edit and record.id and not fv_formset %}
         <a href="{% url data-record-edit record.id record.name %}">Edit Record</a><br />
+        <a href="{% url data-record-copy record.id record.name %}">Duplicate Record</a><br />
 {% endif %}
 {% if record.id and not fv_formset %}
         <a href="{% url data-record-edit-customize record.id record.name %}">Customize Record</a><br />
@@ -336,7 +337,7 @@ Display metadata as: {{ fieldsetform.fieldset }}
             <div class="fvcol narrow">
                 <span class="row advanced"><label for="{{ form.date_start.html_name }}">Start year:</label> {{ form.date_start }}</span>
                 <span class="row advanced"><label for="{{ form.date_end.html_name }}">End year:</label> {{ form.date_end }}</span>
-                <span class="row advanced"><label for="{{ form.numeric.html_name }}">Numeric:</label> {{ form.numeric_value }}</span>
+                <span class="row advanced"><label for="{{ form.numeric_value.html_name }}">Numeric:</label> {{ form.numeric_value }}</span>
             </div>
             <div class="fvcol narrow">
                 <span class="row advanced"><label for="{{ form.language.html_name }}">Language:</label> {{ form.language }}</span>
