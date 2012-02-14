@@ -299,6 +299,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     else:
         upload_form = None
 
+    record_usage = record.presentationitem_set.values('presentation') \
+                    .distinct().count() if can_edit else 0
+
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
@@ -315,6 +318,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'upload_form': upload_form,
                                'upload_url': ("%s?sidebar&next=%s" % (reverse('storage-media-upload', args=(record.id, record.name)), request.get_full_path()))
                                              if record.id else None,
+                               'record_usage': record_usage,
                                },
                               context_instance=RequestContext(request))
 

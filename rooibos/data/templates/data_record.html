@@ -117,6 +117,17 @@ $(document).ready(function() {
 </div>
 {% endif %}
 
+{% if can_edit and record.id and not fv_formset %}
+<div class="facet active-facet" id="data_record_usage">
+    <div class="facet-header">Usage</div>
+    <div class="facet-body">
+        <a href="{% url presentation-record-usage record.id, record.name %}">
+            Used in {{ record_usage|default:"no" }} presentation{{ record_usage|pluralize }}
+        </a>
+    </div>
+</div>
+{% endif %}
+
 {% if record.id and not fv_formset %}
 {% if request.user.is_authenticated %}
 <div class="facet active-facet" id="data_record_your_tags">
