@@ -17,7 +17,7 @@ from rooibos.contrib.tagging.models import Tag, TaggedItem
 from rooibos.contrib.tagging.forms import TagField
 from rooibos.contrib.tagging.utils import parse_tag_input
 from rooibos.util.models import OwnedWrapper
-from rooibos.access import filter_by_access, accessible_ids
+from rooibos.access import filter_by_access
 from rooibos.util import json_view
 from rooibos.storage.models import ProxyUrl
 from rooibos.data.models import FieldSet, Record
@@ -384,8 +384,9 @@ def password(request, id, name):
 @require_POST
 @login_required
 def duplicate(request, id, name):
-    presentation = get_object_or_404(Presentation.objects.filter(
-        id=id, id__in=accessible_ids(request.user, Presentation, write=True, manage=True)))
+    presentation = get_object_or_404(
+        filter_by_access(request.user, Presentation, write=True, manage=True).
+        filter(id=id))
     dup = duplicate_presentation(presentation, request.user)
     return HttpResponseRedirect(reverse('presentation-edit',
                                         args=(dup.id, dup.name)))
