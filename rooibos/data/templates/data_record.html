@@ -164,7 +164,7 @@ $(document).ready(function() {
 <div class="facet active-facet" id="data_record_parent">
     <div class="facet-header">Parent record</div>
     <div class="facet-body">
-        {% record record "True" "thumb" "True" %}
+        {% record record.parent "True" "thumb" "True" %}
     </div>
 </div>
 {% endif %}
@@ -174,7 +174,7 @@ $(document).ready(function() {
     <div class="facet-header">Child records</div>
     <div class="facet-body" style="max-height: 400px; overflow: auto;">
         {% for child in record.record_set.all %}
-        {% record record "True" "thumb" "True" %}
+        {% record child "True" "thumb" "True" %}
         {% endfor %}
     </div>
 </div>
