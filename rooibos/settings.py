@@ -23,7 +23,8 @@ USE_I18N = False
 
 USE_ETAGS = False
 
-SESSION_SAVE_EVERY_REQUEST = True
+# When set to True, may cause problems with basket functionality
+SESSION_SAVE_EVERY_REQUEST = False
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -49,6 +50,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     "rooibos.context_processors.settings",
     "rooibos.context_processors.selected_records",
+    "rooibos.context_processors.current_presentation",
 )
 
 MIDDLEWARE_CLASSES = (
@@ -110,6 +112,7 @@ INSTALLED_APPS = (
     'rooibos.userprofile',
     'rooibos.mediaviewer',
     'rooibos.megazine',
+    'rooibos.groupmanager',
     'pagination',
     'impersonate',
     'compressor',

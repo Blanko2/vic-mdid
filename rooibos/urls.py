@@ -31,7 +31,8 @@ def raise_exception():
 
 
 urls = [
-    url(r'^$', main, {'HELP': 'frontpage'}, name='main'),
+    # main page needs SSL because of embedded login form, otherwise CSRF fails
+    url(r'^$', main, {'HELP': 'frontpage', 'SSL': True}, name='main'),
     url(r'^about/', direct_to_template, {'template': 'about.html'}, name='about'),
     url(r'^showcases/', direct_to_template, {'HELP': 'showcases',
                                              'template': 'showcases.html',

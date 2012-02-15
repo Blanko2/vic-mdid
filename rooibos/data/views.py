@@ -67,15 +67,18 @@ def record_delete(request, id, name):
 
 
 def record(request, id, name, contexttype=None, contextid=None, contextname=None,
-           edit=False, customize=False, personal=False):
+           edit=False, customize=False, personal=False, copy=False,
+           copyid=None, copyname=None):
 
     writable_collections = list(accessible_ids(request.user, Collection, write=True))
     readable_collections = list(accessible_ids(request.user, Collection))
     can_edit = request.user.is_authenticated()
+    can_manage = False
 
     if id and name:
         record = Record.get_or_404(id, request.user)
         can_edit = can_edit and record.editable_by(request.user)
+        can_manage = record.manageable_by(request.user)
     else:
         if request.user.is_authenticated() and (writable_collections or (personal and readable_collections)):
             record = Record()
@@ -105,6 +108,8 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     media = filter(lambda m: m.downloadable_in_template or m.editable_in_template, media)
 
     edit = edit and request.user.is_authenticated()
+
+    copyrecord = Record.get_or_404(copyid, request.user) if copyid else None
 
     class FieldSetForm(forms.Form):
         fieldset = FieldSetChoiceField(user=request.user, default_label='Default' if not edit else None)
@@ -240,7 +245,24 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                 return HttpResponseRedirect(url if request.POST.has_key('save_and_continue') else next)
         else:
 
-            if fieldset:
+            if copyrecord:
+                initial = []
+                for fv in copyrecord.get_fieldvalues(hidden=True):
+                    initial.append(dict(
+                        label=fv.label,
+                        field=fv.field_id,
+                        refinement=fv.refinement,
+                        value=fv.value,
+                        date_start=fv.date_start,
+                        date_end=fv.date_end,
+                        numeric_value=fv.numeric_value,
+                        language=fv.language,
+                        order=fv.order,
+                        group=fv.group,
+                        hidden=fv.hidden,
+                    ))
+                FieldValueFormSet.extra = len(initial) + 3
+            elif fieldset:
                 needed = fieldset.fields.filter(~Q(id__in=[fv.field_id for fv in fieldvalues])).order_by('fieldsetfield__order').values_list('id', flat=True)
                 initial = [{}] * len(fieldvalues) + [{'field': id} for id in needed]
                 FieldValueFormSet.extra = len(needed) + 3
@@ -256,7 +278,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                     )
                 )
 
-                for item in record.collectionitem_set.all():
+                for item in (copyrecord or record).collectionitem_set.all():
                     collections.get(item.collection_id, {}).update(dict(
                         member=True,
                         shared=not item.hidden,
@@ -279,6 +301,9 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
     else:
         upload_form = None
 
+    record_usage = record.presentationitem_set.values('presentation') \
+                    .distinct().count() if can_edit else 0
+
     return render_to_response('data_record.html',
                               {'record': record,
                                'media': media,
@@ -290,11 +315,13 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
                                'fv_formset': formset,
                                'c_formset': collectionformset,
                                'can_edit': can_edit,
+                               'can_manage': can_manage,
                                'next': request.GET.get('next'),
                                'collection_items': collection_items,
                                'upload_form': upload_form,
                                'upload_url': ("%s?sidebar&next=%s" % (reverse('storage-media-upload', args=(record.id, record.name)), request.get_full_path()))
                                              if record.id else None,
+                               'record_usage': record_usage,
                                },
                               context_instance=RequestContext(request))
 

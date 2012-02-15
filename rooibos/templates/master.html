@@ -11,6 +11,10 @@
 <head>
     <script type="text/javascript">
         document.documentElement.className = 'js-enabled';
+        var profile_settings = {% profile_settings ui %};
+        var basket_open = profile_settings['ui_basket_open'] == 'true';
+        if (basket_open) document.documentElement.className = 'js-enabled basket-open';
+        var custom_process_facets = false;
     </script>
     <title>MDID{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" href="{% url static 'images/favicon.ico' %}" />
@@ -19,7 +23,7 @@
     <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
-    <link href="{% url static 'jquery/jquery-ui-*.css'|fileversion %}" rel="stylesheet" type="text/css" media="screen">
+    <link href="{% url static 'jquery/jquery-ui-1.8.11.custom.css' %}" rel="stylesheet" type="text/css" media="screen">
     {% include "master.css" %}
 {% endcompress %}
 <!--[if IE]>
@@ -35,6 +39,22 @@
 {% block raw-content %}
     <div id="content-wrapper">
         <div id="content">
+
+
+
+
+{% block basket %}
+{% spaceless %}
+<div id="basket-content">
+    <div id="basket-scroll-right"></div>
+    <div id="basket-scroll-left"></div>
+    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
+</div>
+{% endspaceless %}
+{% endblock %}
+
+<div style="height: 15px;"></div>
+
 
 {% if messages %}
 <div id="messages">
@@ -58,7 +78,7 @@
 
 {% block footer %}
             <div id="footer">
-                Copyright 1997-2011 James Madison University
+                Copyright 1997-2012 James Madison University
             </div>
 {% endblock %}
 
@@ -68,30 +88,7 @@
 
 <div id="preview-dialog" style="display: none;" class="ui-corner-all"></div>
 
-{% block basket %}
-{% spaceless %}
-<div id="basket-content">
-    <div id="basket-menu">
-        <a href="{% url solr-selected %}">Explore</a><br />
-        <a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a><br />
-        {% recent_presentation request.user as presentation %}
-        {% if presentation %}
-        <a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a><br />
-        {% endif %}
-    </div>
-    <div id="basket-scroll-right"></div>
-    <div id="basket-scroll-left"></div>
-    <div id="basket-thumbs">{% include "ui_basket.html" %}</div>
-</div>
-<div id="basket-tab">
-    <div id="basket-tab-icon"></div>
-    <span id="basket-header">{% include "ui_basket_header.html" %}</span>
-    {% if user.is_authenticated %}
-    <img src="{% url static 'images/pin_up.png' %}" id="basket-tab-pin" title="Click to keep open or automatically hide" />
-    {% endif %}
-</div>
-{% endspaceless %}
-{% endblock %}
+
 
 {% block header %}
 {% spaceless %}
@@ -117,6 +114,19 @@
         <div class="spacer">
             <div id="header">
                 <a href="{% url main %}" id="logo"></a>
+                <ul style="float: right;">
+                    <li><div id="basket-header"
+                    style="background: url({% url static "images/basket.png" %})
+                    no-repeat; font-size: 0.6em; width: 32px; height: 22px; text-align: center; padding-top: 10px;"
+                              >{% include "ui_basket_header.html" %}</div>
+                        <ul class="menu">
+                            <li><a id="basket-toggle" href="#">Hide</a></li>
+                            <li><a href="{% url solr-selected %}">Explore</a></li>
+                            <li><a href="{% url ui-clear-selected %}?next={{ request.get_full_path|urlencode }}">Clear</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
                 <ul>
                     <li><a href="{% url solr-search %}">Discover</a>
                         <ul class="menu">
@@ -129,6 +139,9 @@
                     {% if user.is_authenticated %}
                     <li><a href="{% url presentation-manage %}">Organize</a>
                         <ul class="menu">
+                            {% if current_presentation %}
+                            <li><a href="{% url presentation-edit current_presentation.id, current_presentation.name %}">Edit {{ current_presentation.title }}</a></li>
+                            {% endif %}
                             <li><a href="{% url presentation-manage %}">Your Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
                             <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
@@ -152,7 +165,7 @@
                             <li><a href="{% url about %}">About</a></li>
                         </ul>
                     </li>
-                    <li class="search"><span>Search</span>
+                    <li class="search" style="padding-right: 20px;"><span>Search</span>
                         <form method="GET" action="{% url solr-search %}">
                             <input id="quicksearch" name="kw" type="text" title="Search" /><input type="image" src="{% url static 'images/go.png' %}" id="search-go" />
                         </form>
@@ -187,26 +200,23 @@
 <div id="stats"><!-- STATS: Total: %(totTime).2fs <br/>Python: %(pyTime).2fs <br/>DB: %(dbTime).2fs <br/>Queries: %(queries)d --></div>
 {% endif %}
 
-<script type="text/javascript">
-    var profile_settings = {% profile_settings ui %};
-    var custom_process_facets = false;
-</script>
 {% block javascript %}
- {% compress js %}
-    <script type="text/javascript" src="{% url static 'jquery/jquery-*.js'|fileversion %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/jquery-ui-*.js'|fileversion %}"></script>
+{% compress js %}
+    <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.4.min.js' %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.8.11.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.hoverIntent.minified.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.ajaxmanager.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.autocomplete.pack.js' %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-*.js'|fileversion %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/jquery.scrollTo-1.4.2-min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.multicheckbox.js' %}"></script>
     <script type="text/javascript" src="{% url static 'swfupload/swfupload.js' %}"></script>
     <script type="text/javascript" src="{% url static 'swfupload/plugins/swfupload.cookies.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.swfupload.js' %}"></script>
-    <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-*.js'|fileversion %}"></script>
+    <script type="text/javascript" src="{% url static 'jquery/qtip/jquery.qtip-1.0.0-rc3.min.js' %}"></script>
     <script type="text/javascript">
-        var ajaxManager = $.manageAjax.create('cacheQueue', { queue: true });
+        var ajaxManager = $.manageAjax.create('defaultQueue', { queue: true });
+        var ajaxInteractionManager = $.manageAjax.create('interactionQueue', { queue: true });
     </script>
     <script type="text/javascript" src="{% url static 'scripts/ui-scripts.js' %}"></script>
     <script type="text/javascript" src="{% url static 'scripts/json2.js' %}"></script>
@@ -214,16 +224,21 @@
     <!--<script type="text/javascript" src="/jsi18n/"></script>-->
 
     <script type="text/javascript">
+        function basket_imgs_first_row_top() {
+            return ($("#basket-thumbs img:visible:first").position() || Object({top: 0})).top;
+        }
+
         function basket_scroll_arrows() {
             $("#basket-scroll-left").css("visibility", ($("#basket-thumbs img:hidden:first").length > 0) ? "visible" : "hidden");
-            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > 50); }).length > 0) ? "visible" : "hidden");
+            var first_row_top = basket_imgs_first_row_top();
+            $("#basket-scroll-right").css("visibility",  ($("#basket-thumbs img").filter(function() { return ($(this).position().top > first_row_top); }).length > 0) ? "visible" : "hidden");
         }
 
         function recordSelection(ids, checked) {
             var method = ids == 0 ? 'GET' : 'POST';
             if (ids.constructor != Array) ids = [ids];
             ids = $.map(ids, function(e) { return parseInt(e); });
-            ajaxManager.add({
+            ajaxInteractionManager.add({
                 type: method,
                 url: '{% url ui-api-select-record %}',
                 data: {'id': JSON.stringify(ids), 'checked': checked},
@@ -233,7 +248,8 @@
                     basket_thumbs.html(r.basket);
                     add_metadata_popup(basket_thumbs);
                     $("#basket-header").html(r.header);
-                    basket_scroll_arrows();
+                    // set up scroll arrows after a delay to give Safari time to load thumbnails first
+                    setTimeout(basket_scroll_arrows, 1000);
                     $("#basket-thumbs").trigger('update');
                 }
             });
@@ -287,7 +303,7 @@
 
 
         function store_profile_setting(key, value) {
-            ajaxManager.add({
+            ajaxInteractionManager.add({
                 type: 'POST',
                 url: '{% url userprofile-store %}',
                 data: {'key': key, 'value': value},
@@ -341,8 +357,8 @@
         };
 
         function addCopyLinkIcon(item) {
-            if (!item.attr('href')) return;
-            var host = window.location.href.substring(0, window.location.href.length - window.location.pathname.length);
+            if (!item.attr('href') || item.hasClass('nocopylink')) return;
+            var host = window.location.href.substring(0, window.location.href.length - window.location.pathname.length - window.location.search.length);
             var url = host + item.attr('href').replace(/\?.+/, '');
             var link = $("<img class='item-action-link' src='{% url static 'images/link.png' %}' />");
             link.qtip({
@@ -383,6 +399,40 @@
             link.insertAfter(item);
         }
 
+        function keepAtTop(element, not_past) {
+            if (!keepAtTop.elements) keepAtTop.elements = Array();
+            keepAtTop.elements.push(
+                element.css("position", "relative").css("top", "0").css('z-index',
+                100 - keepAtTop.elements.length).css("left", "0"));
+            var placeholder = $("<div>").css("height", element.outerHeight(true)).insertBefore(element).hide();
+            keepAtTop.$window = $(window).scroll(function() {
+                if (element.is(":hidden")) return;
+                var not_past_bottom = not_past ? not_past.offset().top + not_past.height() : Number.MAX_VALUE;
+                var offset = 0;
+                $.each(keepAtTop.elements, function(i, e) {
+                    if (e != element) offset += e.is(":visible") ? e.height() : 0;
+                    else return false;
+                });
+                if (element.css("position") != "fixed") {
+                    var top = element.offset().top;
+                    // check to see if element is now too far up
+                    if (top < keepAtTop.$window.scrollTop() + offset &&
+                        keepAtTop.$window.scrollTop() + offset + element.height() < not_past_bottom) {
+                        element.css("position", "fixed").css("top", offset + "px").css("width", "100%");
+                        placeholder.show();
+                    }
+                } else {
+                    var top = placeholder.offset().top;
+                    // check if element can go back into its normal position
+                    if (top >= keepAtTop.$window.scrollTop() + offset ||
+                        element.offset().top + element.height() >= not_past_bottom) {
+                        element.css("position", "relative").css("top", "0").css("width", "auto");
+                        placeholder.hide();
+                    }
+                }
+            });
+        }
+
         $(document).ready(function() {
             var timeouts = Object();
             var resetwidth = function() { $(this).width($(this).parent().width() + 50); };
@@ -401,57 +451,45 @@
 
             $("#quicksearch").hint();
 
-            // Basket features
-            var basket_open = profile_settings['ui_basket_open'] == 'true';
-            var baskettimeout;
             function hideBasket(immediate) {
                 if (basket_open) return;
-                clearTimeout(baskettimeout);
-                var basket_height = $("#basket-content").css('height');
-                if (immediate == "immediate") {
-                    $("#basket-content").css('bottom', "-" + basket_height);
-                    $("#basket-tab").css('bottom', '0');
-                } else baskettimeout = setTimeout(function() {
-                    $("#basket-content").animate({ bottom: "-" + basket_height }, 500);
-                    $("#basket-tab").animate({ bottom: 0 }, 500);
-                    }, 500);
+                $("#basket-toggle").text("Show");
+                if (immediate)
+                    $("#basket-content").hide();
+                else
+                    $("#basket-content").slideUp();
             }
             function showBasket() {
-                clearTimeout(baskettimeout);
-                var basket_height = $("#basket-content").css('height');
-                baskettimeout = setTimeout(function() {
-                    $("#basket-content").animate({ bottom: 0 }, 500);
-                    $("#basket-tab").animate({ bottom: basket_height }, 500);
-                }, 200);
+                $("#basket-toggle").text("Hide");
+                $("#basket-content").slideDown();
+                basket_scroll_arrows();
             }
-            $("#basket-tab, #basket-content").hover(showBasket, hideBasket);
-            $("#basket-tab-pin").click(function() {
+
+            $("#basket-toggle").click(function(e) {
+                e.preventDefault();
                 basket_open = !basket_open;
                 store_profile_setting('ui_basket_open', basket_open);
-                $("#basket-tab-pin").attr("src", basket_open ? "{% url static 'images/pin_down.png' %}" : "{% url static 'images/pin_up.png' %}");
+                if (basket_open) showBasket(); else hideBasket();
             });
-            if (basket_open)
-                $("#basket-tab-pin").attr("src", "{% url static 'images/pin_down.png' %}");
-            else {
-                if (jQuery.browser.safari)
-                    // need to do this in load event, otherwise Safari does not have CSS info for basket height yet
-                    $(window).load(function() { hideBasket('immediate'); });
-                else
-                    hideBasket('immediate');
+
+            if (!basket_open) {
+                hideBasket(true);
             }
             $("#basket-scroll-right").click(function() {
-                if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > 50); }).length > 0) {
+                var first_row_top = basket_imgs_first_row_top();
+                if ($("#basket-thumbs img:visible").filter(function() { return ($(this).position().top > first_row_top); }).length > 0) {
                     var last = 0;
-                    $("#basket-thumbs img:visible").filter(function() { return ($(this).position().top < 50); }).each(
+                    $("#basket-thumbs img:visible").filter(function() { return ($(this).position().top <= first_row_top); }).each(
                         function(i) { $(this).delay(20 * i).hide(0); last = i; });
                     setTimeout(basket_scroll_arrows, (last + 1) * 20);
                 }
             });
             $("#basket-scroll-left").click(function() {
+                var first_row_top = basket_imgs_first_row_top();
                 if ($("#basket-thumbs img:hidden").length > 0) {
                     var first = $("#basket-thumbs img:visible:first");
                     function scroll_left() {
-                        if (first.position().top < 50 && $("#basket-thumbs img:hidden:last").show().length == 1)
+                        if (first.position().top <= first_row_top && $("#basket-thumbs img:hidden:last").show().length == 1)
                             setTimeout(scroll_left, 20);
                         else
                             basket_scroll_arrows();
@@ -459,13 +497,22 @@
                     scroll_left();
                 }
             });
-            $("#basket-content").css('overflow', 'hidden');
-            basket_scroll_arrows();
 
-            $("#basket-refresh").click(function() {
-                recordSelection(0);
-                return false;
+            $("#basket-thumbs img").live('mouseover', function(event) {
+                var $this = $(this);
+                $("#basket-unselect").remove();
+                var b = $("<input type='checkbox' id='basket-unselect' checked='checked' style='position: absolute; z-index: 1000;'>");
+                b.appendTo($("#basket-thumbs")).offset($this.offset()).click(function() {
+                    var id = $($this).attr("id");
+                    id = id.substring(id.lastIndexOf('-') + 1);
+                    recordSelection(id, false);
+                });
             });
+            $("#basket-thumbs").bind('mouseleave', function(event) {
+                $("#basket-unselect").remove();
+            });
+
+            basket_scroll_arrows();
 
             bindSelectRecordCheckboxes();
 
@@ -480,8 +527,14 @@
                     id = id.substring(id.lastIndexOf('-') + 1);
                     recordSelection(id, true);
                     ui.draggable.parents(".record").find("input.record-select").attr('checked', true);
+                },
+                activate: function(event, ui) {
+                    ui.helper.css('z-index', '10001');
                 }
             });
+
+            keepAtTop($("#basket-content"));
+
 
             $("#content-wrapper .record-anchor[id^=record-id-]").draggable({
                 containment: 'window',
@@ -506,8 +559,10 @@
                 var u = $("<ul><" + "/ul>");
                 $("td.item-actions a, td.item-actions input", r).each(function() {
                     var item = $(this);
-                    var li = $("<li><" + "/li>").append(item);
-                    u.append(li);
+                    if (!item.hasClass('item-action-important')) {
+                        var li = $("<li><" + "/li>").append(item);
+                        u.append(li);
+                    }
                     addCopyLinkIcon(item);
                 });
                 if (!u.children().length) u.append($("<li>No actions available<" + "/li>"));
