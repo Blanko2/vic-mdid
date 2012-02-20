@@ -8,6 +8,7 @@ class Viewer(object):
 
     embed_template = 'viewers_embed.html'
     is_embeddable = False
+    default_options = dict()
 
     def __init__(self, obj, user, options=None):
         self.user = user
@@ -26,6 +27,7 @@ class Viewer(object):
             return None
         return render_to_string(self.embed_template,
                                 {
+                                    'viewer': self,
                                     'divid': 'v' + str(uuid.uuid4())[-12:],
                                     'obj': self.obj,
                                     'options': options,

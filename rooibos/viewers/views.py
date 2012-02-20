@@ -20,9 +20,10 @@ def viewer_shell(request, viewer, objid):
     options_form_cls = viewer.get_options_form()
     if options_form_cls:
         options_form = options_form_cls(request.GET)
-        options = options_form.cleaned_data if options_form.is_valid() else None
+        options = options_form.cleaned_data if options_form.is_valid() else viewer.default_options
     else:
-        options_form = options = None
+        options_form = None
+        options = viewer.default_options
 
     return render_to_response(
         'viewers_shell.html',

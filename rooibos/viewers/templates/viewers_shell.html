@@ -3,14 +3,14 @@
 {% block sidebar %}
 {{ block.super }}
 
-{% if next %}
 <div class="facet active-facet" id="viewer_options">
     <div class="facet-header">Options</div>
     <div class="facet-body">
+{% if next %}
         <a href="{{ next }}">Return to previous page</a>
+{% endif %}
     </div>
 </div>
-{% endif %}
 
 {% endblock %}
 
