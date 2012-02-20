@@ -113,6 +113,7 @@ INSTALLED_APPS = (
     'rooibos.mediaviewer',
     'rooibos.megazine',
     'rooibos.groupmanager',
+    'rooibos.pdfviewer',
     'pagination',
     'impersonate',
     'compressor',
