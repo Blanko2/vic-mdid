@@ -8,7 +8,7 @@ import re
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
-from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions
+from rooibos.access import filter_by_access, get_effective_permissions_and_restrictions
 from rooibos.data.models import Collection, Record, standardfield, standardfield_ids
 from models import Media, Storage
 
@@ -51,7 +51,7 @@ def get_media_for_record(record, user=None, passwords={}):
         )
         access_q = Q(
             # Must have access to presentation
-            id__in=accessible_ids(user, Presentation),
+            id__in=filter_by_access(user, Presentation),
             # and presentation must not be archived
             hidden=False
         )
@@ -65,7 +65,7 @@ def get_media_for_record(record, user=None, passwords={}):
 
     return Media.objects.filter(
         record__id=record_id,
-        storage__id__in=accessible_ids(user, Storage),
+        storage__id__in=filter_by_access(user, Storage),
         )
 
 
