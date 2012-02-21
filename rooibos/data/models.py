@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
-from rooibos.access import accessible_ids, check_access
+from rooibos.access import filter_by_access, check_access
 from rooibos.access.models import AccessControl
 from rooibos.util import unique_slug
 from rooibos.util.caching import get_cached_value, cache_get, cache_get_many, cache_set, cache_set_many
@@ -128,9 +128,9 @@ class Record(models.Model):
             allowed_ids = []
             to_check = ids
 
-        cq = Q(collectionitem__collection__in=accessible_ids(user, Collection),
+        cq = Q(collectionitem__collection__in=filter_by_access(user, Collection),
                collectionitem__hidden=False)
-        mq = Q(collectionitem__collection__in=accessible_ids(user, Collection, write=True),
+        mq = Q(collectionitem__collection__in=filter_by_access(user, Collection, write=True),
                owner=None)
         oq = Q(owner=user) if user and not user.is_anonymous() else Q()
         records = records.filter(cq | mq | oq)
@@ -267,7 +267,7 @@ class Record(models.Model):
             # checks if user is owner:
             check_access(user, self, write=True) or
             # or if user has write access to collection:
-            len(accessible_ids(user, self.collection_set, write=True)) > 0)
+            filter_by_access(user, self.collection_set, write=True).count() > 0)
 
 
 

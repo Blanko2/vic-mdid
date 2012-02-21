@@ -19,7 +19,7 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from models import *
 from forms import FieldSetChoiceField
-from rooibos.access import filter_by_access, accessible_ids, check_access
+from rooibos.access import filter_by_access, check_access
 from rooibos.presentation.models import Presentation
 from rooibos.storage.models import Media, Storage
 from rooibos.userprofile.views import load_settings, store_settings
@@ -69,8 +69,8 @@ def record_delete(request, id, name):
 def record(request, id, name, contexttype=None, contextid=None, contextname=None,
            edit=False, customize=False, personal=False):
 
-    writable_collections = list(accessible_ids(request.user, Collection, write=True))
-    readable_collections = list(accessible_ids(request.user, Collection))
+    writable_collections = list(filter_by_access(request.user, Collection, write=True).values_list('id', flat=True))
+    readable_collections = list(filter_by_access(request.user, Collection).values_list('id', flat=True))
     can_edit = request.user.is_authenticated()
 
     if id and name:
@@ -96,7 +96,7 @@ def record(request, id, name, contexttype=None, contextid=None, contextname=None
         context = get_object_or_404(filter_by_access(request.user, model_class), id=contextid)
 
     media = Media.objects.select_related().filter(record=record,
-                                                  storage__id__in=accessible_ids(request.user, Storage))
+                                                  storage__in=filter_by_access(request.user, Storage))
     # Only list media that is downloadable or editable
     for m in media:
         # Calculate permissions and store with object for later use in template
@@ -364,7 +364,7 @@ class DisplayOnlyTextWidget(forms.HiddenInput):
 def data_import_file(request, file):
 
     available_collections = filter_by_access(request.user, Collection)
-    writable_collection_ids = accessible_ids(request.user, Collection, write=True)
+    writable_collection_ids = list(filter_by_access(request.user, Collection, write=True).values_list('id', flat=True))
     if not available_collections:
         raise Http404
     available_fieldsets = FieldSet.for_user(request.user)
@@ -543,8 +543,7 @@ def manage_collections(request):
 def manage_collection(request, id=None, name=None):
 
     if id and name:
-        collection = get_object_or_404(Collection,
-                                       id__in=accessible_ids(request.user, Collection, manage=True),
+        collection = get_object_or_404(filter_by_access(request.user, Collection, manage=True),
                                        id=id)
     else:
         collection = Collection(title='Untitled')
