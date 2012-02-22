@@ -73,6 +73,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'rooibos.storage.middleware.StorageOnStart',
+    'rooibos.access.middleware.AccessOnStart',
     'rooibos.middleware.HistoryMiddleware',
 )
 
