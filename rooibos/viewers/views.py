@@ -17,6 +17,10 @@ def viewer_shell(request, viewer, objid):
                             '?next=' + request.get_full_path())
         raise Http404()
 
+    response = viewer.view(request)
+    if response:
+        return response
+
     options_form_cls = viewer.get_options_form()
     if options_form_cls:
         options_form = options_form_cls(request.GET)

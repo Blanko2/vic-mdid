@@ -41,6 +41,9 @@ class Viewer(object):
     def embed_script(self, request):
         return None
 
+    def view(self, request):
+        return None
+
 
 
 _registered_viewers = dict()
