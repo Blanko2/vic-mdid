@@ -114,6 +114,7 @@ INSTALLED_APPS = (
     'rooibos.megazine',
     'rooibos.groupmanager',
     'rooibos.pdfviewer',
+    'rooibos.pptexport',
     'pagination',
     'impersonate',
     'compressor',

@@ -2,19 +2,7 @@ from __future__ import with_statement
 from zipfile import ZipFile, ZIP_DEFLATED
 import os
 import xml.dom.minidom
-from tempfile import mkstemp
-from django.core.urlresolvers import reverse
-from django.conf.urls.defaults import url
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import get_object_or_404, render_to_response
-from django.template import RequestContext
-from rooibos.viewers import NO_SUPPORT, PARTIAL_SUPPORT, FULL_SUPPORT
-from rooibos.access import filter_by_access
-from rooibos.data.models import Collection
-from rooibos.util import guess_extension
 from rooibos.storage import get_image_for_record
-from rooibos.storage.models import Media
-from rooibos.presentation.models import Presentation
 import Image
 
 
@@ -61,6 +49,8 @@ class PowerPointGenerator:
     def generate(self, template, outfile):
         if len(self.items) == 0:
             return False
+        if not template.endswith('.pptx'):
+            template += '.pptx'
         template = ZipFile(os.path.join(os.path.dirname(__file__), 'pptx_templates', template), mode='r')
         outfile = ZipFile(outfile, mode='w', compression=ZIP_DEFLATED)
         for name in template.namelist():
@@ -280,79 +270,3 @@ class PowerPointGenerator:
 
     def _content_types(self, name, content, outfile):
         self.content_types = content
-
-
-class PowerPointPresentation(object):
-
-    title = "PowerPoint"
-    weight = 20
-
-    def __init__(self):
-        pass
-
-    def analyze(self, obj, user):
-        if not isinstance(obj, Presentation):
-            return NO_SUPPORT
-        items = obj.cached_items()
-        valid = filter(lambda i: not i.type or i.hidden, items)
-        if len(valid) == 0:
-            return NO_SUPPORT
-        elif len(valid) < len(items):
-            return PARTIAL_SUPPORT
-        else:
-            return FULL_SUPPORT
-
-    def url(self):
-        return [url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/$', self.options, name='viewers-powerpoint'),
-                url(r'^powerpoint/(?P<id>[\d]+)/(?P<name>[-\w]+)/(?P<template>[^/]+)/$', self.generate, name='viewers-powerpoint-download'),
-                url(r'^powerpoint/(?P<template>[^/]+)/thumb/$', self.thumbnail, name='viewers-powerpoint-thumbnail')]
-
-    def url_for_obj(self, obj):
-        return reverse('viewers-powerpoint', kwargs={'id': obj.id, 'name': obj.name})
-
-    def options(self, request, id, name):
-        return_url = request.GET.get('next', reverse('presentation-browse'))
-        presentation = Presentation.get_by_id_for_request(id, request)
-        if not presentation:
-            return HttpResponseRedirect(return_url)
-
-        templates = [(reverse('viewers-powerpoint-download', kwargs={'id': presentation.id,
-                                                                        'name': presentation.name,
-                                                                        'template': t}),
-                      reverse('viewers-powerpoint-thumbnail', kwargs={'template': t}),
-                      t[:-5].capitalize())
-                         for t in PowerPointGenerator.get_templates()]
-        return render_to_response('presentations/powerpoint/options.html',
-                                  {'templates': templates,
-                                   'presentation': presentation,
-                                   'next': return_url,
-                                   },
-                                  context_instance=RequestContext(request))
-
-    def generate(self, request, id, name, template):
-        return_url = request.GET.get('next', reverse('presentation-browse'))
-        presentation = Presentation.get_by_id_for_request(id, request)
-        if not presentation:
-            return HttpResponseRedirect(return_url)
-
-        g = PowerPointGenerator(presentation, request.user)
-        filename = os.tempnam()
-        try:
-            g.generate(template, filename)
-            with open(filename, mode="rb") as f:
-                response = HttpResponse(content=f.read(),
-                    mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-            response['Content-Disposition'] = 'attachment; filename=%s.pptx' % name
-            return response
-        finally:
-            try:
-                os.unlink(filename)
-            except:
-                pass
-
-    def thumbnail(self, request, template):
-        filename = os.path.join(os.path.dirname(__file__), 'pptx_templates', template)
-        if not os.path.isfile(filename):
-            raise Http404()
-        template = ZipFile(filename, mode='r')
-        return HttpResponse(content=template.read('docProps/thumbnail.jpeg'), mimetype='image/jpg')

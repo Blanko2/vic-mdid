@@ -5,7 +5,7 @@ from rooibos.data.models import Collection, CollectionItem, Record, Field, Field
 from rooibos.storage.models import Media, Storage
 from rooibos.presentation.models import Presentation, PresentationItem
 from rooibos.access.models import AccessControl
-from viewers.powerpoint import PowerPointGenerator
+from pptexport.functions import PowerPointGenerator
 import os
 import tempfile
 import logging
