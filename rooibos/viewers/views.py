@@ -5,7 +5,7 @@ from django.http import Http404, HttpResponseForbidden
 from django.template import RequestContext
 
 
-def viewer_shell(request, viewer, objid):
+def viewer_shell(request, viewer, objid, template='viewers_shell.html'):
 
     viewer_cls = get_viewer_by_name(viewer)
     if not viewer_cls:
@@ -30,7 +30,7 @@ def viewer_shell(request, viewer, objid):
         options = viewer.default_options
 
     return render_to_response(
-        'viewers_shell.html',
+        template,
         {
             'viewer': viewer,
             'next': request.GET.get('next'),

@@ -19,7 +19,7 @@ class AudioTextSyncViewer(Viewer):
     title = "Audio Text Sync Viewer"
     weight = 10
 
-    def view(self, request):
+    def view(self, request, template='audiotextsync_view.html'):
         next = request.GET.get('next')
         can_edit = self.obj.editable_by(request.user)
 
@@ -35,7 +35,7 @@ class AudioTextSyncViewer(Viewer):
         transcript = textmedia.load_file().readlines()
         markers = get_markers(self.obj)
 
-        return render_to_response('audiotextsync_view.html',
+        return render_to_response(template,
                                   {'record': self.obj,
                                    'next': next,
                                    'transcript': transcript,
