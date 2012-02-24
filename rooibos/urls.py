@@ -63,6 +63,7 @@ urls = [
     (r'^megazine/', include('rooibos.megazine.urls')),
     (r'^pdfviewer/', include('rooibos.pdfviewer.urls')),
     (r'^pptexport/', include('rooibos.pptexport.urls')),
+    (r'^audiotextsync/', include('rooibos.audiotextsync.urls')),
 
     url(r'^favicon.ico$', serve, {'document_root': settings.STATIC_DIR, 'path': 'images/favicon.ico'}),
     url(r'^robots.txt$', serve, {'document_root': settings.STATIC_DIR, 'path': 'robots.txt'}),

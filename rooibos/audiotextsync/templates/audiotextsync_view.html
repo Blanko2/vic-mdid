@@ -126,7 +126,7 @@
                         $("#transcript").scrollTo(div, 1000, {easing: 'swing'});
                         ajaxManager.add({
                             type: 'POST',
-                            url: '{% url viewers-audiotextsync-setmarker record.id, record.name %}',
+                            url: '{% url audiotextsync-setmarker record.id, record.name %}',
                             data: {
                                 index: $("#transcript div").index(div),
                                 time: timer
