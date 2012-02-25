@@ -69,12 +69,21 @@ def get_media_for_record(record, user=None, passwords={}):
         )
 
 
+try:
+    import gfx
+    PDF_SUPPORT = True
+except ImportError:
+    PDF_SUPPORT = False
+
+
 def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
     media = get_media_for_record(record, user, passwords)
     q = Q(mimetype__startswith='image/')
     if settings.FFMPEG_EXECUTABLE:
         # also support video and audio
         q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
+    if PDF_SUPPORT:
+        q = q | Q(mimetype='application/pdf')
 
     media = media.select_related('storage').filter(q)
 
@@ -125,6 +134,8 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                         image = image.crop((0, (h - w) / 2, w, (h - w) / 2 + w))
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
+                if image.mode != "RGB":
+                    image = image.convert("RGB")
                 image.save(output, 'JPEG', quality=85, optimize=True)
                 return output.getvalue(), image.size
             except Exception, e:
