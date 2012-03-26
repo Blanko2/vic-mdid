@@ -1,5 +1,6 @@
 from django import forms
-from models import FieldSet
+from models import FieldSet, Collection
+from rooibos.access.functions import filter_by_access
 
 
 class FieldSetChoiceField(forms.ChoiceField):
@@ -21,3 +22,27 @@ class FieldSetChoiceField(forms.ChoiceField):
     def clean(self, value):
         value = super(FieldSetChoiceField, self).clean(value)
         return None if not value or value == '0' else int(value)
+
+
+
+class CollectionVisibilityPreferencesForm(forms.Form):
+
+    show_or_hide = forms.ChoiceField(widget=forms.RadioSelect,
+                                     label='When searching and browsing,',
+                                     initial='show',
+                                     choices=(
+                                        ('show', 'Show all collections except the ones selected below'),
+                                        ('hide', 'Hide all collections except the ones selected below'),
+                                     ),
+                                    )
+
+    collections = forms.ChoiceField(widget=forms.CheckboxSelectMultiple,
+                                    choices=(),
+                                   )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super(CollectionVisibilityPreferencesForm, self).__init__(*args, **kwargs)
+        self.fields['collections'].choices = (
+            (c.id, c.title) for c in filter_by_access(self.user, Collection)
+        )
