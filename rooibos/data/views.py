@@ -34,23 +34,6 @@ import random
 import string
 
 
-def collections(request):
-    collections = filter_by_access(request.user, Collection)
-    return render_to_response('data_groups.html',
-                              {'groups': collections, },
-                              context_instance=RequestContext(request))
-
-#def collection_raw(request, id, name):
-#    collection = get_object_or_404(filter_by_access(request.user, Collection), id=id)
-##    viewers = map(lambda v: v().generate(collection), get_viewers('collection', 'link'))
-#    return render_to_response('data_group.html',
-#                              {'collection': collection,
-##                               'viewers': viewers,
-#                               },
-#                              context_instance=RequestContext(request))
-
-
-
 @login_required
 def record_delete(request, id, name):
     if request.method == 'POST':
