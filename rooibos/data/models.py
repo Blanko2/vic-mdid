@@ -104,7 +104,7 @@ class Record(models.Model):
     source = models.CharField(max_length=1024, null=True, blank=True)
     manager = models.CharField(max_length=50, null=True, blank=True)
     next_update = models.DateTimeField(null=True, blank=True)
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
 
 
     @staticmethod
