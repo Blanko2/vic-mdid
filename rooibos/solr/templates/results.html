@@ -228,9 +228,9 @@
 {% if user.is_authenticated %}
 <li><span class="dropdown-anchor">Selected Items <img src="{% url static 'images/down_arrow.png' %}" /></span>
   <div class="dropdown">
-  {% if user|accessible_objects:"data.Collection,m"|length %}
+  {#{% if user|accessible_objects:"data.Collection,m"|length %}#}
   <a href="{% url ui-delete-selected %}">Delete</a><br />
-  {% endif %}
+  {#{% endif %}#}
   <a href="{% url presentation-manage %}">Add to Presentation</a><br />
   </div>
 </li>
