@@ -24,6 +24,7 @@ try:
 except ImportError:
     #### 1.1 or below ####
     # We'll 'fake' multi-db; set the default alias
+    print "****** settings = %s" % settings
     DEFAULT_DB_ALIAS = 'default'
     # SOUTH_DATABASE_ADAPTER is an optional override if you have a different module
     engine = getattr(settings, "SOUTH_DATABASE_ADAPTER", "south.db.%s" % settings.DATABASE_ENGINE)
@@ -34,9 +35,11 @@ else:
     # Loop over the defined databases, gathering up their engines
     db_engines = dict([
         # Note we check to see if contrib.gis has overridden us.
-        (alias, "south.db.%s" % engine_modules.get(db_settings['ENGINE'], None))
+        (alias, "south.db.%s" % engine_modules.get(db_settings['ENGINE'], "sqlite3"))
         for alias, db_settings in settings.DATABASES.items()
     ])
+    print "**** %s" % db_engines
+    print "!!!! %s" % settings.DATABASES.items()
     # Update with any overrides
     db_engines.update(getattr(settings, "SOUTH_DATABASE_ADAPTERS", {}))
     # Check there's no None engines, or...
