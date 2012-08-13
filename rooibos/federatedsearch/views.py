@@ -11,6 +11,7 @@ from models import HitCount
 from nasa import NasaImageExchange
 from artstor import ArtstorSearch
 from flickr import FlickrSearch
+from dummy import Dummy
 
 import logging
 
@@ -25,6 +26,7 @@ source_classes = [
     NasaImageExchange,
     ArtstorSearch,
     FlickrSearch,
+    Dummy,
 ]
 
 

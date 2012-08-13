@@ -1,0 +1,22 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+{% load solr %}
+
+{{ block.super }}
+
+{% block sidebar %}
+
+{{ block.super }}
+
+{% endblock %}
+
+
+{% block content-top %}
+<h1>Dummy search results</h1>
+{% endblock %}
+
+{% block content %}
+Not much here
+{% endblock %}
