@@ -56,6 +56,7 @@ urls = [
     (r'^profile/', include('rooibos.userprofile.urls')),
     (r'^federated/', include('rooibos.federatedsearch.urls')),
     (r'^nasa/', include('rooibos.federatedsearch.nasa.urls')),
+    (r'^dummy/', include('rooibos.federatedsearch.dummy.urls')),
     (r'^flickr/', include('rooibos.federatedsearch.flickr.urls')),
     (r'^artstor/', include('rooibos.federatedsearch.artstor.urls')),
     (r'^impersonate/', include('rooibos.contrib.impersonate.urls')),
