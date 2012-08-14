@@ -3,5 +3,5 @@ import views
 
 urlpatterns = patterns('',
 	url(r'^search/', views.search, name='dummy-search'),
-#	url(r'^select/', nix_select_record, name='dummy-select'),
+	url(r'^select/', views.select, name='dummy-select'),
 )
