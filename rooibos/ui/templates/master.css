@@ -554,6 +554,23 @@ html.basket-open #basket-content {
 }
 
 
+.resultlist-metadata .record {
+    float: none;
+    border: none;
+    border-bottom: 1px {{ colors.borders }} solid;
+    padding: 2px;
+    background-color: transparent;
+    width: auto;
+    margin: 0;
+    height: auto;
+}
+
+.resultlist-metadata .record .metadata {
+    padding-left: 105px;
+    width: 765px;
+}
+
+
 .tag {
     background-color: {{ colors.tag }};
     color: {{ colors.tag_text }};
