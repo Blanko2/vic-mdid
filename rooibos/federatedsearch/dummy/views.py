@@ -18,38 +18,48 @@ def search(request):
 		}, context_instance=RequestContext(request))
 
 def _dummy_record(title, url):
+	print '** _dummy_record (%s, %s)' % (title, url)
 	record = Record.objects.create(name=title,
 					source=url,
 					manager='dummy')
+	print '** _dummy_record.foo'
 	FieldValue.objects.create(record=record,
-				field=standard('title'),
+				field=standardfield('title'),
 				order=0,
 				value=title)
-	CollectionItem.obects.create(collection=_get_collection(), record=record)
+	collection = _get_collection()
+	print '** _dummy_record.bar'
+	CollectionItem.objects.create(collection=collection, record=record)
+	print '** _dummy_record.baz'
 	job = JobInfo.objects.create(func='dummy_download_media', arg=simplejson.dump({
 		'record': record.id,
 		'url': url
 	}))
+	print '** _dummy_record.qux'
 	job.run()
 	return record
 
 def _get_collection():
+	print '** _get_collection'
+	print '** %s' % Collection.objects.get_or_create
 	collection, created = Collection.objects.get_or_create(name='dummy',
 								defaults={
 									'title': 'Dummy collection',
-									'hidden': true,
+									'hidden': True,
 									'description': 'Collection for dummy search thing'
 								})
+	print '** _get_collection.foo'
 	if created:
 		authenticated_users, created = ExtendedGroup.objects.get_or_create(type=AUTHENTICATED_GROUP)
 		AccessControl.objects.create(content_object=collection, usergroup=authenticated_users, read=True)
+	print '** _get_collection.bar'
 	return collection
 
 def _get_storage():
 	storage, created = Storage.objects.get_or_create(name='dummy',
 								defaults={
 									'title': 'Dummy collection',
-									'hidden': true,
+									'hidden': True,
 									'description': 'Collection for dummy search thing',
 									'base': os.path.join(settings.AUTO_STORAGE_DIR, 'dummy')
 								})
@@ -74,12 +84,14 @@ def select(request):
 			print '*** url %s' % url
 			id = ids.get(url)
 			if id:
+				print '** baz'
 				result.append(id)
 			else:
+				print '** qux'
 				record = _dummy_record("blah", url)
+				print '*** record = %s' % record
 				result.append(record.id)
 		r = request.POST.copy()
 		r['id'] = simplejson.dumps(result)
 		request.POST = r
 	return select_record(request)
-
