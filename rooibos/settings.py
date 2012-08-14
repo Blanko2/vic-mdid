@@ -53,6 +53,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'rooibos.mobilemiddleware.MobileMiddleware',
     'rooibos.middleware.Middleware',
     'rooibos.help.middleware.PageHelp',
 #    'rooibos.profile_middleware.ProfileMiddleware',
