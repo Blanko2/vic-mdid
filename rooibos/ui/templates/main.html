@@ -1,4 +1,4 @@
-{% extends "master.html" %}
+{% extends "base.html" %}
 {% load help %}
 {% load comments %}
 {% load humanize %}
@@ -125,7 +125,7 @@
         </form>
 
     {% else %}
-        <h2>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}</h2>
+        <h2>Hello{% if user.first_name %}, {{ user.first_name }}{% endif %}</h2>
     {% endif %}
     </div>
 
