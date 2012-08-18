@@ -8,5 +8,5 @@ from django.views.decorators.csrf import csrf_protect
 def m_main(request):
     form = AuthenticationForm()
     request.session.set_test_cookie()
-    return render_to_response('m_login.html', {'login_form': form}, context_instance=RequestContext(request))
+    return render_to_response('m_login.html', {'form': form}, context_instance=RequestContext(request))
 
