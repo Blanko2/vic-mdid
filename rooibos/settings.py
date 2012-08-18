@@ -92,6 +92,7 @@ INSTALLED_APPS = (
     'google_analytics',
     'rooibos.data',
     'rooibos.migration',
+    'rooibos.mobile',
     'rooibos.util',
     'rooibos.access',
     'rooibos.solr',
