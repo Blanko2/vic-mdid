@@ -20,7 +20,7 @@ class MobileMiddleware:
         'qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar',
         'sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-',
         'tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp',
-        'wapr','webc','winw','winw','xda','xda-', 'mozi',
+        'wapr','webc','winw','winw','xda','xda-',
         ]
  
         mobile_ua_hints = [ 'SymbianOS', 'Opera Mini', 'iPhone' ]
