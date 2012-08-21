@@ -1,11 +1,83 @@
+{% load compress %}
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+
 <title>MDID{% block title %}{% endblock %}</title>
+{% block stylesheets %}
+{% compress css %}
+    <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
+    <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
+    <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
+    <link href="{% url static 'jquery/jquery-ui-1.8.11.custom.css' %}" rel="stylesheet" type="text/css" media="screen">
+    {% include "mobile.css" %}
+{% endcompress %}
+<!--[if IE]>
+{% compress css %}
+    {% include "master-ie.css" %}
+{% endcompress %}
+<![endif]-->
+{% endblock %}
 </head>
-<body>
-	<p>This is a mobile webpage</p>
-	{% block content %}
-	{% endblock %}
+
+<!-- Sets the background color using body.master (line 75 master.css) -->
+<body class="ui-reset master">	
+	
+{% block raw-content %}
+    <div id="content-wrapper">	<!-- line 296 master.css -->
+        <div id="content">		<!-- line 83 and line 303 master.css -->
+        
+		{% block content-top %}
+		{% endblock %}
+        	
+
+		<!-- main content goes in here -->
+		{% block content %}
+		{% endblock content %}
+		
+		<!-- better acknowledge the originals -->
+		{% block footer %}
+            <div id="footer">
+                Copyright 1997-2011 James Madison University
+            </div>
+		{% endblock footer %}
+
+		</div>
+    </div>
+{% endblock raw-content %}
+
+{% block header %}
+{% spaceless %}
+    <div id="topmenu">	<!-- line 137 mobile.css -->
+        <ul>
+            {% if user.is_authenticated %}
+            <li>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}</li>
+            <li><a href="{% url logout %}?next={% url main %}">Log out</a></li>
+            <li><a href="{% url ui-options %}">Options</a></li>
+            <li><a href="{% url ui-management %}">Management</a></li>
+            {% endif %}
+            
+        </ul>
+    </div>
+
+    <div id="header-bar">
+        <div class="spacer">	<!-- line 182 mobile.css -->
+            <div id="header">
+                <a href="{% url main %}" id="logo"></a>
+               <!-- <ul>
+                     <li class="search" style="padding-right: 20px;"><span>Search</span>
+                        <form method="GET" action="{% url solr-search %}">
+                            <input id="quicksearch" name="kw" type="text" title="Search" /><input type="image" src="{% url static 'images/go.png' %}" id="search-go" />
+                        </form>
+                    </li>
+                </ul> -->
+            </div>
+        </div>
+    </div>
+{% endspaceless %}
+{% endblock header %}
+
+
 </body>
 </html>

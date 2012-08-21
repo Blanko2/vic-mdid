@@ -15,6 +15,12 @@
         var basket_open = profile_settings['ui_basket_open'] == 'true';
         if (basket_open) document.documentElement.className = 'js-enabled basket-open';
         var custom_process_facets = false;
+        
+        function move() {
+            if(window.innerWidth < 400)
+                window.location = '/mobile';
+        }
+        
     </script>
     <title>MDID{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" href="{% url static 'images/favicon.ico' %}" />
@@ -34,7 +40,7 @@
 {% endblock %}
 </head>
 
-<body class="ui-reset master">
+<body class="ui-reset master" onload="timer=setTimeout('move()',1000)">
 
 {% block raw-content %}
     <div id="content-wrapper">
