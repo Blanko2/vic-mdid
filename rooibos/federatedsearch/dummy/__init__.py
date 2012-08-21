@@ -1,9 +1,10 @@
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch, HitCount
+import digitalnz
 
 class Dummy(FederatedSearch):
 	def hits_count(self, keyword):
-		return 4
+		return digitalnz.count(keyword)
 	
 	def get_label(self):
 		return "Dummy"

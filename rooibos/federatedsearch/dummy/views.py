@@ -1,11 +1,22 @@
 from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseRedirect, Http404
+from rooibos.workers.models import JobInfo
 from django.template import RequestContext
 from rooibos.ui.views import select_record
 from django.utils import simplejson
+from rooibos.storage.models import *
+from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
+import digitalnz
+
+import sys
+import traceback
 
 def search(request):
 	query = request.GET.get('q', '') or request.POST.get('q', '')
+	return render_to_response('dummy-results.html', {
+		"results": map(lambda((n, t, u)): { "title": n, "thumb_url": t, "record_url": u }, digitalnz.search(query))
+	}, context_instance=RequestContext(request))
 	return render_to_response('dummy-results.html',
 		{
 			'results': [
@@ -31,7 +42,7 @@ def _dummy_record(title, url):
 	print '** _dummy_record.bar'
 	CollectionItem.objects.create(collection=collection, record=record)
 	print '** _dummy_record.baz'
-	job = JobInfo.objects.create(func='dummy_download_media', arg=simplejson.dump({
+	job = JobInfo.objects.create(func='dummy_download_media', arg=simplejson.dumps({
 		'record': record.id,
 		'url': url
 	}))
@@ -59,8 +70,7 @@ def _get_storage():
 	storage, created = Storage.objects.get_or_create(name='dummy',
 								defaults={
 									'title': 'Dummy collection',
-									'hidden': True,
-									'description': 'Collection for dummy search thing',
+									'system': 'local',
 									'base': os.path.join(settings.AUTO_STORAGE_DIR, 'dummy')
 								})
 	if created:
