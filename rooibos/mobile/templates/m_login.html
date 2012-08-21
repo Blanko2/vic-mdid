@@ -23,8 +23,10 @@
 
 <form method="post" action=".">{% csrf_token %}
 <table summary="Login">
-<tr><td>{{ form.username.label_tag }}</td><td>{{ form.username }}</td></tr>
-<tr><td>{{ form.password.label_tag }}</td><td>{{ form.password }}</td></tr>
+<tr><td>{{ form.username.label_tag }}</td></tr>
+<tr><td>{{ form.username }}</td></tr>
+<tr><td>{{ form.password.label_tag }}</td></tr>
+<tr><td>{{ form.password }}</td></tr>
 </table>
 
 <input type="submit" value="Log in" />
