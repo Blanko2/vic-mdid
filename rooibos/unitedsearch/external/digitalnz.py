@@ -7,6 +7,7 @@ from urllib import urlencode
 from django.conf import settings
 
 name = "DigitalNZ"
+identifier = "digitalnz"
 
 def _get(url):
 #	return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
@@ -30,5 +31,10 @@ def search(term, params, off, len):
 	result = Result(_count(obj), off + len)
 	for i in obj["results"]:
 		if(i["object_url"] != None):
-			result.addImage(Image(i["object_url"], i["thumburl_url"], i["title"], i))
+			# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
+			result.addImage(Image(i["object_url"], i["thumbnail_url"], i["title"], i, json.dumps(i)))
 	return result
+
+def getImage(identifier):
+	i = json.loads(identifier)
+	return result.addImage(Image(i["object_url"], i["thumbnail_url"], i["title"], i, identifier))
