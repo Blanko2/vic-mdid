@@ -1,6 +1,6 @@
 import json
 import urllib2
-from rooibos.federatedsearch.searchers import *
+from rooibos.unitedsearch import *
 #from searcher import *
 from urllib import urlencode
 
@@ -9,8 +9,8 @@ from django.conf import settings
 name = "DigitalNZ"
 
 def _get(url):
-	return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-#	return urllib2.urlopen(url)
+#	return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+	return urllib2.urlopen(url)
 
 def __search(term, off, len):
 	return json.load(_get("http://api.digitalnz.org/v3/records.json?" + urlencode({ 'api_key': settings.DIGITALNZ_KEY, 'text': term, 'per_page': len })))["search"]

@@ -12,7 +12,7 @@ from nasa import NasaImageExchange
 from artstor import ArtstorSearch
 from flickr import FlickrSearch
 from dummy import Dummy
-from searchers import aggregate
+from rooibos.unitedsearch import aggregate
 
 import logging
 

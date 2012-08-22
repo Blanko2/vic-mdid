@@ -1,7 +1,7 @@
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch
 
-from rooibos.federatedsearch.searchers.external import digitalnz
+from external import digitalnz
 
 def federatedSearchSource(searcher):
 	class Search(FederatedSearch):
