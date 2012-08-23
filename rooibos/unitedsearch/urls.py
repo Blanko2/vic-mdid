@@ -1,9 +1,5 @@
 from django.conf.urls.defaults import *
 from views import usViewer
-import external.digitalnz
+import searchers
 
-dnzviewer = usViewer(external.digitalnz)
-
-urlpatterns = patterns('',
-	url(r'^digitalnz/', include(dnzviewer.urlpatterns))
-)
+urlpatterns = patterns('', *[url(r'^' + searcher.identifier + '/', include(usViewer(searcher), namespace=searcher.identifier)) for searcher in searchers.all])
