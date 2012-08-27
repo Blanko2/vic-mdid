@@ -15,8 +15,8 @@ import traceback
 class usViewer():
 	def __init__(self, searcher):
 		self.urlpatterns = patterns('',
-			url(r'^search/', self.search),
-			url(r'^select/', self.select))
+			url(r'^search/', self.search, name='search'),
+			url(r'^select/', self.select, name='select'))
 		self.searcher = searcher
 
 	def search(self, request):

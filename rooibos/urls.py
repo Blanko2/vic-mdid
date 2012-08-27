@@ -62,7 +62,8 @@ urls = [
     (r'^impersonate/', include('rooibos.contrib.impersonate.urls')),
     (r'^mediaviewer/', include('rooibos.mediaviewer.urls')),
     (r'^mobile/', include('rooibos.mobile.urls')),
-    (r'^united/', include('rooibos.unitedsearch.urls')),
+
+    url(r'^united/', include('rooibos.unitedsearch.urls', namespace='united')),
 
     url(r'^favicon.ico$', serve, {'document_root': settings.STATIC_DIR, 'path': 'images/favicon.ico'}),
     url(r'^robots.txt$', serve, {'document_root': settings.STATIC_DIR, 'path': 'robots.txt'}),

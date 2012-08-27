@@ -1,7 +1,7 @@
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch
 
-from external import digitalnz
+import searchers
 
 def federatedSearchSource(searcher):
 	class Search(FederatedSearch):
@@ -16,16 +16,8 @@ def federatedSearchSource(searcher):
 			return "fake-source-id"
 
 		def get_search_url(self):
-			""" TODO """
-			return reverse('dummy-search')
+			return reverse('united:%s:search' % searcher.identifier)
 	return Search
 
-searchers = [ digitalnz ]
-
-test = federatedSearchSource(digitalnz)
-
 def federatedSearchSources():
-	print '*******'
-	print test
-	return [ test ]
-#	return map(federatedSearchSource, searchers)
+	return map(federatedSearchSource, searchers.all)
