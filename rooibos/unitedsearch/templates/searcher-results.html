@@ -14,7 +14,7 @@
         if (ids.constructor != Array) ids = [ids];
         ajaxManager.add({
             type: method,
-            url: '{% url dummy-select %}',
+            url: '{{ select_url }}',
             data: {'id': JSON.stringify(ids), 'checked': checked},
             dataType: 'json',
             success: function(r) {
@@ -77,7 +77,7 @@
 <div class="record">
     <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
     <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
-    <input type="checkbox" class="remote-record-select" name="r" value="{{ r.record_url }}"{% if r.selected %} checked="checked"{% endif %} />
+    <input type="checkbox" class="remote-record-select" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
 </div>
 
 
