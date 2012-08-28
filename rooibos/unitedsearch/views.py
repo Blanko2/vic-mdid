@@ -26,7 +26,9 @@ class usViewer():
 		return render_to_response('searcher-results.html',
 			{
 				'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.url, 'identifier': i.identifier } for i in results ],
-				'select_url': reverse('united:%s:select' % self.searcher.identifier) },
+				'select_url': reverse('united:%s:select' % self.searcher.identifier),
+				'searcher_name': self.searcher.name
+			},
 			context_instance=RequestContext(request))
 
 	def record(self, identifier):
