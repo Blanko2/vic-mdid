@@ -12,8 +12,7 @@ def federatedSearchSource(searcher):
 			return searcher.name
 
 		def get_source_id(self):
-			""" TODO """
-			return "fake-source-id"
+			return "united-%s" % searcher.identifier
 
 		def get_search_url(self):
 			return reverse('united:%s:search' % searcher.identifier)
