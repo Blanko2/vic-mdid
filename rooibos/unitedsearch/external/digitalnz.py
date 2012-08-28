@@ -10,8 +10,8 @@ name = "DigitalNZ"
 identifier = "digitalnz"
 
 def _get(url):
-#	return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-	return urllib2.urlopen(url)
+	return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+#	return urllib2.urlopen(url)
 
 def __search(term, off, len):
 	return json.load(_get("http://api.digitalnz.org/v3/records.json?" + urlencode({ 'api_key': settings.DIGITALNZ_KEY, 'text': term, 'per_page': len })))["search"]
@@ -37,4 +37,4 @@ def search(term, params, off, len):
 
 def getImage(identifier):
 	i = json.loads(identifier)
-	return result.addImage(Image(i["object_url"], i["thumbnail_url"], i["title"], i, identifier))
+	return Image(i["object_url"], i["thumbnail_url"], i["title"], i, identifier)
