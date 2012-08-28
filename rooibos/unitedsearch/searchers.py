@@ -1,3 +1,5 @@
 from external import digitalnz
+from external import nga
 
-all = [ digitalnz ]
+""" UnitedSearchers to search. Must have name and identifier attributes defined"""
+all = [ nga ]

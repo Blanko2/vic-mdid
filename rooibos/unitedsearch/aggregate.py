@@ -4,6 +4,7 @@ from rooibos.federatedsearch.models import FederatedSearch
 import searchers
 
 def federatedSearchSource(searcher):
+	
 	class Search(FederatedSearch):
 		def hits_count(self, keyword):
 			return searcher.search(keyword, {}, 0, 0).total
@@ -20,4 +21,6 @@ def federatedSearchSource(searcher):
 	return Search
 
 def federatedSearchSources():
+	""" Wraps the UnitedSearch searchers from searchers.py
+	into FedaratedSearch, so they can be displayed etc """
 	return map(federatedSearchSource, searchers.all)

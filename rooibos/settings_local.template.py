@@ -81,8 +81,10 @@ FLICKR_KEY = ''
 FLICKR_SECRET = ''
 
 # Set to None if you don't subscribe to ARTstor
-ARTSTOR_GATEWAY = None
-#ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'
+#ARTSTOR_GATEWAY = None
+ARTSTOR_GATEWAY = 'http://sru.artstor.org/SRU/artstor.htm'
+
+DIGITALNZ_KEY = ''
 
 OPEN_OFFICE_PATH = 'C:/Program Files/OpenOffice.org 3/program/'
 
