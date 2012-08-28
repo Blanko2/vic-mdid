@@ -16,9 +16,20 @@
         if (basket_open) document.documentElement.className = 'js-enabled basket-open';
         var custom_process_facets = false;
         
+        // Test if the device screen is mobile sized.
+        // If so, split the url at http://mdid/presentation for example,
+        // and insert 'mobile' eg http://mdid/mobile/presentation.
         function move() {
-            if(window.innerWidth < 400)
-                window.location = '/mobile';
+            if(window.innerWidth < 400){
+                var url = window.location.href;
+                // This regex splits the url into two parts
+                // and uses capturing groups (the parentheses)
+                // to separate them. The captured groups are
+                // later accessed using the match variable below.
+            	var pattern = /(^.+:\/\/[^\/]+)(.+$)/;
+            	var match = pattern.exec(url);
+            	window.location = match[1] + '/mobile' + match[2];
+            }
         }
         
     </script>

@@ -84,7 +84,8 @@ body.master {
     font-size: 133.3%;
 }
 
-img {
+img {width: 200px;
+    height: 300px;
     margin: 0;
 }
 
