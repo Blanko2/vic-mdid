@@ -79,13 +79,13 @@ def __scrubHTML(soup, maxNumResults, firstIdIndex):
 
 def __count(soup):
     containing_div = soup.find('div', 'breakdown')
-    return re.findall("\d{1,}", containing_div.renderContents())[0]     # num results is the only number in the breakdown
+    return int(re.findall("\d{1,}", containing_div.renderContents())[0])     # num results is the only number in the breakdown
     
     
     
 def count(term):
     
-    soup = __getResultsHTML(term, {}, 0)
+    soup = __getResultsHTML(term, {}, 0)[0]
     return __count(soup)
     
 
@@ -132,7 +132,7 @@ def search(term, params, off, num_results_wanted) :
     
      
      # make Result that the rest of UnitedSearch can deal with
-     result = Result(count(term), off+num_results_wanted)    # TODO should be actual count, not 2
+     result = Result(count(term), off+num_results_wanted)
      for i in range(len(ids)) :
          result.addImage(__createImage(ids[i], thumbs[i]))
        
