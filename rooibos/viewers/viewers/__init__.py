@@ -8,3 +8,4 @@ from printview import PrintView
 from audiotextsync import AudioTextSync
 from mediaplayer import MediaPlayer, EmbeddedMediaPlayer
 from megazine import MegazinePlayer
+from htmlpresentation import HTMLPresentation
