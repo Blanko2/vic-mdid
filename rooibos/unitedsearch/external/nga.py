@@ -6,6 +6,7 @@ from rooibos.unitedsearch import *
 SEARCH_BASE_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
 METADATA_BASE_URL = "https://images.nga.gov/en/asset/show_zoom_window_popup.html"
 IMAGE_URL_BASE = "https://images.nga.gov/?service=asset&action=show_preview&asset"
+THUMB_URL_BASE = "https://images.nga.gov/"
 
 name = "National Gallery of Art"
 identifier = "nga"
@@ -15,10 +16,10 @@ def __getResultsHTML(query, paramenters,offset) :
      """ Ask the site itself to perform the search. Returns
      the page containing the offset'th image """
      
-     page_num = offset/25    # 25 = num items per page on site
+     page_num = str(1 + (offset/25))    # 25 = num items per page on site
      startImNum = offset%25
      # simple search
-     url = SEARCH_BASE_URL + "&q=" + query #+ "&page=" + page_num
+     url = SEARCH_BASE_URL + "&q=" + query + "&page=" + page_num
      # html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
      proxy = urllib2.ProxyHandler({"https": "http://localhost:3128"})
      opener = urllib2.build_opener(proxy)
@@ -55,26 +56,30 @@ def __findIds(soup, maxWanted, firstIdIndex) :
   
 
   
-def __findThumbUrls(soup, maxWanted) :
-   """ get src for each image thumbnail """
+def __findMetaData(soup, maxWanted) :
+   """ get thumbnail source and description for each image """
    
    thumbs = []
+   descriptions = []
    
    metaDataDivs = soup.findAll('div', 'pictureBox')  # class = 'pictureBox'
    
    maxIndex = maxWanted if (maxWanted < len(metaDataDivs)) else len(metaDataDivs)
    
    for i in range(0, maxIndex) :
-       thumbs.append(divs[i].find('img', 'mainThumbImage imageDraggable')['src'])
+       metaData = metaDataDivs[i].find('img', 'mainThumbImage imageDraggable')
+       if not metaData :
+           metaData = metaDataDivs[i].find('img', 'mainThumbImage ')   # class type if image not available
+       thumbs.append(THUMB_URL_BASE+metaData['src'].encode("UTF-8"))
+       descriptions.append(metaData['title'].encode("UTF-8"))
    
-   return thumbs
-
+   return (thumbs, descriptions)
 
 
 def __scrubHTML(soup, maxNumResults, firstIdIndex):
  ids = __findIds(soup, maxNumResults, firstIdIndex)
- thumbs = __findThumbUrls(soup, maxNumResults)
- return (ids, thumbs)
+ thumbs, descriptions = __findMetaData(soup, maxNumResults)
+ return (ids, thumbs, descriptions)
    
 
 def __count(soup):
@@ -89,25 +94,48 @@ def count(term):
     return __count(soup)
     
 
-def __createImage(id, thumb) :
+def __getDataFromMetaDataPage(id, thumb) :
+    """ Slower but more thorough method for finding metadata """
+    
+    print "getDataFromMetaPage: id " + id
+    metaUrl = METADATA_BASE_URL + "?asset=" + id
+    html = urllib2.build_opener(urllib2.ProxyHandler({"https": "http://localhost:3128"})).open(metaUrl)
+    metadataSoup = BeautifulSoup(html)
+    
+    info = metadataSoup.find('div', id="info", style=True)    # check for style, because there are two div with id info
+    
+    artist = info.find('dd')    # first dd
+    title = artist.findNextSibling('dd').findNextSibling('dd')
+    date = title.findNextSibling('dd')    # note, not just numeric
+    access = info('dd')[-1]    # last dd in info
+    meta = {'artist': artist.renderContents(), 
+            'title': title.renderContents(),
+            'date': date.renderContents(),
+            'access': access.renderContents()}
+    
+    return (title.renderContents(), meta) 
+ 
+ 
+def __createImage(id, thumb, description) :
      
-     metaUrl = METADATA_BASE_URL + "?asset=" + id
-     html = urllib2.build_opener(urllib2.ProxyHandler({"https": "http://localhost:3128"})).open(metaUrl)
-     metadataSoup = BeautifulSoup(html)
      
-     info = metadataSoup.find('div', id="info", style=True)    # check for style, because there are two div with id info
+     # break description string into relevant parts
+     descr_parts = description.split("-")
+     artist = "" 
+     title = ""
+     meta = {}
      
-     artist = info.find('dd')    # first dd
-     title = artist.findNextSibling('dd').findNextSibling('dd')
-     date = title.findNextSibling('dd')    # note, not just numeric
-     access = info('dd')[-1]    # last dd in info
-     meta = {'artist': artist, 
-             'title': title,
-             'date': date,
-             'access': access}
-     
+     if len(descr_parts) >= 2 :     # have both title and artist :)
+         artist = descr_parts[0].strip()
+         title = descr_parts[1].strip()
+         meta = {'artist': artist,
+                 'title': title}
+     else :     # only have partial info, need to go to metadata page to see what we have
+         title, meta = __getDataFromMetaDataPage(id, thumb)
+         
      url = IMAGE_URL_BASE + "=" + id
      image = Image(url, thumb, title, meta, identifier+id)
+     return image
     
 
 
@@ -116,24 +144,31 @@ def search(term, params, off, num_results_wanted) :
      
      # get image ids and thumbnail urls
      soup, firstIdIndex = __getResultsHTML(term, params, off)
-     ids, thumbs = __scrubHTML(soup, num_results_wanted, firstIdIndex)
+     
+     ids, thumbs, descriptions = __scrubHTML(soup, num_results_wanted, firstIdIndex)
      
      # ensure the correct number of images found
-     if (len(ids) < num_results_wanted) :    # need more results, check the next page
-         while (len(ids) < num_results_wanted) :
-             soup = __getResultsHTML(term, params, off+len(ids))
-             results = __scrubHTML(soup, num_results_wanted, firstIdIndex+len(ids))
-             ids.append(id in results[0])
-             thumbs.append(id in results[1])
-     if (len(ids) > num_results_wanted) :    # we've found too many, so remove some
+     num_results_wanted = min(num_results_wanted, __count(soup))    # adjusted by how many there are to have
+     
+     if len(ids) < num_results_wanted :    # need more results and the next page has some
+         
+         while len(ids) < num_results_wanted :
+             soup, firstIdIndex = __getResultsHTML(term, params, off+len(ids))
+             results = __scrubHTML(soup, num_results_wanted, firstIdIndex)
+             for i in range(0, len(results[0])) :
+                 ids.append(results[0][i]) 
+                 thumbs.append(results[1][i])
+                 descriptions.append(results[2][i])
+                
+     if (len(ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and descriptions self-regulate to never be more
          while (len(ids) > num_results_wanted) :
              ids.pop()
-             thumbs.pop()
     
      
      # make Result that the rest of UnitedSearch can deal with
-     result = Result(count(term), off+num_results_wanted)
+     result = Result(__count(soup), off+num_results_wanted)
      for i in range(len(ids)) :
-         result.addImage(__createImage(ids[i], thumbs[i]))
+         result.addImage(__createImage(ids[i], thumbs[i], descriptions[i]))
        
-     return result
+     return result 
+     
