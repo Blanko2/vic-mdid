@@ -59,10 +59,7 @@ def main(request):
     form = AuthenticationForm()
 
     if is_mobile(request):
-        response = HttpResponse(content='', mimetype="text/plain")
-        response['Location'] = reverse("mobile-main")
-        response.status_code = 302
-        return response
+        return HttpResponseRedirect(reverse("mobile-main"))
 
     return render_to_response('main.html',
                               {'records': records,
