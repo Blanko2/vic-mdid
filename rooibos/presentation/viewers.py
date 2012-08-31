@@ -370,3 +370,19 @@ class PackageFilesViewer(Viewer):
 def packagefilesviewer(obj, request, objid=None):
     presentation = _get_presentation(obj, request, objid)
     return PackageFilesViewer(presentation, request.user) if presentation else None
+
+
+class HTMLPresentation(Viewer):
+
+    title = "HTML"
+    weight = 80
+
+    def view(self, request):
+        return_url = request.GET.get('next', reverse('presentation-browse'))
+        return render_to_response('galleria.html', { 'presentation': self.obj, 'return_url': return_url }, context_instance=RequestContext(request))
+
+
+@register_viewer('htmlpresentation', HTMLPresentation)
+def htmlpresentation(obj, request, objid=None):
+    presentation = _get_presentation(obj, request, objid)
+    return HTMLPresentation(presentation, request.user) if presentation else None
