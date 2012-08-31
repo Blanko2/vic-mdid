@@ -5,21 +5,24 @@
 <head>
 <meta content="width=device-width" name="viewport">
 
-<title>MDID{% block title %}{% endblock %}</title>
-{% block stylesheets %}
-{% compress css %}
+ <script type="text/javascript">
+ 	document.documentElement.className = 'js-enabled';
+ </script>
+ <title>MDID{% block title %}{% endblock %}</title>
+ {% block stylesheets %}
+ {% compress css %}
     <link href="{% url static 'css/reset.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'css/typography.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery.autocomplete.css' %}" rel="stylesheet" type="text/css" media="screen">
     <link href="{% url static 'jquery/jquery-ui-1.8.11.custom.css' %}" rel="stylesheet" type="text/css" media="screen">
     {% include "mobile.css" %}
-{% endcompress %}
-<!--[if IE]>
-{% compress css %}
+ {% endcompress %}
+ <!--[if IE]>
+ {% compress css %}
     {% include "master-ie.css" %}
-{% endcompress %}
-<![endif]-->
-{% endblock %}
+ {% endcompress %}
+ <![endif]-->
+ {% endblock %}
 </head>
 
 <!-- Sets the background color using body.master (line 75 master.css) -->
@@ -58,21 +61,14 @@
             <li><a href="{% url ui-options %}">Options</a></li>
             <li><a href="{% url ui-management %}">Management</a></li>
             {% endif %}
-            
-        </ul>
+         </ul>
+        <span id="javascriptwarning">You have JavaScript disabled.  MDID works better with JavaScript enabled.</span>
     </div>
 
     <div id="header-bar">
-        <div class="spacer">	<!-- line 182 mobile.css -->
+        <div class="spacer">
             <div id="header">
                 <a href="{% url mobile-main %}" id="logo"></a>
-               <!-- <ul>
-                     <li class="search" style="padding-right: 20px;"><span>Search</span>
-                        <form method="GET" action="{% url solr-search %}">
-                            <input id="quicksearch" name="kw" type="text" title="Search" /><input type="image" src="{% url static 'images/go.png' %}" id="search-go" />
-                        </form>
-                    </li>
-                </ul> -->
             </div>
         </div>
     </div>
