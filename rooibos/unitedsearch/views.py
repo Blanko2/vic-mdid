@@ -8,6 +8,7 @@ from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 from django.conf.urls.defaults import *
+from urllib import urlencode
 from common import *
 
 import sys
@@ -22,11 +23,15 @@ class usViewer():
 
 	def search(self, request):
 		query = request.GET.get('q', '') or request.POST.get('q', '')
-		results = self.searcher.search(query, {}, 0, 50).images
+		offset = int(request.GET.get('from', '') or request.POST.get('from', '') or 0)
+		result = self.searcher.search(query, {}, offset, 50)
+		results = result.images
 		return render_to_response('searcher-results.html',
 			{
 				'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.url, 'identifier': i.identifier } for i in results ],
 				'select_url': reverse('united:%s:select' % self.searcher.identifier),
+				'next_page': reverse('united:%s:search' % self.searcher.identifier) + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
+				'hits': result.total,
 				'searcher_name': self.searcher.name
 			},
 			context_instance=RequestContext(request))

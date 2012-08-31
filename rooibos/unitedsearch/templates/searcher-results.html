@@ -69,6 +69,11 @@
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
+{% if next_page %}
+<div style="text-align: center;">
+    <a href="{{ next_page }}">Next</a>
+</div>
+{% endif %}
 
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
