@@ -14,7 +14,7 @@ def _get(url):
 #	return urllib2.urlopen(url)
 
 def __search(term, off, len):
-	return json.load(_get("http://api.digitalnz.org/v3/records.json?" + urlencode({ 'api_key': settings.DIGITALNZ_KEY, 'text': term, 'page': int(off/len) + 1, 'per_page': len })))["search"]
+	return json.load(_get("http://api.digitalnz.org/v3/records.json?" + urlencode({ 'api_key': settings.DIGITALNZ_KEY, 'text': term, 'page': int(off/len if len > 0 else 0) + 1, 'per_page': len })))["search"]
 
 def _count(searchobj):
 	return searchobj["result_count"]
