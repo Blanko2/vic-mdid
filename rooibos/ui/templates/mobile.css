@@ -74,7 +74,7 @@ html.js-enabled #javascriptwarning {
 
 body.master {
     background-color: {{ colors.background }};
-    /*min-width: 970px;         dean changed this*/
+    /*min-width: 970px;*/
     font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
     padding-bottom: 80px;
     line-height: normal;
@@ -1304,5 +1304,3 @@ td.annotation-col textarea {
 .wide-table {
     font-size: 90%;
 }
-
-</style>
