@@ -4,11 +4,12 @@ import StringIO
 import logging
 import mimetypes
 import os
+import re
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
-from rooibos.access import accessible_ids, get_effective_permissions_and_restrictions
-from rooibos.data.models import Collection, Record, standardfield
+from rooibos.access import filter_by_access, get_effective_permissions_and_restrictions
+from rooibos.data.models import Collection, Record, standardfield, standardfield_ids
 from models import Media, Storage
 
 
@@ -50,7 +51,7 @@ def get_media_for_record(record, user=None, passwords={}):
         )
         access_q = Q(
             # Must have access to presentation
-            id__in=accessible_ids(user, Presentation),
+            id__in=filter_by_access(user, Presentation),
             # and presentation must not be archived
             hidden=False
         )
@@ -64,8 +65,15 @@ def get_media_for_record(record, user=None, passwords={}):
 
     return Media.objects.filter(
         record__id=record_id,
-        storage__id__in=accessible_ids(user, Storage),
+        storage__id__in=filter_by_access(user, Storage),
         )
+
+
+try:
+    import gfx
+    PDF_SUPPORT = True
+except ImportError:
+    PDF_SUPPORT = False
 
 
 def get_image_for_record(record, user=None, width=100000, height=100000, passwords={}, crop_to_square=False):
@@ -74,6 +82,8 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
     if settings.FFMPEG_EXECUTABLE:
         # also support video and audio
         q = q | Q(mimetype__startswith='video/') | Q(mimetype__startswith='audio/')
+    if PDF_SUPPORT:
+        q = q | Q(mimetype='application/pdf')
 
     media = media.select_related('storage').filter(q)
 
@@ -108,7 +118,7 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
 
         def derivative_image(master, width, height):
             if not master.file_exists():
-                logging.error('Image derivative failed for media %d, cannot find file' % master.id)
+                logging.error('Image derivative failed for media %d, cannot find file "%s"' % (master.id, master.get_absolute_file_path()))
                 return None, (None, None)
             import ImageFile
             ImageFile.MAXBLOCK = 16 * 1024 * 1024
@@ -124,6 +134,8 @@ def get_image_for_record(record, user=None, width=100000, height=100000, passwor
                         image = image.crop((0, (h - w) / 2, w, (h - w) / 2 + w))
                 image.thumbnail((width, height), Image.ANTIALIAS)
                 output = StringIO.StringIO()
+                if image.mode != "RGB":
+                    image = image.convert("RGB")
                 image.save(output, 'JPEG', quality=85, optimize=True)
                 return output.getvalue(), image.size
             except Exception, e:
@@ -165,16 +177,29 @@ def get_thumbnail_for_record(record, user=None, crop_to_square=False):
     return get_image_for_record(record, user, width=100, height=100, crop_to_square=crop_to_square)
 
 
+def find_record_by_identifier(identifiers, collection, owner=None,
+        ignore_suffix=False, suffix_regex=r'[-_]\d+$'):
+    idfields = standardfield_ids('identifier', equiv=True)
+    records = Record.by_fieldvalue(idfields, identifiers) \
+                    .filter(collection=collection, owner=owner)
+    if not records and ignore_suffix:
+        if not isinstance(identifiers, (list, tuple)):
+            identifiers = [identifiers]
+        identifiers = (re.sub(suffix_regex, '', id) for id in identifiers)
+        records = Record.by_fieldvalue(idfields, identifiers) \
+                        .filter(collection=collection, owner=owner)
+    return records
+
+
 def match_up_media(storage, collection):
     broken, files = analyze_media(storage)
     # find records that have an ID matching one of the remaining files
-    idfields = standardfield('identifier', equiv=True)
     results = []
     for file in files:
         # Match identifiers that are either full file name (with extension) or just base name match
         filename = os.path.split(file)[1]
         id = os.path.splitext(filename)[0]
-        records = Record.by_fieldvalue(idfields, (id, filename)).filter(collection=collection, owner=None)
+        records = find_record_by_identifier((id, filename,), collection, ignore_suffix=True)
         if len(records) == 1:
             results.append((records[0], file))
     return results

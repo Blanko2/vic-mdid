@@ -9,12 +9,28 @@ from django.contrib.auth.views import login as dj_login, logout as dj_logout
 from django.conf import settings
 from django import forms
 from django.core.urlresolvers import reverse
+from django.contrib.auth import REDIRECT_FIELD_NAME
 from models import AccessControl, update_membership_by_ip
 from . import check_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object
 from rooibos.statistics.models import Activity
+import re
 
 
-def login(request, login_url=None, *args, **kwargs):
+def login(request, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME,
+          *args, **kwargs):
+    if request.user.is_authenticated():
+        # Similar redirect_to processing as in django.contrib.auth.views.login
+        redirect_to = request.REQUEST.get(redirect_field_name, '')
+        # Light security check -- make sure redirect_to isn't garbage.
+        if not redirect_to or ' ' in redirect_to:
+            redirect_to = settings.LOGIN_REDIRECT_URL
+        # Heavier security check -- redirects to http://example.com should
+        # not be allowed, but things like /view/?param=http://example.com
+        # should be allowed. This regex checks if there is a '//' *before* a
+        # question mark.
+        elif '//' in redirect_to and re.match(r'[^\?]*//', redirect_to):
+            redirect_to = settings.LOGIN_REDIRECT_URL
+        return HttpResponseRedirect(redirect_to)
     try:
         response = dj_login(request, *args, **kwargs)
     except ValueError:
