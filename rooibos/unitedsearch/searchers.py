@@ -1,5 +1,8 @@
-from external import digitalnz
-from external import nga
+from external import digitalnz, nga, flickr
 
 """ UnitedSearchers to search. Must have name and identifier attributes defined"""
-all = [ nga, digitalnz ]
+all = [
+	nga,
+	digitalnz,
+	flickr,
+]
