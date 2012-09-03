@@ -1,113 +1,121 @@
-from BeautifulSoup import BeautifulSoup
-import urllib2
-import re
-from rooibos.unitedsearch import *
+from BeautifulSoup import BeautifulSoup      # html parser
+import urllib2                               # fetch html
+import re                                   # regular expressions
+from rooibos.unitedsearch import *        # other website search parts
 
-SEARCH_BASE_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
-METADATA_BASE_URL = "https://images.nga.gov/en/asset/show_zoom_window_popup.html"
-IMAGE_URL_BASE = "https://images.nga.gov/?service=asset&action=show_preview&asset"
-THUMB_URL_BASE = "https://images.nga.gov/"
-
-name = "National Gallery of Art"
-identifier = "nga"
+"""
+Searcher for the National Gallery of Art website
+"""
 
 
-def __getResultsHTML(query, paramenters,offset) :
-     """ Ask the site itself to perform the search. Returns
-     the page containing the offset'th image """
+BASE_SIMPLE_SEARCH_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
+BASE_IMAGE_PROPERTIES_URL = "https://images.nga.gov/en/asset/show_zoom_window_popup.html"
+BASE_IMAGE_LOCATION_URL = "https://images.nga.gov/?service=asset&action=show_preview&asset"
+BASE_THUMBNAIL_LOCATION_URL = "https://images.nga.gov/"
+
+# These variable names are fixed by the software requirements
+name = "National Gallery of Art"    # database name that user will recognise
+identifier = "nga"            # don't know what this is
+
+
+def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
      
-     page_num = str(1 + (offset/25))    # 25 = num items per page on site
-     startImNum = offset%25
-     # simple search
-     url = SEARCH_BASE_URL + "&q=" + query + "&page=" + page_num
-     # html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-     proxy = urllib2.ProxyHandler({"https": "http://localhost:3128"})
-     opener = urllib2.build_opener(proxy)
+     search_results_per_page = 25
+     search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
+     howFarDownThePage = first_wanted_result_index % search_results_per_page
+     
+     url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
+
+     # use a proxy handler in case user is behind firewall
+     proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
+     opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
-     return BeautifulSoup(html), startImNum
+     
+     return html, howFarDownThePage
 
 
 
-def __findIds(soup, maxWanted, firstIdIndex) :
-     """ Finds the javascript block following the div id=autoShowSimilars
-     then gets an array holding numbers surrounded by ' '
-     then breaks the array into the numbers and returns.
+def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :
+     """ Ids are in the javascript block following the div id=autoShowSimilars
      Note, will need re-writing if html changes """
      
-    
-     # find the javascript containing the ids
-     jsBlock = soup.find('input', id="autoShowSimilars").next
+     jsBlock_containing_list_of_image_ids = website_search_results_parser.find('input', id="autoShowSimilars").next.renderContents()
      
-     # get ids from within the jsBlock
-     listRegex = re.compile("\[\'\d{1,}\'.*\]")
-     idList = listRegex.findall(jsBlock.renderContents())
-     itemRegex = re.compile("(?<=\')\d+(?=\')")    # digits surrounded by ' '
-     ids = itemRegex.findall(idList[0])
+     # typical image_ids_text would be ['111', '2531', '13', '5343'], we find this, then break into an array of 4 numbers (list_of_image_ids)
+     regex_for_image_ids_text = re.compile("\[\'\d{1,}\'.*\]")    #look for ['digit(s)'...]
+     image_ids_text = regex_for_image_ids_text.findall(jsBlock_containing_list_of_image_ids)
      
-     # cut off any unwanted at start or end
+     regex_for_list_of_image_ids = re.compile("(?<=\')\d+(?=\')")    # digits surrounded by ' '
+     list_of_image_ids = regex_for_list_of_image_ids.findall(image_ids_text[0])
+     
+     # only want maxWanted list_of_image_ids starting at firstIdIndex
      if (firstIdIndex > 0) :    # at start
          for numToRemove in (firstIdIndex, 0, -1) :
-             ids.pop(0)     # remove the first. Note this is not efficient, is there a better way?
-     if (len(ids) > maxWanted) :     # at end
-         while (len(ids) > maxWanted) :
-             ids.pop()
+             list_of_image_ids.pop(0)     # remove the first. Note this is not efficient, is there a better way?
+     if (len(list_of_image_ids) > maxWanted) :     # at end
+         while (len(list_of_image_ids) > maxWanted) :
+             list_of_image_ids.pop()
              
-     return ids
+     return list_of_image_ids
   
 
   
-def __findMetaData(soup, maxWanted) :
-   """ get thumbnail source and description for each image """
+def __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxWanted) :
    
-   thumbs = []
-   descriptions = []
+   thumb_urls = []
+   image_descriptions = []
    
-   metaDataDivs = soup.findAll('div', 'pictureBox')  # class = 'pictureBox'
+   containing_divs = website_search_results_parser.findAll('div', 'pictureBox')  # class = 'pictureBox'
    
-   maxIndex = maxWanted if (maxWanted < len(metaDataDivs)) else len(metaDataDivs)
+   maxWanted = maxWanted if (maxWanted < len(containing_divs)) else len(containing_divs)
    
-   for i in range(0, maxIndex) :
-       metaData = metaDataDivs[i].find('img', 'mainThumbImage imageDraggable')
-       if not metaData :
-           metaData = metaDataDivs[i].find('img', 'mainThumbImage ')   # class type if image not available
-       thumbs.append(THUMB_URL_BASE+metaData['src'].encode("UTF-8"))
-       descriptions.append(metaData['title'].encode("UTF-8"))
+   # get metadata for each image. Note, metadata div class depends on whether the image is available to the website
+   for i in range(0, maxWanted) :
+       metadata_div = containing_divs[i].find('img', 'mainThumbImage imageDraggable')
+       if not metadata_div :    # couldn't find by normal class name, use alternative
+           metadata_div = containing_divs[i].find('img', 'mainThumbImage ')   # class type if image not available
+       # encode to UTF-8 because description might contain accents from other languages
+       thumb_urls.append(BASE_THUMBNAIL_LOCATION_URL+metadata_div['src'].encode("UTF-8"))
+       image_descriptions.append(metadata_div['title'].encode("UTF-8"))
    
-   return (thumbs, descriptions)
+   return (thumb_urls, image_descriptions)
 
 
-def __scrubHTML(soup, maxNumResults, firstIdIndex):
- ids = __findIds(soup, maxNumResults, firstIdIndex)
- thumbs, descriptions = __findMetaData(soup, maxNumResults)
- return (ids, thumbs, descriptions)
+def __parse_html_for_image_details(website_search_results_parser, maxNumResults, firstIdIndex):
+    list_of_image_ids = __create_imageId_array_from_html_page(website_search_results_parser, maxNumResults, firstIdIndex)
+    
+    thumb_urls, image_descriptions = __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxNumResults)
+    
+    return (list_of_image_ids, thumb_urls, image_descriptions)
    
 
-def __count(soup):
-    containing_div = soup.find('div', 'breakdown')
-    return int(re.findall("\d{1,}", containing_div.renderContents())[0])     # num results is the only number in the breakdown
+def __count(website_search_results_parser):
+    containing_div = website_search_results_parser.find('div', 'breakdown')
+    return int(re.findall("\d{1,}", containing_div.renderContents())[0])     # num results is the first number in this div
     
     
     
 def count(term):
+    # must be called 'count'
     
-    soup = __getResultsHTML(term, {}, 0)[0]
-    return __count(soup)
+    searchhtml  = __getHTMLPage_Containing_SearchResultX(term, {}, 0)[0]
+    website_search_results_parser = BeautifulSoup(searchhtml)
+    return __count(website_search_results_parser)
     
 
-def __getDataFromMetaDataPage(id, thumb) :
+def __get_image_properties_from_imageSpecific_page(id, thumb) :
     """ Slower but more thorough method for finding metadata """
     
-    print "getDataFromMetaPage: id " + id
-    metaUrl = METADATA_BASE_URL + "?asset=" + id
-    html = urllib2.build_opener(urllib2.ProxyHandler({"https": "http://localhost:3128"})).open(metaUrl)
-    metadataSoup = BeautifulSoup(html)
+    page_url = BASE_IMAGE_PROPERTIES_URL + "?asset=" + id
+    html = urllib2.build_opener(urllib2.ProxyHandler({"https": "http://localhost:3128"})).open(page_url)
+    page_html_parser = BeautifulSoup(html)
     
-    info = metadataSoup.find('div', id="info", style=True)    # check for style, because there are two div with id info
+    containing_div = page_html_parser.find('div', id="containing_div", style=True)    # check for style, because there are two div with id containing_div
     
-    artist = info.find('dd')    # first dd
+    artist = containing_div.find('dd')    # first dd
     title = artist.findNextSibling('dd').findNextSibling('dd')
     date = title.findNextSibling('dd')    # note, not just numeric
-    access = info('dd')[-1]    # last dd in info
+    access = containing_div('dd')[-1]    # last dd in containing_div
     meta = {'artist': artist.renderContents(), 
             'title': title.renderContents(),
             'date': date.renderContents(),
@@ -130,45 +138,51 @@ def __createImage(id, thumb, description) :
          title = descr_parts[1].strip()
          meta = {'artist': artist,
                  'title': title}
-     else :     # only have partial info, need to go to metadata page to see what we have
-         title, meta = __getDataFromMetaDataPage(id, thumb)
+     else :     # only have partial info, need to go to image-specific page
+         title, meta = __get_image_properties_from_imageSpecific_page(id, thumb)
          
-     url = IMAGE_URL_BASE + "=" + id
-     image = Image(url, thumb, title, meta, identifier+id)
+     image_url = BASE_IMAGE_LOCATION_URL + "=" + id
+     image = Image(image_url, thumb, title, meta, identifier+id)
      return image
     
 
 
 def search(term, params, off, num_results_wanted) :
-     """ Get the actual results! """
+     """ Get the actual results! Note, method must be called 'search'"""
      
-     # get image ids and thumbnail urls
-     soup, firstIdIndex = __getResultsHTML(term, params, off)
+     # get the image details
+     searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(term, params, off)
+     website_search_results_parser = BeautifulSoup(searchhtml)
      
-     ids, thumbs, descriptions = __scrubHTML(soup, num_results_wanted, firstIdIndex)
+     list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
+     
      
      # ensure the correct number of images found
-     num_results_wanted = min(num_results_wanted, __count(soup))    # adjusted by how many there are to have
+     num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
      
-     if len(ids) < num_results_wanted :    # need more results and the next page has some
+     if len(list_of_image_ids) < num_results_wanted :    # need more results and the next page has some
          
-         while len(ids) < num_results_wanted :
-             soup, firstIdIndex = __getResultsHTML(term, params, off+len(ids))
-             results = __scrubHTML(soup, num_results_wanted, firstIdIndex)
+         while len(list_of_image_ids) < num_results_wanted :
+             searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(term, params, off+len(list_of_image_ids))
+             website_search_results_parser = BeautifulSoup(searchhtml)
+             
+             results = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
+             
              for i in range(0, len(results[0])) :
-                 ids.append(results[0][i]) 
-                 thumbs.append(results[1][i])
-                 descriptions.append(results[2][i])
-                
-     if (len(ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and descriptions self-regulate to never be more
-         while (len(ids) > num_results_wanted) :
-             ids.pop()
+                 list_of_image_ids.append(results[0][i]) 
+                 thumbnail_urls.append(results[1][i])
+                 image_descriptions.append(results[2][i])
+
+                 
+     if (len(list_of_image_ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and image_descriptions self-regulate to never be more
+         while (len(list_of_image_ids) > num_results_wanted) :
+             list_of_image_ids.pop()
     
      
      # make Result that the rest of UnitedSearch can deal with
-     result = Result(__count(soup), off+num_results_wanted)
-     for i in range(len(ids)) :
-         result.addImage(__createImage(ids[i], thumbs[i], descriptions[i]))
+     resulting_images = Result(__count(website_search_results_parser), off+num_results_wanted)
+     for i in range(len(list_of_image_ids)) :
+         resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
        
-     return result 
+     return resulting_images 
      
