@@ -32,7 +32,7 @@ def search(term, params, off, len):
 	for i in obj["results"]:
 		if(i["object_url"] != None):
 			# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
-			result.addImage(Image(i["object_url"], i["thumbnail_url"], i["title"], i, json.dumps(i)))
+			result.addImage(ResultImage(i["object_url"], i["thumbnail_url"], i["title"], json.dumps(i)))
 	return result
 
 def getImage(identifier):

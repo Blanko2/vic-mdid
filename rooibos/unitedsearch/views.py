@@ -28,7 +28,7 @@ class usViewer():
 		results = result.images
 		return render_to_response('searcher-results.html',
 			{
-				'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.url, 'identifier': i.identifier } for i in results ],
+				'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.infourl, 'identifier': i.identifier } for i in results ],
 				'select_url': reverse('united:%s:select' % self.searcher.identifier),
 				'next_page': reverse('united:%s:search' % self.searcher.identifier) + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
 				'hits': result.total,

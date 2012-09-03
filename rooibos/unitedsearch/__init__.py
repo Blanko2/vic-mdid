@@ -11,6 +11,15 @@ class Result:
 	def addImage(self, image):
 		self.images += [image]
 
+class ResultImage:
+	def __init__(self, infourl, thumb, name, identifier):
+		""" infourl is the url gone to when the result is clicked
+		thumb is the thumbnail url
+		identifier is passed to the seracher's .getImage to get the corresponding Image object """
+		self.infourl = infourl
+		self.thumb = thumb
+		self.name = name
+		self.identifier = identifier
 
 class Image:
 	""" A single image-metadata pair"""
