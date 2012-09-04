@@ -12,7 +12,7 @@ def m_main(request):
     print '** blah!!'
     form = AuthenticationForm()
     request.session.set_test_cookie()
-    return render_to_response('m_login.html', {'form': form}, context_instance=RequestContext(request))
+    return render_to_response('m_main.html', {'form': form}, context_instance=RequestContext(request))
 
 class usViewer():
     def __init__(self, searcher):

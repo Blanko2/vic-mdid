@@ -74,7 +74,7 @@ html.js-enabled #content {
 }
 
 #content-wrapper {
-    margin: 0 20px;
+    margin: 0 10px; /* changed from 20px*/
     border: solid 1px {{ colors.content_border_gradient1 }};
     border-top: none;
     background-color: {{ colors.content_background }};
@@ -152,7 +152,7 @@ html.js-enabled #header-bar {
 
 #header-bar div.spacer {
     background-color: {{ colors.content_background }};
-    margin: 0 21px;
+    margin: 0 11px; /* changed from 21px*/
     padding: 10px 10px 0 10px;
     border: solid 1px {{ colors.background_top_gradient }};
     border-bottom: none;
@@ -178,6 +178,58 @@ html.js-enabled #header-bar {
         z-index: 1000; position: absolute; left: 0px; top: 0px;
         -moz-opacity: .7; opacity: .7;}
 {% endif %}
+
+/*****************************************************************************/
+/* Main                                                                      */
+/*****************************************************************************/
+
+.center{
+	margin-left:auto;
+	margin-right:auto;
+	width:95%;
+}
+
+#button{
+    height: 40px;
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#background{
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#button #button-text{
+	text-align: center;
+	font-size: 150%;
+}
+
+#button img{
+	width: 30px;
+    height: 30px; 
+    display: none; 
+}
+
+
+#quicksearch{
+	width: 70%;
+    height: 30px;
+    margin:0px;
+    padding:0px;
+    vertical-align: top;
+}
+
+#search-go{
+	width: 35px;
+    height: 35px;
+}
+
+a:link {text-decoration:none;}
 
 /*****************************************************************************/
 /*  Some general CSS stuff?                                                  */
