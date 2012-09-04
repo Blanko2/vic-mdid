@@ -142,7 +142,7 @@ def __createImage(id, thumb, description) :
          title, meta = __get_image_properties_from_imageSpecific_page(id, thumb)
          
      image_url = BASE_IMAGE_LOCATION_URL + "=" + id
-     image = Image(image_url, thumb, title, meta, identifier+id)
+     image = ResultImage(image_url, thumb, title, identifier+id)
      return image
     
 

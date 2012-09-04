@@ -1,16 +1,9 @@
-<<<<<<< OURS
-from external import digitalnz, nga, flickr
-=======
-from external import digitalnz, nga
->>>>>>> THEIRS
+from external import digitalnz, nga, flickr, gallica
 
 """ UnitedSearchers to search. Must have name and identifier attributes defined"""
-<<<<<<< OURS
 all = [
 	nga,
 	digitalnz,
 	flickr,
+    gallica,
 ]
-=======
-all = [ digitalnz, nga ]
->>>>>>> THEIRS
