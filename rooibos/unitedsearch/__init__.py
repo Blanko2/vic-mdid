@@ -21,6 +21,14 @@ class ResultImage:
 		self.name = name
 		self.identifier = identifier
 
+class ResultRecord:
+	def __init__(self, record, identifier):
+		""" can be returned instead of both Result and ResultImage
+		the identifier is still up to the search implementation---records and non-records could
+		potentially be mixed """
+		self.record = record
+		self.identifier = identifier
+
 class Image:
 	""" A single image-metadata pair"""
 	

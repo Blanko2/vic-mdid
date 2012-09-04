@@ -10,6 +10,7 @@ from rooibos.data.models import Collection, Record, standardfield, CollectionIte
 from django.conf.urls.defaults import *
 from urllib import urlencode
 from common import *
+from . import ResultRecord
 
 import sys
 import traceback
@@ -26,9 +27,27 @@ class usViewer():
 		offset = int(request.GET.get('from', '') or request.POST.get('from', '') or 0)
 		result = self.searcher.search(query, {}, offset, 50)
 		results = result.images
+
+		def resultpart(image):
+			if isinstance(image, ResultRecord):
+				return {
+					"is_record": True,
+					"thumb_url": image.record.get_thumbnail_url(),
+					"title": image.record.title,
+					"record_url": image.record.get_absolute_url(),
+					"identifier": image.identifier
+				}
+			else:
+				return {
+					"thumb_url": image.thumb,
+					"title": image.name,
+					"record_url": image.infourl,
+					"identifier": image.identifier
+				}
+
 		return render_to_response('searcher-results.html',
 			{
-				'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.infourl, 'identifier': i.identifier } for i in results ],
+				'results': map(resultpart, results),
 				'select_url': reverse('united:%s:select' % self.searcher.identifier),
 				'next_page': reverse('united:%s:search' % self.searcher.identifier) + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
 				'hits': result.total,
@@ -38,6 +57,8 @@ class usViewer():
 
 	def record(self, identifier):
 		image = self.searcher.getImage(identifier)
+		if isinstance(image, ResultRecord):
+			return image.record
 		record = Record.objects.create(name=image.name,
 						source=image.url,
 						manager='unitedsearch')
@@ -66,8 +87,9 @@ class usViewer():
 		if request.method == "POST":
 			imagesjs = simplejson.loads(request.POST.get('id', '[]'))
 			images = map(self.searcher.getImage, imagesjs)
-			urlmap = dict([(i.url, i) for i in images])
+			urlmap = dict([(i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url, i) for i in images])
 			urls = urlmap.keys()
+			# map of relevant source URLs to record IDs that already exist
 			ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
 			result = []
 			for url in urls:

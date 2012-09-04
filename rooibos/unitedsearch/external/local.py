@@ -4,6 +4,7 @@ from rooibos.unitedsearch import *
 from urllib import urlencode
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from rooibos.data.models import Record
 
 name = "Local"
 identifier = "local"
@@ -18,27 +19,9 @@ def search(term, params, off, len):
 	hits, records = sobj[0:2]
 	result = Result(hits, off + len)
 	for i in records:
-		# TODO: Reduce level of insanity.
-		result.addImage(ResultImage(
-			"javascript:preview_dialog({" +
-				"attr: function(){" +
-					"return \"" + i.get_absolute_url() + "\";" +
-				"}" +
-			"}," +
-			"{" +
-				"attr: function(n){" +
-					"return n == \"src\"? \"" + i.get_thumbnail_url() + "\" :" +
-						"n == \"id\"? \"record-id-" + str(i.id) + "\" :" +
-						"n == \"alt\"? \"" + i.title + "\" : \"\";" +
-				"}" +
-			"})", i.get_thumbnail_url(), i.title, None))
+		result.addImage(ResultRecord(i, str(i.id)))
 	return result
 
-# TODO: figure out a way to let the local search bypass US by giving back a record
-def doNotGetImage(identifier):
-	i = json.loads(identifier)
-	info = fed.flickr.flickr_call(method='flickr.photos.getSizes',
-					photo_id=i["flickr_id"],
-					format='xmlnode')
-	image_url = info.sizes[0].size[-1]['source']
-	return Image(image_url, i["thumb_url"], i["title"], i, identifier)
+def getImage(identifier):
+	i = int(identifier)
+	return ResultRecord(Record.filter_one_by_access(AnonymousUser(), i), identifier)
