@@ -82,7 +82,9 @@
 <div class="record">
     <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
     <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
-    <input type="checkbox" class="remote-record-select" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
+    {% if request.user.is_authenticated %}
+      <input type="checkbox" class="remote-record-select" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
+    {% endif %}
 </div>
 
 
