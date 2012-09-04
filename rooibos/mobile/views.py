@@ -27,8 +27,7 @@ class usViewer():
             {
                 'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.infourl, 
                               'identifier': i.identifier } for i in results ],
-                'select_url': reverse('united:%s:select' % self.searcher.identifier),
-                'next_page': reverse('united:%s:search' % self.searcher.identifier) + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
+                'next_page': reverse('mobile-search-results') + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
                 'hits': result.total,
                 'searcher_name': self.searcher.name
             },

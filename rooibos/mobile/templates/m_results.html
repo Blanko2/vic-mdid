@@ -66,14 +66,9 @@
 <input type="hidden" name="q" value="{{ query }}" />
 <div>
     Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
-    <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
+<br>
 
-{% if next_page %}
-<div style="text-align: center;">
-    <a href="{{ next_page }}">Next</a>
-</div>
-{% endif %}
 
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
@@ -82,11 +77,15 @@
 <div class="record">
     <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
     <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
-    <input type="checkbox" class="remote-record-select" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
 </div>
 
-
 {% endfor %}
+</div>
+{% endif %}
+
+{% if next_page %}
+<div class = "result-next">
+    <a href="{{ next_page }}">Next</a>
 </div>
 {% endif %}
 

@@ -3,17 +3,17 @@
 {% block content %}
 <div class = "center">
 	Search		
-	<form method="GET" action="{% url solr-search %}">
+	<form method="GET" action="{% url mobile-search-results  %}">
 		<div id="background">
-       		<input type="text" name="kw" id="quicksearch"/>
+       		<input type="text" name="q" id="quicksearch"/>
        		<input type="image" src="{% url static 'images/go.png' %}" id="search-go" />
-      		<br>
-      		<input type="radio" name="search" value="local" id="search-local"/>Local<br>
-       		<input type="radio" name="search" value="remote" id="search-remote"/>Remote<br>
+      		<br> 
+      		<!-- <input type="radio" name="search" value="local" id="search-local"/>Local<br>
+       		<input type="radio" name="search" value="remote" id="search-remote"/>Remote<br>-->
        	</div>
     </form>
 	<br>
-	<a href = "http://localhost/explore">
+	<a href = "{% url presentation-browse %}">
 		<div id = "button">
 			<div id="button-text">Presentations
 			<img src="{% url static 'images/bubblearrow-right.png' %}" />

@@ -232,6 +232,78 @@ html.js-enabled #header-bar {
 a:link {text-decoration:none;}
 
 /*****************************************************************************/
+/* m_results                                                                 */
+/*****************************************************************************/
+
+.record {
+    float: left;
+    border: 1px {{ colors.borders }} solid;
+    /*width: 102px;
+    height: 102px;*/
+    width: 80px;
+    height: 80px;
+    padding: 3px;
+    margin: auto;
+    overflow: hidden;
+    font-size: smaller;
+    background-color: {{ colors.shaded_background }};
+    position: relative;
+    
+}
+
+.record.notitle {
+    width: 140px;
+}
+
+.record a {
+    text-decoration: none;
+}
+
+.record img {
+    border: 1px {{ colors.borders }} solid;
+    position: relative;
+    max-width: 100px;
+    overflow: hidden;
+    width: 95%;
+    height: 95%;
+    margin: auto;
+}
+
+.record-select, .remote-record-select {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+.record-title {
+    padding: 0 16px 0 105px;
+    display: none;
+}
+
+.resultlist-list .record {
+    float: none;
+    border: none;
+    border-bottom: 1px {{ colors.borders }} solid;
+    padding: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    height: 22px;
+    background-color: transparent;
+    width: auto;
+    margin: 0;
+}
+
+.resultlist-list .record img.thumbnail {
+    height: 20px;
+    max-width: 30px;
+    margin-right: 5px;
+}
+
+.result-next{
+	style="text-align: center;
+}
+
+/*****************************************************************************/
 /*  Some general CSS stuff?                                                  */
 /*****************************************************************************/
 
