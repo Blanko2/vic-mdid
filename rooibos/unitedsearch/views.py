@@ -124,21 +124,22 @@ class usUnionViewer(usViewer):
 		usViewer.__init__(self, searcher, None)
 	
 	def url_select(self):
-		return reverse("united:union-select") + "?" + urlencode({"sid": self.searcher.identifier})
+		return reverse("united:union-select", kwargs={"sid": self.searcher.identifier})
 
 	def url_search(self):
 		# TODO: ensure the URL doesn't already have a ?
-		return reverse("united:union-search") + "?" + urlencode({"sid": self.searcher.identifier})
+		return reverse("united:union-search", kwargs={"sid": self.searcher.identifier})
 
 searchersmap = dict([(s.identifier, s) for s in searchers.all])
 
-def union(request):
+def union(request, sid):
 	from union import searcherUnion
-	slist = map(searchersmap.get, request.GET.get("sid", "local").split(","))
-	return usUnionViewer(searcherUnion(slist))
+	slist = map(searchersmap.get, sid.split(","))
+	searcher = slist[0] if len(slist) == 1 else searcherUnion(slist)
+	return usUnionViewer(searcher)
 
-def union_select(request):
-	return union(request).select(request)
+def union_select(request, sid="local"):
+	return union(request, sid).select(request)
 
-def union_search(request):
-	return union(request).search(request)
+def union_search(request, sid="local"):
+	return union(request, sid).search(request)

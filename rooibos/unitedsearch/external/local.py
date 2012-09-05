@@ -10,6 +10,7 @@ name = "Local"
 identifier = "local"
 
 def search(term, params, off, len):
+	off = int(off)
 	from rooibos.solr.views import run_search
 	sobj = run_search(AnonymousUser(),
 		keywords=term,

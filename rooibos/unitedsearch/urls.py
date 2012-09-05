@@ -6,6 +6,6 @@ searchersurlpatterns = patterns('', *[url(r'^' + searcher.identifier + '/', incl
 
 urlpatterns = patterns('',
 	url(r'^searchers/', include(searchersurlpatterns, namespace="searchers")),
-	url(r'^union/search', union_search, name="union-search"),
-	url(r'^union/select', union_select, name="union-select"),
+	url(r'^union/(?P<sid>[a-z0-9A-Z,]*)/search', union_search, name="union-search"),
+	url(r'^union/(?P<sid>[a-z0-9A-Z,]*)/select', union_select, name="union-select"),
 )
