@@ -11,20 +11,33 @@ from django.conf.urls.defaults import *
 from urllib import urlencode
 from common import *
 from . import ResultRecord
+import searchers
 
 import sys
 import traceback
 
 class usViewer():
-	def __init__(self, searcher):
+	def __init__(self, searcher, mynamespace):
 		self.urlpatterns = patterns('',
 			url(r'^search/', self.search, name='search'),
 			url(r'^select/', self.select, name='select'))
 		self.searcher = searcher
+		self.namespace = mynamespace
+	
+	def url_select(self):
+		return reverse(self.namespace + ':select')
+	
+	def url_search(self):
+		return reverse(self.namespace + ':search')
+	
+	def __url_search_(self, params={}):
+		u = self.url_search()
+		return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
 	def search(self, request):
+		request.session["selected_records"] = []
 		query = request.GET.get('q', '') or request.POST.get('q', '')
-		offset = int(request.GET.get('from', '') or request.POST.get('from', '') or 0)
+		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
 		result = self.searcher.search(query, {}, offset, 50)
 		results = result.images
 
@@ -35,7 +48,7 @@ class usViewer():
 					"thumb_url": image.record.get_thumbnail_url(),
 					"title": image.record.title,
 					"record_url": image.record.get_absolute_url(),
-					"identifier": image.identifier
+					"identifier": image.record.id
 				}
 			else:
 				return {
@@ -48,8 +61,8 @@ class usViewer():
 		return render_to_response('searcher-results.html',
 			{
 				'results': map(resultpart, results),
-				'select_url': reverse('united:%s:select' % self.searcher.identifier),
-				'next_page': reverse('united:%s:search' % self.searcher.identifier) + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
+				'select_url': self.url_select(),
+				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }),
 				'hits': result.total,
 				'searcher_name': self.searcher.name
 			},
@@ -85,6 +98,7 @@ class usViewer():
 			raise Http404()
 		
 		if request.method == "POST":
+			# TODO: maybe drop the unused given-records portion of this
 			imagesjs = simplejson.loads(request.POST.get('id', '[]'))
 			images = map(self.searcher.getImage, imagesjs)
 			urlmap = dict([(i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url, i) for i in images])
@@ -104,3 +118,27 @@ class usViewer():
 			r['id'] = simplejson.dumps(result)
 			request.POST = r
 		return select_record(request)
+
+class usUnionViewer(usViewer):
+	def __init__(self, searcher):
+		usViewer.__init__(self, searcher, None)
+	
+	def url_select(self):
+		return reverse("united:union-select") + "?" + urlencode({"sid": self.searcher.identifier})
+
+	def url_search(self):
+		# TODO: ensure the URL doesn't already have a ?
+		return reverse("united:union-search") + "?" + urlencode({"sid": self.searcher.identifier})
+
+searchersmap = dict([(s.identifier, s) for s in searchers.all])
+
+def union(request):
+	from union import searcherUnion
+	slist = map(searchersmap.get, request.GET.get("sid", "local").split(","))
+	return usUnionViewer(searcherUnion(slist))
+
+def union_select(request):
+	return union(request).select(request)
+
+def union_search(request):
+	return union(request).search(request)

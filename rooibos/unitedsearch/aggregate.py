@@ -16,7 +16,7 @@ def federatedSearchSource(searcher):
 			return "united-%s" % searcher.identifier
 
 		def get_search_url(self):
-			return reverse('united:%s:search' % searcher.identifier)
+			return reverse('united:searchers:%s:search' % searcher.identifier)
 	return Search
 
 def federatedSearchSources():

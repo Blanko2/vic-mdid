@@ -20,6 +20,9 @@ class ResultImage:
 		self.thumb = thumb
 		self.name = name
 		self.identifier = identifier
+	
+	def withIdentifier(self, newIdent):
+		return ResultImage(self.infourl, self.thumb, self.name, newIdent)
 
 class ResultRecord:
 	def __init__(self, record, identifier):
@@ -28,6 +31,9 @@ class ResultRecord:
 		potentially be mixed """
 		self.record = record
 		self.identifier = identifier
+	
+	def withIdentifier(self, newIdent):
+		return ResultRecord(self.record, newIdent)
 
 class Image:
 	""" A single image-metadata pair"""
@@ -42,6 +48,9 @@ class Image:
 		self.name = name
 		self.meta = meta
 		self.identifier = identifier
+	
+	def withIdentifier(self, newIdent):
+		return Image(self.url, self.thumb, self.name, self.meta, newIdent)
 
 
 class Parameter:
