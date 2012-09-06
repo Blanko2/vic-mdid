@@ -262,7 +262,7 @@ def browse(request, manage=False):
         presentations = filter_by_access(request.user, Presentation, write=True, manage=True)
     else:
         qv = Presentation.published_Q()
-        presentations = filter_by_access(request.user, Presentation)
+        presentations = filter_by_access(request.user, Presentation )
 
     presentations = presentations.select_related('owner').filter(q, qp, qk, qv).order_by('title')
 

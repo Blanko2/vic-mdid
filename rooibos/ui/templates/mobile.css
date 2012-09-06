@@ -304,6 +304,71 @@ a:link {text-decoration:none;}
 }
 
 /*****************************************************************************/
+/* Mobile Presentation Browse                                                */
+/*****************************************************************************/
+
+tr.itemactions-row td{
+/*    border-collapse: collapse;*/
+  border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+td.item-actions-menu img {
+  display: none;
+}
+
+tr.actionrow-selected td.item-actions-menu img, tr.actionrow-open td.item-actions-menu img {
+  display: inline;
+}
+
+
+tr.actionrow-selected td, tr.actionrow-open td {
+  border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+td.item-actions-menu div {
+  display: none;
+  position: absolute;
+  border: solid 1px {{ PRIMARY_COLOR }};
+  border-top-color: #f2f2f2;
+  border-right: none;
+  background-color: #f2f2f2;
+}
+
+td.item-actions-menu div ul {
+  list-style-type: disc;
+  margin-bottom: 0.5em;
+  color: {{ PRIMARY_COLOR }};
+}
+
+td.item-actions-menu div ul li a {
+  text-decoration: none;
+}
+
+td.item-actions-menu div ul li input, td.item-actions input {
+    /*border: none;*/
+    background: none;
+    padding: 0;
+    margin-left: 0px;
+    margin-left: -3px;
+    cursor: pointer;
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    font-size: 100%;
+    color: {{ colors.links }};
+}
+
+tr.actionrow-open td.item-actions-menu div {
+  display: block;
+}
+
+tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
+    visibility: visible;
+}
+
+/*****************************************************************************/
 /*  Some general CSS stuff?                                                  */
 /*****************************************************************************/
 
