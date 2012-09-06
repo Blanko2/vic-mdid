@@ -27,14 +27,19 @@ def dummy_download_media(job):
 		url = arg['url']
 		storage = get_storage()
 #		file = urllib2.urlopen(url)
-		file = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+		file = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128", "https": "http://localhost:3128"})).open(url)
 		setattr(file, 'size', int(file.info().get('content-length')))
 		mimetype = file.info().get('content-type')
 		media = Media.objects.create(record=record,
 						storage=storage,
 						name=record.name,
 						mimetype=mimetype)
-		media.save_file(record.name + guess_extension(mimetype), file)
+		ext = guess_extension(mimetype)
+		extension = guess_extension(mimetype)
+		if not extension :		# wasn't a matched pattern
+			extension = ""
+		#media.save_file(record.name + guess_extension(mimetype), file)
+		media.save_file(record.name + extension, file)
 		jobinfo.complete('Complete', 'File downloaded')
 	
 	except Exception, ex:
