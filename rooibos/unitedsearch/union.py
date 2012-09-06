@@ -15,6 +15,7 @@ class searcherUnion:
 			off = json.loads(off)
 		# TODO: better maths so the amount of results isn't off by a few due to flooring
 		leng = leng/len(self.searchers)
+		# TODO: don't include searchers with `None' offsets
 		results = [(s, s.search(term, params, o, leng)) for (s, o) in zip(self.searchers, off)]
 		result = Result(sum([r.total for (_, r) in results]), json.dumps([r.nextoffset for (_, r) in results]))
 		# NOTE: map works, imap doesn't .. no list-comprehension-expression scope
