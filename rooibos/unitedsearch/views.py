@@ -74,6 +74,7 @@ class usViewer():
 			return image.record
 		record = Record.objects.create(name=image.name,
 						source=image.url,
+						tmp_extthumb=image.thumb,
 						manager='unitedsearch')
 		n = 0
 		# TODO: more field values; need to be standard fields
@@ -127,7 +128,6 @@ class usUnionViewer(usViewer):
 		return reverse("united:union-select", kwargs={"sid": self.searcher.identifier})
 
 	def url_search(self):
-		# TODO: ensure the URL doesn't already have a ?
 		return reverse("united:union-search", kwargs={"sid": self.searcher.identifier})
 
 searchersmap = dict([(s.identifier, s) for s in searchers.all])

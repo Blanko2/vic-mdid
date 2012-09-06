@@ -22,11 +22,8 @@ def _count(searchobj):
 def count(term):
 	return _count(_search(term))
 
-# search(searchobj) :: [(name, thumburl, fullurl)]
-#def _search(searchobj):
-#	return filter(lambda(t): all(map(lambda(v): v != None, t)), map(lambda(v): (v["title"], v["thumbnail_url"], v["object_url"]), searchobj["results"]))
-
 def search(term, params, off, len):
+	off = int(off)
 	obj = __search(term, off, len)
 	result = Result(_count(obj), off + len)
 	for i in obj["results"]:

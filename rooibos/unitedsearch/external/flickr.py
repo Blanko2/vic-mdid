@@ -14,6 +14,7 @@ fed = FlickrSearch()
 fed._licenses = {}
 
 def search(term, params, off, len):
+	off = int(off)
 	fs = fed.search(term, page=int(off/len if len > 0 else 0) + 1, pagesize=len)
 	result = Result(fs["hits"], off + len)
 	for i in fs["records"]:
