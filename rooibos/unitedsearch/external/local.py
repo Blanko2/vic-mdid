@@ -18,7 +18,7 @@ def search(term, params, off, len):
 		page=int(off/len if len > 0 else 0) + 1,
 		pagesize=len)
 	hits, records = sobj[0:2]
-	result = Result(hits, off + len)
+	result = Result(hits, off + len if off + len < hits else None)
 	for i in records:
 		result.addImage(ResultRecord(i, str(i.id)))
 	return result

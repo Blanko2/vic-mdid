@@ -35,7 +35,6 @@ class usViewer():
 		return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
 	def search(self, request):
-		request.session["selected_records"] = []
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
 		result = self.searcher.search(query, {}, offset, 50)
@@ -62,7 +61,7 @@ class usViewer():
 			{
 				'results': map(resultpart, results),
 				'select_url': self.url_select(),
-				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }),
+				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
 				'hits': result.total,
 				'searcher_name': self.searcher.name
 			},
