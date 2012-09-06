@@ -75,15 +75,28 @@ class usViewer():
 						source=image.url,
 						tmp_extthumb=image.thumb,
 						manager='unitedsearch')
+
+		def add_field(f, v, o):
+			if type(v) == list:
+				for w in v:
+					add_field(f, w, o)
+			elif v:
+				# TODO: neaten?
+				try:
+					FieldValue.objects.create(
+						record=record,
+						field=standardfield(f),
+						order=o,
+						value=v)
+				except:
+					pass
+
 		n = 0
-		# TODO: more field values; need to be standard fields
-		for field, value in dict(title=image.name).iteritems():
-			FieldValue.objects.create(
-				record=record,
-				field=standardfield(field),
-				order=n,
-				value=value)
+		# go through the metadata given by the searcher; just add whatever can be added---what are not standard fields are simply skipped.
+		for field, value in dict(image.meta, title=image.name).iteritems():
+			add_field(field, value, n)
 			n += 1
+
 		collection = get_collection()
 		CollectionItem.objects.create(collection=collection, record=record)
 		job = JobInfo.objects.create(func='unitedsearch_download_media', arg=simplejson.dumps({
