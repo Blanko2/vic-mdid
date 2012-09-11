@@ -37,7 +37,11 @@ class usViewer():
 	def search(self, request):
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
-		result = self.searcher.search(query, {}, offset, 50)
+		params = {}
+		for n in request.GET:
+			if n[:2] == "p-":
+				params[n[2:]] = request.GET[n]
+		result = self.searcher.search(query, params, offset, 50)
 		results = result.images
 
 		def resultpart(image):
