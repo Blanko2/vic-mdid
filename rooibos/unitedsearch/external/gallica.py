@@ -139,6 +139,7 @@ def count(term) :
 def search(term, params, off, num_wanted) :
     
     print "entered search"
+    off = (int)(off)
     
     images = []
     search_results_parser = BeautifulSoup(__get_search_resultsHtml(term, params, off, __items_per_page(num_wanted)))
