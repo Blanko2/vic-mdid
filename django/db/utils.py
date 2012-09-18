@@ -44,9 +44,8 @@ def load_backend(backend_name):
             if backend_name not in available_backends:
                 error_msg = ("%r isn't an available database backend. \n" +
                     "Try using django.db.backends.XXX, where XXX is one of:\n    %s\n" +
-                    "Error was: %s\n" +
-                    "*@&*^#!* %s") % \
-                    (backend_name, ", ".join(map(repr, available_backends)), e_user, os.listdir(backend_dir))
+                    "Error was: %s") % \
+                    (backend_name, ", ".join(map(repr, available_backends)), e_user)
                 raise ImproperlyConfigured(error_msg)
             else:
                 raise # If there's some other error, this must be an error in Django itself.
