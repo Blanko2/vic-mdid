@@ -53,10 +53,18 @@ class Image:
 		return Image(self.url, self.thumb, self.name, self.meta, newIdent)
 
 
-class Parameter:
-	""" Essentially a search filter applicable to the given database"""
+class ScalarParameter:
+	""" Essentially a nameless (that will probably come from a MapParameter) search filter applicable to the given database"""
 	
-	def __init__(self, name, type):
-		""" eg name = 'from nz': type = boolean """
-		self.name = name
+	def __init__(self, type):
+		""" eg type = boolean """
 		self.type = type
+
+class OptionalParameter:
+	def __init__(self, subparam):
+		self.subparam = subparam
+
+class MapParameter:
+	""" MapParameter({ "category": ScalarParameter(str), "year": OptionalParameter(ScalarParameter("year")) }) """
+	def __init__(self, parammap):
+		self.parammap = parammap
