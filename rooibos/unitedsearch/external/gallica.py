@@ -61,15 +61,24 @@ def __create_image(soup, id_div) :
     image_id = id_div.renderContents();
     
     url_containing_string = url_block['style']
-#    thumb
-#    url  # initialise for later
     
+    # images in gallica are stored in 2 main ways, so deal with each of these separately then have a default for all others
+    
+    # case 1 : ark images
     # example url_containing_string: 
     # background-image:url(/ark:/12148/btv1b84304008.thumbnail);background-position:center center;background-repeat:no-repeat
     regex_result = re.search("(?<=background-image:url\()(?P<url>.*)(?P<extension>\..*)\)", url_containing_string)
     if regex_result.group('extension') == '.thumbnail' :
         thumb = BASE_URL + regex_result.group('url') + regex_result.group('extension')
         url = BASE_URL + regex_result.group('url') + '.highres'
+    # case 2 : tools.yoolib images
+    # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles%2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);background-position:center center;background-repeat:no-repeat"
+    elif regex_result.group('url').startswith("/resize") :
+      # replace special char values with the actual characters, then strip off the resize part at the start
+      thumb = regex_result.group('url').replace("%3A", ":").replace("%2F", "/").split("url=",1)[1] + regex_result.group('extension')
+      # url has set width and height, we set to 2000x2000 here to allow scaling
+      url = re.sub("WID\d*?(?=/)", "WID200", re.sub("HEI\d*?(?=\.)", "HEI200", thumb))
+    # case 3: anything else
     else :
         # if external image, won't be thumbnail, treat url and thumbnail as same
         thumb = BASE_URL + regex_result.group('url') + regex_result.group('extension')
@@ -101,11 +110,12 @@ def __scrub_html_for_property(property_name, html) :
     print "looking for " + property_name
     for para in html.findAll('p') :
         print para
-        if para.strong.renderContents().startswith(property_name) :
+        if para.strong and para.strong.renderContents().startswith(property_name) :
             print "found right para"
-            contents = re.search("(?<=\</strong\>).*", para.renderContents()).trim()
-            print "contents: " + contents
-            return contents
+            contents = re.findall("(?<=\</strong\>).*", para.renderContents())
+            if contents :
+	      print "contents = " + contents[0]
+	      return contents[0]
             
     
     return "None"
@@ -124,6 +134,9 @@ def getImage(json_image_identifier) :
             }
     
     print "made meta"
+    print "url: " + image_identifier['url']
+    print "thumb: " + image_identifier['thumb']
+    
     return Image(
                  image_identifier['url'],
                  image_identifier['thumb'],
