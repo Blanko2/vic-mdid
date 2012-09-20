@@ -74,10 +74,10 @@ def __create_image(soup, id_div) :
     # case 2 : tools.yoolib images
     # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles%2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);background-position:center center;background-repeat:no-repeat"
     elif regex_result.group('url').startswith("/resize") :
-      # replace special char values with the actual characters, then strip off the resize part at the start
+      # replace special char values with the actual characters, then strip off the resize part at the start.
       thumb = regex_result.group('url').replace("%3A", ":").replace("%2F", "/").split("url=",1)[1] + regex_result.group('extension')
-      # url has set width and height, we set to 2000x2000 here to allow scaling
-      url = re.sub("WID\d*?(?=/)", "WID200", re.sub("HEI\d*?(?=\.)", "HEI200", thumb))
+      # url has set width and height, we set to 2000x2000 here to allow scaling. Last replace is to get fullsize images from buisante.parisdescrates, shouldn't affect any from other sources
+      url = re.sub("WID\d*?(?=/)", "WID2000", re.sub("HEI\d*?(?=\.)", "HEI2000", thumb)).replace("/pt/", "/zoom/")
     # case 3: anything else
     else :
         # if external image, won't be thumbnail, treat url and thumbnail as same
