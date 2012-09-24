@@ -52,6 +52,19 @@
         </form>
     </div>
   </div>
+  {% if searcher_parameters %}
+  <div class="facet active-facet" id="results_sidebar_parameters">
+    <form method="GET" action=".">
+    {% for p in searcher_parameters %}
+    <div>
+      {{ p.label }}: <input type="text" name="i_{{ p.identifier }}" value="" />
+    </div>
+    {% endfor %}
+    <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
+  </div>
+  {% endif %}
+      
+
 
 {% endblock %}
 
