@@ -35,8 +35,8 @@
         <th>Modified</th>
         {% endif %}
         <th>Presenter</th>
-        <th>Tags</th>
-        <th>Items</th>
+        <!--  <th>Tags</th> -->
+        <!--  <th>Items</th> -->
         <th></th>
     </tr>
 {% for presentation in presentations %}
@@ -52,19 +52,19 @@
         {% endif %}
         <td>{% if presentation.owner == request.user %}-{% else %}{% if presentation.owner.last_name %}{{ presentation.owner.last_name }}, {{ presentation.owner.first_name }}{% else %}{{ presentation.owner.username }}{% endif %}{% endif %}</td>
         
-        <!-- tags -->
+        <!-- tags
         <td>{% for ptag in ptags %}
                 {% tag ptag presentation 0 "True" %}
             {% endfor %}
             
             {% if not ptags %}&nbsp;{% endif %}
-        </td>
+        </td> -->
         
-        <!-- number of presentation items -->
+        <!-- number of presentation items 
         <td>
           {{ presentation.visible_item_count }}
 
-		  <!-- padlock image if presentation is private/public -->	
+		  <!-- padlock image if presentation is private/public
           {% if presentation.password %}
                 {% if presentation.unlocked %}
                 <img src="{% url static "images/unlocked.png" %}" />
@@ -72,12 +72,13 @@
                 <img src="{% url static "images/locked.png" %}" />
                 {% endif %}
             {% endif %}
-        </td>
+        </td> -->
         
         <!-- link to viewer -->
-        <td class="item-actions">
+        <td >
+        	<div id="view-button">
             {% if not presentation.password or presentation.unlocked or presentation.owner == request.user %}
-            <a href="{% url viewers-viewer-shell viewer='htmlpresentation' objid=presentation.id %}?next={{ request.get_full_path|urlencode }}">HTML</a>
+            <a href="{% url viewers-viewer-shell viewer='htmlpresentation' objid=presentation.id %}?next={{ request.get_full_path|urlencode }}">View</a>
             {% endif %}
         </td>
     </tr>

@@ -51,7 +51,7 @@ def m_browse(request, manage=False):
         raise Http404()
 
     if request.user.is_authenticated() and not request.GET.items():
-        # retrieve past settings
+        #retrieve past settings
         qs = load_settings(request.user, filter='presentation_browse_querystring')
         if qs.has_key('presentation_browse_querystring'):
             return HttpResponseRedirect('%s?%s' % (

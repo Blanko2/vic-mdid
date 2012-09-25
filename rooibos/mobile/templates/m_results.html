@@ -8,6 +8,7 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
+	
 
     function remoteRecordSelection(ids, checked) {
         var method = ids == 0 ? 'GET' : 'POST';
@@ -29,6 +30,24 @@
         $("#submit_record_selections").hide();
         $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
     });
+    
+    var p_toggle = false;	// Panel disply toggle boolean 
+    
+    // Toggle the display of the information panel on/off
+    // Param: index of the image
+    function toggle_panel(index){
+    	var scrollTop = window.pageYOffset;
+    	var panel = document.getElementsByClassName("image-info-panel")[index];
+    	if(p_toggle){
+    		panel.style.display = "none";				// Switch off
+    	}
+    	else{
+    		panel.style.display = "inline";				// Switch on
+    		panel.style.top = scrollTop + 20 + "px";	// Place in the scroll window correctly
+    	}
+    	p_toggle = !p_toggle;
+    }
+    
 
 </script>
 {% endblock %}
@@ -51,7 +70,7 @@
         <input type="text" id="keywords" name="q" value="{{ query }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
         </form>
     </div>
-  </div>
+  </div>/am/phoenix/home1/woodwadean/workspace
 
 {% endblock %}
 
@@ -69,24 +88,34 @@
 </div>
 <br>
 
+<!-- Image information panels -->
+{% for r in results %}
+<div class="image-info-panel">
+	<img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
+	<div id="info-text">
+	<b>Title:</b> {{ r.title }}<br>
+	</div>
+	<a href="{{ r.record_url }}"><div id="close-button">View</div></a>
+	<a href="#" onclick="toggle_panel({{forloop.counter0}})"><div id="close-button">Close</div></a>
+</div>
+{% endfor %}
+
 
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
-{% for r in results %}
-
-<div class="record">
-    <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
-    <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
-</div>
-
-{% endfor %}
+	{% for r in results %}
+	<div class="record">
+    	<img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" onclick="toggle_panel({{forloop.counter0}})"/>
+    	<div class="record-title"><a href="{{ r.record_url }}">{{ r.title }} </a></div>  
+	</div>
+	{% endfor %}
 </div>
 {% endif %}
 
 {% if next_page %}
-<div class = "result-next">
-    <a href="{{ next_page }}">Next</a>
-</div>
+<a href="{{ next_page }}">
+    <div class = "result-next">Next</div>
+</a>
 {% endif %}
 
 </form>

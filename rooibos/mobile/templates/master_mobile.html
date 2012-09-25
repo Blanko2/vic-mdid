@@ -8,6 +8,8 @@
  <script type="text/javascript">
  	document.documentElement.className = 'js-enabled';
  </script>
+ {% block javascript %}
+ {% endblock javascript %}
  <title>MDID{% block title %}{% endblock %}</title>
  {% block stylesheets %}
  {% compress css %}
