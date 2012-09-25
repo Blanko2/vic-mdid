@@ -10,6 +10,7 @@ Searcher for the National Gallery of Art website
 
 
 BASE_SIMPLE_SEARCH_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
+BASE_ADVANCED_SEARCH_URL = "https://images.nga.gov/en/search/show_advanced_search_page/?service=search&action=do_advanced_search&language=en&form_name=default"
 BASE_IMAGE_PROPERTIES_URL = "https://images.nga.gov/en/asset/show_zoom_window_popup.html"
 BASE_IMAGE_LOCATION_URL = "https://images.nga.gov/?service=asset&action=show_preview&asset"
 BASE_THUMBNAIL_LOCATION_URL = "https://images.nga.gov/"
@@ -25,7 +26,35 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
      howFarDownThePage = first_wanted_result_index % search_results_per_page
      
-     url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
+     # replace all whitespace in query with '+'
+     query = re.sub("\W", "+", query)
+     
+     if parameters :
+       # advanced search
+       all_words = parameters.get('all_words', "")		# value if it exists, else ""
+       exact_phrase = parameters.get('exact_phrase', "")
+       exclude = parameters.get('exclude_words', "")
+       artist = parameters.get('artist', "")
+       keywords = parameters.get('keywords', "")
+       accession_number = parameters.get('accession_number', "")
+       school = parameters.get('school', "")
+       classification = parameters.get('classification', "")
+       medium = parameters.get('medium', "")
+       year1 = parameters.get('start_date', "")
+       year2 = parameters.get('end_date', "")
+       access = parameters.get('access', "")
+       
+       url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase + "&exclude_words="+exclude
+       url += "&artist_last_name="+artist + "&keywords_in_title="+keywords + "&accession_num="+accession_number
+       url += "&school="+school + "&Classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
+       url += "&open_access="+access + "&page="+search_page_num
+       
+       url = re.sub(" ", "+", url)
+	 
+     else :
+       # simple search
+	url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
+
 
      # use a proxy handler in case user is behind firewall
      proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
