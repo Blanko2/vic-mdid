@@ -48,6 +48,22 @@ class usViewer():
 		# TODO: add labels to parameters themselves
 		return [{ 'identifier': "_".join(x['identifier']), 'label': " ".join(x['identifier']), 'type': x['type'] } for x in out]
 	
+	def readargs(self, getdata):
+		inputs = dict([(n[2:], getdata[n]) for n in getdata if n[:2] == "i_"])
+		def read(params, prefix):
+			if isinstance(params, MapParameter):
+				r = {}
+				for k in params.parammap:
+					r[k] = read(params.parammap[k], prefix + [k])
+				return r
+			if isinstance(params, ScalarParameter):
+				if "_".join(prefix) in inputs:
+					return inputs["_".join(prefix)]
+			if isinstance(params, OptionalParameter):
+				# TODO: this, properly
+				return [read(params.subparam, prefix + ["opt"])]
+		return read(self.searcher.parameters, [])
+	
 	def search(self, request):
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
@@ -55,7 +71,7 @@ class usViewer():
 		for n in request.GET:
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
-		result = self.searcher.search(query, params, offset, 50)
+		result = self.searcher.search(query, self.readargs(request.GET), offset, 50)
 		results = result.images
 
 		def resultpart(image):
