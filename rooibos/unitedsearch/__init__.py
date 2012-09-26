@@ -56,15 +56,18 @@ class Image:
 class ScalarParameter:
 	""" Essentially a nameless (that will probably come from a MapParameter) search filter applicable to the given database"""
 	
-	def __init__(self, type):
+	def __init__(self, type, label=None):
 		""" eg type = boolean """
 		self.type = type
+		self.label = label
 
 class OptionalParameter:
-	def __init__(self, subparam):
+	def __init__(self, subparam, label=None):
 		self.subparam = subparam
+		self.label = label
 
 class MapParameter:
 	""" MapParameter({ "category": ScalarParameter(str), "year": OptionalParameter(ScalarParameter("year")) }) """
-	def __init__(self, parammap):
+	def __init__(self, parammap, label=None):
 		self.parammap = parammap
+		self.label = label

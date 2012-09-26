@@ -50,20 +50,20 @@ class usViewer():
 
 	def htmlparams(self):
 		def out(params, indent, prefix):
+			label = params.label if params.label else " ".join(prefix)
 			if isinstance(params, MapParameter):
 				r = ["  "*indent + "<div>"]
 				for k in params.parammap:
-					print "params.parammap = %s" % (params.parammap,)
-					print "k = %s" % (k,)
-					print "params.parammap[k] = %s" % (params.parammap[k],)
-					print "%s" % ((params.parammap, indent, prefix),)
 					r += out(params.parammap[k], indent + 1, prefix + [k])
 				r += ["  "*indent + "</div>"]
 				return r
 			elif isinstance(params, ScalarParameter):
-				return ["  "*indent + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"\" />"]
+				return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"\" />"]
 			elif isinstance(params, OptionalParameter):
-				return ["  "*indent + "<div class=\"opt\">"] + out(params.subparam, indent + 1, prefix + ["opt"]) + ["  "*indent + "</div>"]
+				r = ["  "*indent + "<a href=\"#\" class=\"param-opt-a\">" + label + "</a>", "  "*indent + "<div class=\"param-opt\">"]
+				r += out(params.subparam, indent + 1, prefix + ["opt"])
+				r += ["  "*indent + "</div>"]
+				return r
 		return "\n".join(out(self.searcher.parameters, 0, []))
 
 	
