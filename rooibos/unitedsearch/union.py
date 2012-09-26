@@ -7,6 +7,7 @@ class searcherUnion:
 		self.searchers = searchers
 		self.name = ", ".join([s.name for s in searchers])
 		self.identifier = ",".join([s.identifier for s in searchers])
+		self.parameters = MapParameter(dict([(str(si), searchers[si].parameters) for si in range(len(searchers))]))
 
 	def search(self, term, params, off, leng):
 		if str(off) == "0":
@@ -16,7 +17,7 @@ class searcherUnion:
 		# TODO: better maths so the amount of results isn't off by a few due to flooring
 		leng = leng/len(self.searchers)
 		# TODO: don't include searchers with `None' offsets
-		results = [(s, s.search(term, params, o, leng)) for (s, o) in zip(self.searchers, off)]
+		results = [(s, s.search(term, params[str(si)], o, leng)) for (s, o, si) in zip(self.searchers, off, range(len(self.searchers)))]
 		result = Result(sum([r.total for (_, r) in results]), json.dumps([r.nextoffset for (_, r) in results]))
 		# NOTE: map works, imap doesn't .. no list-comprehension-expression scope
 		for (se, im) in ifilter(None, chain(*izip_longest(*[map(lambda i: (s, i), r.images) for (s, r) in results]))):

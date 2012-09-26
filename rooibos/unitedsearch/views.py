@@ -10,7 +10,7 @@ from rooibos.data.models import Collection, Record, standardfield, CollectionIte
 from django.conf.urls.defaults import *
 from urllib import urlencode
 from common import *
-from . import ResultRecord
+from . import *
 import searchers
 
 import sys
@@ -34,6 +34,36 @@ class usViewer():
 		u = self.url_search()
 		return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
+	def flattenedparams(self):
+		def flat(params, prefix, out):
+			if isinstance(params, MapParameter):
+				for k in params.parammap:
+					flat(params.parammap[k], prefix + [k], out)
+			elif isinstance(params, ScalarParameter):
+				out.append({ 'identifier': prefix, 'type': params.type })
+			elif isinstance(params, OptionalParameter):
+				flat(params.subparam, prefix + ["opt"], out)
+		out = []
+		flat(self.searcher.parameters, [], out)
+		# TODO: add labels to parameters themselves
+		return [{ 'identifier': "_".join(x['identifier']), 'label': " ".join(x['identifier']), 'type': x['type'] } for x in out]
+	
+	def readargs(self, getdata):
+		inputs = dict([(n[2:], getdata[n]) for n in getdata if n[:2] == "i_"])
+		def read(params, prefix):
+			if isinstance(params, MapParameter):
+				r = {}
+				for k in params.parammap:
+					r[k] = read(params.parammap[k], prefix + [k])
+				return r
+			if isinstance(params, ScalarParameter):
+				if "_".join(prefix) in inputs:
+					return inputs["_".join(prefix)]
+			if isinstance(params, OptionalParameter):
+				# TODO: this, properly
+				return [read(params.subparam, prefix + ["opt"])]
+		return read(self.searcher.parameters, [])
+	
 	def search(self, request):
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
@@ -41,7 +71,7 @@ class usViewer():
 		for n in request.GET:
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
-		result = self.searcher.search(query, params, offset, 50)
+		result = self.searcher.search(query, self.readargs(request.GET), offset, 50)
 		results = result.images
 
 		def resultpart(image):
@@ -67,7 +97,8 @@ class usViewer():
 				'select_url': self.url_select(),
 				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
 				'hits': result.total,
-				'searcher_name': self.searcher.name
+				'searcher_name': self.searcher.name,
+				'searcher_parameters': self.flattenedparams()
 			},
 			context_instance=RequestContext(request))
 
