@@ -47,6 +47,25 @@ class usViewer():
 		flat(self.searcher.parameters, [], out)
 		# TODO: add labels to parameters themselves
 		return [{ 'identifier': "_".join(x['identifier']), 'label': " ".join(x['identifier']), 'type': x['type'] } for x in out]
+
+	def htmlparams(self):
+		def out(params, indent, prefix):
+			if isinstance(params, MapParameter):
+				r = ["  "*indent + "<div>"]
+				for k in params.parammap:
+					print "params.parammap = %s" % (params.parammap,)
+					print "k = %s" % (k,)
+					print "params.parammap[k] = %s" % (params.parammap[k],)
+					print "%s" % ((params.parammap, indent, prefix),)
+					r += out(params.parammap[k], indent + 1, prefix + [k])
+				r += ["  "*indent + "</div>"]
+				return r
+			elif isinstance(params, ScalarParameter):
+				return ["  "*indent + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"\" />"]
+			elif isinstance(params, OptionalParameter):
+				return ["  "*indent + "<div class=\"opt\">"] + out(params.subparam, indent + 1, prefix + ["opt"]) + ["  "*indent + "</div>"]
+		return "\n".join(out(self.searcher.parameters, 0, []))
+
 	
 	def readargs(self, getdata):
 		inputs = dict([(n[2:], getdata[n]) for n in getdata if n[:2] == "i_"])
@@ -98,6 +117,7 @@ class usViewer():
 				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
 				'hits': result.total,
 				'searcher_name': self.searcher.name,
+				'html_parameters': self.htmlparams(),
 				'searcher_parameters': self.flattenedparams()
 			},
 			context_instance=RequestContext(request))
