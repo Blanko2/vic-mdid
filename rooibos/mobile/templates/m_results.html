@@ -74,19 +74,18 @@
 
 {% endblock %}
 
-
+<!-- Databases the search found results in -->
 {% block content-top %}
-<h1>{{ searcher_name }}</h1>
+<span id="database-names">{{ searcher_name }}</span>
 {% endblock %}
 
-
+<!--  Number of hits -->
 {% block content %}
 <form method="POST" action=".">{% csrf_token %}
 <input type="hidden" name="q" value="{{ query }}" />
-<div>
+<div id="hit-text">
     Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
-<br>
 
 <!-- Image information panels -->
 {% for r in results %}
@@ -95,23 +94,23 @@
 	<div id="info-text">
 	<b>Title:</b> {{ r.title }}<br>
 	</div>
-	<a href="{{ r.record_url }}"><div id="close-button">View</div></a>
-	<a href="#" onclick="toggle_panel({{forloop.counter0}})"><div id="close-button">Close</div></a>
+	<a href="{{ r.record_url }}"><div id="view-button">Source</div></a>
+	<div id="close-button" onclick="toggle_panel({{forloop.counter0}})">Close</div>
 </div>
 {% endfor %}
 
-
+<!-- Image thumb-nails -->
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
 	{% for r in results %}
 	<div class="record">
     	<img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" onclick="toggle_panel({{forloop.counter0}})"/>
-    	<div class="record-title"><a href="{{ r.record_url }}">{{ r.title }} </a></div>  
 	</div>
 	{% endfor %}
 </div>
 {% endif %}
 
+<!-- Button to select next results page -->
 {% if next_page %}
 <a href="{{ next_page }}">
     <div class = "result-next">Next</div>

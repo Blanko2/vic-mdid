@@ -168,9 +168,9 @@ html.js-enabled #header-bar {
 /* end of header bar */
 
 #footer {
-    padding-top: 50px;
+    padding-top: 8px;
     clear: both;
-    font-size: smaller;
+    font-size: 0.7em;	/*was smaller*/
 }
 
 {% if debug %}
@@ -238,68 +238,36 @@ a:link {text-decoration:none;}
 .record {
     float: left;
     border: 1px {{ colors.borders }} solid;
-    /*width: 102px;
-    height: 102px;*/
-    width: 80px;
-    height: 80px;
-    padding: 3px;
-    margin: auto;
-    overflow: hidden;
-    font-size: smaller;
+    width: 90px;
+   	height: 90px;
+    margin: 2px;
     background-color: {{ colors.shaded_background }};
-    position: relative;
-    
 }
 
-.record.notitle {
-    width: 140px;
-}
-
-.record a {
-    text-decoration: none;
-}
-
-.record img {
-    border: 1px {{ colors.borders }} solid;
-    position: relative;
-    max-width: 100px;
-    overflow: hidden;
-    width: 95%;
-    height: 95%;
+.record img{
+    width: auto;
+    height: auto;
+    max-width: 90px;
+    max-height: 90px;
+    background-color: {{ colors.shaded_background }};
+    display: block;
     margin: auto;
 }
 
-.record-select, .remote-record-select {
-    position: absolute;
-    top: 0px;
-    right: 0px;
+/* Names of databases results found in */
+#database-names{
+	font-size: 1em;
+	font-weight: bold;
+	color: {{ PRIMARY_COLOR }};
 }
 
-.record-title {
-    padding: 0 16px 0 105px;
-    display: none;
+/* Number of search results */
+#hit-text{
+	font-size: 0.7em;
+	margin: 5px 0px;
 }
 
-.resultlist-list .record {
-    float: none;
-    border: none;
-    border-bottom: 1px {{ colors.borders }} solid;
-    padding: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    height: 22px;
-    background-color: transparent;
-    width: auto;
-    margin: 0;
-}
-
-.resultlist-list .record img.thumbnail {
-    height: 20px;
-    max-width: 30px;
-    margin-right: 5px;
-}
-
-/* Next page of results button */
+/* Button for Next page of results */
 .result-next{
 	text-align: center;
 	clear: both;
@@ -315,7 +283,7 @@ a:link {text-decoration:none;}
 	color: white;
 }
 
-/* Image information panel CSS */
+/* Image information panel */
 .image-info-panel{
 	display: none;
 	width: 150px;
@@ -334,9 +302,12 @@ a:link {text-decoration:none;}
 }
 
 .image-info-panel .thumbnail{
-	width: 150px;
-    height: 150px;
-    display: block;
+	width: auto;
+	height: auto;
+	max-width: 150px;
+    max-height: 150px;
+    margin: auto;
+    display: block;	/* Prevents extra padding being inserted */
 }
 
 .image-info-panel #info-text{
@@ -346,6 +317,22 @@ a:link {text-decoration:none;}
 	height: 50px;
 	overflow: hidden;
 	margin: 10px 0px;
+}
+
+#view-button{
+	color: white;
+	background: {{ PRIMARY_COLOR }};
+	border-radius: 6px;
+	padding: 5px;
+	text-align: center;
+	display: inline;
+	font-size: 0.8em;
+	width:80px;
+	margin: 0px auto;
+}
+
+#view-button a {
+	color: white;
 }
 
 #close-button{
@@ -358,10 +345,7 @@ a:link {text-decoration:none;}
 	font-size: 0.8em;
 	width:80px;
 	margin: 0px auto;
-}
-
-#close-button a {
-	color: white;
+	cursor: pointer;	/* Make it look like an anchor on a desktop */
 }
 
 /*****************************************************************************/
