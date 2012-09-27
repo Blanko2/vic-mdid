@@ -34,23 +34,23 @@ class usViewer():
 		u = self.url_search()
 		return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
-	def htmlparams(self):
-		def out(params, indent, prefix):
+	def htmlparams(self, defaults):
+		def out(params, indent, prefix, default):
 			label = params.label if params.label else " ".join(prefix)
 			if isinstance(params, MapParameter):
 				r = ["  "*indent + "<div>"]
 				for k in params.parammap:
-					r += out(params.parammap[k], indent + 1, prefix + [k])
+					r += out(params.parammap[k], indent + 1, prefix + [k], default and default[k] or None)
 				r += ["  "*indent + "</div>"]
 				return r
 			elif isinstance(params, ScalarParameter):
-				return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"\" />"]
+				return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
 			elif isinstance(params, OptionalParameter):
 				r = ["  "*indent + "<a href=\"#\" class=\"param-opt-a\">" + label + "</a>", "  "*indent + "<div class=\"param-opt\">"]
-				r += out(params.subparam, indent + 1, prefix + ["opt"])
+				r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
 				r += ["  "*indent + "</div>"]
 				return r
-		return "\n".join(out(self.searcher.parameters, 0, []))
+		return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
 	
 	def readargs(self, getdata):
@@ -76,7 +76,8 @@ class usViewer():
 		for n in request.GET:
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
-		result = self.searcher.search(query, self.readargs(request.GET), offset, 50)
+		args = self.readargs(request.GET)
+		result = self.searcher.search(query, args, offset, 50)
 		results = result.images
 
 		def resultpart(image):
@@ -103,7 +104,7 @@ class usViewer():
 				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
 				'hits': result.total,
 				'searcher_name': self.searcher.name,
-				'html_parameters': self.htmlparams()
+				'html_parameters': self.htmlparams(args)
 			},
 			context_instance=RequestContext(request))
 
