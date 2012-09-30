@@ -18,7 +18,6 @@ from urllib import urlencode
 
 @csrf_protect
 def m_main(request):
-    print '** blah!!'
     form = AuthenticationForm()
     request.session.set_test_cookie()
     return render_to_response('m_main.html', {'form': form}, context_instance=RequestContext(request))
@@ -43,7 +42,7 @@ class usViewer():
             context_instance=RequestContext(request))
         
 def m_search(request):
-    viewer = usViewer(external.flickr)
+    viewer = usViewer(external.digitalnz)
     return viewer.search(request)
 
 def m_browse(request, manage=False):

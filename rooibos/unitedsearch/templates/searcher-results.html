@@ -28,6 +28,8 @@
     $(document).ready(function() {
         $("#submit_record_selections").hide();
         $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
+        $(".param-opt-a").click(function(){ $(this).next(".param-opt").slideToggle(); });
+        $(".param-opt").hide();
     });
 
 </script>
@@ -52,15 +54,12 @@
         </form>
     </div>
   </div>
-  {% if searcher_parameters %}
+  {% if html_parameters %}
   <div class="facet active-facet" id="results_sidebar_parameters">
     <form method="GET" action=".">
-    {% for p in searcher_parameters %}
-    <div>
-      {{ p.label }}: <input type="text" name="i_{{ p.identifier }}" value="" />
-    </div>
-    {% endfor %}
-    <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
+      {{ html_parameters|safe }}
+      <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
+    </form>
   </div>
   {% endif %}
       
