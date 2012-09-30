@@ -18,9 +18,9 @@ BASE_THUMBNAIL_LOCATION_URL = "https://images.nga.gov/"
 # These variable names are fixed by the software requirements
 name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # don't know what this is
-
-
-def __getHTMLPage_Containinghttp://jp.msn.com/?ocid=hmlogout_SearchResult(query, parameters, first_wanted_result_index) :
+  
+  
+def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
      
      search_results_per_page = 25
      search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
@@ -29,12 +29,20 @@ def __getHTMLPage_Containinghttp://jp.msn.com/?ocid=hmlogout_SearchResult(query,
      # replace all whitespace in query with '+'
      query = re.sub("\W", "+", query)
      
-     if parameters :
+     def __have_parameters(parameters) :
+	for p in parameters :
+	  if not parameters[p][0] is None :
+	    return True
+	return False
+	
+     if __have_parameters(parameters) :
     
+       # TODO give user some hint of parameters form (eg, how to enter dates)
        # advanced search
        def getValue(a):
 	 try:
-	   r = str(a[0])
+	   #r = str(a[0])
+	   r = a[0]
 	 except IndexError:
 	   r = ""
 	 if isinstance(r, str): return r
@@ -80,7 +88,6 @@ def __getHTMLPage_Containinghttp://jp.msn.com/?ocid=hmlogout_SearchResult(query,
      opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
      
-
      
      return html, howFarDownThePage
 
