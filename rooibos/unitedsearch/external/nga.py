@@ -20,7 +20,7 @@ name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # don't know what this is
 
 
-def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
+def __getHTMLPage_Containinghttp://jp.msn.com/?ocid=hmlogout_SearchResult(query, parameters, first_wanted_result_index) :
      
      search_results_per_page = 25
      search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
@@ -30,23 +30,42 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      query = re.sub("\W", "+", query)
      
      if parameters :
+    
        # advanced search
-       all_words = parameters.get('all_words', "")		# value if it exists, else ""
-       exact_phrase = parameters.get('exact_phrase', "")
-       exclude = parameters.get('exclude_words', "")
-       artist = parameters.get('artist', "")
-       keywords = parameters.get('keywords', "")
-       accession_number = parameters.get('accession_number', "")
-       school = parameters.get('school', "")
-       classification = parameters.get('classification', "")
-       medium = parameters.get('medium', "")
-       year1 = parameters.get('start_date', "")
-       year2 = parameters.get('end_date', "")
-       access = parameters.get('access', "")
+       def getValue(a):
+	 try:
+	   r = str(a[0])
+	 except IndexError:
+	   r = ""
+	 if isinstance(r, str): return r
+	 return ""
+
+       all_words = getValue(parameters['All words'])
+
+       # [0] if parameters['All words'] else ""	# value if it exists, else ""
+       exact_phrase = getValue(parameters['Exact Phrase'])
+     
+       exclude = getValue(parameters['Exclude Words'])
+
+       artist = getValue(parameters['Artist'])
+       keywords = getValue(parameters['Keywords'])
+       accession_number = getValue(parameters['Accession Number'])
+       school = getValue(parameters['School'])
+       classification = getValue(parameters['Classification'])
+       medium = getValue(parameters['Medium'])
+       year1 = getValue(parameters['Start Date'])
+       year2 = getValue(parameters['End Date'])
+       access = getValue(parameters['Access'])
+
+    
        
-       url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase + "&exclude_words="+exclude
-       url += "&artist_last_name="+artist + "&keywords_in_title="+keywords + "&accession_num="+accession_number
+       
+       url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
+       
+       url += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
+       
        url += "&school="+school + "&Classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
+       
        url += "&open_access="+access + "&page="+search_page_num
        
        url = re.sub(" ", "+", url)
@@ -60,6 +79,8 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
      opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
+     
+
      
      return html, howFarDownThePage
 
@@ -126,7 +147,7 @@ def __count(website_search_results_parser):
     
     
 def count(term):
-    # must be called 'count'
+    # must be called 'count'"artist"
     
     searchhtml  = __getHTMLPage_Containing_SearchResultX(term, {}, 0)[0]
     website_search_results_parser = BeautifulSoup(searchhtml)
@@ -269,3 +290,23 @@ def search(term, params, off, num_results_wanted) :
        
      return resulting_images 
      
+# would result in something like { "category": "images", "year": [1984] } being passed.
+parameters = MapParameter({ 
+    "All words": OptionalParameter(ScalarParameter(str)), 
+    "Exact Phrase":
+      OptionalParameter(ScalarParameter(str)), 
+     "Exclude Words": OptionalParameter(ScalarParameter(str)),
+    "Artist": OptionalParameter(ScalarParameter(str)),
+
+  
+    "Keywords": OptionalParameter(ScalarParameter(str)),
+    "Accession Number": OptionalParameter(ScalarParameter(str)),
+    "Classification": OptionalParameter(ScalarParameter(str)),
+    "School": OptionalParameter(ScalarParameter(str)),
+    "Medium": OptionalParameter(ScalarParameter(str)),
+    "Start Date": OptionalParameter(ScalarParameter(str)),
+    "End Date": OptionalParameter(ScalarParameter(str)),
+    "Access": OptionalParameter(ScalarParameter(str))
+ 
+    
+    })
