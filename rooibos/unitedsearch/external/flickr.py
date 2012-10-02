@@ -32,3 +32,4 @@ def getImage(identifier):
 	return Image(image_url, i["thumb_url"], i["title"], i, identifier)
 
 parameters = MapParameter({})
+parameters = MapParameter({ "category": ScalarParameter(str, "Category"), "year": OptionalParameter(ScalarParameter("year"), "Year") })

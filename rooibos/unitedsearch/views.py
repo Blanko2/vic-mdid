@@ -40,14 +40,19 @@ class usViewer():
 			if isinstance(params, MapParameter):
 				r = ["  "*indent + "<div>"]
 				for k in params.parammap:
-					r += out(params.parammap[k], indent + 1, prefix + [k], default and default[k] or None)
+					r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
 				r += ["  "*indent + "</div>"]
 				return r
 			elif isinstance(params, ScalarParameter):
 				return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
 			elif isinstance(params, OptionalParameter):
-				r = ["  "*indent + "<a href=\"#\" class=\"param-opt-a\">" + label + "</a>", "  "*indent + "<div class=\"param-opt\">"]
+				r = ["  "*indent + "<div>"]
+				indent += 1
+				r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
+				r += ["  "*indent + "<div class=\"param-opt\">"]
 				r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
+				r += ["  "*indent + "</div>"]
+				indent -= 1
 				r += ["  "*indent + "</div>"]
 				return r
 		return "\n".join(out(self.searcher.parameters, 0, [], defaults))
@@ -65,8 +70,7 @@ class usViewer():
 				if "_".join(prefix) in inputs:
 					return inputs["_".join(prefix)]
 			if isinstance(params, OptionalParameter):
-				# TODO: this, properly
-				return [read(params.subparam, prefix + ["opt"])]
+				return [read(params.subparam, prefix + ["opt"])] if inputs.get("_".join(prefix), "off") == "on" else []
 		return read(self.searcher.parameters, [])
 	
 	def search(self, request):
