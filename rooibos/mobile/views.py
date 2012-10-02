@@ -1,3 +1,4 @@
+from django.http import HttpResponse, HttpResponseRedirect, QueryDict
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.contrib.auth.forms import AuthenticationForm
