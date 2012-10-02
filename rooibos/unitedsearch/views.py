@@ -55,6 +55,19 @@ class usViewer():
 				indent -= 1
 				r += ["  "*indent + "</div>"]
 				return r
+			elif isinstance(params, DefinedListParameter):
+				options = params.options or []
+				r_content = "  "*indent + (label + ": " if params.label else "") 
+				#r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
+				r_content += "<select name=\"i_" + "_".join(prefix) + "\">"
+				selected_option = default or options[0]
+				for option in options :
+				    r_content += "<option value=" + option
+				    if option == selected_option :
+				      r_content += " selected=\"selected\""
+				    r_content += ">" + option + "</option>"
+				r_content += "</select>"
+				return [r_content]
 		return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
 	
@@ -71,6 +84,9 @@ class usViewer():
 					return inputs["_".join(prefix)]
 			if isinstance(params, OptionalParameter):
 				return [read(params.subparam, prefix + ["opt"])] if inputs.get("_".join(prefix), "off") == "on" else []
+			if isinstance(params, DefinedListParameter):
+				if "_".join(prefix) in inputs:
+					return inputs["_".join(prefix)]
 		return read(self.searcher.parameters, [])
 	
 	def search(self, request):

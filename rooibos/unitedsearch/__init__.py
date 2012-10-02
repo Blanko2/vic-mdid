@@ -66,6 +66,23 @@ class OptionalParameter:
 		self.subparam = subparam
 		self.label = label
 
+class DefinedListParameter:
+	""" A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, not supported yet"""
+	def __init__(self, options, label=None):
+		self.options = options
+		self.label = label
+		
+
+""" Standard Parameter Names: (if doing this type of parameter, use this name)
+artist
+title
+start date
+end date
+copyright
+publisher
+
+Note, parameter names should be lowercase, labels (what user should actually see) capitalised
+"""
 class MapParameter:
 	""" MapParameter({ "category": ScalarParameter(str), "year": OptionalParameter(ScalarParameter("year")) }) """
 	def __init__(self, parammap, label=None):

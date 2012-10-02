@@ -1,6 +1,8 @@
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
-from unitedsearch import *                      # other search tools
+#from unitedsearch import *                      # other search tools
+from rooibos.unitedsearch import *
+
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
@@ -11,16 +13,100 @@ identifier = "gallica"  # identifier for view, urls
 
 BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images" # append &q=query&pageNumber=number&lan
 BASE_URL = "http://gallica.bnf.fr"
-
+ADVANCED_SEARCH_URL_STRUCTURE =  "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=&catsel1=f_creator&cat1=ARTIST&ope2=MUST&catsel2=f_title&cat2=TITLE&ope3=MUST&catsel3=f_content&cat=CONTENT&ope4=MUST&catsel4=f_tdm&cat4=TABLE_OF_CONTENTS_CAPTIONS&ope5=MUST&catsel5=f_subject&cat5=SUBJECT&ope6=MUST&catsel6=f_source&cat6=SOURCE&ope7=MUST&catsel7=f_metadata&cat7=BIBLIOGRAPHIC_RECORD&ope8=MUST&catsel8=f_publisher&cat8=PUBLISHER&ope9=MUST&catsel9=f_allmetadata&cat9=ISBN&ope10=MUST&catsel10=f_allcontent&cat10=ALL&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&allProvenances=Tous&t_provenance=bnf.fr&t_provenance=partenaires&sel_provenance_Part=toutPartenaires&t_provenance=edistrib&sel_provenance_Edist=toutSNE&allSources=Tous&t_source=Biblioth%25C3%25A8que+nationale+de+France&t_source=sources&sel_source=toutSources&dateMiseEnLigne=indexDateFrom&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
     
     # calculate page number and items
     page_num = str(1 + (first_index_wanted/items_per_page))
-         
-    # build html to run through proxy
-    url = BASE_SIMPLE_SEARCH_URL + "&q=" + term + "&pageNumber=" + page_num + "&lang=EN&tri=&n=" + str(items_per_page)
+    
+    def haveParams() :
+      print params;
+      for para in params :
+	if (not params[para] is None) and (  len(params[para]) != 0) :
+	  print "found for para"
+	  print para
+	  return True
+      return False
+      
+    if  not haveParams() :
+	# simple search
+	url = BASE_SIMPLE_SEARCH_URL + "&q=" + term + "&pageNumber=" + page_num + "&lang=EN&tri=&n=" + str(items_per_page)
+	
+    else :
+	# advanced search
+	def getValue(dict_val):
+	    try:
+	      r = str(dict_val[0])
+	    except IndexError:
+	      r = ""
+	    if isinstance(r, str): return r
+	    return ""
+	    #return (str)(dict_val[0])
+	    
+	def getLanguages() :
+	    lang_codes = {
+	      "French": "fre",
+	      "English": "eng",
+	      "Italian": "ita",
+	      "Chinese": "chi",
+	      "Spanish": "spa",
+	      "German": "ger",
+	      "Greek": "grc",
+	      "Latin": "lat"
+	    }
+	    
+	    selected = params['languages']
+	    if selected == "All" :	# url needs to be told all are linked and each is linked
+	      lang_string = "&toutesLangues=toutes"
+	      for lang in lang_codes :		
+		lang_string += "&t_language=" + lang_codes[lang]
+	    else :
+	      lang_string = "&t_language=" + lang_codes[selected]
+	    return lang_string
+
+	def getCopyright() :
+	    copyright_codes = {
+	      "Free": "fayes",
+	      "Subject to conditions": "fano"
+	    }
+
+	    selected = params['copyright']
+	    if selected == "All" :
+	      copy_string = "&allAccessType=Tous"
+	      for source in copyright_codes :
+		copy_string += "&t_free_access=" + copyright_codes[source]
+	    else :
+	      copy_string = "&t_free_access=" + copyright_codes[selected]
+	    return copy_string
+
+	      
+	replacements = {
+	  'ARTIST': getValue(params['artist']),
+	  'TITLE': getValue(params['title']),
+	  'CONTENT': getValue(params['content']),
+	  'TABLE_OF_CONTENTS_CAPTIONS': getValue(params['table of contents/captions']),
+	  'SUBJECT': getValue(params['subject']),
+	  'SOURCE': getValue(params['source']),
+	  'BIBLIOGRAPHIC_RECORD': getValue(params['bib record']),
+	  'PUBLISHER': getValue(params['publisher']),
+	  'IBSN': getValue(params['ibsn']),
+	  'ALL': getValue(params['all']),
+	  'START': getValue(params['start date']),
+	  'END': getValue(params['end date']),
+	  'LANGUAGES': getLanguages(),
+	  'COPYRIGHT': getCopyright()
+	  }
+	
+	replacer = re.compile('|'.join(replacements.keys()))
+	url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+	
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+    
+    print params
+    print url
+    print "\n\n"
+    
     return html
 
     
@@ -151,7 +237,6 @@ def count(term) :
 
 def search(term, params, off, num_wanted) :
     
-    print "entered search"
     off = (int)(off)
     
     images = []
@@ -159,8 +244,6 @@ def search(term, params, off, num_wanted) :
     num_results = __count(search_results_parser)
     num_wanted = min(num_wanted, num_results)    # how many were asked for mitigated by how many actually exist
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
-    
-    print "got first soup, about to start parsing"
     
     
     while len(images) < num_wanted :
@@ -175,7 +258,6 @@ def search(term, params, off, num_wanted) :
             
         # find start points for image data
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
-        print "got image id divs"
          
         # discard any excess
         if len(image_id_divs) > num_wanted :
@@ -183,18 +265,34 @@ def search(term, params, off, num_wanted) :
                 image_id_divs.pop()
                 
         # build images
-        print "about to make " + str(len(image_id_divs)) + "images"
         for div in image_id_divs :
-            print "div id " + str(div.renderContents())
             images.append(__create_image(search_results_parser, div))
-            print "made image - images len : " + str(len(images))
     
     
-    print "about to build result"    
     # wrap in Result object and return
     result = Result(num_results, off+len(images))
     for image in images :
-        print "about to add image"
         result.addImage(image)
-        print "added image"
     return result
+    
+    
+    
+    
+    
+parameters = MapParameter({
+  "artist": OptionalParameter(ScalarParameter(str, "Artist")),
+  "title": OptionalParameter(ScalarParameter(str, "Title")),
+  "content": OptionalParameter(ScalarParameter(str, "Content")),
+  "table of contents/captions": OptionalParameter(ScalarParameter(str, "Table of contents/captions")),
+  "subject": OptionalParameter(ScalarParameter(str, "Subject")),
+  "source": OptionalParameter(ScalarParameter(str, "Source")),
+  "bib record": OptionalParameter(ScalarParameter(str, "Bibliographic Record")),
+  "publisher": OptionalParameter(ScalarParameter(str, "Publisher")),
+  "ibsn": OptionalParameter(ScalarParameter(str, "IBSN")),
+  "all": OptionalParameter(ScalarParameter(str, "All")),
+  "start date": OptionalParameter(ScalarParameter(str, "Start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "End Date")),
+  "languages": DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"], "Language"),
+  "copyright": DefinedListParameter(["All", "Free", "Subject to conditions"], "Copyright")
+  })
+

@@ -31,7 +31,7 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      
      def __have_parameters(parameters) :
 	for p in parameters :
-	  if not parameters[p][0] is None :
+	  if (not parameters[p] is None) and (len(parameters[p]) != 0) :
 	    return True
 	return False
 	
@@ -41,8 +41,8 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
        # advanced search
        def getValue(a):
 	 try:
-	   #r = str(a[0])
-	   r = a[0]
+	   r = str(a[0])
+	   #r = a[0]
 	 except IndexError:
 	   r = ""
 	 if isinstance(r, str): return r
@@ -88,6 +88,7 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
      
+     print url
      
      return html, howFarDownThePage
 
@@ -297,7 +298,7 @@ def search(term, params, off, num_results_wanted) :
        
      return resulting_images 
      
-# would result in something like { "category": "images", "year": [1984] } being passed.
+     
 parameters = MapParameter({ 
     "All words": OptionalParameter(ScalarParameter(str)), 
     "Exact Phrase":
