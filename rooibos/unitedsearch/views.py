@@ -59,7 +59,11 @@ class usViewer():
 				options = params.options or []
 				r_content = "  "*indent + (label + ": " if params.label else "") 
 				#r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
-				r_content += "<select name=\"i_" + "_".join(prefix) + "\">"
+				r_content += "<select name=\"i_" + "_".join(prefix) + "\""
+				if params.multipleAllowed :
+				  print "multipleAllowed\n\n"
+				  r_content += " multiple = \"multiple\""
+				r_content += ">"
 				selected_option = default or options[0]
 				for option in options :
 				    r_content += "<option value=" + option
@@ -77,7 +81,10 @@ class usViewer():
 			if isinstance(params, MapParameter):
 				r = {}
 				for k in params.parammap:
-					r[k] = read(params.parammap[k], prefix + [k])
+					if k in r :
+					  r[k].append(read(params.parammap[k], prefix + [k]))
+					else :
+					  r[k] = read(params.parammap[k], prefix + [k])
 				return r
 			if isinstance(params, ScalarParameter):
 				if "_".join(prefix) in inputs:
