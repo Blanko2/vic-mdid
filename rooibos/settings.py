@@ -127,6 +127,7 @@ INSTALLED_APPS = (
     'impersonate',
     'compressor',
     'south',
+    'django_concurrent_test_server',
 )
 
 STORAGE_SYSTEMS = {
