@@ -14,7 +14,11 @@ from django.db import backend
 from django.contrib.auth.models import User
 from django.db.models.aggregates import Count
 
-from rooibos.unitedsearch import external
+from rooibos.unitedsearch import searchers,external
+from rooibos.unitedsearch.union import searcherUnion
+
+import rooibos.unitedsearch.views 
+
 from urllib import urlencode
 
 @csrf_protect
@@ -23,26 +27,25 @@ def m_main(request):
     request.session.set_test_cookie()
     return render_to_response('m_main.html', {'form': form}, context_instance=RequestContext(request))
 
-class usViewer():
+class usViewer(rooibos.unitedsearch.views.usViewer):
     def __init__(self, searcher):
         self.searcher = searcher
+        rooibos.unitedsearch.views.usViewer.__init__(self, searcher, None)
 
     def search(self, request):
-        query = request.GET.get('q', '') or request.POST.get('q', '')
-        offset = int(request.GET.get('from', '') or request.POST.get('from', '') or 0)
-        result = self.searcher.search(query, {}, offset, 6) # 50
-        results = result.images
         return render_to_response('m_results.html',
-            {
-                'results': [ { 'thumb_url': i.thumb, 'title': i.name, 'record_url': i.infourl, 
-                              'identifier': i.identifier } for i in results ],
-                'next_page': reverse('mobile-search-results') + "?" + urlencode({ 'q': query, 'from': result.nextoffset }),
-                'hits': result.total,
-                'searcher_name': self.searcher.name
-            },
-            context_instance=RequestContext(request))
+            self.perform_search(request,6),
+            context_instance=RequestContext(request))    
+        
+    def url_select(self):
+        return reverse("mobile-search-results")
+
+    def url_search(self):
+        return reverse("mobile-search-results")
         
 def m_search(request):
+    #searcher = union.searcherUnion([external.flickr,external.gallica])
+    #viewer = usViewer(searcher)searcherUnion([external.digitalnz]))#
     viewer = usViewer(external.digitalnz)
     return viewer.search(request)
 
