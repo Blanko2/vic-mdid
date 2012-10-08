@@ -38,15 +38,31 @@
     function toggle_panel(index){
     	var scrollTop = window.pageYOffset;
     	var panel = document.getElementsByClassName("image-info-panel")[index];
+    	var border = document.getElementsByClassName("info-panel-border")[index];
+    	var image = document.getElementsByClassName("info-image")[index];
     	if(p_toggle){
     		panel.style.display = "none";				// Switch off
     	}
     	else{
     		panel.style.display = "inline";				// Switch on
     		panel.style.top = scrollTop + 20 + "px";	// Place in the scroll window correctly
+    		image.style.marginTop = (border.clientHeight - image.clientHeight)/2 + "px"; // center image vertically
     	}
     	p_toggle = !p_toggle;
     }
+    
+    // Function to align the images vetically. Couldn't achieve this with CSS unfortunately.
+    function vertAlign(pImg) {
+    	var lHeight = pImg.clientHeight;
+   	 	var lParentHeight = pImg.parentNode.clientHeight;
+    	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
+    }
+    
+    function vertAlign2(pImg) {
+    	var lHeight = pImg.clientHeight;
+   	 	var lParentHeight = 150;
+    	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
+    } 
     
 
 </script>
@@ -87,24 +103,12 @@
     Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
 
-<!-- Image information panels -->
-{% for r in results %}
-<div class="image-info-panel">
-	<img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
-	<div id="info-text">
-	<b>Title:</b> {{ r.title }}<br>
-	</div>
-	<a href="{{ r.record_url }}"><div id="view-button">Source</div></a>
-	<div id="close-button" onclick="toggle_panel({{forloop.counter0}})">Close</div>
-</div>
-{% endfor %}
-
 <!-- Image thumb-nails -->
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
 	{% for r in results %}
-	<div class="record">
-    	<img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" onclick="toggle_panel({{forloop.counter0}})"/>
+	<div class="record" onclick="toggle_panel({{forloop.counter0}})">
+    	<img src="{{ r.thumb_url }}" alt="{{ r.title }}"  onload="vertAlign(this)"/>
 	</div>
 	{% endfor %}
 </div>
@@ -116,6 +120,20 @@
     <div class = "result-next">Next</div>
 </a>
 {% endif %}
+
+<!-- Image information panels -->
+{% for r in results %}
+<div class="image-info-panel">
+	<div class="info-panel-border">
+		<img class="info-image" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
+	</div>
+	<div id="info-text">
+		<b>Title:</b> {{ r.title }}<br>
+	</div>
+	<a href="{{ r.record_url }}"><div id="view-button">Source</div></a>
+	<div id="close-button" onclick="toggle_panel({{forloop.counter0}})">Close</div>
+</div>
+{% endfor %}
 
 </form>
 

@@ -1,10 +1,10 @@
 <!doctype html>
 <html>
     <head>
-    	<meta content="width=device-width" name="viewport">
+    	<meta content="width=device-width; height=device-height;" name="viewport">
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
-        <script src= "/static/galleria/galleria-1.2.8.min.js"></script>
-        <style>#galleria{ background: #000; }
+        <script src= "{% url static 'galleria/galleria-1.2.8.min.js' %}"></script>
+        <style>#galleria{width:auto; background: #000; }
         		html,body{margin:0;}
 		</style>
     </head>
@@ -12,15 +12,15 @@
         <div id="galleria">
             {% for record in presentation.records %}
         		{% with record.title as title %}
-            		<img src="{{ record.get_image_url }}" title="{{ title }}" alt="{{ title }}" />
+            		<img src="{{ record.get_image_url }}" title="{{ title }}" />
         		{% endwith %}
     		{% endfor %}
         </div>
         <script>
         	var g = document.getElementById("galleria");
     		g.style.height = window.innerHeight + "px";
-    		g.style.width = window.innerWidth + "px";
-            Galleria.loadTheme('/static/galleria/themes/classic/galleria.classic.min.js');
+    		//g.style.width = window.innerWidth + "px";
+            Galleria.loadTheme('/static/galleria/themes/classic/galleria.classic.js');
             Galleria.run('#galleria');
             //<img src="{{ record.get_thumbnail_url }}?square" title="{{ title }}" alt="{{ title }}" />
         </script>

@@ -96,7 +96,7 @@ class usViewer():
 					return inputs["_".join(prefix)]
 		return read(self.searcher.parameters, [])
 	
-	def search(self, request):
+	def perform_search(self, request, resultcount):
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
 		params = {}
@@ -104,7 +104,7 @@ class usViewer():
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
 		args = self.readargs(request.GET)
-		result = self.searcher.search(query, args, offset, 50)
+		result = self.searcher.search(query, args, offset, resultcount)
 		results = result.images
 
 		def resultpart(image):
@@ -124,16 +124,18 @@ class usViewer():
 					"identifier": image.identifier
 				}
 
-		return render_to_response('searcher-results.html',
-			{
+		return {
 				'results': map(resultpart, results),
 				'select_url': self.url_select(),
 				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
 				'hits': result.total,
 				'searcher_name': self.searcher.name,
 				'html_parameters': self.htmlparams(args)
-			},
-			context_instance=RequestContext(request))
+			}
+		
+	def search(self, request):
+		return render_to_response('searcher-results.html', self.perform_search(request,50), context_instance=RequestContext(request))
+
 
 	def record(self, identifier):
 		image = self.searcher.getImage(identifier)

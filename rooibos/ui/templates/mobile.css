@@ -206,6 +206,7 @@ html.js-enabled #header-bar {
 
 #button #button-text{
 	text-align: center;
+	line-height: 40px;		/* center the text in the div */
 	font-size: 150%;
 }
 
@@ -235,21 +236,22 @@ a:link {text-decoration:none;}
 /* m_results                                                                 */
 /*****************************************************************************/
 
+/* div to create a border around the image*/ 
 .record {
     float: left;
     border: 1px {{ colors.borders }} solid;
-    width: 90px;
-   	height: 90px;
+    width: 70px;
+   	height: 70px;
     margin: 2px;
     background-color: {{ colors.shaded_background }};
 }
 
+/* The actual image */
 .record img{
     width: auto;
     height: auto;
-    max-width: 90px;
-    max-height: 90px;
-    background-color: {{ colors.shaded_background }};
+    max-width: 70px;
+    max-height: 70px;
     display: block;
     margin: auto;
 }
@@ -301,7 +303,14 @@ a:link {text-decoration:none;}
 	border-radius: 6px;
 }
 
-.image-info-panel .thumbnail{
+.info-panel-border {
+	border: 1px {{ colors.borders }} solid;
+    width: 150px;
+   	height: 150px;
+    background-color: {{ colors.shaded_background }};
+}
+
+.info-panel-border img {
 	width: auto;
 	height: auto;
 	max-width: 150px;
