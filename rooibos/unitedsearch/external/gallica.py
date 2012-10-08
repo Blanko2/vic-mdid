@@ -13,7 +13,7 @@ identifier = "gallica"  # identifier for view, urls
 
 BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images" # append &q=query&pageNumber=number&lan
 BASE_URL = "http://gallica.bnf.fr"
-ADVANCED_SEARCH_URL_STRUCTURE =  "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=&catsel1=f_creator&cat1=ARTIST&ope2=MUST&catsel2=f_title&cat2=TITLE&ope3=MUST&catsel3=f_content&cat=CONTENT&ope4=MUST&catsel4=f_tdm&cat4=TABLE_OF_CONTENTS_CAPTIONS&ope5=MUST&catsel5=f_subject&cat5=SUBJECT&ope6=MUST&catsel6=f_source&cat6=SOURCE&ope7=MUST&catsel7=f_metadata&cat7=BIBLIOGRAPHIC_RECORD&ope8=MUST&catsel8=f_publisher&cat8=PUBLISHER&ope9=MUST&catsel9=f_allmetadata&cat9=ISBN&ope10=MUST&catsel10=f_allcontent&cat10=ALL"
+ADVANCED_SEARCH_URL_STRUCTURE =  "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=&catsel1=f_creator&cat1=ARTIST&ope2=MUST&catsel2=f_title&cat2=TITLE&ope3=MUST&catsel3=f_content&cat=CONTENT&ope4=MUST&catsel4=f_tdm&cat4=TABLE_OF_CONTENTS_CAPTIONS&ope10=MUST&catsel10=f_subject&cat10=SUBJECT&ope6=MUST&catsel6=f_source&cat6=SOURCE&ope7=MUST&catsel7=f_metadata&cat7=BIBLIOGRAPHIC_RECORD&ope8=MUST&catsel8=f_publisher&cat8=PUBLISHER&ope9=MUST&catsel9=f_allmetadata&cat9=ISBN&ope5=MUST&catsel5=f_allcontent&cat5=ALL"
 ADVANCED_SEARCH_URL_STRUCTURE += "&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&allProvenances=Tous&t_provenance=bnf.fr&t_provenance=partenaires&sel_provenance_Part=toutPartenaires&t_provenance=edistrib&sel_provenance_Edist=toutSNE&allSources=Tous&t_source=Biblioth%25C3%25A8que+nationale+de+France&t_source=sources&sel_source=toutSources&dateMiseEnLigne=indexDateFrom&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
@@ -46,6 +46,12 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	    #return (str)(dict_val[0])
 	    
 	def getLanguages() :
+	    
+	    if len(params['languages']) == 0 :
+	      params['languages'] = ['All']
+	      #return "&t_language="
+	      
+	    # if reach here, have languages to read, read them  
 	    lang_codes = {
 	      "French": "fre",
 	      "English": "eng",
@@ -57,28 +63,36 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	      "Latin": "lat"
 	    }
 	    
-	    selected = params['languages']
-	    if selected == "All" :	# url needs to be told all are linked and each is linked
-	      lang_string = "&toutesLangues=toutes"
-	      for lang in lang_codes :		
-		lang_string += "&t_language=" + lang_codes[lang]
-	    else :
-	      lang_string = "&t_language=" + lang_codes[selected]
+	    lang_string = ""
+	    for lang in params['languages'] :
+	      if lang == 'All' :
+		lang_string = "&toutesLangues=toutes"
+		for other_lang in lang_codes :		
+		  lang_string += "&t_language=" + ((str)(lang_codes[other_lang])).strip()
+	    
+	      else :
+		lang_string += "&t_language=" + ((str)(lang_codes[lang])).strip()
 	    return lang_string
 
 	def getCopyright() :
+	  
+	    if len(params['copyright']) == 0 :
+	      params['copyright'] = ['All']
+	      #return "&t_free_access="		# blank result
+	      
+	    # if reach here, have copyright  
 	    copyright_codes = {
 	      "Free": "fayes",
 	      "Subject to conditions": "fano"
 	    }
 
-	    selected = params['copyright']
+	    selected = params['copyright'][0]	# TODO make this  copy languages impl
 	    if selected == "All" :
 	      copy_string = "&allAccessType=Tous"
 	      for source in copyright_codes :
-		copy_string += "&t_free_access=" + copyright_codes[source]
+		copy_string += "&t_free_access=" + (str)(copyright_codes[source])
 	    else :
-	      copy_string = "&t_free_access=" + copyright_codes[selected]
+	      copy_string = "&t_free_access=" + (str)(copyright_codes[selected])
 	    return copy_string
 
 	      
@@ -92,7 +106,7 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	  'BIBLIOGRAPHIC_RECORD': getValue(params['bib record']),
 	  'PUBLISHER': getValue(params['publisher']),
 	  'IBSN': getValue(params['ibsn']),
-	  'ALL': getValue(params['all']),
+	  'ALL':  getValue(params['all']),
 	  'START': getValue(params['start date']),
 	  'END': getValue(params['end date']),
 	  'LANGUAGES': getLanguages(),
@@ -111,7 +125,14 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
     return html
 
     
-
+def any_results(html_page_parser) :
+    
+    results_div = html_page_parser.find('div', 'ariane')
+    text = results_div.findAll('span')[1].next.strip()	# find the bit of text that says if results\
+    
+    return text != "No result"
+    
+    
 def __items_per_page(num_wanted) :
     """ calculate the optimal number of items to display per page,
     to minimise the number of html pages to read """
@@ -242,6 +263,9 @@ def search(term, params, off, num_wanted) :
     
     images = []
     search_results_parser = BeautifulSoup(__get_search_resultsHtml(term, params, off, __items_per_page(num_wanted)))
+    if not any_results(search_results_parser) :
+      return Result(0, off)
+      
     num_results = __count(search_results_parser)
     num_wanted = min(num_wanted, num_results)    # how many were asked for mitigated by how many actually exist
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
@@ -293,7 +317,7 @@ parameters = MapParameter({
   "all": OptionalParameter(ScalarParameter(str, "All")),
   "start date": OptionalParameter(ScalarParameter(str, "Start date")),
   "end date": OptionalParameter(ScalarParameter(str, "End Date")),
-  "languages": DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"], multipleAllowed=True, label="Language"),
-  "copyright": DefinedListParameter(["All", "Free", "Subject to conditions"], label="Copyright")
+  "languages": OptionalParameter(DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"], multipleAllowed=True, label="Language")),
+  "copyright": OptionalParameter(DefinedListParameter(["All", "Free", "Subject to conditions"], label="Copyright"))
   })
 

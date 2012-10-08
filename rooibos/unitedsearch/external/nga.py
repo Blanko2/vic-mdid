@@ -93,7 +93,11 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      return html, howFarDownThePage
 
 
-
+def any_results(html_parser) :
+    have_no_results_tag = html_parser.find('h5')
+    return not have_no_results_tag 
+    
+    
 def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :
      """ Ids are in the javascript block following the div id=autoShowSimilars
      Note, will need re-writing if html changes """
@@ -266,6 +270,9 @@ def search(term, params, off, num_results_wanted) :
      searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(term, params, off)
      website_search_results_parser = BeautifulSoup(searchhtml)
      
+     if not any_results(website_search_results_parser) :
+       return Result(0, off)
+       
      list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
      
      
