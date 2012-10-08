@@ -116,6 +116,9 @@
 
 <!-- Button to select next results page -->
 {% if next_page %}
+<a href="javascript:history.go(-1)">
+    <div class = "result-next">Previous</div>
+</a>
 <a href="{{ next_page }}">
     <div class = "result-next">Next</div>
 </a>
