@@ -74,7 +74,8 @@ def retrieve_image(request, recordid, record, width=None, height=None):
 
     path = get_image_for_record(recordid, request.user, int(width or 100000), int(height or 100000), passwords)
     if not path:
-        raise Http404()
+        #raise Http404()
+        return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
     Activity.objects.create(event='media-download-image',
                             request=request,
@@ -88,6 +89,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
     except IOError:
         logging.error("IOError: %s" % path)
         raise Http404()
+
 
 
 def make_storage_select_choice(storage, user):
