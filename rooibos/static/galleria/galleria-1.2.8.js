@@ -24,7 +24,7 @@ var undef,
 // internal constants
     VERSION = 1.28,
     DEBUG = true,
-    TIMEOUT = 30000,
+    TIMEOUT = 300000,	// changed from 30 000
     DUMMY = false,
     NAV = navigator.userAgent.toLowerCase(),
     HASH = window.location.hash.replace(/#\//, ''),
@@ -2368,7 +2368,7 @@ Galleria.prototype = {
                 portrait: 0,
                 color: 'aaaaaa'
             },
-            wait: 5000, // 1.2.7
+            wait: 500000, // 1.2.7 dean changed from 5000
             width: 'auto',
             youtube: {
                 modestbranding: 1,
@@ -5101,7 +5101,7 @@ Galleria.loadTheme = function( src, options ) {
         length = _galleries.length,
         err = window.setTimeout( function() {
             Galleria.raise( "Theme at " + src + " could not load, check theme path.", true );
-        }, 5000 );
+        }, 500000 ); // was 5000
 
     // first clear the current theme, if exists
     Galleria.theme = undef;
@@ -5549,7 +5549,7 @@ Galleria.Picture.prototype = {
                         if( typeof callback == 'function' ) {
                             callback.call( self, self );
                         }
-                    }, 10);
+                    }, 10000);	// changed from 10
                 };
             }( this, callback )));
 
@@ -5574,13 +5574,13 @@ Galleria.Picture.prototype = {
                         return function() {
                             image.attr('src', src + '?' + Utils.timestamp() );
                         };
-                    }( $(this), src )), 50);
+                    }( $(this), src )), 50000);	// changed from 50
                 } else {
                     // apply the dummy image if it exists
                     if ( DUMMY ) {
                         $( this ).attr( 'src', DUMMY );
                     } else {
-                        Galleria.raise('Image not found: ' + src);
+                        Galleria.raise('Image not found dean: ' + src);
                     }
                 }
             },
