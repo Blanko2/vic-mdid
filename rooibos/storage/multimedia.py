@@ -145,9 +145,10 @@ def render_pdf(pdffile):
 
 
 def get_image(media):
-    if media.mimetype.startswith('image/'):
+    print 'media.mimetype = %s' % media.mimetype
+    if media.mimetype.lower().startswith('image/'):
         return media.load_file()
-    if media.mimetype.startswith('video/'):
+    if media.mimetype.lower().startswith('video/'):
         # retrieve offset if available
         try:
             offset = int(media.record.fieldvalue_set.filter(
@@ -157,8 +158,8 @@ def get_image(media):
         except IndexError, ValueError:
             offset = 5
         return capture_video_frame(media.get_absolute_file_path(), offset=offset)
-    if media.mimetype.startswith('audio/'):
+    if media.mimetype.lower().startswith('audio/'):
         return render_audio_waveform_by_mimetype(media.get_absolute_file_path(), media.mimetype)
-    if media.mimetype == 'application/pdf':
+    if media.mimetype.lower() == 'application/pdf':
         return render_pdf(media.get_absolute_file_path())
     return None
