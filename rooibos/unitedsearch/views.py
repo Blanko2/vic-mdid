@@ -39,7 +39,9 @@ class usViewer():
 			label = params.label if params.label else " ".join(prefix)
 			if isinstance(params, MapParameter):
 				r = ["  "*indent + "<div>"]
-				for k in params.parammap:
+				for index in range(len(params.parammap)-1, -1, -1) :
+				#for k in params.parammap:
+					k = params.parammap.keys()[index]
 					r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
 				r += ["  "*indent + "</div>"]
 				return r
@@ -72,6 +74,26 @@ class usViewer():
 				    r_content += ">" + option + "</option>"
 				r_content += "</select>"
 				return [r_content]
+			elif isinstance(params, UserDefinedTypeParameter) :
+			      options = params.type_options or []
+			      r_content = "  "*indent + (label + ": " if params.label else "")
+			      
+			      r_content += "<div>"
+			      
+			      # select box for the type options
+			      r_content += "<select name=\"i_" + "_".join(prefix) +"_type"+ "\">"
+			      for option in options :
+				    r_content += "<option value=" + option
+				    r_content += ">" + option + "</option>"
+			      r_content += "</select><br>"
+			      
+			      # textbox for value
+			      r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + (default[1] or "") + "\" />"
+			      
+			      r_content += "</div>"
+			      
+			      return [r_content]
+			    
 		return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
 	
@@ -94,6 +116,21 @@ class usViewer():
 			if isinstance(params, DefinedListParameter):
 				if "_".join(prefix) in inputs:
 					return inputs["_".join(prefix)]
+
+			if isinstance(params, UserDefinedTypeParameter) :
+				print inputs
+				print prefix
+				print "\n\n"
+				# TODO don't use prefix[0]
+				field_type = ""
+				field_value = ""
+				if "_".join(prefix)+"_type" in inputs:
+					field_type = inputs["_".join(prefix)+"_type"]
+				if "_".join(prefix)+"_value" in inputs:
+					field_value = inputs["_".join(prefix)+"_value"]
+				return [field_type, field_value]
+				#if "_".join(prefix) in inputs:
+				#	return inputs["_".join(prefix)]
 		return read(self.searcher.parameters, [])
 	
 	def perform_search(self, request, resultcount):

@@ -67,7 +67,7 @@ class OptionalParameter:
 		self.label = label
 
 class DefinedListParameter:
-	""" A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, not supported yet"""
+	""" A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, multipleAllowed not supported yet"""
 	def __init__(self, options, multipleAllowed=False, label=None):
 		self.multipleAllowed = multipleAllowed
 		print "in init: multipleAllowed" 
@@ -75,7 +75,14 @@ class DefinedListParameter:
 		self.options = options
 		self.label = label
 		
-
+class UserDefinedTypeParameter :
+	""" Parameter where user picks which field they are
+	searching by """
+	def __init__(self, type_options, label=None) :
+	      self.type_options = type_options
+	      self.label = label
+	      
+	      
 """ Standard Parameter Names: (if doing this type of parameter, use this name)
 artist
 title
