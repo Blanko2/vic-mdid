@@ -88,7 +88,8 @@ def retrieve_image(request, recordid, record, width=None, height=None):
         return response
     except IOError:
         logging.error("IOError: %s" % path)
-        raise Http404()
+        #raise Http404()
+        return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 
 
