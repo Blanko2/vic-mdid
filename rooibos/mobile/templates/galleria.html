@@ -14,14 +14,14 @@
         	{% for record in presentation.records %}
         		{% with record.title as title %}
             		<!--  <img src="{{ record.get_image_url }}" title="{{ title }}" /> -->
-            		<img src="{% url storage-retrieve-image record.id, record.name, 300, 300 %}">
+            		<img src="{% url storage-retrieve-image record.id, record.name, 300, 300 %}" title="{{ title }}">
         		{% endwith %}
     		{% endfor %}
         </div>
         <script>
         	var g = document.getElementById("galleria");
     		g.style.height = window.innerHeight+ "px";
-            Galleria.loadTheme("{% url static 'galleria/themes/classic/galleria.classic.js' %}");
+            Galleria.loadTheme("{% url static 'galleria/themes/classic/galleria.classic.min.js' %}");
             Galleria.run('#galleria');
         </script>
     </body>

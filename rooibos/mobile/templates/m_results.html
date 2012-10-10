@@ -38,13 +38,13 @@
     function toggle_panel(index){
     	var scrollTop = window.pageYOffset;
     	var panel = document.getElementsByClassName("image-info-panel")[index];
-    	var border = document.getElementsByClassName("info-panel-border")[index];
+    	var border = document.getElementsByClassName("info-panel-image-box")[index];
     	var image = document.getElementsByClassName("info-image")[index];
     	if(p_toggle){
     		panel.style.display = "none";				// Switch off
     	}
     	else{
-    		panel.style.display = "inline";				// Switch on
+    		panel.style.display = "inline";			// Switch on
     		panel.style.top = scrollTop + 20 + "px";	// Place in the scroll window correctly
     		image.style.marginTop = (border.clientHeight - image.clientHeight)/2 + "px"; // center image vertically
     	}
@@ -58,11 +58,11 @@
     	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
     }
     
-    function vertAlign2(pImg) {
-    	var lHeight = pImg.clientHeight;
-   	 	var lParentHeight = 150;
-    	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
-    } 
+    //function vertAlign2(pImg) {
+    //	var lHeight = pImg.clientHeight;
+   	// 	var lParentHeight = 150;
+    //	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
+    //} 
     
 
 </script>
@@ -86,7 +86,7 @@
         <input type="text" id="keywords" name="q" value="{{ query }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
         </form>
     </div>
-  </div>/am/phoenix/home1/woodwadean/workspace
+  </div>
 
 {% endblock %}
 
@@ -114,26 +114,36 @@
 </div>
 {% endif %}
 
-<!-- Button to select next results page -->
-{% if next_page %}
-<a href="javascript:history.go(-1)">
-    <div class = "result-next">Previous</div>
-</a>
-<a href="{{ next_page }}">
-    <div class = "result-next">Next</div>
-</a>
-{% endif %}
+<!-- Buttons to select previous and next results page -->
+<table class="button-table">
+  <tr>
+  	<td>
+	  <a href="javascript:history.go(-1)">
+    	<div class = "result-next">Previous</div>
+	  </a>
+	</td>
+	<td>
+	{% if next_page %}
+	  <a href="{{ next_page }}">
+    	<div class = "result-next">Next</div>
+	  </a>
+	{% endif %}
+	</td>
+  </tr>
+</table>
+
 
 <!-- Image information panels -->
 {% for r in results %}
 <div class="image-info-panel">
-	<div class="info-panel-border">
-		<img class="info-image" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
+	<div class="info-panel-image-box">
+		<a href="{{ r.record_url }}">
+			<img class="info-image" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
+		</a>
 	</div>
 	<div id="info-text">
 		<b>Title:</b> {{ r.title }}<br>
 	</div>
-	<a href="{{ r.record_url }}"><div id="view-button">Source</div></a>
 	<div id="close-button" onclick="toggle_panel({{forloop.counter0}})">Close</div>
 </div>
 {% endfor %}

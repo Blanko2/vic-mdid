@@ -247,7 +247,7 @@ a:link {text-decoration:none;}
 }
 
 /* The actual image */
-.record img{
+.record img {
     width: auto;
     height: auto;
     max-width: 70px;
@@ -257,27 +257,33 @@ a:link {text-decoration:none;}
 }
 
 /* Names of databases results found in */
-#database-names{
+#database-names {
 	font-size: 1em;
 	font-weight: bold;
 	color: {{ PRIMARY_COLOR }};
 }
 
 /* Number of search results */
-#hit-text{
+#hit-text {
 	font-size: 0.7em;
 	margin: 5px 0px;
 }
 
+/* Table for the previous and next buttons */
+.button-table {
+	margin: auto;
+	clear: both;
+}
+
 /* Button for Next page of results */
-.result-next{
+.result-next {
 	text-align: center;
 	clear: both;
 	color: white;
 	background: {{ PRIMARY_COLOR }};
 	border-radius: 6px;
 	padding: 2px;
-	width:100px;
+	width:80px;
 	margin: 10px auto;
 }
 
@@ -286,7 +292,7 @@ a:link {text-decoration:none;}
 }
 
 /* Image information panel */
-.image-info-panel{
+.image-info-panel {
 	display: none;
 	width: 150px;
 	height: 250px;
@@ -303,14 +309,15 @@ a:link {text-decoration:none;}
 	border-radius: 6px;
 }
 
-.info-panel-border {
+.info-panel-image-box {
 	border: 1px {{ colors.borders }} solid;
     width: 150px;
    	height: 150px;
+	margin: auto;
     background-color: {{ colors.shaded_background }};
 }
 
-.info-panel-border img {
+.info-panel-image-box img {
 	width: auto;
 	height: auto;
 	max-width: 150px;
@@ -319,7 +326,7 @@ a:link {text-decoration:none;}
     display: block;	/* Prevents extra padding being inserted */
 }
 
-.image-info-panel #info-text{
+.image-info-panel #info-text {
 	display: block;
 	font-size: 0.6em;
 	width: 150px;
@@ -328,7 +335,7 @@ a:link {text-decoration:none;}
 	margin: 10px 0px;
 }
 
-#view-button{
+/*#view-button{
 	color: white;
 	background: {{ PRIMARY_COLOR }};
 	border-radius: 6px;
@@ -342,7 +349,7 @@ a:link {text-decoration:none;}
 
 #view-button a {
 	color: white;
-}
+}*/
 
 #close-button{
 	color: white;
@@ -350,7 +357,7 @@ a:link {text-decoration:none;}
 	border-radius: 6px;
 	padding: 5px;
 	text-align: center;
-	display: inline;
+	display: block;
 	font-size: 0.8em;
 	width:80px;
 	margin: 0px auto;
