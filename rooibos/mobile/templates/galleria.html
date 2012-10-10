@@ -1,28 +1,28 @@
 <!doctype html>
 <html>
     <head>
-    	<meta content="width=device-width; height=device-height;" name="viewport">
+    	<meta content="width=device-width;" name="viewport">
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
-        <script src= "{% url static 'galleria/galleria-1.2.8.min.js' %}"></script>
+        <script src= "{% url static 'galleria/galleria-1.2.8.js' %}"></script>
         <style>#galleria{width:auto; background: #000; }
         		html,body{margin:0;}
 		</style>
+		
     </head>
     <body>
         <div id="galleria">
-            {% for record in presentation.records %}
+        	{% for record in presentation.records %}
         		{% with record.title as title %}
-            		<img src="{{ record.get_image_url }}" title="{{ title }}" />
+            		<!--  <img src="{{ record.get_image_url }}" title="{{ title }}" /> -->
+            		<img src="{% url storage-retrieve-image record.id, record.name, 300, 300 %}" title="{{ title }}">
         		{% endwith %}
     		{% endfor %}
         </div>
         <script>
         	var g = document.getElementById("galleria");
-    		g.style.height = window.innerHeight + "px";
-    		//g.style.width = window.innerWidth + "px";
-            Galleria.loadTheme('/static/galleria/themes/classic/galleria.classic.js');
+    		g.style.height = window.innerHeight+ "px";
+            Galleria.loadTheme("{% url static 'galleria/themes/classic/galleria.classic.min.js' %}");
             Galleria.run('#galleria');
-            //<img src="{{ record.get_thumbnail_url }}?square" title="{{ title }}" alt="{{ title }}" />
         </script>
     </body>
 </html>

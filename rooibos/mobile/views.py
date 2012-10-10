@@ -46,7 +46,10 @@ class usViewer(rooibos.unitedsearch.views.usViewer):
 def m_search(request):
     #searcher = union.searcherUnion([external.flickr,external.gallica])
     #viewer = usViewer(searcher)searcherUnion([external.digitalnz]))#
+    
+    
     viewer = usViewer(external.digitalnz)
+    #viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
     return viewer.search(request)
 
 def m_browse(request, manage=False):
