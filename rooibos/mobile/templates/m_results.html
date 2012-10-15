@@ -10,26 +10,26 @@
 <script type="text/javascript">
 	
 
-    function remoteRecordSelection(ids, checked) {
-        var method = ids == 0 ? 'GET' : 'POST';
-        if (ids.constructor != Array) ids = [ids];
-        ajaxManager.add({
-            type: method,
-            url: '{{ select_url }}',
-            data: {'id': JSON.stringify(ids), 'checked': checked},
-            dataType: 'json',
-            success: function(r) {
-                $("#basket-thumbs").html(r.basket);
-                $("#basket-tab").html(r.header);
-                basket_scroll_arrows();
-            }
-        });
-    }
+    //function remoteRecordSelection(ids, checked) {
+    //    var method = ids == 0 ? 'GET' : 'POST';
+    //    if (ids.constructor != Array) ids = [ids];
+    //    ajaxManager.add({
+    //        type: method,
+     //       url: '{{ select_url }}',
+    //        data: {'id': JSON.stringify(ids), 'checked': checked},
+     //       dataType: 'json',
+    //        success: function(r) {
+    //            $("#basket-thumbs").html(r.basket);
+    //            $("#basket-tab").html(r.header);
+    //            basket_scroll_arrows();
+    //        }
+    //    });
+    //}
 
-    $(document).ready(function() {
-        $("#submit_record_selections").hide();
-        $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
-    });
+    //$(document).ready(function() {
+    //    $("#submit_record_selections").hide();
+    //    $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
+    //});
     
     var p_toggle = false;	// Panel disply toggle boolean 
     
@@ -62,7 +62,8 @@
     //	var lHeight = pImg.clientHeight;
    	// 	var lParentHeight = 150;
     //	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
-    //} 
+    //}
+    
     
 
 </script>

@@ -29,6 +29,7 @@ import math
 import zipfile
 import os
 from StringIO import StringIO
+from rooibos.mobile import is_mobile
 
 
 def _get_presentation(obj, request, objid):
@@ -59,6 +60,10 @@ class PresentationViewer(Viewer):
 @register_viewer('presentationviewer', PresentationViewer)
 def presentationviewer(obj, request, objid=None):
     presentation = _get_presentation(obj, request, objid)
+    # if the user agent is mobile, redirect to the HTML presentation
+    if is_mobile(request):
+             return HTMLPresentation(presentation, request.user) if presentation else None
+    # else, return the Flash viewer
     return PresentationViewer(presentation, request.user) if presentation else None
 
 
