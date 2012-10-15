@@ -38,5 +38,9 @@ def getImage(identifier):
 	u = i["object_url"] or i["large_thumbnail_url"]
 	return Image(u, i["thumbnail_url"], i["title"], i, identifier)
 
+def previousOffset(off, len):
+	off = int(off)
+	return off > 0 and str(off - len)
+
 # would result in something like { "category": "images", "year": [1984] } being passed.
 parameters = MapParameter({ "category": ScalarParameter(str, "Category"), "year": OptionalParameter(ScalarParameter("year"), "Year") })

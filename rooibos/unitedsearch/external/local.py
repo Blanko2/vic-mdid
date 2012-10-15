@@ -23,6 +23,12 @@ def search(term, params, off, len):
 		result.addImage(ResultRecord(i, str(i.id)))
 	return result
 
+def previousOffset(off, len):
+	off = int(off)
+	return off > 0 and str(off - len)
+
 def getImage(identifier):
 	i = int(identifier)
 	return ResultRecord(Record.filter_one_by_access(AnonymousUser(), i), identifier)
+
+parameters = MapParameter({})
