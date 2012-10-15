@@ -28,10 +28,9 @@ def search(term, params, off, len):
 	hits = _count(obj)
 	result = Result(hits, off + len if off + len < hits else None)
 	for i in obj["results"]:
-		u = i["object_url"] or i["large_thumbnail_url"]
-		if u:
-			# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
-			result.addImage(ResultImage(u, i["thumbnail_url"], i["title"], json.dumps(i)))
+		u = i["object_url"] or i["large_thumbnail_url"] or None
+		# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
+		result.addImage(ResultImage(i["source_url"], i["thumbnail_url"], i["title"], u and json.dumps(i)))
 	return result
 
 def getImage(identifier):
