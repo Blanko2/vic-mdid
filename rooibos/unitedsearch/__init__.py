@@ -22,7 +22,7 @@ class ResultImage:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return ResultImage(self.infourl, self.thumb, self.name, newIdent)
+		return ResultImage(self.infourl, self.thumb, self.name, self.identifier and newIdent)
 
 class ResultRecord:
 	def __init__(self, record, identifier):
@@ -33,7 +33,7 @@ class ResultRecord:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return ResultRecord(self.record, newIdent)
+		return ResultRecord(self.record, self.identifier and newIdent)
 
 class Image:
 	""" A single image-metadata pair"""
@@ -50,7 +50,7 @@ class Image:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return Image(self.url, self.thumb, self.name, self.meta, newIdent)
+		return Image(self.url, self.thumb, self.name, self.meta, self.identifier and newIdent)
 
 
 class ScalarParameter:

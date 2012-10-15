@@ -44,6 +44,7 @@ def add_content_length(func):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):
+    print 'retrieve'
     # check if media exists
     mediaobj = get_media_for_record(recordid, request.user).filter(id=mediaid)
 
@@ -69,6 +70,7 @@ def retrieve(request, recordid, record, mediaid, media):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve_image(request, recordid, record, width=None, height=None):
+    print 'retrieve_image'
 
     passwords = request.session.get('passwords', dict())
 
@@ -181,6 +183,7 @@ def media_delete(request, mediaid, medianame):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
+    print 'record_thumbnail'
     filename = get_thumbnail_for_record(id, request.user, crop_to_square=request.GET.has_key('square'))
     if filename:
         Activity.objects.create(event='media-thumbnail',
