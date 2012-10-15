@@ -13,11 +13,8 @@ identifier = "gallica"  # identifier for view, urls
 
 BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images" # append &q=query&pageNumber=number&lan
 BASE_URL = "http://gallica.bnf.fr"
-"""ADVANCED_SEARCH_URL_STRUCTURE =  "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=&catsel1=f_creator&cat1=ARTIST&ope2=MUST&catsel2=f_title&cat2=TITLE&ope3=MUST&catsel3=f_content&cat=CONTENT&ope4=MUST&catsel4=f_tdm&cat4=TABLE_OF_CONTENTS_CAPTIONS&ope10=MUST&catsel10=f_subject&cat10=SUBJECT&ope6=MUST&catsel6=f_source&cat6=SOURCE&ope7=MUST&catsel7=f_metadata&cat7=BIBLIOGRAPHIC_RECORD&ope8=MUST&catsel8=f_publisher&cat8=PUBLISHER&ope9=MUST&catsel9=f_allmetadata&cat9=ISBN&ope5=MUST&catsel5=f_allcontent&cat5=ALL"
-ADVANCED_SEARCH_URL_STRUCTURE += "&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&allProvenances=Tous&t_provenance=bnf.fr&t_provenance=partenaires&sel_provenance_Part=toutPartenaires&t_provenance=edistrib&sel_provenance_Edist=toutSNE&allSources=Tous&t_source=Biblioth%25C3%25A8que+nationale+de+France&t_source=sources&sel_source=toutSources&dateMiseEnLigne=indexDateFrom&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
-"""
 
-ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&allProvenances=Tous&t_provenance=bnf.fr&t_provenance=partenaires&sel_provenance_Part=toutPartenaires&t_provenance=edistrib&sel_provenance_Edist=toutSNE&allSources=Tous&t_source=Biblioth%25C3%25A8que+nationale+de+France&t_source=sources&sel_source=toutSources&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 #&dateMiseEnLigne=indexDateFrom
 
@@ -25,25 +22,26 @@ filter_type_map = {
   'Artist' : "f_creator",
   'Title': "f_title",
   'Content': "f_content",
-  'Table of contents or captions' : "f_tdm",
+  'Table' : "f_tdm",
   'Subject': "f_subject",
   'Source': "f_source",
-  'Bibliographic Record': "f_metadata",
+  'Bibliographic': "f_metadata",
   'Publisher': "f_publisher",
   'IBSN': "f_allmetadata",
   'All': "f_allcontent",
   '' : "f_creator"	# default so as not to have blank string
-  }
+  } # note, Table is Table of Contents or Captions
   
 def get_optional_search_filters(params) :
     
+    para = params["Key Word"]
     filters_string = ""
     for i in range(1,6) :
       index = (str)(i)
-      field_type = params['filter_'+index][0]
+      field_type = para['filter_'+index][0]
       field_type_for_url = filter_type_map[field_type]
       print field_type + ": " + field_type_for_url + "\n\n"
-      field_value = params['filter_'+index][1]
+      field_value = para['filter_'+index][1]
       
       if i != 1:
 	filters_string += "&ope"+index+"=MUST"
@@ -58,16 +56,16 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
     # calculate page number and items
     page_num = str(1 + (first_index_wanted/items_per_page))
     
+    def haveSimplePara() :
+      term_str = str(term)
+      if term_str=="" :
+	return False
+      return True
+    
     def haveParams() :
-      print params;
-      for para in params :
-	if (not params[para] is None) and (  len(params[para]) != 0) and (not isinstance(params[para], list) and any(params[para])) :	
-	  print "found for para"
-	  print para
-	  return True
-      return False
+      return not query is None
       
-    if  not haveParams() :
+    if  haveSimplePara() :
 	# simple search
 	url = BASE_SIMPLE_SEARCH_URL + "&q=" + term + "&pageNumber=" + page_num + "&lang=EN&tri=&n=" + str(items_per_page)
 	
@@ -84,8 +82,9 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	    
 	def getLanguages() :
 	    if not params['languages'] or len(params['languages']) == 0 :
-	      params['languages'] = 'All'
+	      #params['languages'] = 'All'
 	      #return "&t_language="
+	      return ""
 	      
 	    # if reach here, have languages to read, read them  
 	    lang_codes = {
@@ -99,22 +98,8 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	      "Latin": "lat"
 	    }
 	    
-	    lang_string = ""
-	    """ print params['languages']
-	    print '\n\n'
-	    for lang in params['languages'] :
-	      print lang
-	      if lang == 'All' :
-		lang_string = "&toutesLangues=toutes"
-		for other_lang in lang_codes :		
-		  lang_string += "&t_language=" + ((str)(lang_codes[(str)(other_lang)])).strip()
-	    
-	      else :
-		lang_string += "&t_language=" + ((str)(lang_codes[lang])).strip() """
 	    if params['languages'] == 'All' :
-	      lang_string = "&toutesLangues=toutes"
-	      for other_lang in lang_codes :		
-		lang_string += "&t_language=" + ((str)(lang_codes[(str)(other_lang)])).strip()
+	      lang_string = ""
 	    else :
 	      lang_string = "&t_language=" + lang_codes[params['languages']]
 	      
@@ -123,8 +108,8 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	def getCopyright() :
 	  
 	    if (not params['copyright']) or (len(params['copyright']) == 0) :
-	      params['copyright'] = 'All'
-	      #return "&t_free_access="		# blank result
+	      #params['copyright'] = 'All'
+	      return ""
 	      
 	    # if reach here, have copyright  
 	    copyright_codes = {
@@ -133,18 +118,9 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	    }
 
 	    if params['copyright'] == 'All' :
-	      copy_string = "&allAccessType=Tous"
-	      for source in copyright_codes :
-		copy_string += "&t_free_access=" + (str)(copyright_codes[source])
+	      copy_string = ""
 	    else :
 	      copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
-	    """selected = params['copyright'][0]	# TODO make this  copy languages impl
-	    if selected == "All" :
-	      copy_string = "&allAccessType=Tous"
-	      for source in copyright_codes :
-		copy_string += "&t_free_access=" + (str)(copyright_codes[source])
-	    else :
-	      copy_string = "&t_free_access=" + (str)(copyright_codes[selected])"""
 	    
 	    return copy_string
 
@@ -160,14 +136,7 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	replacer = re.compile('|'.join(replacements.keys()))
 	url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
 	
-
-    print url
-    print "\n\n"
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-    
-    print params
-    print url
-    print "\n\n"
     
     return html
 
@@ -256,20 +225,17 @@ def __create_image(soup, id_div) :
 
 def __count(soup) :
     div = soup.find('div', 'fonctionBar2').find('div', 'fonction1')
-    
-    return (int)(re.findall("\d{1,}", div.renderContents())[0])
+    fixed_div = str(div.renderContents()).replace(",","")
+    return (int)(re.findall("\d{1,}", fixed_div)[0])
+
 
 
 def __scrub_html_for_property(property_name, html) :
     
-    print "looking for " + property_name
     for para in html.findAll('p') :
-        print para
         if para.strong and para.strong.renderContents().startswith(property_name) :
-            print "found right para"
             contents = re.findall("(?<=\</strong\>).*", para.renderContents())
             if contents :
-	      print "contents = " + contents[0]
 	      return contents[0]
             
     
@@ -281,16 +247,11 @@ def getImage(json_image_identifier) :
     image_identifier = json.loads(json_image_identifier)
     descriptive_parser = BeautifulSoup(image_identifier['descriptive_html'])
     
-    print "in getImage"
     meta = {'title': image_identifier['title'],
             'author': __scrub_html_for_property("Author", descriptive_parser),
             #'date': __scrub_html_for_property("Date", descriptive_parser),
             #'access': __scrub_html_for_property("Copyright", descriptive_parser)
             }
-    
-    print "made meta"
-    print "url: " + image_identifier['url']
-    print "thumb: " + image_identifier['thumb']
     
     return Image(
                  image_identifier['url'],
@@ -358,10 +319,12 @@ parameters = MapParameter({
   DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
   DefinedListParameter(["All", "Free", "Subject to conditions"], label="Copyright"),
-  "filter_1": UserDefinedTypeParameter(field_types, label="Filter 1"),
-  "filter_2": UserDefinedTypeParameter(field_types, label="Filter 2"),
-  "filter_3": UserDefinedTypeParameter(field_types, label="Filter 3"),
-  "filter_4": UserDefinedTypeParameter(field_types, label="Filter 4"),
-  "filter_5": UserDefinedTypeParameter(field_types, label="Filter 5")
+  "Key Word" : MapParameter({
+    "filter_1": UserDefinedTypeParameter(field_types, label="Filter 1"),
+    "filter_2": UserDefinedTypeParameter(field_types, label="Filter 2"),
+    "filter_3": UserDefinedTypeParameter(field_types, label="Filter 3"),
+    "filter_4": UserDefinedTypeParameter(field_types, label="Filter 4"),
+    "filter_5": UserDefinedTypeParameter(field_types, label="Filter 5")
+    })
   })
 

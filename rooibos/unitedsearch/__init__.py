@@ -70,8 +70,6 @@ class DefinedListParameter:
 	""" A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, multipleAllowed not supported yet"""
 	def __init__(self, options, multipleAllowed=False, label=None):
 		self.multipleAllowed = multipleAllowed
-		print "in init: multipleAllowed" 
-		print multipleAllowed
 		self.options = options
 		self.label = label
 		

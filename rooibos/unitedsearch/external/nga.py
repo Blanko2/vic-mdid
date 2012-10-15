@@ -21,7 +21,7 @@ identifier = "nga"            # don't know what this is
   
   
 def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
-     
+  
      search_results_per_page = 25
      search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
      howFarDownThePage = first_wanted_result_index % search_results_per_page
@@ -30,15 +30,18 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
      query = re.sub("\W", "+", query)
      
      def __have_parameters(parameters) :
-	for p in parameters :
+	"""for p in parameters :
 	  if (not parameters[p] is None) and (len(parameters[p]) != 0) :
 	    return True
-	return False
+	return False"""
+	return True
 	
      if __have_parameters(parameters) :
-    
-       # TODO give user some hint of parameters form (eg, how to enter dates)
+           
        # advanced search
+       # TODO give user some hint of parameters form (eg, how to enter dates)
+       
+       # return either the value at 0 in the dictionary argument, or "" in none exists
        def getValue(a):
 	 try:
 	   r = str(a[0])
@@ -48,15 +51,14 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
 	 if isinstance(r, str): return r
 	 return ""
 
+       # get the parameter values to put into the url
        all_words = getValue(parameters['All words'])
-
-       # [0] if parameters['All words'] else ""	# value if it exists, else ""
        exact_phrase = getValue(parameters['Exact Phrase'])
-     
        exclude = getValue(parameters['Exclude Words'])
 
        artist = getValue(parameters['Artist'])
        keywords = getValue(parameters['Keywords'])
+       
        accession_number = getValue(parameters['Accession Number'])
        school = getValue(parameters['School'])
        classification = getValue(parameters['Classification'])
@@ -64,10 +66,12 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
        year1 = getValue(parameters['Start Date'])
        year2 = getValue(parameters['End Date'])
        access = getValue(parameters['Access'])
-
+       
+       # add the actual query itself, if it exists
+       if query :
+	 keywords += " " + query
     
-       
-       
+       # build up the url
        url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
        
        url += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
@@ -76,6 +80,7 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
        
        url += "&open_access="+access + "&page="+search_page_num
        
+       # replace all whitespace from the parameters
        url = re.sub(" ", "+", url)
 	 
      else :
@@ -83,12 +88,10 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
 	url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
 
 
-     # use a proxy handler in case user is behind firewall
+     # use a proxy handler as developing behind firewall
      proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
      opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
-     
-     print url
      
      return html, howFarDownThePage
 
@@ -188,48 +191,6 @@ def __get_image_properties_from_imageSpecific_page(id) :
  
  
 def __createImage(id, thumb, description) :
-     
-     
-     # break description string into relevant parts
-     # note, treat description string as title, even though it contains author and may contain artwork type and date
-     # format of description is artist - title - date - type, with any unknown data missing
-#     descr_parts = description.split("-")
-#     
-#     if len(descr_parts) == 1 :     # assume is title. May be solely artist, but that will do as title for user if untitled
-#         title = descr_parts[0].strip()
-#     elif len(descr_parts) >= 2 :
-#         artist = descr_parts[0].strip()
-#         title = descr_parts[1].strip()
-#         
-#         if descr_parts[2] :    # if contains number, assume is date. Else, assume type
-#             if re.search("\d", descr_parts[2]) :
-#                 date = descr_parts[2].strip()
-#                 if descr_parts[3] :    # still more data => type
-#                     type = descr_parts[3].strip()
-#             else :
-#                 type = descr_parts[3].strip()  # ignore any data after type, as don't know what it is
-#
-#     
-#     image_identifier = {'title': title}
-#     if artist :
-#         image_identifier['artist'] = artist
-#     if date :
-#         image_identifier['date'] = date
-#     if type :
-#         image_identifier['type'] = type
-#         
-#     
-#     
-#
-#                 
-#     
-#     if len(descr_parts) >= 2 :     # have both title and artist :)
-#         artist = descr_parts[0].strip()
-#         title = descr_parts[1].strip()
-#         meta = {'artist': artist,
-#                 'title': title}
-#     else :     # only have partial info, need to go to image-specific page
-#         title, meta = __get_image_properties_from_imageSpecific_page(id, thumb)
          
      image_url = BASE_IMAGE_LOCATION_URL + "=" + id
      image_identifier = {'id': id,

@@ -63,7 +63,6 @@ class usViewer():
 				#r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
 				r_content += "<select name=\"i_" + "_".join(prefix) + "\""
 				if params.multipleAllowed :
-				  print "multipleAllowed\n\n"
 				  r_content += " multiple = \"multiple\""
 				r_content += ">"
 				selected_option = default or options[0]
@@ -118,10 +117,6 @@ class usViewer():
 					return inputs["_".join(prefix)]
 
 			if isinstance(params, UserDefinedTypeParameter) :
-				print inputs
-				print prefix
-				print "\n\n"
-				# TODO don't use prefix[0]
 				field_type = ""
 				field_value = ""
 				if "_".join(prefix)+"_type" in inputs:
