@@ -75,7 +75,12 @@ def retrieve_image(request, recordid, record, width=None, height=None):
     path = get_image_for_record(recordid, request.user, int(width or 100000), int(height or 100000), passwords)
     if not path:
         #raise Http404()
-        return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
+        filename = get_thumbnail_for_record(id, request.user, crop_to_square=request.GET.has_key('square')) 
+        try:
+            return HttpResponseRedirect(content=open(filename,'rb').read(), mimetype='image/jpeg')
+        except IOError:
+            logging.error("IOError: %s" % filename)
+        #return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
     Activity.objects.create(event='media-download-image',
                             request=request,
