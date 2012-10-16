@@ -13,6 +13,7 @@ class searcherUnion:
 		if str(off) == "0":
 			off = [0]*len(self.searchers)
 		else:
+			print "off = %s" % off
 			off = json.loads(off)
 		# TODO: better maths so the amount of results isn't off by a few due to flooring
 		leng = leng/len([o for o in off if type(o) != list])
@@ -34,6 +35,30 @@ class searcherUnion:
 		for (se, im) in ifilter(None, chain(*izip_longest(*[map(lambda i: (s, i), r.images) for (o, s, r) in results if r]))):
 			result.addImage(im.withIdentifier(json.dumps([se.identifier, im.identifier])))
 		return result
+	
+	# TODO: only define this when all aggregated searchers do
+	def previousOffset(self, off, leng):
+		def prevFor(o, s, l):
+			if type(o) == list:
+				if o[1] <= 1:
+					return o[0]
+				else:
+					return [o[0], o[1] - 1]
+			else:
+				return s.previousOffset(o, l)
+
+
+		if str(off) == "0":
+			off = [0]*len(self.searchers)
+		else:
+			off = json.loads(off)
+
+		leng = leng/len([o for o in off if type(o) != list])
+
+		if all(map(lambda x: x == 0, off)):
+			return None
+
+		return json.dumps([prevFor(o, s, leng) for (s, o) in zip(self.searchers, off)])
 	
 	def getImage(self, identifier):
 		i = json.loads(identifier)
