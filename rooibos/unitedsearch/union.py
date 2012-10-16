@@ -15,20 +15,23 @@ class searcherUnion:
 		else:
 			off = json.loads(off)
 		# TODO: better maths so the amount of results isn't off by a few due to flooring
-		leng = leng/len([o for o in off if o != None])
+		leng = leng/len([o for o in off if type(o) != list])
 		results = []
 		for (s, o, si) in zip(self.searchers, off, range(len(self.searchers))):
-			if o != None:
-				results += [(s, s.search(term, params[str(si)][0] if len(params[str(si)]) > 0 else None, o, leng))]
+			if type(o) != list:
+				results += [(o, s, s.search(term, params[str(si)][0] if len(params[str(si)]) > 0 else None, o, leng))]
 			else:
-				results += [(s, None)]
-		offsets = map(lambda (_, r): r, results)
-		offsets_ = [r.nextoffset if r else None for r in offsets]
-		if all([r == None for r in offsets_]):
+				results += [(o, s, None)]
+		offsets = map(lambda (_, _a, r): r, results)
+		offsets_ = [r.nextoffset if type(o) != list and r and r.nextoffset else ([o, 1] if type(o) != list else [o[0], o[1] + 1]) for (o, _, r) in results]
+		print "results = %s" % results
+		print "offsets_ = %s" % offsets_
+		print "offsets = %s" % offsets
+		if all([type(r) == list for r in offsets_]):
 			offsets_ = None
-		result = Result(sum([r.total if r else 0 for (_, r) in results]), json.dumps(offsets_) if offsets_ != None else None)
+		result = Result(sum([r.total if r else 0 for (o, _, r) in results]), json.dumps(offsets_) if offsets_ != None else None)
 		# NOTE: map works, imap doesn't .. no list-comprehension-expression scope
-		for (se, im) in ifilter(None, chain(*izip_longest(*[map(lambda i: (s, i), r.images) for (s, r) in results if r]))):
+		for (se, im) in ifilter(None, chain(*izip_longest(*[map(lambda i: (s, i), r.images) for (o, s, r) in results if r]))):
 			result.addImage(im.withIdentifier(json.dumps([se.identifier, im.identifier])))
 		return result
 	
