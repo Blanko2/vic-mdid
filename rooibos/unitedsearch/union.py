@@ -1,6 +1,6 @@
 import json
 from itertools import *
-from . import *
+from rooibos.unitedsearch import *
 
 class searcherUnion:
 	def __init__(self, searchers):

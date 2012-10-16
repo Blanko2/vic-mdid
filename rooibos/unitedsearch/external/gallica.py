@@ -1,6 +1,6 @@
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
-from unitedsearch import *                      # other search tools
+from rooibos.unitedsearch import *                      # other search tools
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
