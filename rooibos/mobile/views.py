@@ -44,11 +44,16 @@ class usViewer(rooibos.unitedsearch.views.usViewer):
         return reverse("mobile-search-results")
         
 def m_search(request):
+    searcherlist = []
+    for s in searchers.all:
+        if (request.GET.get(s.identifier) == "true"):
+            searcherlist.append(s)
     #searcher = union.searcherUnion([external.flickr,external.gallica])
     #viewer = usViewer(searcher)searcherUnion([external.digitalnz]))#
     
     
-    viewer = usViewer(external.digitalnz)
+    #viewer = usViewer(external.digitalnz)
+    viewer = usViewer(searcherUnion(searcherlist))
     #viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
     return viewer.search(request)
 
