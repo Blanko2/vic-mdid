@@ -62,17 +62,13 @@ def union_search(request, sid="local"):
     return union(request, sid).search(request)
   
 def m_search(request):
-    searcherlist = []
-    for s in searchers.all:
-        if (request.GET.get(s.identifier) == "true"):
-            searcherlist.append(s)
+    #searcherlist = []
+    #for s in searchers.all:
+    #   if (request.GET.get(s.identifier) == "true"):
+    #        searcherlist.append(s)
     #searcher = union.searcherUnion([external.flickr,external.gallica])
-    #viewer = usViewer(searcher)searcherUnion([external.digitalnz]))#
-    
-    
-    #viewer = usViewer(external.digitalnz)
-    viewer = usViewer(searcherUnion(searcherlist))
-    #viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
+    viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
+    #viewer = usViewer(searcherUnion(searcherlist))
     return viewer.search(request)
 
 def m_browse(request, manage=False):
