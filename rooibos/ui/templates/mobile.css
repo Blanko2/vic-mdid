@@ -203,12 +203,17 @@ html.js-enabled #header-bar {
     margin:0px;
     padding:0px;
     vertical-align: top;
+    font-size: 1.2em;
 }
 
 /* Search go image button */
 #search-go {
 	width: 35px;
     height: 35px;
+}
+
+#search-check-boxes {
+	font-size: 1.3em;
 }
 
 /* Presentation browse button */

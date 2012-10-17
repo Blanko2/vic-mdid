@@ -39,28 +39,6 @@
 </script>
 {% endblock javascript%}
 
-
-<!-- {% block sidebar %}
-
-{% var as related_pages %}
-{"pages": [
-    {"url": "{% url solr-search %}?kw={{ query|urlencode }}", "title": "Back to Explore"}
-]}
-{% endvar %}
-
-{{ block.super }}
-
-  <div class="facet active-facet" id="results_sidebar_keywords">
-    <div class="facet-header">Keywords</div>
-    <div class="facet-body">
-        <form method="GET" action=".">
-        <input type="text" id="keywords" name="q" value="{{ query }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
-        </form>
-    </div>
-  </div>
-
-{% endblock sidebar %} -->
-
 <!-- Databases the search found results in -->
 {% block content-top %}
 <span id="database-names">{{ searcher_name }}</span>
