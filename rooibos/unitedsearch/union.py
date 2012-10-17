@@ -53,12 +53,13 @@ class searcherUnion:
 		else:
 			off = json.loads(off)
 
-		leng = leng/len([o for o in off if type(o) != list])
+		news = len(filter(lambda a: type(a) != list or a[1] <= 1, off))
+		newl = leng/news
 
 		if all(map(lambda x: x == 0, off)):
 			return None
 
-		return json.dumps([prevFor(o, s, leng) for (s, o) in zip(self.searchers, off)])
+		return json.dumps([prevFor(o, s, newl) for (s, o) in zip(self.searchers, off)])
 	
 	def getImage(self, identifier):
 		i = json.loads(identifier)
