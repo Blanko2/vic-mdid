@@ -168,9 +168,9 @@ html.js-enabled #header-bar {
 /* end of header bar */
 
 #footer {
-    padding-top: 50px;
+    padding-top: 8px;
     clear: both;
-    font-size: smaller;
+    font-size: 0.7em;	/*was smaller*/
 }
 
 {% if debug %}
@@ -183,124 +183,157 @@ html.js-enabled #header-bar {
 /* Main                                                                      */
 /*****************************************************************************/
 
-.center{
+.center {
 	margin-left:auto;
 	margin-right:auto;
 	width:95%;
 }
 
-#button{
-    height: 40px;
+#background {
     color: white;
     background-color: rgb(152,189,198);
     padding: 10px;
     border-radius: 10px;
 }
 
-#background{
-    color: white;
-    background-color: rgb(152,189,198);
-    padding: 10px;
-    border-radius: 10px;
-}
-
-#button #button-text{
-	text-align: center;
-	font-size: 150%;
-}
-
-#button img{
-	width: 30px;
-    height: 30px; 
-    display: none; 
-}
-
-
-#quicksearch{
-	width: 70%;
+/* Text input box */
+#quicksearch {
+	width: 80%;
     height: 30px;
     margin:0px;
     padding:0px;
     vertical-align: top;
 }
 
-#search-go{
+/* Search go image button */
+#search-go {
 	width: 35px;
     height: 35px;
 }
 
-a:link {text-decoration:none;}
+/* Presentation browse button */
+#button {
+    height: 40px;
+    text-align: center;
+	line-height: 40px;		/* center the text in the div */
+	font-size: 150%;
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;  
+}
+
+a:link {
+	text-decoration:none;
+}
 
 /*****************************************************************************/
 /* m_results                                                                 */
 /*****************************************************************************/
 
+/* div to create a border around the image*/ 
 .record {
     float: left;
     border: 1px {{ colors.borders }} solid;
-    /*width: 102px;
-    height: 102px;*/
-    width: 80px;
-    height: 80px;
-    padding: 3px;
-    margin: auto;
-    overflow: hidden;
-    font-size: smaller;
+    width: 30%;
+   	height: 100px;
+    margin: 2px;
     background-color: {{ colors.shaded_background }};
-    position: relative;
-    
 }
 
-.record.notitle {
-    width: 140px;
-}
-
-.record a {
-    text-decoration: none;
-}
-
+/* The actual image */
 .record img {
-    border: 1px {{ colors.borders }} solid;
-    position: relative;
-    max-width: 100px;
-    overflow: hidden;
-    width: 95%;
-    height: 95%;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100px;
+    display: block;
     margin: auto;
 }
 
-.record-select, .remote-record-select {
-    position: absolute;
-    top: 0px;
-    right: 0px;
+/* Names of databases results found in */
+#database-names {
+	font-size: 1em;
+	font-weight: bold;
+	color: {{ PRIMARY_COLOR }};
 }
 
-.record-title {
-    padding: 0 16px 0 105px;
-    display: none;
+/* Number of search results */
+#hit-text {
+	font-size: 0.7em;
+	margin: 5px 0px;
 }
 
-.resultlist-list .record {
-    float: none;
-    border: none;
-    border-bottom: 1px {{ colors.borders }} solid;
-    padding: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    height: 22px;
-    background-color: transparent;
-    width: auto;
-    margin: 0;
+/* Table for the previous and next buttons */
+.button-table {
+	margin: auto;
+	clear: both;
 }
 
-.resultlist-list .record img.thumbnail {
-    height: 20px;
-    max-width: 30px;
-    margin-right: 5px;
+/* Buttons for next and previous page of results */
+.result-buttons {
+	text-align: center;
+	clear: both;
+	color: white;
+	background: {{ PRIMARY_COLOR }};
+	border-radius: 6px;
+	padding: 2px;
+	width:90px;
+	height:30px;
+	line-height:30px;
+	font-size: 1.2em;
+	margin: 10px auto;
 }
 
-.result-next{
-	style="text-align: center;
+.result-buttons a {
+	color: white;
+}
+
+/* Image information panel */
+.image-info-panel {
+	display: none;
+	width: 250px;
+	height: 350px;
+	position:absolute;
+	left:20px;
+	top:50px;
+	background: white;
+	z-index: 999;
+	padding: 10px;
+	box-shadow: 8px 8px 5px #888;			/* Most browsers */ 
+	-moz-box-shadow: 8px 8px 5px #888;		/* Mozilla */
+	-webkit-box-shadow: 8px 8px 5px #888;	/* Safari */
+	border:1px solid black;
+	border-radius: 6px;
+}
+
+.info-panel-image-box {
+	border: 1px {{ colors.borders }} solid;
+    /*width: 150px;
+   	height: 150px;*/
+   	width: 240px;
+   	height: 240px;
+	margin: auto;
+    background-color: {{ colors.shaded_background }};
+}
+
+.info-panel-image-box img {
+	width: auto;
+	height: auto;
+	max-width: 240px;
+    max-height: 240px;
+    margin: auto;
+    display: block;	/* Prevents extra padding being inserted */
+}
+
+.image-info-panel #info-text {
+	width: 250px;
+	height: 50px;
+	max-height: 50px;
+	font-size: 0.8em;
+	overflow: hidden;
+	margin: 10px 0px;
+	display: block;
 }
 
 /*****************************************************************************/
@@ -312,6 +345,7 @@ tr.itemactions-row td{
   border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
   border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
   background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+  vertical-align:middle;
 }
 
 td.item-actions-menu img {
@@ -366,6 +400,18 @@ tr.actionrow-open td.item-actions-menu div {
 
 tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
     visibility: visible;
+}
+
+#view-button{
+	background: {{ PRIMARY_COLOR }};
+	border-radius: 8px;
+	width: 40px;
+	height: 30px;
+	text-align: center;
+	line-height: 30px;
+}
+#view-button a {
+	color: white;
 }
 
 /*****************************************************************************/

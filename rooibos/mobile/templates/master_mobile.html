@@ -8,6 +8,8 @@
  <script type="text/javascript">
  	document.documentElement.className = 'js-enabled';
  </script>
+ {% block javascript %}
+ {% endblock javascript %}
  <title>MDID{% block title %}{% endblock %}</title>
  {% block stylesheets %}
  {% compress css %}
@@ -43,7 +45,8 @@
 		<!-- better acknowledge the originals -->
 		{% block footer %}
             <div id="footer">
-                Copyright 1997-2011 James Madison University
+                &copy 1997-2011 James Madison University<br>
+                &copy 2012 Victoria University
             </div>
 		{% endblock footer %}
 

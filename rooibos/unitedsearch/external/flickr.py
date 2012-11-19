@@ -30,3 +30,10 @@ def getImage(identifier):
 					format='xmlnode')
 	image_url = info.sizes[0].size[-1]['source']
 	return Image(image_url, i["thumb_url"], i["title"], i, identifier)
+
+def previousOffset(off, len):
+	off = int(off)
+	return off > 0 and str(off - len)
+
+parameters = MapParameter({})
+parameters = MapParameter({ "category": ScalarParameter(str, "Category"), "year": OptionalParameter(ScalarParameter("year"), "Year") })

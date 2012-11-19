@@ -28,13 +28,19 @@ def search(term, params, off, len):
 	hits = _count(obj)
 	result = Result(hits, off + len if off + len < hits else None)
 	for i in obj["results"]:
-		u = i["object_url"] or i["large_thumbnail_url"]
-		if u:
-			# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
-			result.addImage(ResultImage(u, i["thumbnail_url"], i["title"], json.dumps(i)))
+		u = i["object_url"] or i["large_thumbnail_url"] or None
+		# TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
+		result.addImage(ResultImage(i["source_url"], i["thumbnail_url"], i["title"], u and json.dumps(i)))
 	return result
 
 def getImage(identifier):
 	i = json.loads(identifier)
 	u = i["object_url"] or i["large_thumbnail_url"]
 	return Image(u, i["thumbnail_url"], i["title"], i, identifier)
+
+def previousOffset(off, len):
+	off = int(off)
+	return off > 0 and str(off - len)
+
+# would result in something like { "category": "images", "year": [1984] } being passed.
+parameters = MapParameter({ "category": ScalarParameter(str, "Category"), "year": OptionalParameter(ScalarParameter("year"), "Year") })

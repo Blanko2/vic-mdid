@@ -28,6 +28,17 @@
     $(document).ready(function() {
         $("#submit_record_selections").hide();
         $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
+        $(".param-opt-a").click(function(){
+        	if($(this).attr("checked"))
+        		$(this).data("subpart").appendTo($(this).parent()).hide().slideDown();
+        	else
+        		$(this).data("subpart").show().slideUp(function(){ $(this).detach(); });
+       	});
+        $(".param-opt-a").each(function(){
+        	$(this).data("subpart", $(this).next(".param-opt"));
+        	if(!$(this).attr("checked"))
+	        	$(this).data("subpart").detach();
+        });
     });
 
 </script>
@@ -52,6 +63,16 @@
         </form>
     </div>
   </div>
+  {% if html_parameters %}
+  <div class="facet active-facet" id="results_sidebar_parameters">
+    <form method="GET" action=".">
+      {{ html_parameters|safe }}
+      <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
+    </form>
+  </div>
+  {% endif %}
+      
+
 
 {% endblock %}
 
@@ -69,9 +90,14 @@
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
-{% if next_page %}
+{% if next_page or previous_page %}
 <div style="text-align: center;">
-    <a href="{{ next_page }}">More</a>
+  {% if previous_page %}
+    <a href="{{ previous_page }}">Previous</a>
+  {% endif %}
+  {% if next_page %}
+    <a href="{{ next_page }}">Next</a>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -82,7 +108,7 @@
 <div class="record">
     <a href="{{ r.record_url }}"><img class="thumbnail{% if r.is_record %} record-anchor{% endif %}" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
     <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
-    {% if request.user.is_authenticated %}
+    {% if request.user.is_authenticated and r.identifier != None %}
       <input type="checkbox" class="{% if r.is_record %}record-select{% else %}remote-record-select{% endif %}" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
     {% endif %}
 </div>

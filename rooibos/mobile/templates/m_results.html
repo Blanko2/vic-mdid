@@ -9,32 +9,38 @@
 {{ block.super }}
 <script type="text/javascript">
 
-    function remoteRecordSelection(ids, checked) {
-        var method = ids == 0 ? 'GET' : 'POST';
-        if (ids.constructor != Array) ids = [ids];
-        ajaxManager.add({
-            type: method,
-            url: '{{ select_url }}',
-            data: {'id': JSON.stringify(ids), 'checked': checked},
-            dataType: 'json',
-            success: function(r) {
-                $("#basket-thumbs").html(r.basket);
-                $("#basket-tab").html(r.header);
-                basket_scroll_arrows();
-            }
-        });
+    var p_toggle = false;	// Panel disply toggle boolean 
+    
+    // Toggle the display of the information panel on/off
+    // Param: index of the image
+    function toggle_panel(index){
+    	var scrollTop = window.pageYOffset;
+    	var panel = document.getElementsByClassName("image-info-panel")[index];
+    	var border = document.getElementsByClassName("info-panel-image-box")[index];
+    	var image = document.getElementsByClassName("info-image")[index];
+    	if(p_toggle){
+    		panel.style.display = "none";				// Switch off
+    	}
+    	else{
+    		panel.style.display = "inline";			// Switch on
+    		panel.style.top = scrollTop + 20 + "px";	// Place in the scroll window correctly
+    		image.style.marginTop = (border.clientHeight - image.clientHeight)/2 + "px"; // center image vertically
+    	}
+    	p_toggle = !p_toggle;
     }
-
-    $(document).ready(function() {
-        $("#submit_record_selections").hide();
-        $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
-    });
-
+    
+    // Function to align the images vetically. Couldn't achieve this with CSS unfortunately.
+    function vertAlign(pImg) {
+    	var lHeight = pImg.clientHeight;
+   	 	var lParentHeight = pImg.parentNode.clientHeight;
+    	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
+    }
+    
 </script>
-{% endblock %}
+{% endblock javascript%}
 
 
-{% block sidebar %}
+<!-- {% block sidebar %}
 
 {% var as related_pages %}
 {"pages": [
@@ -53,42 +59,66 @@
     </div>
   </div>
 
-{% endblock %}
+{% endblock sidebar %} -->
 
-
+<!-- Databases the search found results in -->
 {% block content-top %}
-<h1>{{ searcher_name }}</h1>
+<span id="database-names">{{ searcher_name }}</span>
 {% endblock %}
 
-
+<!--  Number of hits -->
 {% block content %}
 <form method="POST" action=".">{% csrf_token %}
 <input type="hidden" name="q" value="{{ query }}" />
-<div>
+<div id="hit-text">
     Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
 </div>
-<br>
 
-
+<!-- Image thumb-nails -->
 {% if results %}
 <div id="resultlist" class="resultlist-thumb">
+	{% for r in results %}
+	<div class="record" onclick="toggle_panel({{forloop.counter0}})">
+    	<img src="{{ r.thumb_url }}" alt="{{ r.title }}"  onload="vertAlign(this)"/>
+	</div>
+	{% endfor %}
+</div>
+{% endif %}
+
+<!-- Buttons to select previous and next results page -->
+<table class="button-table">
+  <tr>
+  	<td>
+	  <a href="javascript:history.go(-1)">
+    	<div class = "result-buttons">Previous</div>
+	  </a>
+	</td>
+	<td>
+	{% if next_page %}
+	  <a href="{{ next_page }}">
+    	<div class = "result-buttons">Next</div>
+	  </a>
+	{% endif %}
+	</td>
+  </tr>
+</table>
+
+
+<!-- Image information panels -->
 {% for r in results %}
-
-<div class="record">
-    <a href="{{ r.record_url }}"><img class="thumbnail" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
-    <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
+<div class="image-info-panel">
+	<div class="info-panel-image-box">
+		<a href="{{ r.record_url }}">
+			<img class="info-image" src="{{ r.thumb_url }}" alt="{{ r.title }}"/>
+		</a>
+	</div>
+	<div id="info-text">
+		<b>Title:</b> {{ r.title }}<br>
+	</div>
+	<div class="result-buttons" onclick="toggle_panel({{forloop.counter0}})">Close</div>
 </div>
-
 {% endfor %}
-</div>
-{% endif %}
-
-{% if next_page %}
-<div class = "result-next">
-    <a href="{{ next_page }}">Next</a>
-</div>
-{% endif %}
 
 </form>
 
-{% endblock %}
+{% endblock content %}

@@ -22,7 +22,7 @@ class ResultImage:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return ResultImage(self.infourl, self.thumb, self.name, newIdent)
+		return ResultImage(self.infourl, self.thumb, self.name, self.identifier and newIdent)
 
 class ResultRecord:
 	def __init__(self, record, identifier):
@@ -33,7 +33,7 @@ class ResultRecord:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return ResultRecord(self.record, newIdent)
+		return ResultRecord(self.record, self.identifier and newIdent)
 
 class Image:
 	""" A single image-metadata pair"""
@@ -50,13 +50,24 @@ class Image:
 		self.identifier = identifier
 	
 	def withIdentifier(self, newIdent):
-		return Image(self.url, self.thumb, self.name, self.meta, newIdent)
+		return Image(self.url, self.thumb, self.name, self.meta, self.identifier and newIdent)
 
 
-class Parameter:
-	""" Essentially a search filter applicable to the given database"""
+class ScalarParameter:
+	""" Essentially a nameless (that will probably come from a MapParameter) search filter applicable to the given database"""
 	
-	def __init__(self, name, type):
-		""" eg name = 'from nz': type = boolean """
-		self.name = name
+	def __init__(self, type, label=None):
+		""" eg type = boolean """
 		self.type = type
+		self.label = label
+
+class OptionalParameter:
+	def __init__(self, subparam, label=None):
+		self.subparam = subparam
+		self.label = label
+
+class MapParameter:
+	""" MapParameter({ "category": ScalarParameter(str), "year": OptionalParameter(ScalarParameter("year")) }) """
+	def __init__(self, parammap, label=None):
+		self.parammap = parammap
+		self.label = label
