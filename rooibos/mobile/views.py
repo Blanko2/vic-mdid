@@ -42,14 +42,33 @@ class usViewer(rooibos.unitedsearch.views.usViewer):
 
     def url_search(self):
         return reverse("mobile-search-results")
-        
+    
+class usUnionViewer(usViewer):
+    def __init__(self, searcher):
+        usViewer.__init__(self, searcher)
+
+    def url_search(self):
+        return reverse("mobile-union-search", kwargs={"sid": self.searcher.identifier})
+
+searchersmap = dict([(s.identifier, s) for s in searchers.all])
+
+def union(request, sid):
+    from unitedsearch.union import searcherUnion
+    slist = map(searchersmap.get, sid.split(","))
+    searcher = slist[0] if len(slist) == 1 else searcherUnion(slist)
+    return usUnionViewer(searcher)
+
+def union_search(request, sid="local"):
+    return union(request, sid).search(request)
+  
 def m_search(request):
+    #searcherlist = []
+    #for s in searchers.all:
+    #   if (request.GET.get(s.identifier) == "true"):
+    #        searcherlist.append(s)
     #searcher = union.searcherUnion([external.flickr,external.gallica])
-    #viewer = usViewer(searcher)searcherUnion([external.digitalnz]))#
-    
-    
-    viewer = usViewer(external.digitalnz)
-    #viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
+    viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
+    #viewer = usViewer(searcherUnion(searcherlist))
     return viewer.search(request)
 
 def m_browse(request, manage=False):

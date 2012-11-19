@@ -1,0 +1,4 @@
+export PYTHONPATH=.:/am/phoenix/home1/phillibrid1/private/SWEN302/mdid/usr/lib/python2.6/site-packages/
+ssh -L 3128:localhost:3128 bridget@115.188.223.196 &
+python rooibos/manage.py runworkers --server &
+python rooibos/manage.py runserver

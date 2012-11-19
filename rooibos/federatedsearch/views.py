@@ -15,6 +15,8 @@ from dummy import Dummy
 from rooibos.unitedsearch import aggregate
 
 import logging
+import re
+import json
 
 
 #sources = {
@@ -30,8 +32,14 @@ source_classes = [
 ] + aggregate.federatedSearchSources()
 
 
-def sidebar_api_raw(request, query, cached_only=False):
+def sidebar_api_raw(request, query, params={}, cached_only=False):
 
+
+    print "\n\nQUERY:"
+    print query
+    print "\n\nPARAMS:"
+    print params
+    print "\n\n"
     sources = dict(
         (lambda s: (s.get_source_id(), s))(c()) for c in source_classes
     )
@@ -53,13 +61,14 @@ def sidebar_api_raw(request, query, cached_only=False):
             self.cache_hit = False
         def run(self):
             self.instance = sources[self.source]
+            # if we've done this search before, simply use the cached result, don't bother re-searching
             if cache.has_key(self.source):
                 self.cache_hit = True
                 if cache[self.source]:
                     self.hits = cache[self.source]
             elif not cached_only:
                 try:
-                    self.hits = self.instance.hits_count(query)
+                    self.hits = self.instance.hits_count(query, params=params)
                     HitCount.objects.create(query=query,
                                             source=self.source,
                                             hits=self.hits,
@@ -89,7 +98,8 @@ def sidebar_api_raw(request, query, cached_only=False):
 
     return dict(html=render_to_string('federatedsearch_results.html',
                             dict(results=sorted(results),
-                                 query=query),
+                                 query=query,
+                                 params=params),
                             context_instance=RequestContext(request)),
                 hits=total_hits,
                 cache_hit=cache_hit)
@@ -97,4 +107,20 @@ def sidebar_api_raw(request, query, cached_only=False):
 @json_view
 def sidebar_api(request):
     query = ' '.join(request.GET.get('q', '').strip().lower().split())
-    return sidebar_api_raw(request, query)
+ 
+    # build params from query if possible (if query contains type=value parameters)
+    subquery = query.split('keywords=')[1]
+    params={}
+    keywords=""
+    # trim 'search=search_type, keywords='
+    clauses = subquery.split(',')
+
+    for clause in clauses:
+	    type_value = clause.strip().split("=", 1)
+	    if len(type_value) == 1:
+		    keywords += type_value[0] + " "
+	    elif len(type_value) > 1:
+                params[type_value[0]]= type_value[1]
+    
+    query = re.sub("(?<=keywords=).*", keywords.strip(), query) + ", params=" + json.dumps(params)
+    return sidebar_api_raw(request, query, params)

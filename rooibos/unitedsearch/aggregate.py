@@ -6,8 +6,8 @@ import searchers
 def federatedSearchSource(searcher):
 	
 	class Search(FederatedSearch):
-		def hits_count(self, keyword):
-			return searcher.search(keyword, {}, 0, 0).total
+		def hits_count(self, keyword, params={}):
+			return searcher.search(keyword, params, 0, 0).total
 
 		def get_label(self):
 			return searcher.name

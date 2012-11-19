@@ -90,9 +90,14 @@
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
-{% if next_page %}
+{% if next_page or previous_page %}
 <div style="text-align: center;">
-    <a href="{{ next_page }}">More</a>
+  {% if previous_page %}
+    <a href="{{ previous_page }}">Previous</a>
+  {% endif %}
+  {% if next_page %}
+    <a href="{{ next_page }}">Next</a>
+  {% endif %}
 </div>
 {% endif %}
 

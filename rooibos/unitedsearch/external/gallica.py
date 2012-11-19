@@ -1,8 +1,7 @@
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
-#from unitedsearch import *                      # other search tools
-from rooibos.unitedsearch import *
 
+from rooibos.unitedsearch import *                      # other search tools
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
@@ -52,8 +51,93 @@ def get_optional_search_filters(params) :
     
     
 def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
+  
+    """print "gallica"
+    print term
+    para_map={}
+    if params :
+      search_type='advance'
+    else:
+      search_type = 'simple'
+    keywords = ""
+  
+    # get any type=value arguements out of term
+    final_term = ""
+    first_pattern = re.compile("[^,]+")
+    entries = re.findall(first_pattern, term)
+    second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")
+    i=1
+    for entry in entries :
+      m = second_pattern.match(entry)
+      if m.group('type') :
+	k = ((str)(m.group('type').strip()))
+	v = (str(m.group('value').strip()))
+	if k=='search' : 
+	  para_map[0] = {k:v}
+	else:
+	  para_map[i] = {k : v}
+	  i = i+1
+	if k=='keywords' :
+	  keywords=v
+    """
+    print "\n\nGALLICA\nquery:"
+    print term
+    print "\n\nparams:"
+    print params
+    print "\n\n"
+
+
+
+
+    def buildParams() :
+      p = {'languages': None, 'end date': [], 'start date': [], 'copyright': None, 'Key Word': {'filter_5': ['', ''], 'filter_4': ['', ''], 'filter_3': ['', ''], 'filter_2': ['', ''], 'filter_1': ['', '']}}
+      
+      
+      for idx in para_map :
+	key = para_map[idx].keys()[0]
+	value = para_map[idx][key]
+	value = value.replace(' ','+')
+	filterIdx = 'filter_'+str(idx)
+	
+	if key=='keywords' :
+	  entry = ['All', value ]
+	  (p['Key Word'])[filterIdx] = entry
+	elif key=='title_t' :
+	  entry = ['Title', value]
+	  (p['Key Word'])[filterIdx] = entry
+	elif key=='creator_t' :
+	  entry = ['Artist', value]
+	  (p['Key Word'])[filterIdx] = entry
+	elif key=='source_t' :
+	  entry = ['Source', value]
+	  (p['Key Word'])[filterIdx] = entry
+	elif key=='publisher_t' :
+	  entry = ['Publisher', value]
+	  (p['Key Word'])[filterIdx] = entry
+	elif key=='date_t' :
+	  p['end date'] = value
+      print p
+      return p
+
+    
+    
+
+    """
+    if para_map.has_key(0) :
+      search_type = (para_map[0])["search"]
+      if search_type == "simple" :
+	  term = keywords
+	  term = term.replace(' ','+')
+      elif search_type == "advance" :
+	  term = ""
+	  params =  buildParams()
+    elif search_type == "simple" :
+	term = term.replace(' ','+')
+    """
+
     
     # calculate page number and items
+    
     page_num = str(1 + (first_index_wanted/items_per_page))
     
     def haveSimplePara() :
@@ -137,7 +221,7 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
 	url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
 	
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-    
+    print url
     return html
 
     
@@ -296,7 +380,7 @@ def search(term, params, off, num_wanted) :
         if len(image_id_divs) > num_wanted :
             while len(image_id_divs) > num_wanted :
                 image_id_divs.pop()
-                
+            field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN", "All"]    
         # build images
         for div in image_id_divs :
             images.append(__create_image(search_results_parser, div))

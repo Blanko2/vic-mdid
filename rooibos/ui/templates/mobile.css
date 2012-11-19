@@ -183,54 +183,49 @@ html.js-enabled #header-bar {
 /* Main                                                                      */
 /*****************************************************************************/
 
-.center{
+.center {
 	margin-left:auto;
 	margin-right:auto;
 	width:95%;
 }
 
-#button{
-    height: 40px;
+#background {
     color: white;
     background-color: rgb(152,189,198);
     padding: 10px;
     border-radius: 10px;
 }
 
-#background{
-    color: white;
-    background-color: rgb(152,189,198);
-    padding: 10px;
-    border-radius: 10px;
-}
-
-#button #button-text{
-	text-align: center;
-	line-height: 40px;		/* center the text in the div */
-	font-size: 150%;
-}
-
-#button img{
-	width: 30px;
-    height: 30px; 
-    display: none; 
-}
-
-
-#quicksearch{
-	width: 70%;
+/* Text input box */
+#quicksearch {
+	width: 80%;
     height: 30px;
     margin:0px;
     padding:0px;
     vertical-align: top;
 }
 
-#search-go{
+/* Search go image button */
+#search-go {
 	width: 35px;
     height: 35px;
 }
 
-a:link {text-decoration:none;}
+/* Presentation browse button */
+#button {
+    height: 40px;
+    text-align: center;
+	line-height: 40px;		/* center the text in the div */
+	font-size: 150%;
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;  
+}
+
+a:link {
+	text-decoration:none;
+}
 
 /*****************************************************************************/
 /* m_results                                                                 */
@@ -240,8 +235,8 @@ a:link {text-decoration:none;}
 .record {
     float: left;
     border: 1px {{ colors.borders }} solid;
-    width: 70px;
-   	height: 70px;
+    width: 30%;
+   	height: 100px;
     margin: 2px;
     background-color: {{ colors.shaded_background }};
 }
@@ -250,8 +245,8 @@ a:link {text-decoration:none;}
 .record img {
     width: auto;
     height: auto;
-    max-width: 70px;
-    max-height: 70px;
+    max-width: 100%;
+    max-height: 100px;
     display: block;
     margin: auto;
 }
@@ -275,32 +270,35 @@ a:link {text-decoration:none;}
 	clear: both;
 }
 
-/* Button for Next page of results */
-.result-next {
+/* Buttons for next and previous page of results */
+.result-buttons {
 	text-align: center;
 	clear: both;
 	color: white;
 	background: {{ PRIMARY_COLOR }};
 	border-radius: 6px;
 	padding: 2px;
-	width:80px;
+	width:90px;
+	height:30px;
+	line-height:30px;
+	font-size: 1.2em;
 	margin: 10px auto;
 }
 
-.result-next a {
+.result-buttons a {
 	color: white;
 }
 
 /* Image information panel */
 .image-info-panel {
 	display: none;
-	width: 150px;
-	height: 250px;
+	width: 250px;
+	height: 350px;
 	position:absolute;
 	left:20px;
 	top:50px;
 	background: white;
-	z-index: 1;
+	z-index: 999;
 	padding: 10px;
 	box-shadow: 8px 8px 5px #888;			/* Most browsers */ 
 	-moz-box-shadow: 8px 8px 5px #888;		/* Mozilla */
@@ -311,8 +309,10 @@ a:link {text-decoration:none;}
 
 .info-panel-image-box {
 	border: 1px {{ colors.borders }} solid;
-    width: 150px;
-   	height: 150px;
+    /*width: 150px;
+   	height: 150px;*/
+   	width: 240px;
+   	height: 240px;
 	margin: auto;
     background-color: {{ colors.shaded_background }};
 }
@@ -320,48 +320,20 @@ a:link {text-decoration:none;}
 .info-panel-image-box img {
 	width: auto;
 	height: auto;
-	max-width: 150px;
-    max-height: 150px;
+	max-width: 240px;
+    max-height: 240px;
     margin: auto;
     display: block;	/* Prevents extra padding being inserted */
 }
 
 .image-info-panel #info-text {
-	display: block;
-	font-size: 0.6em;
-	width: 150px;
+	width: 250px;
 	height: 50px;
+	max-height: 50px;
+	font-size: 0.8em;
 	overflow: hidden;
 	margin: 10px 0px;
-}
-
-/*#view-button{
-	color: white;
-	background: {{ PRIMARY_COLOR }};
-	border-radius: 6px;
-	padding: 5px;
-	text-align: center;
-	display: inline;
-	font-size: 0.8em;
-	width:80px;
-	margin: 0px auto;
-}
-
-#view-button a {
-	color: white;
-}*/
-
-#close-button{
-	color: white;
-	background: {{ PRIMARY_COLOR }};
-	border-radius: 6px;
-	padding: 5px;
-	text-align: center;
 	display: block;
-	font-size: 0.8em;
-	width:80px;
-	margin: 0px auto;
-	cursor: pointer;	/* Make it look like an anchor on a desktop */
 }
 
 /*****************************************************************************/
@@ -436,6 +408,7 @@ tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
 	width: 40px;
 	height: 30px;
 	text-align: center;
+	line-height: 30px;
 }
 #view-button a {
 	color: white;

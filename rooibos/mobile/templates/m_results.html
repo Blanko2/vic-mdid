@@ -8,29 +8,7 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
-	
 
-    function remoteRecordSelection(ids, checked) {
-        var method = ids == 0 ? 'GET' : 'POST';
-        if (ids.constructor != Array) ids = [ids];
-        ajaxManager.add({
-            type: method,
-            url: '{{ select_url }}',
-            data: {'id': JSON.stringify(ids), 'checked': checked},
-            dataType: 'json',
-            success: function(r) {
-                $("#basket-thumbs").html(r.basket);
-                $("#basket-tab").html(r.header);
-                basket_scroll_arrows();
-            }
-        });
-    }
-
-    $(document).ready(function() {
-        $("#submit_record_selections").hide();
-        $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
-    });
-    
     var p_toggle = false;	// Panel disply toggle boolean 
     
     // Toggle the display of the information panel on/off
@@ -58,18 +36,11 @@
     	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
     }
     
-    //function vertAlign2(pImg) {
-    //	var lHeight = pImg.clientHeight;
-   	// 	var lParentHeight = 150;
-    //	pImg.style.marginTop = (lParentHeight - lHeight)/2 + "px";
-    //} 
-    
-
 </script>
-{% endblock %}
+{% endblock javascript%}
 
 
-{% block sidebar %}
+<!-- {% block sidebar %}
 
 {% var as related_pages %}
 {"pages": [
@@ -88,7 +59,7 @@
     </div>
   </div>
 
-{% endblock %}
+{% endblock sidebar %} -->
 
 <!-- Databases the search found results in -->
 {% block content-top %}
@@ -119,13 +90,13 @@
   <tr>
   	<td>
 	  <a href="javascript:history.go(-1)">
-    	<div class = "result-next">Previous</div>
+    	<div class = "result-buttons">Previous</div>
 	  </a>
 	</td>
 	<td>
 	{% if next_page %}
 	  <a href="{{ next_page }}">
-    	<div class = "result-next">Next</div>
+    	<div class = "result-buttons">Next</div>
 	  </a>
 	{% endif %}
 	</td>
@@ -144,10 +115,10 @@
 	<div id="info-text">
 		<b>Title:</b> {{ r.title }}<br>
 	</div>
-	<div id="close-button" onclick="toggle_panel({{forloop.counter0}})">Close</div>
+	<div class="result-buttons" onclick="toggle_panel({{forloop.counter0}})">Close</div>
 </div>
 {% endfor %}
 
 </form>
 
-{% endblock %}
+{% endblock content %}

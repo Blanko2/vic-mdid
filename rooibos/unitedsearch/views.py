@@ -156,17 +156,23 @@ class usViewer():
 					"identifier": image.identifier
 				}
 
+		prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
+
 		return {
 				'results': map(resultpart, results),
 				'select_url': self.url_select(),
 				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
+				'previous_page': self.__url_search_({ 'q': query, 'from': prev_off }) if prev_off else None, 
 				'hits': result.total,
 				'searcher_name': self.searcher.name,
 				'html_parameters': self.htmlparams(args)
 			}
 		
 	def search(self, request):
-		return render_to_response('searcher-results.html', self.perform_search(request,50), context_instance=RequestContext(request))
+		print request
+		a = self.perform_search(request,50)
+		print "previous_page: %s" % a["previous_page"]
+		return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
 
 
 	def record(self, identifier):

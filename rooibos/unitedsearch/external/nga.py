@@ -20,21 +20,126 @@ name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # don't know what this is
   
   
+def break_query_string_into_parameters(query) :
+  print "NGA breaking query"
+  keywords = ""
+  para_map = {}
+      
+  # get any type=value arguements out of term
+  type_value_pair_pattern = re.compile("[^,]+")		# break into tokens around commas
+  tokens = re.findall(type_value_pair_pattern, query)
+  second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")	# break each token into type and value, separated by =
+									# if no equals, treat whole token as the value
+  # for each type-value pair, put into para_map
+  # for each pair with only a value, add to keywords instead
+  i=1
+  for token in tokens :
+    print "nga token: " + token
+    m = second_pattern.match(token)
+    if m.group('type') :
+      k = ((str)(m.group('type').strip()))	# key
+      v = (str(m.group('value').strip()))	# value
+      if k=='search' : 
+	para_map[0] = {k:v}
+      else:
+	para_map[i] = {k : v}
+	i = i+1
+      if k=='keywords' :
+	keywords=v
+
+  
+  # write para_map, keywords into parameters
+  print para_map
+  
+  
+  return (keywords, para_map)
+
+  
 def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
   
+     # set up fields for any type of search
+     print "NGA"
+     print query
      search_results_per_page = 25
      search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
      howFarDownThePage = first_wanted_result_index % search_results_per_page
      
+     
+     # if we have a query term, search by that. Else, search via the parameters
+     if (query) :
+      keywords, para_map = break_query_string_into_parameters(query)
+      
+      """keywords = ""
+      search_type = "advance"
+
+      para_map = {}
+      
+      # get any type=value arguements out of term
+      first_pattern = re.compile("[^,]+")
+      entries = re.findall(first_pattern, query)
+      second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")
+      i=1
+      for entry in entries :
+	m = second_pattern.match(entry)
+	if m.group('type') :
+	  k = ((str)(m.group('type').strip()))
+	  v = (str(m.group('value').strip()))
+	  if k=='search' : 
+	    para_map[0] = {k:v}
+	  else:
+	    para_map[i] = {k : v}
+	    i = i+1
+	  if k=='keywords' :
+	    keywords=v
+      print para_map"""
+
+
+      def buildParams():
+    
+	p = {'End Date': [''], 'School': [''], 'Medium': [''], 'Exclude Words': [''], 'Classification': [''], 'Artist': [''], 'Exact Phrase': [''], 'Accession Number': [''], 'Access': [''], 'All words': [''], 'Keywords': [''], 'Start Date': ['']}
+
+	print "P"
+	print p
+	
+	for idx in para_map :
+	  key = para_map[idx].keys()[0]
+	  value = para_map[idx][key]
+	  value = value.replace(' ','+')
+	  print "KV"
+	  print key
+	  print value
+	  if key=='keywords' :
+	    p['Keywords'] = [value]
+	  elif key=='creator_t' :
+	    p['Artist'] = [value]
+	    
+	print p
+	return p
+      
+      if para_map.has_key(0) :
+	search_type = (para_map[0])["search"]
+	print search_type
+	if search_type == "simple" :
+	  query = keywords
+	  query = query.replace(' ','+')
+	elif search_type == "advance" :
+	  query = None
+	  if len(parameters)==0 :
+	    parameters=  buildParams()
+      else :
+	  search_type = "simple"
+	  query = query.replace(" ","+")
+     
+     else :
+       search_type = "advance"
+     
+     
      # replace all whitespace in query with '+'
-     query = re.sub("\W", "+", query)
+     #query = re.sub("\W", "+", query)
      
      def __have_parameters(parameters) :
-	"""for p in parameters :
-	  if (not parameters[p] is None) and (len(parameters[p]) != 0) :
-	    return True
-	return False"""
-	return True
+	return search_type == "advance"
+	
 	
      if __have_parameters(parameters) :
            
@@ -66,10 +171,10 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
        year1 = getValue(parameters['Start Date'])
        year2 = getValue(parameters['End Date'])
        access = getValue(parameters['Access'])
-       
+
        # add the actual query itself, if it exists
-       if query :
-	 keywords += " " + query
+       """if query :
+	 keywords += " " + query"""
     
        # build up the url
        url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
@@ -82,17 +187,18 @@ def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result
        
        # replace all whitespace from the parameters
        url = re.sub(" ", "+", url)
+
 	 
      else :
        # simple search
 	url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
 
-
+     print url
      # use a proxy handler as developing behind firewall
      proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
      opener = urllib2.build_opener(proxyHandler)
      html = opener.open(url)
-     
+     print url
      return html, howFarDownThePage
 
 
@@ -224,6 +330,8 @@ def getImage(json_image_identifier) :
 def search(term, params, off, num_results_wanted) :
      """ Get the actual results! Note, method must be called 'search'"""
      
+     """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
+     """
      off = (int)(off)     # type of off varies by searcher implementation
      
      

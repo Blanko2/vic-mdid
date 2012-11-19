@@ -25,6 +25,7 @@ import re
 import copy
 import random
 import logging
+import ast
 
 
 class SearchFacet(object):
@@ -366,6 +367,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     remove = request.GET.get('rem', None)
     if remove and remove in criteria: criteria.remove(remove)
     keywords = request.GET.get('kw', '')
+    #print [ item.encode('ascii') for item in ast.literal_eval(keywords) ]
 
     # get parameters relevant for view
 
@@ -488,6 +490,27 @@ def search(request, id=None, name=None, selected=False, json=False):
     federated_search = sidebar_api_raw(
         request, federated_search_query, cached_only=True) if federated_search_query else None
 
+  
+
+    query_string = ""
+    if len(criteria)>0 :
+      query_string += "search=advance"
+    else :
+      query_string += "search=simple"
+
+    crit_pattern = re.compile("(?P<type>.*?\_t):\"(?P<value>.*?)\"")
+    for c in criteria :
+      m = crit_pattern.match(c)
+      query_string += ", "+m.group('type') + "=" + m.group('value')
+    #for item in ast.literal_eval(keywords) :
+      #query_string += " " + item.encode('ascii')
+    kws = ((str)(keywords))
+    query_string += ", keywords=" + kws.replace('"','')
+
+ 
+    print query_string
+ 
+
     return render_to_response('results.html',
                           {'criteria': map(readable_criteria, criteria),
                            'query': query,
@@ -512,7 +535,8 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'random': random.random(),
                            'viewmode': viewmode,
                            'federated_search': federated_search,
-                           'federated_search_query': federated_search_query,
+                           'federated_search_query':
+			   query_string,#federated_search_query,
                            'pagination_helper': [None] * hits,
                            'has_record_created_criteria': any(f.startswith('created:') for f in criteria),
                            'has_last_modified_criteria': any(f.startswith('modified:') for f in criteria),
