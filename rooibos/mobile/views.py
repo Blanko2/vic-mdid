@@ -25,7 +25,7 @@ from urllib import urlencode
 def m_main(request):
     form = AuthenticationForm()
     request.session.set_test_cookie()
-    return render_to_response('m_main.html', {'form': form}, context_instance=RequestContext(request))
+    return render_to_response('m_main.html', {'form': form, 'searchers': searchers.all}, context_instance=RequestContext(request))
 
 class usViewer(rooibos.unitedsearch.views.usViewer):
     def __init__(self, searcher):
@@ -62,14 +62,13 @@ def union_search(request, sid="local"):
     return union(request, sid).search(request)
   
 def m_search(request):
-    #searcherlist = []
-    #for s in searchers.all:
-    #   if (request.GET.get(s.identifier) == "true"):
-    #        searcherlist.append(s)
-    #searcher = union.searcherUnion([external.flickr,external.gallica])
-    viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
-    #viewer = usViewer(searcherUnion(searcherlist))
-    return viewer.search(request)
+   viewer = usViewer(searcherUnion([external.digitalnz,external.flickr]))
+   return viewer.search(request)
+
+def redirect(request):
+    searchers = request.GET.getlist('sid[]')
+    searchterm = request.GET.get('q')
+    return HttpResponseRedirect(reverse("mobile-union-search",kwargs={'sid':",".join(searchers)}) + "?" + urlencode({'q': searchterm}))
 
 def m_browse(request, manage=False):
     if manage and not request.user.is_authenticated():
