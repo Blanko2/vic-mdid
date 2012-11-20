@@ -142,8 +142,7 @@ def __getHTMLPage_Containing_SearchResult(query, params, first_wanted_result_ind
 
 
 def any_results(html_parser) :
-    have_no_results_tag = html_parser.find('h5')
-    return not have_no_results_tag 
+    return __count(html_parser) != 0 
     
     
 def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :

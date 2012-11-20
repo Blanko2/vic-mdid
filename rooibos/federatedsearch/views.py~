@@ -63,6 +63,9 @@ def sidebar_api_raw(request, query, cached_only=False):
             elif not cached_only:
                 try:
                     self.hits = self.instance.hits_count(query)
+                    print "****Fed.views****"
+                    print self.instance
+                    print self.hits
                     HitCount.objects.create(query=query,
                                             source=self.source,
                                             hits=self.hits,
@@ -116,4 +119,4 @@ def sidebar_api(request):
                 params[type_value[0]]= type_value[1]
     
     query = re.sub("(?<=keywords=).*", keywords.strip(), query) + ", params=" + json.dumps(params)
-    return sidebar_api_raw(request, query, params)
+    return sidebar_api_raw(request, query)

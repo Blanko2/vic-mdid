@@ -36,7 +36,7 @@ def break_query_string_into_parameters(query) :
 	para_map = json.loads(para_map[0])
     else:
 	para_map = {}
-	para_map["All Words"] = keywords
+  
     return keywords, para_map
 
 #checks if key and value exist in dict and adds them
@@ -96,6 +96,7 @@ def __getHTMLPage_Containing_SearchResult(query, params, first_wanted_result_ind
     print params
     print para_map
     para_map = merge_dictionaries(para_map, params)
+    add_to_dict(para_map, "All Words", keywords)
     print "para_map"
     print para_map
 
@@ -141,8 +142,9 @@ def __getHTMLPage_Containing_SearchResult(query, params, first_wanted_result_ind
 
 
 def any_results(html_parser) :
-    have_no_results_tag = html_parser.find('h5')
-    return not have_no_results_tag 
+    
+    print __count(html_parser) == 0 
+    return __count(html_parser) == 0 
     
     
 def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :
