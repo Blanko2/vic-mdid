@@ -15,6 +15,23 @@
         var basket_open = profile_settings['ui_basket_open'] == 'true';
         if (basket_open) document.documentElement.className = 'js-enabled basket-open';
         var custom_process_facets = false;
+        
+        // Test if the device screen is mobile sized.
+        // If so, split the url at http://mdid/presentation for example,
+        // and insert 'mobile' eg http://mdid/mobile/presentation.
+        function move() {
+            if(window.innerWidth < 400){
+                var url = window.location.href;
+                // This regex splits the url into two parts
+                // and uses capturing groups (the parentheses)
+                // to separate them. The captured groups are
+                // later accessed using the match variable below.
+            	var pattern = /(^.+:\/\/[^\/]+)(.+$)/;
+            	var match = pattern.exec(url);
+            	window.location = match[1] + '/mobile' + match[2];
+           }
+        }
+        
     </script>
     <title>MDID{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" href="{% url static 'images/favicon.ico' %}" />
@@ -34,7 +51,7 @@
 {% endblock %}
 </head>
 
-<body class="ui-reset master">
+<body class="ui-reset master" onload="timer=setTimeout('move()',1000)">
 
 {% block raw-content %}
     <div id="content-wrapper">
@@ -78,7 +95,7 @@
 
 {% block footer %}
             <div id="footer">
-                Copyright 1997-2011 James Madison University
+                Copyright 1997-2012 James Madison University
             </div>
 {% endblock %}
 
@@ -115,10 +132,7 @@
             <div id="header">
                 <a href="{% url main %}" id="logo"></a>
                 <ul style="float: right;">
-                    <li><div id="basket-header"
-                    style="background: url({% url static "images/basket.png" %})
-                    no-repeat; font-size: 0.6em; width: 32px; height: 22px; text-align: center; padding-top: 10px;"
-                              >{% include "ui_basket_header.html" %}</div>
+                    <li><div id="basket-header">{% include "ui_basket_header.html" %}</div>
                         <ul class="menu">
                             <li><a id="basket-toggle" href="#">Hide</a></li>
                             <li><a href="{% url solr-selected %}">Explore</a></li>
@@ -139,19 +153,18 @@
                     {% if user.is_authenticated %}
                     <li><a href="{% url presentation-manage %}">Organize</a>
                         <ul class="menu">
-                            {% recent_presentation request.user as presentation %}
-                            {% if presentation %}
-                            <li><a href="{% url presentation-edit presentation.id, presentation.name %}">Edit {{ presentation.title }}</a></li>
+                            {% if current_presentation.id %}
+                            <li><a href="{% url presentation-edit current_presentation.id, current_presentation.name %}">Edit {{ current_presentation.title }}</a></li>
                             {% endif %}
                             <li><a href="{% url presentation-manage %}">Your Presentations</a></li>
                             <li><a href="{% url solr-search %}?c=ownedtag:{{ user.id }}-favorite">Your Favorites</a></li>
                             <li><a href="{% url solr-search %}?c=owner:{{ user.id }}">Your Content</a></li>
-                            {% if user|accessible_objects:"data.Collection,r"|length %}
+                            {#{% if user|accessible_objects:"data.Collection,r"|length %}#}
                             <li><a href="{% url data-record-new-personal %}">Create Item</a></li>
-                            {% endif %}
-                            {% if user|accessible_objects:"data.Collection,rw"|length %}
+                            {#{% endif %}#}
+                            {#{% if user|accessible_objects:"data.Collection,rw"|length %}#}
                             <li><a href="{% url data-record-new %}">Create Collection Item</a></li>
-                            {% endif %}
+                            {#{% endif %}#}
                             <li><a href="{% url presentation-create %}">Create Presentation</a></li>
                         </ul>
                     </li>
@@ -202,7 +215,7 @@
 {% endif %}
 
 {% block javascript %}
-{% compress js %}
+{#{% compress js %}#}
     <script type="text/javascript" src="{% url static 'jquery/jquery-1.4.4.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery-ui-1.8.11.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% url static 'jquery/jquery.cookie.js' %}"></script>
@@ -313,6 +326,7 @@
         }
 
         function process_facets() {
+		window.bleh = "here I am";
             var freqs = Object();
             function sortByFreq(a, b) {
                 var fa = freqs[a.id];
@@ -758,7 +772,7 @@
 
     </script>
 
-{% endcompress %}
+{#{% endcompress %}#}
 
 {% endblock %}
 

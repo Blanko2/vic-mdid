@@ -17,10 +17,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import filesizeformat
 from models import Media, Storage, TrustedSubnet, ProxyUrl
-from rooibos.access import accessible_ids, filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
+from rooibos.access import filter_by_access, get_effective_permissions_and_restrictions, get_accesscontrols_for_object, check_access
 from rooibos.contrib.ipaddr import IP
 from rooibos.data.models import Collection, Record, Field, FieldValue, CollectionItem, standardfield
-from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records
+from rooibos.storage import get_media_for_record, get_image_for_record, get_thumbnail_for_record, match_up_media, analyze_media, analyze_records, find_record_by_identifier
 from rooibos.util import json_view
 from rooibos.statistics.models import Activity
 import logging
@@ -44,6 +44,7 @@ def add_content_length(func):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve(request, recordid, record, mediaid, media):
+    print 'retrieve'
     # check if media exists
     mediaobj = get_media_for_record(recordid, request.user).filter(id=mediaid)
 
@@ -69,12 +70,14 @@ def retrieve(request, recordid, record, mediaid, media):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def retrieve_image(request, recordid, record, width=None, height=None):
+    print 'retrieve_image'
 
     passwords = request.session.get('passwords', dict())
 
     path = get_image_for_record(recordid, request.user, int(width or 100000), int(height or 100000), passwords)
     if not path:
-        raise Http404()
+        #raise Http404()
+        return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
     Activity.objects.create(event='media-download-image',
                             request=request,
@@ -87,7 +90,9 @@ def retrieve_image(request, recordid, record, width=None, height=None):
         return response
     except IOError:
         logging.error("IOError: %s" % path)
-        raise Http404()
+        #raise Http404()
+        return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
+
 
 
 def make_storage_select_choice(storage, user):
@@ -178,6 +183,7 @@ def media_delete(request, mediaid, medianame):
 @add_content_length
 @cache_control(private=True, max_age=3600)
 def record_thumbnail(request, id, name):
+    print 'record_thumbnail'
     filename = get_thumbnail_for_record(id, request.user, crop_to_square=request.GET.has_key('square'))
     if filename:
         Activity.objects.create(event='media-thumbnail',
@@ -190,6 +196,9 @@ def record_thumbnail(request, id, name):
             return HttpResponse(content=open(filename, 'rb').read(), mimetype='image/jpeg')
         except IOError:
             logging.error("IOError: %s" % filename)
+    record = Record.filter_one_by_access(request.user, id)
+    if record and record.tmp_extthumb:
+        return HttpResponseRedirect(record.tmp_extthumb)
     return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 
@@ -305,7 +314,7 @@ def import_files(request):
 
     available_storage = get_list_or_404(filter_by_access(request.user, Storage, write=True).order_by('title'))
     available_collections = get_list_or_404(filter_by_access(request.user, Collection))
-    writable_collection_ids = accessible_ids(request.user, Collection, write=True)
+    writable_collection_ids = list(filter_by_access(request.user, Collection, write=True).values_list('id', flat=True))
 
     storage_choices = choices = [make_storage_select_choice(s, request.user) for s in available_storage]
 
@@ -315,6 +324,8 @@ def import_files(request):
         file = forms.FileField()
         create_records = forms.BooleanField(required=False)
         replace_files = forms.BooleanField(required=False, label='Replace files of same type')
+        multiple_files = forms.BooleanField(required=False,
+                                                   label='Allow multiple files of same type')
         personal_records = forms.BooleanField(required=False)
 
         def clean(self):
@@ -336,6 +347,7 @@ def import_files(request):
 
             create_records = form.cleaned_data['create_records']
             replace_files = form.cleaned_data['replace_files']
+            multiple_files = form.cleaned_data['multiple_files']
             personal_records = form.cleaned_data['personal_records']
 
             collection = get_object_or_404(filter_by_access(request.user, Collection.objects.filter(id=form.cleaned_data['collection']), write=True if not personal_records else None))
@@ -356,17 +368,18 @@ def import_files(request):
                 # find record by identifier
                 titlefield = standardfield('title')
                 idfield = standardfield('identifier')
-                idfields = standardfield('identifier', equiv=True)
 
                 # Match identifiers that are either full file name (with extension) or just base name match
-                records = Record.by_fieldvalue(idfields, (id, file.name)).filter(collection=collection, owner=owner)
+                records = find_record_by_identifier((id, file.name,), collection,
+                    owner=owner, ignore_suffix=multiple_files)
                 result = "File skipped."
 
                 if len(records) == 1:
                     # Matching record found
                     record = records[0]
                     media = record.media_set.filter(storage=storage, mimetype=mimetype)
-                    if len(media) == 0:
+                    media_same_id = media.filter(name=id)
+                    if len(media) == 0 or (len(media_same_id) == 0 and multiple_files):
                         # No media yet
                         media = Media.objects.create(record=record,
                                                      name=id,
@@ -374,8 +387,14 @@ def import_files(request):
                                                      mimetype=mimetype)
                         media.save_file(file.name, file)
                         result = "File added (Identifier '%s')." % id
+                    elif len(media_same_id) > 0 and multiple_files:
+                        # Replace existing media with same name and mimetype
+                        media = media_same_id[0]
+                        media.delete_file()
+                        media.save_file(file.name, file)
+                        result = "File replaced (Identifier '%s')." % id
                     elif replace_files:
-                        # Replace existing media
+                        # Replace existing media with same mimetype
                         media = media[0]
                         media.delete_file()
                         media.save_file(file.name, file)

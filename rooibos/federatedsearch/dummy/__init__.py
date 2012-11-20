@@ -1,0 +1,17 @@
+from django.core.urlresolvers import reverse
+from rooibos.federatedsearch.models import FederatedSearch, HitCount
+import digitalnz
+
+class Dummy(FederatedSearch):
+	def hits_count(self, keyword):
+		return digitalnz.count(keyword)
+	
+	def get_label(self):
+		return "Dummy"
+
+	def get_source_id(self):
+		return "DUM"
+	
+	def get_search_url(self):
+		print "** REVERSE: %s" % reverse('dummy-search')
+		return reverse('dummy-search')

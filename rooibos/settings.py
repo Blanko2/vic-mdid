@@ -37,7 +37,9 @@ MEDIA_URL = ''
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
+#    'django.template.loaders.filesystem.Loader'
     'django.template.loaders.filesystem.load_template_source',
+#    'django.template.loaders.app_directories.Loader'
     'django.template.loaders.app_directories.load_template_source',
 #     'django.template.loaders.eggs.load_template_source',
 )
@@ -50,9 +52,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     "rooibos.context_processors.settings",
     "rooibos.context_processors.selected_records",
+    "rooibos.context_processors.current_presentation",
 )
 
 MIDDLEWARE_CLASSES = (
+#    'rooibos.mobilemiddleware.MobileMiddleware',
     'rooibos.middleware.Middleware',
     'rooibos.help.middleware.PageHelp',
 #    'rooibos.profile_middleware.ProfileMiddleware',
@@ -72,6 +76,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'rooibos.storage.middleware.StorageOnStart',
+    'rooibos.access.middleware.AccessOnStart',
     'rooibos.middleware.HistoryMiddleware',
 )
 
@@ -91,6 +96,7 @@ INSTALLED_APPS = (
     'google_analytics',
     'rooibos.data',
     'rooibos.migration',
+    'rooibos.mobile',
     'rooibos.util',
     'rooibos.access',
     'rooibos.solr',
@@ -105,16 +111,23 @@ INSTALLED_APPS = (
     'rooibos.federatedsearch.artstor',
     'rooibos.federatedsearch.flickr',
     'rooibos.federatedsearch.nasa',
+    'rooibos.federatedsearch.dummy',
+    'rooibos.unitedsearch',
     'rooibos.converters',
     'rooibos.contrib.tagging',
     'rooibos.workers',
     'rooibos.userprofile',
     'rooibos.mediaviewer',
+    'rooibos.megazine',
     'rooibos.groupmanager',
+    'rooibos.pdfviewer',
+    'rooibos.pptexport',
+    'rooibos.audiotextsync',
     'pagination',
     'impersonate',
     'compressor',
     'south',
+    'django_concurrent_test_server',
 )
 
 STORAGE_SYSTEMS = {

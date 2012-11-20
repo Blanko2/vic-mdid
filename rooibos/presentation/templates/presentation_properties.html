@@ -47,6 +47,7 @@
                     var name = input.attr('name', input.attr('name').replace(/[0-9]+/, idx)).attr('id', 'id_' + input.attr('name')).attr('name');
                     if (name.match(/-id$/)) input.val('');
                 });
+                $("div.title a", copy).bind('click', bind_preview_dialog);
                 insert_after.after(copy);
                 insert_after = copy;
             });
@@ -152,7 +153,7 @@
 			customize_url = customize_url.substring(customize_url.indexOf('/edit/') + 1)
 			$("a.customize", copy).attr('href', record_url + customize_url);
 			// fix title
-			$("div.title a", copy).attr('href', record_url).text(title);
+			$("div.title a", copy).attr('href', record_url).text(title).bind('click', bind_preview_dialog);
 			// fix thumbnail
 			$("img", copy).attr('alt', title).attr('src', image.attr('src')).attr('id', 'item-' + idx + image.attr('id').substring(6));
 			// fix form inputs
@@ -251,14 +252,16 @@
 			addCopyLinkIcon($(this));
 		});
 
-		$("#lighttable div.slide div.title a").live('click', function(e) {
+		var bind_preview_dialog = function(e) {
 			var a = $(this);
 			var img = $("img.record-anchor", a.parent().parent());
 			var prev = function() { return a.parents("div.slide").prev("div.slide").children("div.title").children("a") };
 			var next = function() { return a.parents("div.slide").next("div.slide").children("div.title").children("a") };
 			preview_dialog(a, img, prev, next)
 			e.preventDefault();
-		});
+		}
+
+		$("#lighttable div.slide div.title a").bind('click', bind_preview_dialog);
 
 		keepAtTop($("#lighttable-actionbar"), $("#lighttable"));
 		keepAtTop($("#lighttable-annotation"), $("#lighttable"));

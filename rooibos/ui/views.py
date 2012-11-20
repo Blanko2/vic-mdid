@@ -22,6 +22,7 @@ from rooibos.solr.views import run_search
 from rooibos.context_processors import selected_records as ctx_selected_records
 from rooibos.presentation.models import Presentation
 from rooibos.userprofile.views import load_settings, store_settings
+from rooibos.mobile import is_mobile
 import random
 
 
@@ -51,11 +52,14 @@ def main(request):
         pagesize=8,
         produce_facets=False)
 
-    order = range(1, 8)
+    order = range(1, len(records or []))
     random.shuffle(order)
 
     request.session.set_test_cookie()
     form = AuthenticationForm()
+
+    if is_mobile(request):
+        return HttpResponseRedirect(reverse("mobile-main"))
 
     return render_to_response('main.html',
                               {'records': records,

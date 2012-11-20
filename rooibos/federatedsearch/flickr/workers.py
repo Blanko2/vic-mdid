@@ -14,6 +14,7 @@ import traceback
 def flickr_download_media(job):
 
     logging.info('flickr_download_media started for %s' % job)
+    print "aregeuhktdjqhkdat"
     jobinfo = JobInfo.objects.get(id=job.arg)
 
     try:
@@ -25,7 +26,7 @@ def flickr_download_media(job):
         record = Record.objects.get(id=arg['record'], manager='flickr')
         url = arg['url']
         storage = flickr.get_storage()
-        file = urllib2.urlopen(url)
+        file = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
         setattr(file, 'size', int(file.info().get('content-length')))
         mimetype = file.info().get('content-type')
         media = Media.objects.create(record=record,

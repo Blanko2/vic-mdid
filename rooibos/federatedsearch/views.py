@@ -11,6 +11,8 @@ from models import HitCount
 from nasa import NasaImageExchange
 from artstor import ArtstorSearch
 from flickr import FlickrSearch
+from dummy import Dummy
+from rooibos.unitedsearch import aggregate
 
 import logging
 
@@ -25,7 +27,7 @@ source_classes = [
     NasaImageExchange,
     ArtstorSearch,
     FlickrSearch,
-]
+] + aggregate.federatedSearchSources()
 
 
 def sidebar_api_raw(request, query, cached_only=False):
