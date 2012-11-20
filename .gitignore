@@ -15,3 +15,6 @@ Thumbs.db
 rooibos/static/cache/*
 2*M.mysql
 .project
+*~
+*.swp
+var/mdid-scratch/*
