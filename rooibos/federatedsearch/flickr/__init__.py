@@ -21,8 +21,7 @@ class FlickrSearch(FederatedSearch):
     def __init__(self):
         self.flickr = flickrapi.FlickrAPI(settings.FLICKR_KEY, settings.FLICKR_SECRET, cache=True, store_token=False)
 
-    def hits_count(self, keyword, params={}):
-	# note, params is not used (not implemented for this searcher)
+    def hits_count(self, keyword):
         cc_licenses = ','.join(self.get_cc_licenses())
         results = self.flickr.flickr_call(method='flickr.photos.search',
                                           text=keyword,

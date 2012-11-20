@@ -32,14 +32,8 @@ source_classes = [
 ] + aggregate.federatedSearchSources()
 
 
-def sidebar_api_raw(request, query, params={}, cached_only=False):
+def sidebar_api_raw(request, query, cached_only=False):
 
-
-    print "\n\nQUERY:"
-    print query
-    print "\n\nPARAMS:"
-    print params
-    print "\n\n"
     sources = dict(
         (lambda s: (s.get_source_id(), s))(c()) for c in source_classes
     )
@@ -68,7 +62,7 @@ def sidebar_api_raw(request, query, params={}, cached_only=False):
                     self.hits = cache[self.source]
             elif not cached_only:
                 try:
-                    self.hits = self.instance.hits_count(query, params=params)
+                    self.hits = self.instance.hits_count(query)
                     HitCount.objects.create(query=query,
                                             source=self.source,
                                             hits=self.hits,
@@ -98,8 +92,7 @@ def sidebar_api_raw(request, query, params={}, cached_only=False):
 
     return dict(html=render_to_string('federatedsearch_results.html',
                             dict(results=sorted(results),
-                                 query=query,
-                                 params=params),
+                                 query=query),
                             context_instance=RequestContext(request)),
                 hits=total_hits,
                 cache_hit=cache_hit)
@@ -123,4 +116,4 @@ def sidebar_api(request):
                 params[type_value[0]]= type_value[1]
     
     query = re.sub("(?<=keywords=).*", keywords.strip(), query) + ", params=" + json.dumps(params)
-    return sidebar_api_raw(request, query, params)
+    return sidebar_api_raw(request, query)

@@ -21,185 +21,124 @@ identifier = "nga"            # don't know what this is
   
   
 def break_query_string_into_parameters(query) :
-  print "NGA breaking query"
-  keywords = ""
-  para_map = {}
+    print "NGA breaking query"
+    keywords = ""
+    para_map = {}
+    # query is in form search=search_type, keywords=words (space-separated), params={"type": "value", ...}
+    keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
+    if keywords and len(keywords) >= 1:
+	keywords = keywords[0] #now keywords is a string from that list.
+    else:
+	keywords=""
       
-  # get any type=value arguements out of term
-  type_value_pair_pattern = re.compile("[^,]+")		# break into tokens around commas
-  tokens = re.findall(type_value_pair_pattern, query)
-  second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")	# break each token into type and value, separated by =
-									# if no equals, treat whole token as the value
-  # for each type-value pair, put into para_map
-  # for each pair with only a value, add to keywords instead
-  i=1
-  for token in tokens :
-    print "nga token: " + token
-    m = second_pattern.match(token)
-    if m.group('type') :
-      k = ((str)(m.group('type').strip()))	# key
-      v = (str(m.group('value').strip()))	# value
-      if k=='search' : 
-	para_map[0] = {k:v}
+    para_map = re.findall("(?<=params=).*", query)
+    if para_map and len(para_map) >= 1:
+	para_map = json.loads(para_map[0])
+    else:
+	para_map = {}
+  
+    return keywords, para_map
+
+#checks if key and value exist in dict and adds them
+def add_to_dict(dictionary, key, value):
+    if key in dictionary:
+	if value not in dictionary[key]:
+	    dictionary[key].append(value)
+    else:
+	dictionary[key] = value
+  
+# return either the value at 0 in the dictionary argument, or "" in none exists
+def getValue(dictionary, key):
+  # check if key exists
+  # else set to ""
+  if key in dictionary:
+     value = dictionary[key]
+     if isinstance(value, list):
+	value_string = ""
+	for li in value:
+	  value_string += li+" "
+	value = value_string.strip()
+  else:
+    value = ""
+  return value
+  
+unsupported_parameters = {}
+
+def merge_dictionaries(dict1, dict2):
+    for key in dict1:
+      newKey = str(key.capitalize())
+      if newKey in dict2:
+	if dict1[key] not in dict2[newKey]:
+	  dict2[newKey].append(dict1[key])
       else:
-	para_map[i] = {k : v}
-	i = i+1
-      if k=='keywords' :
-	keywords=v
-
-  
-  # write para_map, keywords into parameters
-  print para_map
-  
-  
-  return (keywords, para_map)
-
-  
-def __getHTMLPage_Containing_SearchResult(query, parameters, first_wanted_result_index) :
-  
-     # set up fields for any type of search
-     print "NGA"
-     print query
-     search_results_per_page = 25
-     search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
-     howFarDownThePage = first_wanted_result_index % search_results_per_page
-     
-     
-     # if we have a query term, search by that. Else, search via the parameters
-     if (query) :
-      keywords, para_map = break_query_string_into_parameters(query)
-      
-      """keywords = ""
-      search_type = "advance"
-
-      para_map = {}
-      
-      # get any type=value arguements out of term
-      first_pattern = re.compile("[^,]+")
-      entries = re.findall(first_pattern, query)
-      second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")
-      i=1
-      for entry in entries :
-	m = second_pattern.match(entry)
-	if m.group('type') :
-	  k = ((str)(m.group('type').strip()))
-	  v = (str(m.group('value').strip()))
-	  if k=='search' : 
-	    para_map[0] = {k:v}
-	  else:
-	    para_map[i] = {k : v}
-	    i = i+1
-	  if k=='keywords' :
-	    keywords=v
-      print para_map"""
-
-
-      def buildParams():
-    
-	p = {'End Date': [''], 'School': [''], 'Medium': [''], 'Exclude Words': [''], 'Classification': [''], 'Artist': [''], 'Exact Phrase': [''], 'Accession Number': [''], 'Access': [''], 'All words': [''], 'Keywords': [''], 'Start Date': ['']}
-
-	print "P"
-	print p
+	# parameter type is not supported, so store for error message
+	# and treat value as a keyword
+	unsupported_parameters[key] = dict1[key]
+	if "All Words" not in dict2:
+	  dict2["All Words"] = dict1[key]
+	elif dict1[key] not in dict2["All Words"]:
+	  dict2["All Words"].append(dict1[key])
+	#dict2[newKey] = dict1[key]
+    return dict2
 	
-	for idx in para_map :
-	  key = para_map[idx].keys()[0]
-	  value = para_map[idx][key]
-	  value = value.replace(' ','+')
-	  print "KV"
-	  print key
-	  print value
-	  if key=='keywords' :
-	    p['Keywords'] = [value]
-	  elif key=='creator_t' :
-	    p['Artist'] = [value]
-	    
-	print p
-	return p
-      
-      if para_map.has_key(0) :
-	search_type = (para_map[0])["search"]
-	print search_type
-	if search_type == "simple" :
-	  query = keywords
-	  query = query.replace(' ','+')
-	elif search_type == "advance" :
-	  query = None
-	  if len(parameters)==0 :
-	    parameters=  buildParams()
-      else :
-	  search_type = "simple"
-	  query = query.replace(" ","+")
-     
-     else :
-       search_type = "advance"
-     
-     
-     # replace all whitespace in query with '+'
-     #query = re.sub("\W", "+", query)
-     
-     def __have_parameters(parameters) :
-	return search_type == "advance"
-	
-	
-     if __have_parameters(parameters) :
-           
-       # advanced search
-       # TODO give user some hint of parameters form (eg, how to enter dates)
-       
-       # return either the value at 0 in the dictionary argument, or "" in none exists
-       def getValue(a):
-	 try:
-	   r = str(a[0])
-	   #r = a[0]
-	 except IndexError:
-	   r = ""
-	 if isinstance(r, str): return r
-	 return ""
+def __getHTMLPage_Containing_SearchResult(query, params, first_wanted_result_index) :
+  
+    # set up fields for any type of search
+    print "NGA"
+    print query
+    search_results_per_page = 25
+    search_page_num = str(1 + (first_wanted_result_index/search_results_per_page))   
+    howFarDownThePage = first_wanted_result_index % search_results_per_page
 
-       # get the parameter values to put into the url
-       all_words = getValue(parameters['All words'])
-       exact_phrase = getValue(parameters['Exact Phrase'])
-       exclude = getValue(parameters['Exclude Words'])
+    # build parameters dictionary to search by
+    keywords, para_map = break_query_string_into_parameters(query)
+    print '==================================== this'
+    print params
+    print para_map
+    para_map = merge_dictionaries(para_map, params)
+    add_to_dict(para_map, "All Words", keywords)
+    print "para_map"
+    print para_map
 
-       artist = getValue(parameters['Artist'])
-       keywords = getValue(parameters['Keywords'])
-       
-       accession_number = getValue(parameters['Accession Number'])
-       school = getValue(parameters['School'])
-       classification = getValue(parameters['Classification'])
-       medium = getValue(parameters['Medium'])
-       year1 = getValue(parameters['Start Date'])
-       year2 = getValue(parameters['End Date'])
-       access = getValue(parameters['Access'])
+    print "UNSUPPORTED PARAMETER PAIRS:"
+    print unsupported_parameters
 
-       # add the actual query itself, if it exists
-       """if query :
-	 keywords += " " + query"""
-    
-       # build up the url
-       url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
-       
-       url += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
-       
-       url += "&school="+school + "&Classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
-       
-       url += "&open_access="+access + "&page="+search_page_num
-       
-       # replace all whitespace from the parameters
-       url = re.sub(" ", "+", url)
+    # get the parameter values to put into the url
+    all_words = getValue(para_map, 'All Words')
+    exact_phrase = getValue(para_map, 'Exact Phrase')
+    exclude = getValue(para_map, 'Exclude Words')
 
-	 
-     else :
-       # simple search
-	url = BASE_SIMPLE_SEARCH_URL + "&q=" + query + "&page=" + search_page_num
+    artist = getValue(para_map, 'Artist')
+    keywords = getValue(para_map, 'Title')
 
-     print url
-     # use a proxy handler as developing behind firewall
-     proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
-     opener = urllib2.build_opener(proxyHandler)
-     html = opener.open(url)
-     print url
-     return html, howFarDownThePage
+    accession_number = getValue(para_map, 'Accession Number')
+    school = getValue(para_map, 'School')
+    classification = getValue(para_map, 'Classification')
+    medium = getValue(para_map, 'Medium')
+    year1 = getValue(para_map, 'Start Date')
+    year2 = getValue(para_map, 'End Date')
+    access = getValue(para_map, 'Access')
+
+
+    # build up the url
+    url = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
+
+    url += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
+
+    url += "&school="+school + "&Classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
+
+    url += "&open_access="+access + "&page="+search_page_num
+
+    # replace all whitespace from the parameters
+    url = re.sub(" ", "+", url)
+
+    print url
+    # use a proxy handler as developing behind firewall
+    proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
+    opener = urllib2.build_opener(proxyHandler)
+    html = opener.open(url)
+    print url
+    return html, howFarDownThePage
 
 
 def any_results(html_parser) :
@@ -376,14 +315,14 @@ def search(term, params, off, num_results_wanted) :
      
      
 parameters = MapParameter({ 
-    "All words": OptionalParameter(ScalarParameter(str)), 
+    "All Words": OptionalParameter(ScalarParameter(str)), 
     "Exact Phrase":
       OptionalParameter(ScalarParameter(str)), 
      "Exclude Words": OptionalParameter(ScalarParameter(str)),
     "Artist": OptionalParameter(ScalarParameter(str)),
 
   
-    "Keywords": OptionalParameter(ScalarParameter(str)),
+    "Title": OptionalParameter(ScalarParameter(str)),
     "Accession Number": OptionalParameter(ScalarParameter(str)),
     "Classification": OptionalParameter(ScalarParameter(str)),
     "School": OptionalParameter(ScalarParameter(str)),
@@ -391,6 +330,4 @@ parameters = MapParameter({
     "Start Date": OptionalParameter(ScalarParameter(str)),
     "End Date": OptionalParameter(ScalarParameter(str)),
     "Access": OptionalParameter(ScalarParameter(str))
- 
-    
     })

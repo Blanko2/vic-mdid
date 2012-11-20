@@ -36,7 +36,8 @@ class NasaImageExchange(FederatedSearch):
             for tag in tags
         ]
 
-    def hits_count(self, keyword):
+    def hits_count(self, keyword, params={}):
+	# note, params is never used for this searcher
         soup = BeautifulSoup(urllib2.urlopen(self.SERVER))
         data = self._get_form_defaults(soup.form)
         data['qa'] = keyword

@@ -33,8 +33,7 @@ class SmartRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class ArtstorSearch(FederatedSearch):
 
-    def hits_count(self, keyword, params={}):
-	# note, params has not been implemented in this method
+    def hits_count(self, keyword):
         url = '%s?%s' % (
             settings.ARTSTOR_GATEWAY,
             urllib.urlencode([('query', 'cql.serverChoice = "%s"' % keyword),

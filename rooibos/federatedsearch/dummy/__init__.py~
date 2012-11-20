@@ -3,7 +3,7 @@ from rooibos.federatedsearch.models import FederatedSearch, HitCount
 import digitalnz
 
 class Dummy(FederatedSearch):
-	def hits_count(self, keyword):
+	def hits_count(self, keyword, params={}):
 		return digitalnz.count(keyword)
 	
 	def get_label(self):

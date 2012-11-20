@@ -169,6 +169,7 @@ class usViewer():
 			}
 		
 	def search(self, request):
+		print request
 		a = self.perform_search(request,50)
 		print "previous_page: %s" % a["previous_page"]
 		return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
