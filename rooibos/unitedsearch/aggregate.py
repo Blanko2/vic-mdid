@@ -7,9 +7,10 @@ def federatedSearchSource(searcher):
 	
 	class Search(FederatedSearch):
 		def hits_count(self, keyword):
-			print '====================NOT THIS======================='
-			print keyword
-			return searcher.search(keyword, {}, 0, 0).total
+			return searcher.search(keyword, {}, 0, 0)[0].total
+			#once the count method is implemented in each database, 
+			# switch to this:
+			#return searcher.count)(query)
 
 		def get_label(self):
 			return searcher.name

@@ -135,8 +135,8 @@ class usViewer():
 		for n in request.GET:
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
-		args = self.readargs(request.GET)
-		result = self.searcher.search(query, args, offset, resultcount)
+		#args = self.readargs(request.GET)
+		result,args = self.searcher.search(query, {}, offset, resultcount)
 		results = result.images
 
 		def resultpart(image):

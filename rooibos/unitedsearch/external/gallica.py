@@ -17,6 +17,9 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&la
 
 #&dateMiseEnLigne=indexDateFrom
 
+# optional categories that can be searched by in the url
+# Gallica only allows 5 options at once, thus we consider one of those
+# to always be 'Keywords'
 filter_type_map = {
   'Artist' : "f_creator",
   'Title': "f_title",
@@ -49,7 +52,101 @@ def get_optional_search_filters(params) :
       
     return filters_string
     
+def buildParams() :
+  p = {'languages': None, 'end date': [], 'start date': [], 'copyright': None, 'Key Word': {'filter_5': ['', ''], 'filter_4': ['', ''], 'filter_3': ['', ''], 'filter_2': ['', ''], 'filter_1': ['', '']}}
+  
+  
+  for idx in para_map :
+    key = para_map[idx].keys()[0]
+    value = para_map[idx][key]
+    value = value.replace(' ','+')
+    filterIdx = 'filter_'+str(idx)
     
+    if key=='keywords' :
+      entry = ['All', value ]
+      (p['Key Word'])[filterIdx] = entry
+    elif key=='title_t' :
+      entry = ['Title', value]
+      (p['Key Word'])[filterIdx] = entry
+    elif key=='creator_t' :
+      entry = ['Artist', value]
+      (p['Key Word'])[filterIdx] = entry
+    elif key=='source_t' :
+      entry = ['Source', value]
+      (p['Key Word'])[filterIdx] = entry
+    elif key=='publisher_t' :
+      entry = ['Publisher', value]
+      (p['Key Word'])[filterIdx] = entry
+    elif key=='date_t' :
+      p['end date'] = value
+  print p
+  return p
+
+  
+
+  term_str = str(term)
+  if term_str=="" :
+    return False
+  return True
+
+  
+def haveParams() :
+  return not query is None
+  
+def getValue(dict_val):
+	    try:
+	      r = str(dict_val[0])
+	    except IndexError:
+	      r = ""
+	    if isinstance(r, str): return r
+	    return ""
+	    #return (str)(dict_val[0])
+	    
+def getLanguages() :
+    if not params['languages'] or len(params['languages']) == 0 :
+      #params['languages'] = 'All'
+      #return "&t_language="
+      return ""
+      
+    # if reach here, have languages to read, read them  
+    lang_codes = {
+      "French": "fre",
+      "English": "eng",
+      "Italian": "ita",
+      "Chinese": "chi",
+      "Spanish": "spa",
+      "German": "ger",
+      "Greek": "grc",
+      "Latin": "lat"
+    }
+    
+    if params['languages'] == 'All' :
+      lang_string = ""
+    else :
+      lang_string = "&t_language=" + lang_codes[params['languages']]
+      
+    return lang_string
+
+def getCopyright() :
+  
+    if (not params['copyright']) or (len(params['copyright']) == 0) :
+      #params['copyright'] = 'All'
+      return ""
+      
+    # if reach here, have copyright  
+    copyright_codes = {
+      "Free": "fayes",
+      "Subject to conditions": "fano"
+    }
+
+    if params['copyright'] == 'All' :
+      copy_string = ""
+    else :
+      copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
+    
+    return copy_string
+
+  
 def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
   
     """print "gallica"
@@ -84,43 +181,7 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
     print term
     print "\n\nparams:"
     print params
-    print "\n\n"
-
-
-
-
-    def buildParams() :
-      p = {'languages': None, 'end date': [], 'start date': [], 'copyright': None, 'Key Word': {'filter_5': ['', ''], 'filter_4': ['', ''], 'filter_3': ['', ''], 'filter_2': ['', ''], 'filter_1': ['', '']}}
-      
-      
-      for idx in para_map :
-	key = para_map[idx].keys()[0]
-	value = para_map[idx][key]
-	value = value.replace(' ','+')
-	filterIdx = 'filter_'+str(idx)
-	
-	if key=='keywords' :
-	  entry = ['All', value ]
-	  (p['Key Word'])[filterIdx] = entry
-	elif key=='title_t' :
-	  entry = ['Title', value]
-	  (p['Key Word'])[filterIdx] = entry
-	elif key=='creator_t' :
-	  entry = ['Artist', value]
-	  (p['Key Word'])[filterIdx] = entry
-	elif key=='source_t' :
-	  entry = ['Source', value]
-	  (p['Key Word'])[filterIdx] = entry
-	elif key=='publisher_t' :
-	  entry = ['Publisher', value]
-	  (p['Key Word'])[filterIdx] = entry
-	elif key=='date_t' :
-	  p['end date'] = value
-      print p
-      return p
-
-    
-    
+    print "\n\n"     
 
     """
     if para_map.has_key(0) :
@@ -140,74 +201,20 @@ def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
     
     page_num = str(1 + (first_index_wanted/items_per_page))
     
-    def haveSimplePara() :
-      term_str = str(term)
-      if term_str=="" :
-	return False
-      return True
+    # get parameter values
+    keywords, para_map = break_query_string(term)
+    params = merge_dictionaries(para_map, params)
+    add_to_dict(params, "Keywords", keywords)
     
-    def haveParams() :
-      return not query is None
-      
+    # build url for search
+    
+    # check if params is empty or full of empty lists
     if  haveSimplePara() :
 	# simple search
 	url = BASE_SIMPLE_SEARCH_URL + "&q=" + term + "&pageNumber=" + page_num + "&lang=EN&tri=&n=" + str(items_per_page)
 	
     else :
 	# advanced search
-	def getValue(dict_val):
-	    try:
-	      r = str(dict_val[0])
-	    except IndexError:
-	      r = ""
-	    if isinstance(r, str): return r
-	    return ""
-	    #return (str)(dict_val[0])
-	    
-	def getLanguages() :
-	    if not params['languages'] or len(params['languages']) == 0 :
-	      #params['languages'] = 'All'
-	      #return "&t_language="
-	      return ""
-	      
-	    # if reach here, have languages to read, read them  
-	    lang_codes = {
-	      "French": "fre",
-	      "English": "eng",
-	      "Italian": "ita",
-	      "Chinese": "chi",
-	      "Spanish": "spa",
-	      "German": "ger",
-	      "Greek": "grc",
-	      "Latin": "lat"
-	    }
-	    
-	    if params['languages'] == 'All' :
-	      lang_string = ""
-	    else :
-	      lang_string = "&t_language=" + lang_codes[params['languages']]
-	      
-	    return lang_string
-
-	def getCopyright() :
-	  
-	    if (not params['copyright']) or (len(params['copyright']) == 0) :
-	      #params['copyright'] = 'All'
-	      return ""
-	      
-	    # if reach here, have copyright  
-	    copyright_codes = {
-	      "Free": "fayes",
-	      "Subject to conditions": "fano"
-	    }
-
-	    if params['copyright'] == 'All' :
-	      copy_string = ""
-	    else :
-	      copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
-	    
-	    return copy_string
-
 	      
 	replacements = {	
 	  'START': getValue(params['start date']),
@@ -390,7 +397,7 @@ def search(term, params, off, num_wanted) :
     result = Result(num_results, off+len(images))
     for image in images :
         result.addImage(image)
-    return result
+    return result, {}
     
     
     
