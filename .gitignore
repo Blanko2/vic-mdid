@@ -14,5 +14,6 @@ rooibos/static/flowplayer/flowplayer.commercial*
 Thumbs.db
 rooibos/static/cache/*
 2*M.mysql
-*.swp
+*swp
 var/*
+*~

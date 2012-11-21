@@ -34,6 +34,54 @@ filter_type_map = {
   '' : "f_creator"	# default so as not to have blank string
   } # note, Table is Table of Contents or Captions
   
+"""# # # # # # # # # # #
+# # # # # TOOLS # # # # #
+"""# # # # # # # # # # #
+  
+"""
+  Merges two dictionaries together for Gallica -- when overlaps occur it appends the [key]Value 
+"""
+def merge_dictionaries(dict1, dict2):
+  
+  
+ """
+  
+  
+ """
+def build_URL(query, params):
+    keywords, para_map = break_query_string(query) 
+    params = merge_dictionaries(para_map, params)
+    if params.containsKey("All"):
+      keywords += " " + getValue(params,"All")
+      del params['All']
+      
+    """
+    Pulls out five things: Keywords, 2 Dates, Copyright and Languages, then deletes them from the 
+      dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
+      keywords
+    """
+    copyright 	= ""
+    languages 	= ""
+    start_date 	= ""
+    end_date 	= ""
+    
+    if params.containsKey("copyright"):
+	copyright = getCopyright(params)
+	del params['copyright']      
+    if params.containsKey("languages"):
+	languages = getLanguages(params)
+	del params['languages']
+    if params.containsKey("start date"):
+	start_date = getDate(params["start date"])
+    if params.containsKey("end date"):  
+	end_date = getDate(params["end date"])
+    
+    for parameter in params:
+	
+    
+    
+    
+    
 def get_optional_search_filters(params) :
     
     para = params["Key Word"]
@@ -81,70 +129,11 @@ def buildParams() :
       p['end date'] = value
   print p
   return p
-
-  
-
-  term_str = str(term)
-  if term_str=="" :
-    return False
-  return True
-
   
 def haveParams() :
   return not query is None
   
-def getValue(dict_val):
-	    try:
-	      r = str(dict_val[0])
-	    except IndexError:
-	      r = ""
-	    if isinstance(r, str): return r
-	    return ""
-	    #return (str)(dict_val[0])
-	    
-def getLanguages() :
-    if not params['languages'] or len(params['languages']) == 0 :
-      #params['languages'] = 'All'
-      #return "&t_language="
-      return ""
-      
-    # if reach here, have languages to read, read them  
-    lang_codes = {
-      "French": "fre",
-      "English": "eng",
-      "Italian": "ita",
-      "Chinese": "chi",
-      "Spanish": "spa",
-      "German": "ger",
-      "Greek": "grc",
-      "Latin": "lat"
-    }
-    
-    if params['languages'] == 'All' :
-      lang_string = ""
-    else :
-      lang_string = "&t_language=" + lang_codes[params['languages']]
-      
-    return lang_string
 
-def getCopyright() :
-  
-    if (not params['copyright']) or (len(params['copyright']) == 0) :
-      #params['copyright'] = 'All'
-      return ""
-      
-    # if reach here, have copyright  
-    copyright_codes = {
-      "Free": "fayes",
-      "Subject to conditions": "fano"
-    }
-
-    if params['copyright'] == 'All' :
-      copy_string = ""
-    else :
-      copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
-    
-    return copy_string
 
   
 def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
@@ -356,6 +345,8 @@ def count(term) :
     return __count(__get_search_resultsHtml(term, {}, 0))
     
 
+""" Do the search, return the results and the parameters dictionary used (must have
+all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(term, params, off, num_wanted) :
     
     off = (int)(off)
@@ -397,10 +388,81 @@ def search(term, params, off, num_wanted) :
     result = Result(num_results, off+len(images))
     for image in images :
         result.addImage(image)
-    return result
+    return result, {}
+  
+  
+##         ##
+## GETTERS ##
+##         ##
+
+def getValue(dict_val):
+	    try:
+	      r = str(dict_val[0])
+	    except IndexError:
+	      r = ""
+	    if isinstance(r, str): return r
+	    return ""
+	    #return (str)(dict_val[0])
+	    
+def getLanguages(params) :
+    if not params['languages'] or len(params['languages']) == 0 :
+      #params['languages'] = 'All'
+      #return "&t_language="
+      return ""
+      
+    # if reach here, have languages to read, read them  
+    lang_codes = {
+      "French": "fre",
+      "English": "eng",
+      "Italian": "ita",
+      "Chinese": "chi",
+      "Spanish": "spa",
+      "German": "ger",
+      "Greek": "grc",
+      "Latin": "lat"
+    }
     
+    if params['languages'] == 'All' :
+      lang_string = ""
+    else :
+      lang_string = "&t_language=" + lang_codes[params['languages']]
+      
+    return lang_string
+
+def getCopyright(params) :
+  
+    if (not params['copyright']) or (len(params['copyright']) == 0) :
+      #params['copyright'] = 'All'
+      return ""
+      
+    # if reach here, have copyright  
+    copyright_codes = {
+      "Free": "fayes",
+      "Subject to conditions": "fano"
+    }
+
+    if params['copyright'] == 'All' :
+      copy_string = ""
+    else :
+      copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
     
-    
+    return copy_string    
+  
+##      	##
+## PARAMETERS 	##
+##      	##
+  
+"""
+DOESNT DO MUCH RIGHT NOW BUT IT WILL BE A BIG BOY I PROMISE.
+... LAZY GIT TODO
+"""
+def getDate(date):
+  return date
+  
+
+## 		##
+## PARAMETERS 	##
+## 		##
 field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN", "All"]
     
 parameters = MapParameter({
