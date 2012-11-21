@@ -1,7 +1,8 @@
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
 
-from rooibos.unitedsearch import *                      # other search tools
+from rooibos.unitedsearch import *              # other search tools
+from rooibos.unitedsearch.common import * 	# methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
@@ -10,10 +11,10 @@ name = "Gallica"        # database name the user will recognise
 identifier = "gallica"  # identifier for view, urls
 
 
-BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images" # append &q=query&pageNumber=number&lan
+BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=ITEMSPERPAGE" 
 BASE_URL = "http://gallica.bnf.fr"
 
-ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=15&p=1&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 #&dateMiseEnLigne=indexDateFrom
 
@@ -37,51 +38,100 @@ filter_type_map = {
 """# # # # # # # # # # #
 # # # # # TOOLS # # # # #
 """# # # # # # # # # # #
-  
+
 """
-  Merges two dictionaries together for Gallica -- when overlaps occur it appends the [key]Value 
+URL BUILDERS
+
 """
-def merge_dictionaries(dict1, dict2):
-  
-  
- """
-  
-  
- """
 def build_URL(query, params):
     keywords, para_map = break_query_string(query) 
-    params = merge_dictionaries(para_map, params)
-    if params.containsKey("All"):
-      keywords += " " + getValue(params,"All")
-      del params['All']
-      
-    """
-    Pulls out five things: Keywords, 2 Dates, Copyright and Languages, then deletes them from the 
-      dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
-      keywords
-    """
-    copyright 	= ""
-    languages 	= ""
-    start_date 	= ""
-    end_date 	= ""
-    
-    if params.containsKey("copyright"):
-	copyright = getCopyright(params)
-	del params['copyright']      
-    if params.containsKey("languages"):
-	languages = getLanguages(params)
-	del params['languages']
-    if params.containsKey("start date"):
-	start_date = getDate(params["start date"])
-    if params.containsKey("end date"):  
-	end_date = getDate(params["end date"])
-    
-    #for parameter in params:
+    params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
+    #check if simple or advanced search
+    if len(params)!=0:
+      url, params = build_advanced_url(keywords, params)
+    else:
+      url = build_simple_url(keywords)
+    return url, params
 	
+	
+def build_simple_url(keywords):
+    keywords = re.sub(" ", "+", keywords)
+    return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     
     
+def build_advanced_url(keywords, params):
+  if "all" in params:
+    keywords += " " + getValue(params,"all")
+    del params['all']
+  #Pulls out five things: Keywords, 2 Dates, Copyright and Languages, then deletes them from the 
+  #  dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
+  #  keywords
+  
+  copyright 	= ""
+  languages 	= ""
+  start_date 	= ""
+  end_date 	= ""
+  
+  if "copyright" in params:
+      copyright = getCopyright(params)
+      del params['copyright']      
+  if "languages" in params:
+      languages = getLanguages(params)
+      del params['languages']
+  if "start date" in params:
+      start_date = getDate(params["start date"])
+  if "end date" in params:  
+      end_date = getDate(params["end date"])
+  
+  # deal with remaining optional arguments
+  optionals_dict = {}
+  keyworded_optionals = {}
+  unsupported_parameters = {}
+  
+  # grab the "Key Word" dictionary out of params 
+  # merge it with the rest of params
+  temp_optionals = {}
+  if "Key Word" in params:
+      temp_optionals = getValue(params, "Key Word")    
+      del params['Key Word']
+      temp_optionals, unsupported_parameters = merge_dictionaries(params, temp_optionals, valid_keys )
+  else:
+      temp_optionals = params
+  # dont need params anymore
+  
+  for opt_parameter in temp_optionals:
+      if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
+	  if len(optionals_dict) < 4:		# can only support 4 optional parameters. Damn gallica
+	    optional_type = filter_type_map[opt_parameter]
+	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
+	  else:
+	    keywords += " " + temp_optionals[opt_parameter]
+	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
+      else:
+	keywords += " " + temp_optionals[opt_parameter]
+	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
+	
+  # start with keywords, than add on any other requested optionals
+  optionals_string = "&catsel1="+filter_type_map["All"]+"&cat1="+keywords.strip()
+  print optionals_dict.values()[0]
+  for i in range(0, len(optionals_dict)):
+    index = str(i+2)	# want to index starting at 2, because keywords has already filled cat1
+    optionals_string += "&ope"+index+"=MUST"+"&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i]
+  
+  # shove everything into the url
+  replacements = {	
+      'START': start_date,
+      'SEARCH_FILTERS': optionals_string,
+      'END': end_date,
+      'LANGUAGES': languages,
+      'COPYRIGHT': copyright
+      }
     
-    
+  replacer = re.compile('|'.join(replacements.keys()))
+  url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+  
+  return url, optionals_dict
+"""    
 def get_optional_search_filters(params) :
     
     para = params["Key Word"]
@@ -132,90 +182,16 @@ def buildParams() :
   
 def haveParams() :
   return not query is None
-  
+"""  
 
 
   
-def __get_search_resultsHtml(term, params, first_index_wanted, items_per_page) :
-  
-    """print "gallica"
-    print term
-    para_map={}
-    if params :
-      search_type='advance'
-    else:
-      search_type = 'simple'
-    keywords = ""
-  
-    # get any type=value arguements out of term
-    final_term = ""
-    first_pattern = re.compile("[^,]+")
-    entries = re.findall(first_pattern, term)
-    second_pattern = re.compile("((?P<type>[^\"=]*)=)?(?P<value>.*)")
-    i=1
-    for entry in entries :
-      m = second_pattern.match(entry)
-      if m.group('type') :
-	k = ((str)(m.group('type').strip()))
-	v = (str(m.group('value').strip()))
-	if k=='search' : 
-	  para_map[0] = {k:v}
-	else:
-	  para_map[i] = {k : v}
-	  i = i+1
-	if k=='keywords' :
-	  keywords=v
-    """
-    print "\n\nGALLICA\nquery:"
-    print term
-    print "\n\nparams:"
-    print params
-    print "\n\n"     
-
-    """
-    if para_map.has_key(0) :
-      search_type = (para_map[0])["search"]
-      if search_type == "simple" :
-	  term = keywords
-	  term = term.replace(' ','+')
-      elif search_type == "advance" :
-	  term = ""
-	  params =  buildParams()
-    elif search_type == "simple" :
-	term = term.replace(' ','+')
-    """
-
-    
-    # calculate page number and items
+def __get_search_resultsHtml(url, first_index_wanted, items_per_page) :
+     # calculate page number and items
     
     page_num = str(1 + (first_index_wanted/items_per_page))
+    url = re.sub("ITEMSPERPAGE", str(items_per_page), re.sub("PAGENUMBER", page_num, url))
     
-    # get parameter values
-    keywords, para_map = break_query_string(term)
-    params = merge_dictionaries(para_map, params)
-    add_to_dict(params, "Keywords", keywords)
-    
-    # build url for search
-    
-    # check if params is empty or full of empty lists
-    if  haveSimplePara() :
-	# simple search
-	url = BASE_SIMPLE_SEARCH_URL + "&q=" + term + "&pageNumber=" + page_num + "&lang=EN&tri=&n=" + str(items_per_page)
-	
-    else :
-	# advanced search
-	      
-	replacements = {	
-	  'START': getValue(params['start date']),
-	  'SEARCH_FILTERS': get_optional_search_filters(params),
-	  'END': getValue(params['end date']),
-	  'LANGUAGES': getLanguages(),
-	  'COPYRIGHT': getCopyright()
-	  }
-	
-	replacer = re.compile('|'.join(replacements.keys()))
-	url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
-	
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
     print url
     return html
@@ -341,20 +317,21 @@ def getImage(json_image_identifier) :
                  json_image_identifier)
     
     
-def count(term) :
-    return __count(__get_search_resultsHtml(term, {}, 0))
+def count(query) :
+    return __count(__get_search_resultsHtml(query, {}, 0))
     
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
-def search(term, params, off, num_wanted) :
+def search(query, params, off, num_wanted) :
     
     off = (int)(off)
     
     images = []
-    search_results_parser = BeautifulSoup(__get_search_resultsHtml(term, params, off, __items_per_page(num_wanted)))
+    url, params = build_URL(query, params)
+    search_results_parser = BeautifulSoup(__get_search_resultsHtml(url, off, __items_per_page(num_wanted)))
     if not any_results(search_results_parser) :
-      return Result(0, off)
+      return Result(0, off), empty_params
       
     num_results = __count(search_results_parser)
     num_wanted = min(num_wanted, num_results)    # how many were asked for mitigated by how many actually exist
@@ -363,10 +340,8 @@ def search(term, params, off, num_wanted) :
     
     while len(images) < num_wanted :
         
-        
-        
         if not first_round :
-            search_results_parser = BeautifulSoup(__get_search_resultsHtml(term, params, off+len(images), __items_per_page(num_wanted)))
+            search_results_parser = BeautifulSoup(__get_search_resultsHtml(url, off+len(images), __items_per_page(num_wanted)))
         else :
             first_round = False
             
@@ -388,22 +363,16 @@ def search(term, params, off, num_wanted) :
     result = Result(num_results, off+len(images))
     for image in images :
         result.addImage(image)
-    return result, {}
+        
+    # and make sure params contains all param types
+    params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
+    return result, params
   
   
 ##         ##
 ## GETTERS ##
 ##         ##
 
-def getValue(dict_val):
-	    try:
-	      r = str(dict_val[0])
-	    except IndexError:
-	      r = ""
-	    if isinstance(r, str): return r
-	    return ""
-	    #return (str)(dict_val[0])
-	    
 def getLanguages(params) :
     if not params['languages'] or len(params['languages']) == 0 :
       #params['languages'] = 'All'
@@ -463,7 +432,7 @@ def getDate(date):
 ## 		##
 ## PARAMETERS 	##
 ## 		##
-field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN", "All"]
+field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN"]
     
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "Start Date")),
@@ -473,11 +442,37 @@ parameters = MapParameter({
   "copyright": 
   DefinedListParameter(["All", "Free", "Subject to conditions"], label="Copyright"),
   "Key Word" : MapParameter({
-    "filter_1": UserDefinedTypeParameter(field_types, label="Filter 1"),
-    "filter_2": UserDefinedTypeParameter(field_types, label="Filter 2"),
-    "filter_3": UserDefinedTypeParameter(field_types, label="Filter 3"),
-    "filter_4": UserDefinedTypeParameter(field_types, label="Filter 4"),
-    "filter_5": UserDefinedTypeParameter(field_types, label="Filter 5")
+    "Artist": UserDefinedTypeParameter(field_types),
+    "Title": UserDefinedTypeParameter(field_types),
+    "Content": UserDefinedTypeParameter(field_types),
+    "Table of contents or captions": UserDefinedTypeParameter(field_types),
+    "Subject": UserDefinedTypeParameter(field_types),
+    "Source": UserDefinedTypeParameter(field_types),
+    "Bibliographic Record": UserDefinedTypeParameter(field_types),
+    "Publisher": UserDefinedTypeParameter(field_types),
+    "IBSN": UserDefinedTypeParameter(field_types)
     })
   })
+  
+empty_params = {"Start Date": [],
+    "End Date": [],
+    "Languages": [],
+    "Copyright": [],
+    "All": [],
+    "Key Word": {"Artist":[], "Title":[], "Content":[], "Table Of Contents Or Captions":[], "Subject":[], "Source":[], "Bibliographic Record":[], "Publisher":[], "IBSN":[]}
+}
 
+valid_keys=["Start Date",
+    "End Date",
+    "Languages",
+    "Copyright",
+    "All",    
+    "Artist",
+    "Title",
+    "Content",
+    "Table Of Contents Or Captions",
+    "Subject",
+    "Source",
+    "Bibliographic Record",
+    "Publisher",
+    "IBSN"]

@@ -87,6 +87,10 @@ class usViewer():
 			      r_content += "</select><br>"
 			      
 			      # textbox for value
+			      if default and len(default) >0:
+				value = default[1]
+			      else:
+				value = ""
 			      r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + (default[1] or "") + "\" />"
 			      
 			      r_content += "</div>"
@@ -135,8 +139,8 @@ class usViewer():
 		for n in request.GET:
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
-		args = self.readargs(request.GET)
-		result = self.searcher.search(query, args, offset, resultcount)
+		#args = self.readargs(request.GET)
+		result,args = self.searcher.search(query, {}, offset, resultcount)
 		results = result.images
 
 		def resultpart(image):

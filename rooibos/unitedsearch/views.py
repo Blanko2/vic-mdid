@@ -87,7 +87,11 @@ class usViewer():
 			      r_content += "</select><br>"
 			      
 			      # textbox for value
-			      r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + (default[1] or "") + "\" />"
+			      if default and len(default) >0:
+				value = default[1]
+			      else:
+				value = ""
+			      r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
 			      
 			      r_content += "</div>"
 			      
