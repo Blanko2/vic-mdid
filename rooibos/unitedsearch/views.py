@@ -42,6 +42,7 @@ class usViewer():
 				for index in range(len(params.parammap)-1, -1, -1) :
 				#for k in params.parammap:
 					k = params.parammap.keys()[index]
+					print params.parammap.keys()[index]
 					r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
 				r += ["  "*indent + "</div>"]
 				return r

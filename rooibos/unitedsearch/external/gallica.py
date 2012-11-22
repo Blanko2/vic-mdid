@@ -22,18 +22,18 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERP
 # Gallica only allows 5 options at once, thus we consider one of those
 # to always be 'Keywords'
 filter_type_map = {
-  'Artist' : "f_creator",
-  'Title': "f_title",
-  'Content': "f_content",
-  'Table' : "f_tdm",
-  'Subject': "f_subject",
-  'Source': "f_source",
+  'artist' : "f_creator",
+  'title': "f_title",
+  'content': "f_content",
+  'table' : "f_tdm",
+  'subject': "f_subject",
+  'source': "f_source",
   'Bibliographic': "f_metadata",
-  'Publisher': "f_publisher",
-  'IBSN': "f_allmetadata",
-  'All': "f_allcontent",
+  'publisher': "f_publisher",
+  'isbn': "f_allmetadata",
+  'all': "f_allcontent",
   '' : "f_creator"	# default so as not to have blank string
-  } # note, Table is Table of Contents or Captions
+  } # note, table is table of contents or Captions
   
 """# # # # # # # # # # #
 # # # # # TOOLS # # # # #
@@ -63,7 +63,7 @@ def build_advanced_url(keywords, params):
   if "all" in params:
     keywords += " " + getValue(params,"all")
     del params['all']
-  #Pulls out five things: Keywords, 2 Dates, Copyright and Languages, then deletes them from the 
+  #Pulls out five things: Keywords, 2 Dates, copyright and languages, then deletes them from the 
   #  dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
   #  keywords
   
@@ -73,10 +73,10 @@ def build_advanced_url(keywords, params):
   end_date 	= ""
   
   if "copyright" in params:
-      copyright = getCopyright(params)
+      copyright = getcopyright(params)
       del params['copyright']      
   if "languages" in params:
-      languages = getLanguages(params)
+      languages = getlanguages(params)
       del params['languages']
   if "start date" in params:
       start_date = getDate(params["start date"])
@@ -88,12 +88,12 @@ def build_advanced_url(keywords, params):
   keyworded_optionals = {}
   unsupported_parameters = {}
   
-  # grab the "Key Word" dictionary out of params 
+  # grab the "key word" dictionary out of params 
   # merge it with the rest of params
   temp_optionals = {}
-  if "Key Word" in params:
-      temp_optionals = getValue(params, "Key Word")    
-      del params['Key Word']
+  if "key word" in params:
+      temp_optionals = getValue(params, "key word")    
+      del params['key word']
       temp_optionals, unsupported_parameters = merge_dictionaries(params, temp_optionals, valid_keys )
   else:
       temp_optionals = params
@@ -110,16 +110,13 @@ def build_advanced_url(keywords, params):
 	    keywords += " " + temp_optionals[opt_parameter]
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
       else:
-	keywords += " " + temp_optionals[opt_parameter]
+	print temp_optionals[opt_parameter]
+	keywords += " " + temp_optionals[opt_parameter][0]
 	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
 	
   # start with keywords, than add on any other requested optionals
-  optionals_string = "&catsel1="+filter_type_map["All"]+"&cat1="+keywords.strip()
+  optionals_string = "&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
   
-  #need to break optionals_dict values from lists of strings to strings?
-  print '==============================================================================' 
-  print 'Gallica Opt Dict'
-  print optionals_dict.values()[0]
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
   print optionals_dict
   
@@ -144,7 +141,7 @@ def build_advanced_url(keywords, params):
 """    
 def get_optional_search_filters(params) :
     
-    para = params["Key Word"]
+    para = params["key word"]
     filters_string = ""
     for i in range(1,6) :
       index = (str)(i)
@@ -161,7 +158,7 @@ def get_optional_search_filters(params) :
     return filters_string
     
 def buildParams() :
-  p = {'languages': None, 'end date': [], 'start date': [], 'copyright': None, 'Key Word': {'filter_5': ['', ''], 'filter_4': ['', ''], 'filter_3': ['', ''], 'filter_2': ['', ''], 'filter_1': ['', '']}}
+  p = {'languages': None, 'end date': [], 'start date': [], 'copyright': None, 'key word': {'filter_5': ['', ''], 'filter_4': ['', ''], 'filter_3': ['', ''], 'filter_2': ['', ''], 'filter_1': ['', '']}}
   
   
   for idx in para_map :
@@ -171,20 +168,20 @@ def buildParams() :
     filterIdx = 'filter_'+str(idx)
     
     if key=='keywords' :
-      entry = ['All', value ]
-      (p['Key Word'])[filterIdx] = entry
+      entry = ['all', value ]
+      (p['key word'])[filterIdx] = entry
     elif key=='title_t' :
-      entry = ['Title', value]
-      (p['Key Word'])[filterIdx] = entry
+      entry = ['title', value]
+      (p['key word'])[filterIdx] = entry
     elif key=='creator_t' :
-      entry = ['Artist', value]
-      (p['Key Word'])[filterIdx] = entry
+      entry = ['artist', value]
+      (p['key word'])[filterIdx] = entry
     elif key=='source_t' :
-      entry = ['Source', value]
-      (p['Key Word'])[filterIdx] = entry
+      entry = ['source', value]
+      (p['key word'])[filterIdx] = entry
     elif key=='publisher_t' :
-      entry = ['Publisher', value]
-      (p['Key Word'])[filterIdx] = entry
+      entry = ['publisher', value]
+      (p['key word'])[filterIdx] = entry
     elif key=='date_t' :
       p['end date'] = value
   print p
@@ -316,7 +313,7 @@ def getImage(json_image_identifier) :
     meta = {'title': image_identifier['title'],
             'author': __scrub_html_for_property("Author", descriptive_parser),
             #'date': __scrub_html_for_property("Date", descriptive_parser),
-            #'access': __scrub_html_for_property("Copyright", descriptive_parser)
+            #'access': __scrub_html_for_property("copyright", descriptive_parser)
             }
     
     return Image(
@@ -363,7 +360,7 @@ def search(query, params, off, num_wanted) :
         if len(image_id_divs) > num_wanted :
             while len(image_id_divs) > num_wanted :
                 image_id_divs.pop()
-            field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN", "All"]    
+            field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn", "all"]    
         # build images
         for div in image_id_divs :
             images.append(__create_image(search_results_parser, div))
@@ -383,7 +380,7 @@ def search(query, params, off, num_wanted) :
 ## GETTERS ##
 ##         ##
 
-def getLanguages(params) :
+def getlanguages(params) :
     if not params['languages'] or len(params['languages']) == 0 :
       #params['languages'] = 'All'
       #return "&t_language="
@@ -408,7 +405,7 @@ def getLanguages(params) :
       
     return lang_string
 
-def getCopyright(params) :
+def getcopyright(params) :
   
     if (not params['copyright']) or (len(params['copyright']) == 0) :
       #params['copyright'] = 'All'
@@ -442,47 +439,47 @@ def getDate(date):
 ## 		##
 ## PARAMETERS 	##
 ## 		##
-field_types = ["Artist", "Title", "Content", "Table of contents or captions", "Subject", "Source", "Bibliographic Record", "Publisher", "IBSN"]
+field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
     
 parameters = MapParameter({
-  "start date": OptionalParameter(ScalarParameter(str, "Start Date")),
-  "end date": OptionalParameter(ScalarParameter(str, "End Date")),
+  "start date": OptionalParameter(ScalarParameter(str, "start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "end date")),
   "languages": 
   DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
-  DefinedListParameter(["All", "Free", "Subject to conditions"], label="Copyright"),
-  "Key Word" : MapParameter({
-    "Artist": UserDefinedTypeParameter(field_types),
-    "Title": UserDefinedTypeParameter(field_types),
-    "Content": UserDefinedTypeParameter(field_types),
-    "Table of contents or captions": UserDefinedTypeParameter(field_types),
-    "Subject": UserDefinedTypeParameter(field_types),
-    "Source": UserDefinedTypeParameter(field_types),
-    "Bibliographic Record": UserDefinedTypeParameter(field_types),
-    "Publisher": UserDefinedTypeParameter(field_types),
-    "IBSN": UserDefinedTypeParameter(field_types)
+  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
+  "key word" : MapParameter({
+    "artist": UserDefinedTypeParameter(field_types),
+    "title": UserDefinedTypeParameter(field_types),
+    "content": UserDefinedTypeParameter(field_types),
+    "table of contents or captions": UserDefinedTypeParameter(field_types),
+    "subject": UserDefinedTypeParameter(field_types),
+    "source": UserDefinedTypeParameter(field_types),
+    "bibliographic record": UserDefinedTypeParameter(field_types),
+    "publisher": UserDefinedTypeParameter(field_types),
+    "isbn": UserDefinedTypeParameter(field_types)
     })
   })
   
-empty_params = {"Start Date": [],
-    "End Date": [],
-    "Languages": [],
-    "Copyright": [],
-    "All": [],
-    "Key Word": {"Artist":[], "Title":[], "Content":[], "Table Of Contents Or Captions":[], "Subject":[], "Source":[], "Bibliographic Record":[], "Publisher":[], "IBSN":[]}
+empty_params = {"start date": [],
+    "end date": [],
+    "languages": [],
+    "copyright": [],
+    "all": [],
+    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]}
 }
 
-valid_keys=["Start Date",
-    "End Date",
-    "Languages",
-    "Copyright",
-    "All",    
-    "Artist",
-    "Title",
-    "Content",
-    "Table Of Contents Or Captions",
-    "Subject",
-    "Source",
-    "Bibliographic Record",
-    "Publisher",
-    "IBSN"]
+valid_keys=["start date",
+    "end date",
+    "languages",
+    "copyright",
+    "all",    
+    "artist",
+    "title",
+    "content",
+    "table Of contents or captions",
+    "subject",
+    "source",
+    "bibliographic record",
+    "publisher",
+    "isbn"]
