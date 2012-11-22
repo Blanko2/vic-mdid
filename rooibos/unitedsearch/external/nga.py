@@ -97,45 +97,51 @@ def __create_imageId_array_from_html_page(website_search_results_parser, maxWant
      image_ids_text = regex_for_image_ids_text.findall(jsBlock_containing_list_of_image_ids)
      
      regex_for_list_of_image_ids = re.compile("(?<=\')\d+(?=\')")    # digits surrounded by ' '
-     list_of_image_ids = regex_for_list_of_image_ids.findall(image_ids_text[0])
-     
-     # only want maxWanted list_of_image_ids starting at firstIdIndex
-     if (firstIdIndex > 0) :    # at start
-         for numToRemove in (firstIdIndex, 0, -1) :
-             list_of_image_ids.pop(0)     # remove the first. Note this is not efficient, is there a better way?
-     if (len(list_of_image_ids) > maxWanted) :     # at end
-         while (len(list_of_image_ids) > maxWanted) :
-             list_of_image_ids.pop()
-             
-     return list_of_image_ids
-  
-
-  
-def __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxWanted) :
+     if image_ids_text[0]:
+      list_of_image_ids = regex_for_list_of_image_ids.findall(image_ids_text[0])
+      
+      
+     thumb_urls = []
+     image_descriptions = []
    
-   thumb_urls = []
-   image_descriptions = []
+     containing_divs = website_search_results_parser.findAll('div', 'pictureBox')  # class = 'pictureBox'
    
-   containing_divs = website_search_results_parser.findAll('div', 'pictureBox')  # class = 'pictureBox'
-   
-   maxWanted = maxWanted if (maxWanted < len(containing_divs)) else len(containing_divs)
-   
-   # get metadata for each image. Note, metadata div class depends on whether the image is available to the website
-   for i in range(0, maxWanted) :
+     #maxWanted = maxWanted if (maxWanted < len(containing_divs)) else len(containing_divs)
+     maxWanted = len(list_of_image_ids)
+     # get metadata for each image. Note, metadata div class depends on whether the image is available to the website
+     for i in range(0, maxWanted) :
        metadata_div = containing_divs[i].find('img', 'mainThumbImage imageDraggable')
        if not metadata_div :    # couldn't find by normal class name, use alternative
            metadata_div = containing_divs[i].find('img', 'mainThumbImage ')   # class type if image not available
        # encode to UTF-8 because description might contain accents from other languages
        thumb_urls.append(BASE_THUMBNAIL_LOCATION_URL+metadata_div['src'].encode("UTF-8"))
        image_descriptions.append(metadata_div['title'].encode("UTF-8"))
-   
-   return (thumb_urls, image_descriptions)
+    
+      
+     
+     # only want maxWanted list_of_image_ids starting at firstIdIndex
+     if (firstIdIndex > 0) :    # at start
+         while firstIdIndex>0 :
+	     firstIdIndex = firstIdIndex -1
+             del list_of_image_ids[0]     # remove the first. Note this is not efficient, is there a better way?
+             del thumb_urls[0]
+             del image_descriptions[0]
+     if (len(list_of_image_ids) > maxWanted) :     # at end
+         while (len(list_of_image_ids) > maxWanted) :
+             list_of_image_ids.pop()
+             thumb_urls.pop()
+             image_descriptions.pop()
+             
+     return (list_of_image_ids, thumb_urls, image_descriptions)
+  
+
+
 
 
 def __parse_html_for_image_details(website_search_results_parser, maxNumResults, firstIdIndex):
-    list_of_image_ids = __create_imageId_array_from_html_page(website_search_results_parser, maxNumResults, firstIdIndex)
+    list_of_image_ids, thumb_urls, image_descriptions = __create_imageId_array_from_html_page(website_search_results_parser, maxNumResults, firstIdIndex)
     
-    thumb_urls, image_descriptions = __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxNumResults)
+    #thumb_urls, image_descriptions = __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxNumResults)
     
     return (list_of_image_ids, thumb_urls, image_descriptions)
    
@@ -231,19 +237,30 @@ def search(term, params, off, num_results_wanted) :
      
      # ensure the correct number of images found
      num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
+     if off>__count(website_search_results_parser):
+	num_results_wanted=0
+     else:
+	num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
      
-     if len(list_of_image_ids) < num_results_wanted :    # need more results and the next page has some
-         
-         while len(list_of_image_ids) < num_results_wanted :
+     print"wanted"
+     print num_results_wanted
+     if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
+         tmp = 0
+         while len(list_of_image_ids) < num_results_wanted and tmp<1:
              searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off+len(list_of_image_ids))
              website_search_results_parser = BeautifulSoup(searchhtml)
              
              results = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
-             
+             if len(results[0])==0:
+	       break
+             if len(results[0])<25 :
+	       tmp=1
              for i in range(0, len(results[0])) :
-                 list_of_image_ids.append(results[0][i]) 
-                 thumbnail_urls.append(results[1][i])
-                 image_descriptions.append(results[2][i])
+		# if not results[0][i] in list_of_image_ids:
+		  list_of_image_ids.append(results[0][i]) 
+		  thumbnail_urls.append(results[1][i])
+		  image_descriptions.append(results[2][i])
+
 
                  
      if (len(list_of_image_ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and image_descriptions self-regulate to never be more
