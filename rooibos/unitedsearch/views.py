@@ -162,12 +162,28 @@ class usViewer():
 				}
 
 		prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
+		
+		
+		
+		prev = None
+		
+		if int(offset)>0 :
+
+		  prev_off =int(offset)-50
+		  if prev_off <0:
+		    prev_off=0
+		  prev = self.__url_search_({ 'q': query, 'from': prev_off })
+
+		nextPage = None
+		
+		if (int(result.nextoffset)-int(offset)==50):
+		  nextPage = self.__url_search_({ 'q': query, 'from': result.nextoffset })
 
 		return {
 				'results': map(resultpart, results),
 				'select_url': self.url_select(),
-				'next_page': self.__url_search_({ 'q': query, 'from': result.nextoffset }) if result.nextoffset else None,
-				'previous_page': self.__url_search_({ 'q': query, 'from': prev_off }) if prev_off else None, 
+				'next_page': nextPage,
+				'previous_page': prev, 
 				'hits': result.total,
 				'searcher_name': self.searcher.name,
 				'html_parameters': self.htmlparams(args)
