@@ -333,20 +333,24 @@ def count(query) :
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
-    
+    perPage = num_wanted
     off = (int)(off)
     
     images = []
     
     url, params = build_URL(query, params)
-    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(num_wanted))
+    #html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage))
+    #search_results_parser = BeautifulSoup(html)
+    #num_results = __count(search_results_parser)
+    #num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
+    
+    
+    print "No change happens from this point"
+    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
     search_results_parser = BeautifulSoup(html)
+    
     num_results = __count(search_results_parser)
     num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
-    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(num_wanted)) #Do it again because num_wanted has been changed
-    search_results_parser = BeautifulSoup(html)
-    
-    
     
     
     if not any_results(search_results_parser) :
@@ -359,7 +363,7 @@ def search(query, params, off, num_wanted) :
     while len(images) < num_wanted :
         
         if not first_round :
-	    html, unwanted2 = __get_search_resultsHtml(url, off+len(images), __items_per_page(num_wanted))
+	    html, unwanted2 = __get_search_resultsHtml(url, off+len(images), __items_per_page(perPage))
             search_results_parser = BeautifulSoup(html)
         else :
             first_round = False
