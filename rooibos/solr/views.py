@@ -21,11 +21,13 @@ from rooibos.data.functions import apply_collection_visibility_preferences, \
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 from rooibos.federatedsearch.views import sidebar_api_raw
+import rooibos.unitedsearch
 import re
 import copy
 import random
 import logging
 import ast
+
 
 
 class SearchFacet(object):
@@ -294,7 +296,8 @@ def run_search(user,
 
     available_storage = list(filter_by_access(user, Storage).values_list('id', flat=True))
     exclude_facets = ['identifier']
-    fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
+    #fields = Field.objects.filter(standard__prefix='dc').exclude(name__in=exclude_facets)
+    fields = Field.objects.exclude(name__in=exclude_facets)
 
     search_facets = [SearchFacet('tag', 'Tags')] + [SearchFacet(field.name + '_t', field.label) for field in fields]
     search_facets.append(StorageSearchFacet('resolution', 'Image size', available_storage))
@@ -493,28 +496,46 @@ def search(request, id=None, name=None, selected=False, json=False):
   
 
     query_string = ""
-    if len(criteria)>0 :
-      query_string += "search=advance"
+    """if len(criteria)>0 :
+      query_string += "search=advance "
     else :
-      query_string += "search=simple"
-
+      query_string += "search=simple "
+    """
+    query_list = dict()
+    
     crit_pattern = re.compile("(?P<type>.*?\_t):\"(?P<value>.*?)\"")
+    #crit_pattern = re.compile("(?P<type>.*?\_t):(?P<value>.*?)")
     for c in criteria :
       m = crit_pattern.match(c)
-      query_string += ", "+m.group('type') + "=" + m.group('value')
-    #for item in ast.literal_eval(keywords) :
-      #query_string += " " + item.encode('ascii')
-    kws = ((str)(keywords))
-    query_string += ", keywords=" + kws.replace('"','')
+      if query_list.has_key(str(m.group('type'))) :
+	    query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+      else:
+	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
- 
-    print query_string
+      
+
+
+
+    kws = (str(keywords))
+    query_string += "keywords=" + kws.replace(' ','+')
+    
+  #  query_string += ";"+str(query_list)
+    
+
+    for key in query_list.keys() :
+      query = key+"="+query_list[key]
+      query_string += ' '+query.replace("\"", "")
+
+
+
+    print "\n\n\n\n\n--------------------------Query String is:--------------------------------"
+    print query_string+"\n\n\n\n\n"
  
 
     return render_to_response('results.html',
                           {'criteria': map(readable_criteria, criteria),
-                           'query': query,
-                           'keywords': keywords,
+                           'query': query_string,
+                           'keywords': kws,#keywords,
                            'hiddenfields': hiddenfields,
                            'records': records,
                            'hits': hits,
@@ -720,7 +741,13 @@ def search_form(request):
         raise Http404()
 
     def _get_fields():
-        return Field.objects.select_related('standard').all().order_by('standard__title', 'name')
+	#f = Field.objects.select_related('standard')
+	print 'YYYYY'
+	#for ff in f :
+	#  if not ff.standard is 'United Search':
+	#    f.remove(ff)
+        #return Field.objects.select_related('standard').filter(standard='United Search', ).order_by('standard__title', 'name')
+        return Field.objects.filter(standard=4).order_by('standard__title', 'id')
 
     def _cmp(x, y):
         if x == "Other": return 1
