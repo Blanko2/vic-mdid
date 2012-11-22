@@ -259,7 +259,7 @@ def search(term, params, off, num_results_wanted) :
      print "NGA params:"
      print params
      print empty_params
-     params = merge_dictionaries(empty_params, params)[0]
+     params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
      print "NGA params:"
      print params
      

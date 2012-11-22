@@ -98,7 +98,9 @@ def build_advanced_url(keywords, params):
   else:
       temp_optionals = params
   # dont need params anymore
-  
+  print 'Temp Optionals ==========================================================' 
+  print temp_optionals 
+
   for opt_parameter in temp_optionals:
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
 	  if len(optionals_dict) < 4:		# can only support 4 optional parameters. Damn gallica
@@ -113,10 +115,18 @@ def build_advanced_url(keywords, params):
 	
   # start with keywords, than add on any other requested optionals
   optionals_string = "&catsel1="+filter_type_map["All"]+"&cat1="+keywords.strip()
+  
+  #need to break optionals_dict values from lists of strings to strings?
+  print '==============================================================================' 
+  print 'Gallica Opt Dict'
   print optionals_dict.values()[0]
+  # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
+  print optionals_dict
+  
+  
   for i in range(0, len(optionals_dict)):
     index = str(i+2)	# want to index starting at 2, because keywords has already filled cat1
-    optionals_string += "&ope"+index+"=MUST"+"&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i]
+    optionals_string += "&ope"+index+"=MUST"+"&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i][0]
   
   # shove everything into the url
   replacements = {	
