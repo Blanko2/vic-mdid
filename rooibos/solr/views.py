@@ -26,7 +26,7 @@ import re
 import copy
 import random
 import logging
-import ast
+import string
 
 
 
@@ -223,6 +223,16 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
     fields = map(lambda (name, crit): '%s:(%s)' % (name, (name.startswith('NOT ') and ' OR ' or ' AND ').join(crit)),
                  fields.iteritems())
 
+    """
+    checks if the string is composed of whitespace only
+    solr breaks if this goes unchecked.
+    """
+    def not_space(keywords):
+	for char in keywords:
+	  if char not in string.whitespace:
+	    return True
+	return False
+	
     def build_keywords(q, k):
         k = k.lower()
         if k == 'and' or k == 'or':
@@ -231,8 +241,8 @@ def _generate_query(search_facets, user, collection, criteria, keywords, selecte
             return q + ' ' + k
         else:
             return q + ' AND ' + k
-
-    if keywords: keywords = reduce(build_keywords, keywords.split())
+    #TODO: make search empty when it is made up of only whitespace
+    if keywords and not_space(keywords): keywords = reduce(build_keywords, keywords.split())
 
     query = ''
     if fields:
