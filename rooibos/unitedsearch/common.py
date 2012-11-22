@@ -40,7 +40,6 @@ Breaks query string into parameters and keywords
 query is in form search=search_type, keywords=words (space-separated), params={"type": "value", ...}
 """
 def break_query_string(query):
-    print "NGA breaking query"
     keywords = ""
     para_map = {}
     

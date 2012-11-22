@@ -325,8 +325,8 @@ def getImage(json_image_identifier) :
     
     
 def count(query) :
-    return __count(__get_search_resultsHtml(query, {}, 0))
-    
+    # return __count(__get_search_resultsHtml(query, {}, 0))
+    return search(query, {}, 0, 0)[0].total 
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
