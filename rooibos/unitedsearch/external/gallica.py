@@ -200,8 +200,9 @@ def __get_search_resultsHtml(url, first_index_wanted, items_per_page) :
     url = re.sub("ITEMSPERPAGE", str(items_per_page), re.sub("PAGENUMBER", page_num, url))
     
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+    unwanted = first_index_wanted%items_per_page
     print url
-    return html
+    return (html,unwanted)
 
     
 def any_results(html_page_parser) :
@@ -316,16 +317,17 @@ def getImage(json_image_identifier) :
             #'access': __scrub_html_for_property("copyright", descriptive_parser)
             }
     
-    return Image(
+    return Image(url, params = build_URL(query, pa,
                  image_identifier['url'],
                  image_identifier['thumb'],
                  image_identifier['title'],
                  meta,
-                 json_image_identifier)
+                 json_image_identifier))
     
     
 def count(query) :
-    return __count(__get_search_resultsHtml(query, {}, 0))
+      html, unwanted = __get_search_resultsHtml(query, 0, 50)
+      return __count(html)
     
 
 """ Do the search, return the results and the parameters dictionary used (must have
@@ -335,36 +337,55 @@ def search(query, params, off, num_wanted) :
     off = (int)(off)
     
     images = []
+    
     url, params = build_URL(query, params)
-    search_results_parser = BeautifulSoup(__get_search_resultsHtml(url, off, __items_per_page(num_wanted)))
+    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(num_wanted))
+    search_results_parser = BeautifulSoup(html)
+    num_results = __count(search_results_parser)
+    num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
+    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(num_wanted)) #Do it again because num_wanted has been changed
+    search_results_parser = BeautifulSoup(html)
+    
+    
+    
+    
     if not any_results(search_results_parser) :
       return Result(0, off), empty_params
       
-    num_results = __count(search_results_parser)
-    num_wanted = min(num_wanted, num_results)    # how many were asked for mitigated by how many actually exist
+    
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     
     
     while len(images) < num_wanted :
         
         if not first_round :
-            search_results_parser = BeautifulSoup(__get_search_resultsHtml(url, off+len(images), __items_per_page(num_wanted)))
+	    html, unwanted2 = __get_search_resultsHtml(url, off+len(images), __items_per_page(num_wanted))
+            search_results_parser = BeautifulSoup(html)
         else :
             first_round = False
             
             
         # find start points for image data
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
-         
-        # discard any excess
-        if len(image_id_divs) > num_wanted :
-            while len(image_id_divs) > num_wanted :
-                image_id_divs.pop()
-            field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn", "all"]    
+        
+        if unwanted>0:
+	  while unwanted>0:
+	    unwanted = unwanted-1
+	    del image_id_divs[0]
+        
+        
         # build images
         for div in image_id_divs :
             images.append(__create_image(search_results_parser, div))
-    
+        
+         
+        # discard any excess
+        
+            #field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn", "all"]    
+        
+    if len(images) > num_wanted :
+            while len(images) > num_wanted :
+                images.pop()
     
     # wrap in Result object and return
     result = Result(num_results, off+len(images))
