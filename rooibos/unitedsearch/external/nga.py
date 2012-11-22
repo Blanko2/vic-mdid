@@ -26,6 +26,11 @@ identifier = "nga"            # don't know what this is
     
 def build_parameters(query, params):
   # build parameters dictionary to search by
+    print "NGA build_parameters"
+    print "query"
+    print query
+    print "params"
+    print params
     keywords, para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     add_to_dict(params, "All Words", keywords)
