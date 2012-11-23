@@ -9,6 +9,7 @@ name = "DigitalNZ"
 identifier = "digitalnz"
 
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
+API_KEY="sfypBYD5Jpu1XqYBipX8"
 
 """
 due to the way that DigitalNZ treats parameters it is easier to always treat a search as an 

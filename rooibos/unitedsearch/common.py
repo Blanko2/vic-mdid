@@ -4,6 +4,9 @@ from rooibos.data.models import Collection, Record, standardfield, CollectionIte
 import re 
 import json
 
+
+API_KEY="sfypBYD5Jpu1XqYBipX8"
+
 """ Methods for all UnitedSearch searchers """
 def get_collection():
 	collection, created = Collection.objects.get_or_create(

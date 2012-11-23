@@ -220,6 +220,7 @@ def getImage(json_image_identifier) :
      
 
 def search(term, params, off, num_results_wanted) :
+     print term
      """ Get the actual results! Note, method must be called 'search'"""
      
      """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
