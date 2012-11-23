@@ -28,25 +28,25 @@ def build_parameters(query, params):
   # build parameters dictionary to search by
     keywords, para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    add_to_dict(params, "All Words", keywords)
+    add_to_dict(params, "all words", keywords)
 
     # get the parameter values to put into the url
     print "Params\n\n"
     print params
-    all_words = getValue(params, 'All Words')
-    exact_phrase = getValue(params, 'Exact Phrase')
-    exclude = getValue(params, 'Exclude Words')
+    all_words = getValue(params, 'all words')
+    exact_phrase = getValue(params, 'exact phrase')
+    exclude = getValue(params, 'exclude words')
 
-    artist = getValue(params, 'Artist')
-    keywords = getValue(params, 'Title')
+    artist = getValue(params, 'artist')
+    keywords = getValue(params, 'title')
 
-    accession_number = getValue(params, 'Accession Number')
-    school = getValue(params, 'School')
-    classification = getValue(params, 'Classification')
-    medium = getValue(params, 'Medium')
-    year1 = getValue(params, 'Start Date')
-    year2 = getValue(params, 'End Date')
-    access = getValue(params, 'Access')
+    accession_number = getValue(params, 'accession number')
+    school = getValue(params, 'school')
+    classification = getValue(params, 'classification')
+    medium = getValue(params, 'medium')
+    year1 = getValue(params, 'start date')
+    year2 = getValue(params, 'end date')
+    access = getValue(params, 'access')
 
 
     # build up the url
@@ -54,7 +54,7 @@ def build_parameters(query, params):
 
     url_base += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
 
-    url_base += "&school="+school + "&Classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
+    url_base += "&school="+school + "&classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
 
     url_base += "&open_access="+access
 
@@ -285,31 +285,31 @@ def search(term, params, off, num_results_wanted) :
      
      
 parameters = MapParameter({ 
-    "All Words": OptionalParameter(ScalarParameter(str)), 
-    "Exact Phrase":
+    "all words": OptionalParameter(ScalarParameter(str)), 
+    "exact phrase":
       OptionalParameter(ScalarParameter(str)), 
-    "Exclude Words": OptionalParameter(ScalarParameter(str)),
-    "Artist": OptionalParameter(ScalarParameter(str)),
-    "Title": OptionalParameter(ScalarParameter(str)),
-    "Accession Number": OptionalParameter(ScalarParameter(str)),
-    "Classification": OptionalParameter(ScalarParameter(str)),
-    "School": OptionalParameter(ScalarParameter(str)),
-    "Medium": OptionalParameter(ScalarParameter(str)),
-    "Start Date": OptionalParameter(ScalarParameter(str)),
-    "End Date": OptionalParameter(ScalarParameter(str)),
-    "Access": OptionalParameter(ScalarParameter(str))
+    "exclude words": OptionalParameter(ScalarParameter(str)),
+    "artist": OptionalParameter(ScalarParameter(str)),
+    "title": OptionalParameter(ScalarParameter(str)),
+    "accession number": OptionalParameter(ScalarParameter(str)),
+    "classification": OptionalParameter(ScalarParameter(str)),
+    "school": OptionalParameter(ScalarParameter(str)),
+    "medium": OptionalParameter(ScalarParameter(str)),
+    "start date": OptionalParameter(ScalarParameter(str)),
+    "end date": OptionalParameter(ScalarParameter(str)),
+    "access": OptionalParameter(ScalarParameter(str))
     })
     
-empty_params = {"All Words": [],
-    "Exact Phrase": [],
-    "Exclude Words": [],
-    "Artist": [],
-    "Title": [],
-    "Accession Number": [],
-    "Classification": [],
-    "School": [],
-    "Medium": [],
-    "Start Date": [],
-    "End Date": [],
-    "Access": []
+empty_params = {"all words": [],
+    "exact phrase": [],
+    "exclude words": [],
+    "artist": [],
+    "title": [],
+    "accession number": [],
+    "classification": [],
+    "school": [],
+    "medium": [],
+    "start date": [],
+    "end date": [],
+    "access": []
     }
