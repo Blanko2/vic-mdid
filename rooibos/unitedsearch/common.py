@@ -67,8 +67,13 @@ def merge_dictionaries(dict1, dict2, valid_keys):
     
     unsupported_parameters = {}
     
+    print "dic 1 and dic2"
+    print dict1
+    print dict2
     for key in dict1:
-      newKey = str(key.title())
+      newKey = key
+
+      print newKey
       if newKey in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
 	add_to_dict(dict2, newKey, dict1[key])

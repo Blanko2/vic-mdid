@@ -46,7 +46,11 @@ URL BUILDERS
 def build_URL(query, params):
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
+    print "params here"
+    print params
     #check if simple or advanced search
+    print "para_map in build_URL:"
+    print para_map
     if len(params)!=0:
       url, params = build_advanced_url(keywords, params)
     else:
@@ -60,6 +64,8 @@ def build_simple_url(keywords):
     
     
 def build_advanced_url(keywords, params):
+  print "params in build_advanced_url"
+  print params
   if "all" in params:
     keywords += " " + getValue(params,"all")
     del params['all']
@@ -99,6 +105,7 @@ def build_advanced_url(keywords, params):
       temp_optionals = params
   # dont need params anymore
   print 'Temp Optionals ==========================================================' 
+  print params
   print temp_optionals 
 
   for opt_parameter in temp_optionals:
@@ -327,11 +334,18 @@ def getImage(json_image_identifier) :
     
 def count(query) :
       html, unwanted = __get_search_resultsHtml(query, 0, 50)
+      print "html in count\n"+html
       return __count(html)
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
+  
+  
+    print "query"
+    print query
+    print "params"
+    print params
     perPage = num_wanted
     off = (int)(off)
     
@@ -344,10 +358,14 @@ def search(query, params, off, num_wanted) :
     #num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     
     
-    print "No change happens from this point"
+    print "DEBUGGING SEARCH\n\n"
+    print "URL: "+url
+    print "params: "+str(params)
+    print "query: "+str(query)
     html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
     search_results_parser = BeautifulSoup(html)
-    
+    #print "html in search\n"+str(html)
+    #print "search_resultts_parser = " + str(search_results_parser)
     num_results = __count(search_results_parser)
     num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     
