@@ -11,10 +11,10 @@ name = "Gallica"        # database name the user will recognise
 identifier = "gallica"  # identifier for view, urls
 
 
-BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=ITEMSPERPAGE" 
+BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=ITEMSPERPAGE&p=PAGEIDX" 
 BASE_URL = "http://gallica.bnf.fr"
 
-ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&&p=PAGEIDX&PAGENUMBER=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 #&dateMiseEnLigne=indexDateFrom
 
@@ -193,7 +193,7 @@ def buildParams() :
       p['end date'] = value
   print p
   return p
-  
+  PAGNUMBER
 def haveParams() :
   return not query is None
 """  
@@ -202,14 +202,22 @@ def haveParams() :
   
 def __get_search_resultsHtml(url, first_index_wanted, items_per_page) :
      # calculate page number and items
+    print "__get_search_resultsHtml"
     
-    page_num = str(1 + (first_index_wanted/items_per_page))
+    page_idx = str(1 + (first_index_wanted/items_per_page))
+    url = re.sub("ITEMSPERPAGE", str(items_per_page), re.sub("PAGEIDX", page_idx, url))
+    
+    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+    s=BeautifulSoup(html)
+
+    print "----------------------------have----------------------"
+    page_num = str(1+(__count(s)/items_per_page))
     url = re.sub("ITEMSPERPAGE", str(items_per_page), re.sub("PAGENUMBER", page_num, url))
-    
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
     unwanted = first_index_wanted%items_per_page
     print url
     return (html,unwanted)
+
 
     
 def any_results(html_page_parser) :
@@ -297,7 +305,9 @@ def __create_image(soup, id_div) :
 def __count(soup) :
     div = soup.find('div', 'fonctionBar2').find('div', 'fonction1')
     fixed_div = str(div.renderContents()).replace(",","")
+    return 1
     return (int)(re.findall("\d{1,}", fixed_div)[0])
+
 
 
 
@@ -335,6 +345,7 @@ def getImage(json_image_identifier) :
 def count(query) :
       html, unwanted = __get_search_resultsHtml(query, 0, 50)
       print "html in count\n"+html
+      
       return __count(html)
 
 """ Do the search, return the results and the parameters dictionary used (must have
@@ -350,7 +361,7 @@ def search(query, params, off, num_wanted) :
     off = (int)(off)
     
     images = []
-    
+    any_results
     url, params = build_URL(query, params)
     #html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage))
     #search_results_parser = BeautifulSoup(html)
@@ -412,6 +423,8 @@ def search(query, params, off, num_wanted) :
     result = Result(num_results, off+len(images))
     for image in images :
         result.addImage(image)
+    
+
         
     # and make sure params contains all param types
     params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
