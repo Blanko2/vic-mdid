@@ -295,7 +295,12 @@ def __create_image(soup, id_div) :
      
 
 def __count(soup) :
-    div = soup.find('div', 'fonctionBar2').find('div', 'fonction1')
+    if not soup:
+      return 0
+    fragment = soup.find('div', 'fonctionBar2')
+    if not fragment:
+      return 0
+    div = fragment.find('div', 'fonction1')
     fixed_div = str(div.renderContents()).replace(",","")
     return (int)(re.findall("\d{1,}", fixed_div)[0])
 
