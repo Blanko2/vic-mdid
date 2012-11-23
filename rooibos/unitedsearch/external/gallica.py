@@ -336,7 +336,6 @@ def count(query) :
       html, unwanted = __get_search_resultsHtml(query, 0, 50)
       print "html in count\n"+html
       return __count(html)
-    
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
