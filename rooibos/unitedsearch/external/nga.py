@@ -232,11 +232,15 @@ def search(term, params, off, num_results_wanted) :
      off = (int)(off)     # type of off varies by searcher implementation
      
      params, unsupported_params, url_base = build_parameters(term, params)
-     """
-     print "UNSUPPORTED PARAMETERS"
-     print unsupported_params
-     """
-     
+     no_query = True;
+     for p in params:
+       if params[p][0]:
+	 no_query = False
+     if no_query:
+       print "Not searching (nga.py ln 242)"
+       return Result(0, off), empty_params
+       
+       
      # get the image details
      searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
      website_search_results_parser = BeautifulSoup(searchhtml)
