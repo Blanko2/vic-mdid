@@ -41,12 +41,15 @@ def get_storage():
 """
 Breaks query string into parameters and keywords 
 query is in form search=search_type, keywords=words (space-separated), params={"type": "value", ...}
+or form word
 """
 def break_query_string(query):
     keywords = ""
     para_map = {}
+
     
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
+
     if keywords and len(keywords) >= 1:
         keywords = keywords[0] #now keywords is a string from that list.
     else:
@@ -58,6 +61,15 @@ def break_query_string(query):
     else:
         para_map = {}
   
+    # default, if query didn't follow search=... structure, simply use query itself
+    print "common:"
+    print keywords
+    print para_map
+    if keywords is "" and len(para_map) is 0 :
+	print "in if, keywords:"
+	keywords = query or ""
+	print keywords
+	print "\n\n"
     return keywords, para_map
     
 #========Dictionary methods ========
@@ -134,3 +146,58 @@ def get_supported_synonym(key, valid_keys):
       else:	# assumes no two synonyms lists are overlapping. If any do, change this
 	return None
   
+#=============Helper Methods ============
+""" Example desired format: ddmmyyyy
+	Can have no days, and/or no months, and 2 or 4 year-specifiers
+    Example separators: "", ".", "/", "-", None
+    
+    Will return "" if date is unparsable or invalid
+
+    Supported incoming formats: "ddmmyy[yy]", "dd-mm-yy[yy]" (or any non-numeric separator), "mm-yy[yy]", "yy[yy]", None, ""
+	Passing None or "" as date returns current date
+	If no day or month is specified, returns jan 1st
+	Note, doesn't support BC dates, or specification of BC, AD
+
+    If month or day is invalid (eg, mm = 21), attempts swapping month and day order
+"""
+def format_date(date, format, separator):
+
+  if isinstance(date, str) or isinstance(date, unicode):
+    # break down string into parts
+
+    # first, check if date is just a year:
+    year_match = re.match("^(\d{2,4})$", date)
+    if year_match:
+	day_int = 1
+	month_int = 1
+	year_int = int(year_match.group(0)
+
+    # then, try matching full date
+    else:
+    	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
+	if date_match:
+	day = date_match.group("day")
+	month = date_match.group("month")
+	year = date_match.group("year")
+	  
+	# regex always matches day over year if one is present, and we want to treat it as month
+	if day and not month
+	  month = day
+	  day = "01"
+
+	day_int = int(day) if day else 1
+	month_int = int(month) if day else 1
+	year_int = int(year)
+
+    # format date
+    # validate date (simple validation, eg assume 31 feb is valid)
+    if day_int < 0 or day_int > 31:
+	# invalid
+	return ""
+
+
+
+
+
+
+
