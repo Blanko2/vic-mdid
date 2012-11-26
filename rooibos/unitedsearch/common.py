@@ -125,3 +125,58 @@ def getValue(dictionary, key):
     value = ""
   return value
    
+#=============Helper Methods ============
+""" Example desired format: ddmmyyyy
+	Can have no days, and/or no months, and 2 or 4 year-specifiers
+    Example separators: "", ".", "/", "-", None
+    
+    Will return "" if date is unparsable or invalid
+
+    Supported incoming formats: "ddmmyy[yy]", "dd-mm-yy[yy]" (or any non-numeric separator), "mm-yy[yy]", "yy[yy]", None, ""
+	Passing None or "" as date returns current date
+	If no day or month is specified, returns jan 1st
+	Note, doesn't support BC dates, or specification of BC, AD
+
+    If month or day is invalid (eg, mm = 21), attempts swapping month and day order
+"""
+def format_date(date, format, separator):
+
+  if isinstance(date, str) or isinstance(date, unicode):
+    # break down string into parts
+
+    # first, check if date is just a year:
+    year_match = re.match("^(\d{2,4})$", date)
+    if year_match:
+	day_int = 1
+	month_int = 1
+	year_int = int(year_match.group(0)
+
+    # then, try matching full date
+    else:
+    	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
+	if date_match:
+	day = date_match.group("day")
+	month = date_match.group("month")
+	year = date_match.group("year")
+	  
+	# regex always matches day over year if one is present, and we want to treat it as month
+	if day and not month
+	  month = day
+	  day = "01"
+
+	day_int = int(day) if day else 1
+	month_int = int(month) if day else 1
+	year_int = int(year)
+
+    # format date
+    # validate date (simple validation, eg assume 31 feb is valid)
+    if day_int < 0 or day_int > 31:
+	# invalid
+	return ""
+
+
+
+
+
+
+
