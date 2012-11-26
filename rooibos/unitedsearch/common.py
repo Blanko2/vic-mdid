@@ -118,8 +118,8 @@ def getValue(dictionary, key):
   
 
 synonyms_lists = [["artist","author","painter"],
-	    ["subject","keyword","all","all words"]
-
+	    ["subject","keyword","all","all words"]]
+	    
 # return a supported synonym of key if one exists, or None
 def get_supported_synonym(key, valid_keys):
   
