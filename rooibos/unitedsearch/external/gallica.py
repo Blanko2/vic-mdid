@@ -356,11 +356,11 @@ def getImage(json_image_identifier) :
     
     
 def count(keyword) :
-      url, params = build_URL(keyword, {})
-      html, unwanted = __get_search_resultsHtml(url, 0, 50)
-      search_results_parser = BeautifulSoup(html)
+      first_url,second_url, params = build_URL(keyword, {})
+      num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
+      #search_results_parser = BeautifulSoup(html)
       #print "html in count\n"+html
-      return __count(search_results_parser)
+      return num_results#__count(search_results_parser)
 
       
 def get_first_search_result(url,off, page_idx) :
