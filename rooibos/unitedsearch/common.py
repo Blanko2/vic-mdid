@@ -41,6 +41,7 @@ def get_storage():
 """
 Breaks query string into parameters and keywords 
 query is in form search=search_type, keywords=words (space-separated), params={"type": "value", ...}
+or form word
 """
 def break_query_string(query):
     keywords = ""
@@ -58,6 +59,15 @@ def break_query_string(query):
     else:
         para_map = {}
   
+    # default, if query didn't follow search=... structure, simply use query itself
+    print "common:"
+    print keywords
+    print para_map
+    if keywords is "" and len(para_map) is 0 :
+	print "in if, keywords:"
+	keywords = query or ""
+	print keywords
+	print "\n\n"
     return keywords, para_map
     
 #========Dictionary methods ========
