@@ -230,14 +230,19 @@ def search(term, params, off, num_results_wanted) :
      """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
      """
      off = (int)(off)     # type of off varies by searcher implementation
-     
+	
+     print "In nga.py ln 236"
+     print term
+     print params
      params, unsupported_params, url_base = build_parameters(term, params)
      no_query = True;
+     print params
+     
      for p in params:
        if params[p][0]:
 	 no_query = False
      if no_query:
-       print "Not searching (nga.py ln 242)"
+       print "Not searching NGA (nga.py ln 242)"
        return Result(0, off), empty_params
        
        

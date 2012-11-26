@@ -339,7 +339,8 @@ def __scrub_html_for_property(property_name, html) :
     
     return "None"
     
-
+"""
+Wasn't used anyway
 def getImage(json_image_identifier) :
     
     image_identifier = json.loads(json_image_identifier)
@@ -357,7 +358,7 @@ def getImage(json_image_identifier) :
                  image_identifier['title'],
                  meta,
                  json_image_identifier))
-    
+"""
     
 def count(keyword) :
       first_url,second_url, params = build_URL(keyword, {})
@@ -385,7 +386,17 @@ def get_first_search_result(url,off, page_idx) :
     return (num_results, num_pages,page_idx,unwanted,off,search_results_parser,True)
     
     
-    
+"""
+Not used yet!!!
+"""
+def get_search_result_parser(url,off, page_idx) :
+  url2 = re.sub("PAGEIDX", str(page_idx),url)
+  html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
+  search_results_parser = BeautifulSoup(html)
+  if __count(search_results_parser) is 0:
+	return None
+  return search_results_parser
+		  
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
