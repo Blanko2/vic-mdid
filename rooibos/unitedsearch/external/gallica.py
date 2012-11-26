@@ -395,6 +395,8 @@ def search(query, params, off, num_wanted) :
     print params
     perPage = num_wanted
     off = (int)(off)
+    if off<0:
+      off=0
     page_idx = page_idx = 1 + (off/50)
     
     
