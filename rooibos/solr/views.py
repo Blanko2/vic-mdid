@@ -359,6 +359,11 @@ def run_search(user,
 
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
+    
+    
+    print "------------------------------------------------------view.search----------------------------"
+    print "request"
+    print request
 
     if request.method == "POST":
         update_record_selection(request)
@@ -528,15 +533,20 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     kws = (str(keywords))
     query_string += "keywords=" + kws.replace(' ','+')
+    query_string = query_string.replace('\"','')
     
   #  query_string += ";"+str(query_list)
     
+    
 
     for key in query_list.keys() :
+      query_string = query_string+','
       query = key+"="+query_list[key]
-      query_string += ' '+query.replace("\"", "")
+      query_string += ' '+query.replace("\"", "").replace('_t','')
 
-
+    
+    
+    
 
     print "\n\n\n\n\n--------------------------Query String is:--------------------------------"
     print query_string+"\n\n\n\n\n"
@@ -744,7 +754,6 @@ def fieldvalue_autocomplete(request):
 
 
 def search_form(request):
-
     collections = filter_by_access(request.user, Collection)
     collections = apply_collection_visibility_preferences(request.user, collections)
     if not collections:
