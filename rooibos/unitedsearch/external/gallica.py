@@ -11,8 +11,13 @@ name = "Gallica"        # database name the user will recognise
 identifier = "gallica"  # identifier for view, urls
 
 
-BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=ITEMSPERPAGE" 
+BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=50&p=PAGEIDX" 
 BASE_URL = "http://gallica.bnf.fr"
+BASE_FIRST_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&n=50&p=PAGEIDX&pageNumber=200000"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+FIRST_ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=200000&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+#&dateMiseEnLigne=indexDateFrom
+
 
 ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
@@ -52,18 +57,22 @@ def build_URL(query, params):
     print "para_map in build_URL:"
     print para_map
     if len(params)!=0:
-      url, params = build_advanced_url(keywords, params)
+      first_url, second_url, params = build_advanced_url(keywords, params)
     else:
-      url = build_simple_url(keywords)
-    return url, params
-	
+      first_url , second_url = build_simple_url(keywords)
+    return first_url, second_url,params
+    
+
+    
+    
 	
 def build_simple_url(keywords):
     keywords = re.sub(" ", "+", keywords)
-    return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
+    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL), re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     
     
 def build_advanced_url(keywords, params):
+
   print "params in build_advanced_url"
   print params
   if "all" in params:
@@ -142,9 +151,10 @@ def build_advanced_url(keywords, params):
       }
     
   replacer = re.compile('|'.join(replacements.keys()))
-  url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+  first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
+  second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
   
-  return url, optionals_dict
+  return first_url, second_url, optionals_dict
 """    
 def get_optional_search_filters(params) :
     
@@ -193,23 +203,30 @@ def buildParams() :
       p['end date'] = value
   print p
   return p
-  
+  PAGNUMBER
 def haveParams() :
   return not query is None
 """  
 
 
   
-def __get_search_resultsHtml(url, first_index_wanted, items_per_page) :
+
+    
+    
+
+def __get_search_resultsHtml(url, page_idx, page_num) :
      # calculate page number and items
+    print "__get_search_resultsHtml"
     
-    page_num = str(1 + (first_index_wanted/items_per_page))
-    url = re.sub("ITEMSPERPAGE", str(items_per_page), re.sub("PAGENUMBER", page_num, url))
-    
-    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-    unwanted = first_index_wanted%items_per_page
+    page_idx = page_idx+1
+    url = re.sub("PAGEIDX", str(page_idx),url)
+    url = re.sub("PAGENUMBER", str(page_num), url)
+    print "search url"
     print url
-    return (html,unwanted)
+    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
+
+    return (html,page_idx)
+
 
     
 def any_results(html_page_parser) :
@@ -225,12 +242,12 @@ def __items_per_page(num_wanted) :
     to minimise the number of html pages to read """
     
     # based on the options the site itself offers
-    if num_wanted <= 15 :
+    """if num_wanted <= 15 :
         return 15
     elif num_wanted <= 30 :
         return 30
-    else :
-        return 50
+    else :"""
+    return 50
     
    
    
@@ -306,6 +323,7 @@ def __count(soup) :
 
 
 
+
 def __scrub_html_for_property(property_name, html) :
     
     for para in html.findAll('p') :
@@ -338,56 +356,100 @@ def getImage(json_image_identifier) :
     
     
 def count(keyword) :
-      url, params = build_URL(keyword, {})
-      html, unwanted = __get_search_resultsHtml(url, 0, 50)
-      search_results_parser = BeautifulSoup(html)
+      first_url,second_url, params = build_URL(keyword, {})
+      num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
+      #search_results_parser = BeautifulSoup(html)
       #print "html in count\n"+html
-      return __count(search_results_parser)
+      return num_results#__count(search_results_parser)
+
+      
+def get_first_search_result(url,off, page_idx) :
+    url2 = re.sub("PAGEIDX", str(page_idx),url)
+    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
+    search_results_parser = BeautifulSoup(html)
+    if not any_results(search_results_parser) :
+      return (0,1,1,0,search_results_parser,False)
+    num_results = __count(search_results_parser)
+    num_pages = 1+(num_results/50)
+    unwanted = off%50
+    if page_idx>num_pages :
+      page_idx = num_pages
+      unwanted = 0
+      off = (num_pages-1)*50
+      return get_first_search_result(url, off, page_idx)
+    
+    return (num_results, num_pages,page_idx,unwanted,off,search_results_parser,True)
+    
+    
+    
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
   
-  
+    print "num_wanted ==="
+    print num_wanted
     print "query"
     print query
     print "params"
     print params
     perPage = num_wanted
     off = (int)(off)
+    page_idx = page_idx = 1 + (off/50)
+    
+    
+
+    
     
     images = []
     
-    url, params = build_URL(query, params)
-    #html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage))
+
+    
+    #any_results
+    first_url, second_url, params = build_URL(query, params) 
+    first_round = True      # optimisation to say we don't need to replace the first search_results_parser
+    
+    #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage))
     #search_results_parser = BeautifulSoup(html)
     #num_results = __count(search_results_parser)
     #num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     
     
     print "DEBUGGING SEARCH\n\n"
-    print "URL: "+url
+    print "1st_URL: "+first_url
+    print "2nd_URL: "+second_url
     print "params: "+str(params)
     print "query: "+str(query)
-    html, unwanted = __get_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
-    search_results_parser = BeautifulSoup(html)
+
+    #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
+    #search_results_parser = BeautifulSoup(html)
     #print "html in search\n"+str(html)
     #print "search_resultts_parser = " + str(search_results_parser)
-    num_results = __count(search_results_parser)
-    num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
+
     
     
-    if not any_results(search_results_parser) :
+    num_results, num_pages,page_idx,num_unwanted, off, search_results_parser, any_result = get_first_search_result(first_url, off, page_idx)
+    
+
+    if not any_result:
       return Result(0, off), empty_params
       
+
+
+    print "Somehow got here?!"   
+   
+    num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
+    if num_wanted <0 :
+      num_wanted =0
     
-    first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     
     
-    while len(images) < num_wanted :
+    while len(images) < num_wanted:
         
         if not first_round :
-	    html, unwanted2 = __get_search_resultsHtml(url, off+len(images), __items_per_page(perPage))
+	    if page_idx>=num_pages:
+	      break
+	    html, page_idx = __get_search_resultsHtml(second_url,page_idx,num_pages)
             search_results_parser = BeautifulSoup(html)
         else :
             first_round = False
@@ -395,12 +457,14 @@ def search(query, params, off, num_wanted) :
             
         # find start points for image data
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
+        print "image_id_divs"
+        print len(image_id_divs)
         
-        if unwanted>0:
-	  while unwanted>0:
-	    unwanted = unwanted-1
+        if num_unwanted>0:
+	  while num_unwanted>0:
+	    num_unwanted = num_unwanted-1
 	    del image_id_divs[0]
-        
+        #result = Result(num_results, off+len(images))
         
         # build images
         for div in image_id_divs :
@@ -419,9 +483,12 @@ def search(query, params, off, num_wanted) :
     result = Result(num_results, off+len(images))
     for image in images :
         result.addImage(image)
+    
+
         
     # and make sure params contains all param types
     params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
+    
     return result, params
   
   
