@@ -26,6 +26,10 @@ def search(term, params, off, len):
 def previousOffset(off, len):
 	off = int(off)
 	return off > 0 and str(off - len)
+	
+def count(keyword):
+	#TODO: needs to be implemented properly
+	return 12345
 
 def getImage(identifier):
 	i = int(identifier)

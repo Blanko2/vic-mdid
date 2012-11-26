@@ -157,7 +157,7 @@ def __count(website_search_results_parser):
     
     
     
-def count(term):
+def count(keyword):
     # must be called 'count'"artist"
     
     # searchhtml  = __getHTMLPage_Containing_SearchResultX(term, {}, 0)[0]

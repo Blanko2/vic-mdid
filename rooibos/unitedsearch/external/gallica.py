@@ -19,7 +19,9 @@ FIRST_ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&
 #&dateMiseEnLigne=indexDateFrom
 
 
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
+#&dateMiseEnLigne=indexDateFrom
 
 # optional categories that can be searched by in the url
 # Gallica only allows 5 options at once, thus we consider one of those
@@ -353,6 +355,12 @@ def getImage(json_image_identifier) :
                  json_image_identifier))
     
     
+def count(keyword) :
+      url, params = build_URL(keyword, {})
+      html, unwanted = __get_search_resultsHtml(url, 0, 50)
+      search_results_parser = BeautifulSoup(html)
+      #print "html in count\n"+html
+      return __count(search_results_parser)
 
       
 def get_first_search_result(url,off, page_idx) :
