@@ -41,6 +41,9 @@ class ArtstorSearch(FederatedSearch):
                               ('version', '1.1'),
                               ('maximumRecords', '1')])
         )
+        if not settings.ARTSTOR_GATEWAY:
+	    print "Not subscribed to ArtStor, not searching"
+	    return 0
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()), SmartRedirectHandler())
         request = urllib2.Request(url)
         socket.setdefaulttimeout(self.timeout)

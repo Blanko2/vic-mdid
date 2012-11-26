@@ -89,9 +89,10 @@ def sidebar_api_raw(request, query, cached_only=False):
             if thread.hits > 0:
                 total_hits += thread.hits
             results.append((thread.instance, thread.hits))
-
+    """
     print "*******Fed.views***********"
     print results
+    """
     return dict(html=render_to_string('federatedsearch_results.html',
                             dict(results=sorted(results),
                                  query=query),

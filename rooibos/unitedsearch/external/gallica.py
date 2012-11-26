@@ -51,11 +51,13 @@ URL BUILDERS
 def build_URL(query, params):
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
+    """
     print "params here"
     print params
     #check if simple or advanced search
     print "para_map in build_URL:"
     print para_map
+    """
     if len(params)!=0:
       first_url, second_url, params = build_advanced_url(keywords, params)
     else:
@@ -73,8 +75,8 @@ def build_simple_url(keywords):
     
 def build_advanced_url(keywords, params):
 
-  print "params in build_advanced_url"
-  print params
+  #print "params in build_advanced_url"
+  #print params
   if "all" in params:
     keywords += " " + getValue(params,"all")
     del params['all']
@@ -113,9 +115,11 @@ def build_advanced_url(keywords, params):
   else:
       temp_optionals = params
   # dont need params anymore
+  """
   print 'Temp Optionals ==========================================================' 
   print params
   print temp_optionals 
+  """
 
   for opt_parameter in temp_optionals:
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
@@ -126,7 +130,7 @@ def build_advanced_url(keywords, params):
 	    keywords += " " + temp_optionals[opt_parameter]
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
       else:
-	print temp_optionals[opt_parameter]
+	#print temp_optionals[opt_parameter]
 	keywords += " " + temp_optionals[opt_parameter][0]
 	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
 	
@@ -134,7 +138,7 @@ def build_advanced_url(keywords, params):
   optionals_string = "&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
   
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
-  print optionals_dict
+  #print optionals_dict
   
   
   for i in range(0, len(optionals_dict)):
@@ -216,13 +220,13 @@ def haveParams() :
 
 def __get_search_resultsHtml(url, page_idx, page_num) :
      # calculate page number and items
-    print "__get_search_resultsHtml"
+    #print "__get_search_resultsHtml"
     
     page_idx = page_idx+1
     url = re.sub("PAGEIDX", str(page_idx),url)
     url = re.sub("PAGENUMBER", str(page_num), url)
-    print "search url"
-    print url
+    #print "search url"
+    #print url
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
 
     return (html,page_idx)
@@ -386,13 +390,14 @@ def get_first_search_result(url,off, page_idx) :
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
-  
+    """
     print "num_wanted ==="
     print num_wanted
     print "query"
     print query
     print "params"
     print params
+    """
     perPage = num_wanted
     off = (int)(off)
     if off<0:
