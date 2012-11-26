@@ -114,4 +114,22 @@ def getValue(dictionary, key):
   else:
     value = ""
   return value
-   
+  
+
+synonyms_lists = [["artist","author","painter"],
+	    ["subject","keyword","all","all words"]
+
+# return a supported synonym of key if one exists, or None
+def get_supported_synonym(key, valid_keys):
+  
+  for syn_list in synonyms_lists:
+    if key.lower() in syn_list:
+      # find synonmym for key which works for valid_keys as well
+      valid_syns = list(set(syn_list) & set(valid_keys))
+      
+      if len(valid_syns) > 0:
+	# found (at least) a match!
+	return valid_syns[0]
+      else:	# assumes no two synonyms lists are overlapping. If any do, change this
+	return None
+  
