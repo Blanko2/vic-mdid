@@ -160,6 +160,8 @@ def get_supported_synonym(key, valid_keys):
 
     If month or day is invalid (eg, mm = 21), attempts swapping month and day order
 """
+
+"""
 def format_date(date, format, separator):
 
   if isinstance(date, str) or isinstance(date, unicode):
@@ -173,7 +175,7 @@ def format_date(date, format, separator):
 	year_int = int(year_match.group(0)
 
     # then, try matching full date
-    else:
+    else: 
     	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
 	if date_match:
 	day = date_match.group("day")
@@ -196,7 +198,7 @@ def format_date(date, format, separator):
 	return ""
 
 
-
+"""
 
 
 

@@ -94,9 +94,9 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
     opener = urllib2.build_opener(proxyHandler)
     print "-----------url ="
-    print url
+
     html = opener.open(url)
-    #print url
+    print url
     return html, howFarDownThePage
     
 
@@ -263,13 +263,18 @@ def search(term, params, off, num_results_wanted) :
      website_search_results_parser = BeautifulSoup(searchhtml)
      
      if not any_results(website_search_results_parser) :
-       return search(term,params,0,50)
+       return Result(0, off), empty_params
        
      list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
      
      
      # ensure the correct number of images found
      num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
+     
+     
+     print "----------------------count  NGA------------"
+     print __count(website_search_results_parser)
+     
      count = __count(website_search_results_parser)
      print "___Count is ="
      print count
