@@ -13,7 +13,7 @@ identifier = "gallica"  # identifier for view, urls
 
 BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=50&p=PAGEIDX" 
 BASE_URL = "http://gallica.bnf.fr"
-BASE_FIRST_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&n=50&p=PAGEIDX&pageNumber=200000"
+BASE_FIRST_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&n=50&p=PAGEIDX&pageNumber=200000&lang=EN"
 ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 FIRST_ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=200000&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 #&dateMiseEnLigne=indexDateFrom
@@ -319,10 +319,17 @@ def __count(soup) :
     if not soup:
       return 0
     fragment = soup.find('div', 'fonctionBar2')
+    """
+    print "fragment"
+    print fragment
+    """
+
     if not fragment:
       return 0
     div = fragment.find('div', 'fonction1')
-    fixed_div = str(div.renderContents()).replace(",","")
+    fixed_div = str(div.renderContents()).replace(",","").replace('.','')
+    print "------------------fixed_div="
+    print fixed_div
     return (int)(re.findall("\d{1,}", fixed_div)[0])
 
 
@@ -372,8 +379,10 @@ def get_first_search_result(url,off, page_idx) :
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
     search_results_parser = BeautifulSoup(html)
     if not any_results(search_results_parser) :
-      return (0,1,1,0,search_results_parser,False)
+      return (0,1,1,0,0,search_results_parser,False)
     num_results = __count(search_results_parser)
+    print "----------------------------num_results:"
+    print num_results
     num_pages = 1+(num_results/50)
     unwanted = off%50
     if page_idx>num_pages :

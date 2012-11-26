@@ -45,8 +45,10 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 def break_query_string(query):
     keywords = ""
     para_map = {}
+
     
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
+
     if keywords and len(keywords) >= 1:
         keywords = keywords[0] #now keywords is a string from that list.
     else:
