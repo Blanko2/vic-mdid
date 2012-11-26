@@ -56,7 +56,7 @@ def sidebar_api_raw(request, query, cached_only=False):
         def run(self):
             self.instance = sources[self.source]
             # if we've done this search before, simply use the cached result, don't bother re-searching
-            if cache.has_key(self.source):
+            if False:#cache.has_key(self.source): #TODO: this is debug only, re-enable caching for better repeat performance
                 self.cache_hit = True
                 if cache[self.source]:
                     self.hits = cache[self.source]

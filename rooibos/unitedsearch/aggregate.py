@@ -7,7 +7,11 @@ def federatedSearchSource(searcher):
 	
 	class Search(FederatedSearch):
 		def hits_count(self, keyword):
-			return searcher.search(keyword, {}, 0, 0)[0].total
+			#TODO: make searcher.search return a list of empty lists {{}, {}, {}} if no results are found
+			numHits = searcher.search(keyword, {}, 0, 0)
+			if not numHits:
+			  return 0
+			return numHits[0].total
 			#once the count method is implemented in each database, 
 			# switch to this:
 			#return searcher.count)(query)
