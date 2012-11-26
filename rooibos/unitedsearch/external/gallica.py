@@ -367,7 +367,7 @@ def get_first_search_result(url,off, page_idx) :
     if page_idx>num_pages :
       page_idx = num_pages
       unwanted = 0
-      off = num_pages*50
+      off = (num_pages-1)*50
       return get_first_search_result(url, off, page_idx)
     
     return (num_results, num_pages,page_idx,unwanted,off,search_results_parser,True)
