@@ -26,9 +26,9 @@ import json
 #}
 
 source_classes = [
-    NasaImageExchange,
+    #NasaImageExchange, TODO: ignoring completely
     ArtstorSearch,
-    FlickrSearch,
+    #FlickrSearch, TODO: Maybe implement later
 ] + aggregate.federatedSearchSources()
 
 

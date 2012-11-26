@@ -4,7 +4,7 @@ from external import digitalnz, nga, flickr, gallica, local
 all = [
 	nga,
 	digitalnz,
-	flickr,
+	#flickr, TODO: maybe implement later
 	gallica,
 	local,
 ]

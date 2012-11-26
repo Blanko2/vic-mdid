@@ -36,7 +36,9 @@ def _count(searchobj):
 	return searchobj["result_count"]
 
 def count(query):
-	return _count(_search(query))
+	#TODO: do a proper implementation
+	return 12345
+	#return _count(_search(query))
 
 def search(query, params, off, len):
 	off = int(off)
