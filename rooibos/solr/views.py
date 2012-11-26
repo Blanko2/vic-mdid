@@ -493,7 +493,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                           mode,
                           str(ids),
                           )
-    print hash
+    #print hash
     facets = cache.get('search_facets_html_%s' % hash)
 
     sort = sort.startswith('random') and 'random' or sort.split()[0]
@@ -752,7 +752,7 @@ def search_form(request):
 
     def _get_fields():
 	#f = Field.objects.select_related('standard')
-	print 'YYYYY'
+	#print 'YYYYY'
 	#for ff in f :
 	#  if not ff.standard is 'United Search':
 	#    f.remove(ff)

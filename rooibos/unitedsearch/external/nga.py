@@ -25,19 +25,28 @@ identifier = "nga"            # don't know what this is
 
     
 def build_parameters(query, params):
-  # build parameters dictionary to search by
+    # build parameters dictionary to search by
+
     print "NGA build_parameters"
     print "query"
     print query
     print "params"
     print params
+
     keywords, para_map = break_query_string(query)
+    
+    print "after break query string"
+    print keywords
+    print para_map
+    
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     add_to_dict(params, "all words", keywords)
 
     # get the parameter values to put into the url
+
     print "Params\n\n"
     print params
+
     all_words = getValue(params, 'all words')
     exact_phrase = getValue(params, 'exact phrase')
     exclude = getValue(params, 'exclude words')
@@ -67,12 +76,14 @@ def build_parameters(query, params):
     url_base = re.sub(" ", "+", url_base)
 
     return params, unsupported_parameters, url_base
-	
-	
+    
+
 def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
   
+
+  
     # set up fields for any type of search
-    print "NGA"
+    #print "NGA"
     search_results_per_page = 25
     search_page_num = str(1 + (index_offset/search_results_per_page))   
     howFarDownThePage = index_offset % search_results_per_page
@@ -82,9 +93,14 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     # use a proxy handler as developing behind firewall
     proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
     opener = urllib2.build_opener(proxyHandler)
-    html = opener.open(url)
+    print "-----------url ="
     print url
+    html = opener.open(url)
+    #print url
     return html, howFarDownThePage
+    
+
+
 
 
 def any_results(html_parser) :
@@ -157,7 +173,7 @@ def __count(website_search_results_parser):
     
     
     
-def count(term):
+def count(keyword):
     # must be called 'count'"artist"
     
     # searchhtml  = __getHTMLPage_Containing_SearchResultX(term, {}, 0)[0]
@@ -220,7 +236,7 @@ def getImage(json_image_identifier) :
      
 
 def search(term, params, off, num_results_wanted) :
-     print term
+     #print term
      """ Get the actual results! Note, method must be called 'search'"""
      
      """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
@@ -228,28 +244,34 @@ def search(term, params, off, num_results_wanted) :
      off = (int)(off)     # type of off varies by searcher implementation
      
      params, unsupported_params, url_base = build_parameters(term, params)
+     """
      print "UNSUPPORTED PARAMETERS"
      print unsupported_params
+     """
      
      # get the image details
      searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
      website_search_results_parser = BeautifulSoup(searchhtml)
      
      if not any_results(website_search_results_parser) :
-       return Result(0, off), empty_params
+       return search(term,params,0,50)
        
      list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
      
      
      # ensure the correct number of images found
      num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
-     if off>__count(website_search_results_parser):
-	num_results_wanted=0
+     count = __count(website_search_results_parser)
+     print "___Count is ="
+     print count
+     if off>count:
+	return search(term,params,0,50)
      else:
 	num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
-     
+     """
      print"wanted"
      print num_results_wanted
+     """
      if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
          tmp = 0
          while len(list_of_image_ids) < num_results_wanted and tmp<1:
@@ -278,13 +300,16 @@ def search(term, params, off, num_results_wanted) :
      resulting_images = Result(__count(website_search_results_parser), off+num_results_wanted)
      for i in range(len(list_of_image_ids)) :
          resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
-     
+     """
      print "NGA params:"
      print params
      print empty_params
+     """
      params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
+     """
      print "NGA params:"
      print params
+     """
      
      return resulting_images, params
      

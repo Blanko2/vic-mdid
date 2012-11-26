@@ -26,9 +26,9 @@ import json
 #}
 
 source_classes = [
-    NasaImageExchange,
+    #NasaImageExchange, TODO: ignoring completely
     ArtstorSearch,
-    FlickrSearch,
+    #FlickrSearch, TODO: Maybe implement later
 ] + aggregate.federatedSearchSources()
 
 
@@ -56,7 +56,7 @@ def sidebar_api_raw(request, query, cached_only=False):
         def run(self):
             self.instance = sources[self.source]
             # if we've done this search before, simply use the cached result, don't bother re-searching
-            if cache.has_key(self.source):
+            if False:#cache.has_key(self.source): #TODO: this is debug only, re-enable caching for better repeat performance
                 self.cache_hit = True
                 if cache[self.source]:
                     self.hits = cache[self.source]
@@ -89,9 +89,10 @@ def sidebar_api_raw(request, query, cached_only=False):
             if thread.hits > 0:
                 total_hits += thread.hits
             results.append((thread.instance, thread.hits))
-
+    """
     print "*******Fed.views***********"
     print results
+    """
     return dict(html=render_to_string('federatedsearch_results.html',
                             dict(results=sorted(results),
                                  query=query),

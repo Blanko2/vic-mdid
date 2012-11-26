@@ -1,14 +1,19 @@
 import json
 import urllib2
+import digitalnz as dnz
 from rooibos.unitedsearch import *
 from urllib import urlencode
 from rooibos.unitedsearch.common import *
 from django.conf import settings
 
+
 name = "DigitalNZ"
 identifier = "digitalnz"
 
+FORMAT_FINAL = "image"
+
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
+# TODO get a University API key instead of a personal one
 API_KEY="sfypBYD5Jpu1XqYBipX8"
 
 """
@@ -20,8 +25,10 @@ def build_URL(query, params):
   # parse query into parameters -- format will always be image
   # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
   
-  break_query(query) 
+  keywords, para_map = break_query_string(query) 
+  params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.keys())
   
+  dnz.search(params)  
   return 'h','k' 
 
 def _get(url):
@@ -36,7 +43,9 @@ def _count(searchobj):
 	return searchobj["result_count"]
 
 def count(query):
-	return _count(_search(query))
+	#TODO: do a proper implementation
+	return 12345
+	#return _count(_search(query))
 
 def search(query, params, off, len):
 	off = int(off)
@@ -68,6 +77,7 @@ parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter("start date"),"Start Date"),
   "end date": OptionalParameter(ScalarParameter("end date"), "End Date"),
   "type": OptionalParameter(ScalarParameter("type"), "Type"),
+  "copyright": OptionalParameter(ScalarParameter("copyright"), "Copyright"),
   "all": ScalarParameter(str,"All")
   })
 

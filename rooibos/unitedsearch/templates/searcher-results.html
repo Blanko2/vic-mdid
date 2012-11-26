@@ -90,15 +90,25 @@
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
-{% if next_page or previous_page %}
+
+
+{% if first_page or next_page or previous_page %}
 <div style="text-align: center;">
+  {% if first_page %}
+    <a href="{{ first_page }}">First</a>
+  {% endif %}
   {% if previous_page %}
     <a href="{{ previous_page }}">Previous</a>
   {% endif %}
   {% if next_page %}
     <a href="{{ next_page }}">Next</a>
   {% endif %}
+  {% if last_page %}
+    <a href="{{ last_page }}">Last</a>
+  {% endif %}
 </div>
+
+
 {% endif %}
 
 {% if results %}
@@ -115,8 +125,13 @@
 
 
 {% endfor %}
+
+
+
 </div>
 {% endif %}
+
+
 
 </form>
 
