@@ -160,6 +160,7 @@ def get_supported_synonym(key, valid_keys):
 	If no day or month is specified, returns jan 1st
 	Note, doesn't support BC dates, or specification of BC, AD
 
+<<<<<<< Updated upstream
     Supported outgoing formats: "ddmmyyyy", "mmddyyyy", "yyyy"
     
     Returns (startDate, endDate, error_msg) where startDate and endDate are formatted as requested
@@ -171,6 +172,11 @@ def get_supported_synonym(key, valid_keys):
     Pass default end date as a datetime.date object
 """
 def format_date(date, desired_format, separator, default_end=datetime.date.today()):
+=======
+    If month or day is invalid (eg, mm = 21), attempts swapping month and day order
+
+def format_date(date, format, separator):
+>>>>>>> Stashed changes
 
   # first, check if date is year range only (simplest format)
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
@@ -222,10 +228,34 @@ def _build_dates_from_year(year_match, default_end):
     if len(y2_suffix) is 2:
       y2 = int(y1_prefix+y2_suffix)
     else:
+<<<<<<< Updated upstream
       y2 = int( y1_prefix + y1_suffix[0:1] + y2_suffix)
   else:
     # no second date specified, use default
     y2 = str(default_end.year)
+=======
+    	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
+	if date_match:
+	day = date_match.group("day")
+	month = date_match.group("month")
+	year = date_match.group("year")
+	  
+	# regex always matches day over year if one is present, and we want to treat it as month
+	if day and not month
+	  month = day
+	  day = "01"
+
+	day_int = int(day) if day else 1
+	month_int = int(month) if day else 1
+	year_int = int(year)
+
+    # format date
+    # validate date (simple validation, eg assume 31 feb is valid)
+    if day_int < 0 or day_int > 31:
+	# invalid
+	return ""
+"""
+>>>>>>> Stashed changes
 
   return ((d1,m1,y1), (d2,m2,y2))
 
