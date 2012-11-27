@@ -59,10 +59,12 @@ def build_URL(query, params):
     print para_map
     """
     if len(params)!=0:
-      first_url, second_url, params = build_advanced_url(keywords, params)
+	  first_url, params = build_advanced_url(keywords, params)
+      #first_url, second_url, params = build_advanced_url(keywords, params)
     else:
-      first_url , second_url = build_simple_url(keywords)
-    return first_url, second_url,params
+	  first_url = build_simple_url(keywords)
+      #first_url , second_url = build_simple_url(keywords)
+    return first_url, params #second_url,params
     
 
     
@@ -70,7 +72,7 @@ def build_URL(query, params):
 	
 def build_simple_url(keywords):
     keywords = re.sub(" ", "+", keywords)
-    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL), re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
+    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL)#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     
     
 def build_advanced_url(keywords, params):
@@ -156,9 +158,9 @@ def build_advanced_url(keywords, params):
     
   replacer = re.compile('|'.join(replacements.keys()))
   first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
-  second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+  #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
   
-  return first_url, second_url, optionals_dict
+  return first_url, optionals_dict #second_url, optionals_dict
 """    
 def get_optional_search_filters(params) :
     
@@ -217,11 +219,12 @@ def haveParams() :
 
     
     
-
-def __get_search_resultsHtml(url, page_idx, page_num) :
+"""
+#def __get_search_resultsHtml(url, page_idx, page_num) :
+def __get_search_resultsHtml(url, page_idx) :
      # calculate page number and items
     #print "__get_search_resultsHtml"
-    
+    page_num = 200000
     page_idx = page_idx+1
     url = re.sub("PAGEIDX", str(page_idx),url)
     url = re.sub("PAGENUMBER", str(page_num), url)
@@ -230,16 +233,18 @@ def __get_search_resultsHtml(url, page_idx, page_num) :
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
 
     return (html,page_idx)
-
-
+"""
+"""
     
 def any_results(html_page_parser) :
     
+    return __count(html_page_parser) is not 0
     results_div = html_page_parser.find('div', 'ariane')
     text = results_div.findAll('span')[1].next.strip()	# find the bit of text that says if results\
     
     return text != "No result"
     
+"""
     
 def __items_per_page(num_wanted) :
     """ calculate the optimal number of items to display per page,
@@ -328,12 +333,14 @@ def __count(soup) :
       return 0
     div = fragment.find('div', 'fonction1')
     fixed_div = str(div.renderContents()).replace(",","").replace('.','')
-    print "------------------fixed_div="
-    print fixed_div
+    """print "------------------fixed_div="
+    print fixed_div"""
     return (int)(re.findall("\d{1,}", fixed_div)[0])
 
 
 
+"""
+#not used atm, would be used by getImage
 
 def __scrub_html_for_property(property_name, html) :
     
@@ -347,7 +354,10 @@ def __scrub_html_for_property(property_name, html) :
     return "None"
     
 """
-Wasn't used anyway
+
+
+"""
+#Wasn't used anyway
 def getImage(json_image_identifier) :
     
     image_identifier = json.loads(json_image_identifier)
@@ -368,42 +378,42 @@ def getImage(json_image_identifier) :
 """
     
 def count(keyword) :
-      first_url,second_url, params = build_URL(keyword, {})
-      num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
+      first_url, params = build_URL(keyword, {})
+      #num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
+      soup = get_search_result_parser(first_url, 0, 1)
+      return __count(soup)
       #search_results_parser = BeautifulSoup(html)
       #print "html in count\n"+html
       return num_results#__count(search_results_parser)
-
       
+      
+"""
 def get_first_search_result(url,off, page_idx) :
     url2 = re.sub("PAGEIDX", str(page_idx),url)
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
     search_results_parser = BeautifulSoup(html)
-    if not any_results(search_results_parser) :
-      return (0,1,1,0,0,search_results_parser,False)
     num_results = __count(search_results_parser)
+    if num_results is 0:
+      return (0,1,1,0,0,search_results_parser,False)
     print "----------------------------num_results:"
     print num_results
-    num_pages = 1+(num_results/50)
-    unwanted = off%50
+    per_page = __items_per_page(50)
+    num_pages = 1+(num_results/per_page)
+    unwanted = off%per_page
     if page_idx>num_pages :
       page_idx = num_pages
       unwanted = 0
-      off = (num_pages-1)*50
+      off = (num_pages-1)*per_page
       return get_first_search_result(url, off, page_idx)
     
     return (num_results, num_pages,page_idx,unwanted,off,search_results_parser,True)
+    """
     
-    
-"""
-Not used yet!!!
-"""
-def get_search_result_parser(url,off, page_idx) :
-  url2 = re.sub("PAGEIDX", str(page_idx),url)
-  html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
+
+def get_search_result_parser(base_url, page_idx) :
+  page_url = re.sub("PAGEIDX", str(page_idx),base_url)
+  html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
   search_results_parser = BeautifulSoup(html)
-  if __count(search_results_parser) is 0:
-	return None
   return search_results_parser
 		  
 
@@ -418,11 +428,11 @@ def search(query, params, off, num_wanted) :
     print "params"
     print params
     """
-    perPage = num_wanted
+    per_page = __items_per_page(num_wanted)
     off = (int)(off)
     if off<0:
       off=0
-    page_idx = page_idx = 1 + (off/50)
+    page_idx = 1 + (off/per_page)
     
     
 
@@ -433,7 +443,7 @@ def search(query, params, off, num_wanted) :
 
     
     #any_results
-    first_url, second_url, params = build_URL(query, params) 
+    first_url, params = build_URL(query, params) 
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     
     #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage))
@@ -444,26 +454,39 @@ def search(query, params, off, num_wanted) :
     
     print "DEBUGGING SEARCH\n\n"
     print "1st_URL: "+first_url
-    print "2nd_URL: "+second_url
+    #print "2nd_URL: "+second_url
     print "params: "+str(params)
     print "query: "+str(query)
 
     #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
     #search_results_parser = BeautifulSoup(html)
     #print "html in search\n"+str(html)
-    #print "search_resultts_parser = " + str(search_results_parser)
+    #print "search_results_parser = " + str(search_results_parser)
 
     
     
-    num_results, num_pages,page_idx,num_unwanted, off, search_results_parser, any_result = get_first_search_result(first_url, off, page_idx)
+    #num_results, num_pages,page_idx,num_unwanted, off, search_results_parser, any_result = get_first_search_result(first_url, off, page_idx)
     
-
+    search_results_parser = get_search_result_parser(first_url, page_idx)
+    if not search_results_parser:
+	  print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 464ish in search method"
+	  return Result(0, off), empty_params
+    num_results = __count(search_results_parser)
+    num_pages = num_results/per_page + 1
+    num_unwanted = off%per_page
+    
+    if page_idx>num_pages :
+	  page_idx = num_pages
+	  num_unwanted = 0
+	  off = (num_pages-1)*per_page
+	  search_results_parser = get_search_result_parser(first_url, page_idx)
+    
+    if __count(search_results_parser) is 0:
+	  return Result(0, off), empty_params
+	  
+	  """
     if not any_result:
-      return Result(0, off), empty_params
-      
-
-
-    print "Somehow got here?!"   
+      return Result(0, off), empty_params"""
    
     num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     if num_wanted <0 :
@@ -474,10 +497,15 @@ def search(query, params, off, num_wanted) :
     while len(images) < num_wanted:
         
         if not first_round :
-	    if page_idx>=num_pages:
-	      break
-	    html, page_idx = __get_search_resultsHtml(second_url,page_idx,num_pages)
+		  if page_idx>=num_pages:
+			break
+		#html, page_idx = __get_search_resultsHtml(second_url,page_idx,num_pages)
+		  """
+	    html, page_idx = __get_search_resultsHtml(second_url,page_idx,200000)
             search_results_parser = BeautifulSoup(html)
+		"""
+		  page_idx = page_idx+1
+		  search_results_parser = get_search_result_parser(first_url, page_idx)
         else :
             first_round = False
             
@@ -486,22 +514,20 @@ def search(query, params, off, num_wanted) :
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
         print "image_id_divs"
         print len(image_id_divs)
-        
-        if num_unwanted>0:
-	  while num_unwanted>0:
-	    num_unwanted = num_unwanted-1
-	    del image_id_divs[0]
-        #result = Result(num_results, off+len(images))
-        
-        # build images
+        while num_unwanted>0:
+		  num_unwanted = num_unwanted-1
+		  del image_id_divs[0]
+		  #result = Result(num_results, off+len(images))
+		  
+		# build images
         for div in image_id_divs :
-            images.append(__create_image(search_results_parser, div))
-        
-         
-        # discard any excess
-        
-            #field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn", "all"]    
-        
+		  images.append(__create_image(search_results_parser, div))
+		
+		
+		# discard any excess
+		
+			#field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn", "all"]    
+		  
     if len(images) > num_wanted :
             while len(images) > num_wanted :
                 images.pop()

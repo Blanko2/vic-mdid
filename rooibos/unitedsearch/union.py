@@ -10,6 +10,8 @@ class searcherUnion:
 		self.parameters = MapParameter(dict([(str(si), OptionalParameter(searchers[si].parameters, searchers[si].name)) for si in range(len(searchers))]))
 
 	def search(self, term, params, off, leng):
+	  
+
 		if str(off) == "0":
 			off = [0]*len(self.searchers)
 		else:
