@@ -380,7 +380,7 @@ def getImage(json_image_identifier) :
 def count(keyword) :
       first_url, params = build_URL(keyword, {})
       #num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
-      soup = get_search_result_parser(first_url, 0, 1)
+      soup = get_search_result_parser(first_url, 1)
       return __count(soup)
       #search_results_parser = BeautifulSoup(html)
       #print "html in count\n"+html
