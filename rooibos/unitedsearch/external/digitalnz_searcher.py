@@ -11,6 +11,10 @@ name = "DigitalNZ"
 identifier = "digitalnz"
 
 FORMAT_FINAL = "image"
+dnz_start_year=1500
+dnz_end_year=3000
+dnz_valid_types=['artwork','memorabilia','magazine','people','news','specimen','book','reference']
+dnz_valid_usage=['all rights reserved','share','modify','use commercially']
 
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 # TODO get a University API key instead of a personal one
@@ -104,18 +108,65 @@ def build_simple_URL(keywords):
 
 """
 returns a complex search using the digitalNZ API
+    format is a JSON string converted into a python object
 """
 def build_complex_URL(keywords, para_map):
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     year = ''  
-    if params["start_date"] and params['start_date'] != "":
-        start_year=format_date(params['start_date'], 'yyyy', "")
-        print 'digital_searcher L~110'
-        print start_year
-        year+= start_year + ' TO '
+    # replaces the starting year value with 1500 (digitalnz's oldest search year) if not present 
+    if 'start_date' in params:
+        # TODO: replace all this with stuff
+        # year+=format_date(params['start_year'], 'yyyy', "")+' TO ' if params['start_date'] != "" else: year+=dnz_start_year+' TO '
+        if params['start_date'] != "":
+            #this could be shorter -- when we remove the line directly below
+            start_year=format_date(params['start_date'], 'yyyy', "")
+            print 'digital_searcher L~110'
+            print start_year
+            year+= start_year + ' TO '
+        del params['start_date']
     else:
-        year+= '1500 TO '    
-    if params['end_date'] and params['end_date'] != "": 
-        year+= format_date(params['end_date'])
+        year+= dnz_start_year+' TO '   
+    
+    # does the same for end year (y:3000) dnz accepts an arbitrarily large end year value 
+    if 'end_date' in params:    
+        if params['end_date'] != "": 
+            year+= format_date(params['end_date'])
+        del params['end_date']
     else:
-        year+= '3000'
+        year+= dnz_end_year 
+    print'digitalnz L~130'
+    print year
+    print'===='
+    
+    if 'type' in params:
+        type = params['type'] if check_valid_type(params['type']) else None 
+        del params['type']
+        if type:
+            params['dnz_type'] = type
+    
+    if 'copyright' in params:
+        usage = params['copyright'] if check_valid_usage(params['copyright']) else None
+        if usage:
+            params['usage'] = usage
+
+
+    params['format'] = FORMAT_FINAL 
+    params['year']=year
+
+"""
+================
+#TOOLS
+================
+"""
+
+def check_valid_type(type):
+    if type in dnz_valid_type: 
+        return True
+    else:
+        return False
+
+def check_valid_usage(usage):
+    if usage in dnz_valid_usage:
+        return True
+    else:
+        return False

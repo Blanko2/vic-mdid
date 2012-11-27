@@ -1,6 +1,6 @@
-"""from rooibos.storage.models import *
+from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
-from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue"""
+from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 import re 
 import json
 import datetime
@@ -159,7 +159,6 @@ Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "
 	If no day or month is specified, returns jan 1st
 	Note, doesn't support BC dates, or specification of BC, AD
 
-<<<<<<< Updated upstream
     Supported outgoing formats: "ddmmyyyy", "mmddyyyy", "yyyy"
     
     Returns (startDate, endDate, error_msg) where startDate and endDate are formatted as requested
