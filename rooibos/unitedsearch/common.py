@@ -1,6 +1,6 @@
-from rooibos.storage.models import *
+"""from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
-from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
+from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue"""
 import re 
 import json
 import datetime
@@ -148,11 +148,10 @@ def get_supported_synonym(key, valid_keys):
 	return None
   
 #=============Helper Methods ============
-""" Takes a string describing one or two dates and returns it as (date1, date2, error_msg)
-      Note, returns date2 as None if two_dates_wanted=False, and error_msg=None unless error found
-      (if there is an error, date(s) are None)
+""" Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
+    as per desired_format
 
-    Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
+Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
 				"[yy]yy-[yyy]y"
 				"dd/mm/[yy]yy"
 				"[yy]yy"
@@ -160,13 +159,19 @@ def get_supported_synonym(key, valid_keys):
 	If no day or month is specified, returns jan 1st
 	Note, doesn't support BC dates, or specification of BC, AD
 
+<<<<<<< Updated upstream
     Supported outgoing formats: "ddmmyyyy", "mmddyyyy", "yyyy"
-
+    
+    Returns (startDate, endDate, error_msg) where startDate and endDate are formatted as requested
+    Both dates are "" if date is unparsable or invalid
+    error_msg is None unless error was found
+    
     Note, date must be the entire string, or regices will break
     
     Pass default end date as a datetime.date object
 """
 def format_date(date, desired_format, separator, default_end=datetime.date.today(), two_dates_wanted=False):
+
 
   # first, check if date is year range only (simplest format)
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
@@ -178,20 +183,20 @@ def format_date(date, desired_format, separator, default_end=datetime.date.today
   else:
       day_match = re.match("^((?P<d1>(\d{2}))(?P<separator>([-/:]))(?P<m1>(\d{2}))(?P=separator)(?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<d2>(\d{2}))(?P=separator)(?P<m2>(\d{2}))(?P=separator)(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{2})))?)$", date)
       if day_match :
-	date1_tuple, date2_tuple = _build_dates_from_day(day_match, default_end, two_dates_wanted)
+	date1_tuple,date2_tuple = _build_dates_from_day(day_match, default_end, two_dates_wanted)
       else:
 	# dammit, unrecognised format
 	return "", "", ("Date was unparsable: %s" %(date))
 
   # have date data, now validate it
-  date1_tuple,date2_tuple, error_msg = _validate_date_range(date1_tuple, date2_tuple)
+  date1_tuple, date2_tuple, error_msg = _validate_date_range(date1_tuple, date2_tuple)
   
   if error_msg:
     return "", "", error_msg
   
   # and format
   date1, date2 = _format_dates(date1_tuple, date2_tuple, desired_format, separator)
-  return date1, date2, None
+  return date1, date2, None	# no error message
   
 
 def _build_dates_from_year(year_match, default_end, two_dates_wanted):
@@ -206,9 +211,9 @@ def _build_dates_from_year(year_match, default_end, two_dates_wanted):
     else:
 	y1_prefix = _get_default_year_prefix(int(y1_suffix))
 	y1 = int(y1_prefix+y1_suffix)
-    
+
+    # build y2 data
     if two_dates_wanted:
-	# build y2 data
 	d2 = 31	# end of year for last year of date range - want to include whole year
 	m2 = 12
 	y2_prefix = year_match.group("y2_prefix")
@@ -216,7 +221,7 @@ def _build_dates_from_year(year_match, default_end, two_dates_wanted):
 	if y2_prefix and len(y2_suffix) > 1:	# have full date specified
 	    y2 = int(y2_prefix + y2_suffix)
 	elif y2_suffix:
-	    # no prefix specified, use data from y1
+	    # no prefix specified, use data from from date
 	    if len(y2_suffix) is 2:
 		y2 = int(y1_prefix+y2_suffix)
 	    else:
@@ -226,15 +231,13 @@ def _build_dates_from_year(year_match, default_end, two_dates_wanted):
 	    y2 = str(default_end.year)
 
 	return ((d1,m1,y1), (d2,m2,y2))
-  
     else:
 	return (d1,m1,y1), None
-  
 
 
 
 def _build_dates_from_day(day_match, default_end, two_dates_wanted):
-  
+
     # build from year data
     d1 = int(day_match.group("d1"))
     m1 = int(day_match.group("m1"))
@@ -246,8 +249,8 @@ def _build_dates_from_day(day_match, default_end, two_dates_wanted):
 	y1_prefix = _get_default_year_prefix(int(y1_suffix))
 	y1 = int(y1_prefix+y1_suffix)
 
+    # build y2 data
     if two_dates_wanted:
-	# build y2 data
 	d2 = int(day_match.group("d2")) if day_match.group("d2") else default_end.day
 	m2 = int(day_match.group("m2")) if day_match.group("m2") else default_end.month
 	y2_prefix = day_match.group("y2_prefix")
@@ -259,13 +262,12 @@ def _build_dates_from_day(day_match, default_end, two_dates_wanted):
 	    y2 = int(y2_prefix + y2_suffix)
 	else:		# no data specified
 	    y2 = default_end.year
-	    
-	return ((d1,m1,y1), (d2,m2,y2))
 
+	return ((d1,m1,y1), (d2,m2,y2))
+	
     else:
 	return (d1,m1,y1), None
-  
-    
+
     
 def _get_default_year_prefix(year_suffix):
   
@@ -282,12 +284,11 @@ def _validate_date_range(date1_tuple, date2_tuple):
     if date1_tuple and date2_tuple:
 	y1 = date1_tuple[2]
 	y2 = date2_tuple[2]
-	print date1_tuple
 	if y1 > y2:
 	    return date1_tuple, date2_tuple, ("Date range cannot be negative: %s-%s" %(y1,y2))
     
     return date1_tuple, date2_tuple, None
-
+  
 
 def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
 
@@ -308,3 +309,6 @@ def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
 	return date1, date2
     else:
 	raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
+
+  
+  
