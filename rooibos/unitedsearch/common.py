@@ -172,7 +172,7 @@ def format_date(date, desired_format, separator, default_end=datetime.date.today
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
   
   if year_match:
-    date1_tuple,date2_tuple = _build_dates_from_year(year_match, default_end, two_dates_wanted)
+     date1_tuple,date2_tuple = _build_dates_from_year(year_match, default_end, two_dates_wanted)
   
   # next, try day format matching
   else:
