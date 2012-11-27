@@ -109,7 +109,10 @@ def build_complex_URL(keywords, para_map):
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     year = ''  
     if params["start_date"] and params['start_date'] != "":
-        year+= format_date(params['start_date']) +' TO '
+        start_year=format_date(params['start_date'], 'yyyy', "")
+        print 'digital_searcher L~110'
+        print start_year
+        year+= start_year + ' TO '
     else:
         year+= '1500 TO '    
     if params['end_date'] and params['end_date'] != "": 
