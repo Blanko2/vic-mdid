@@ -610,23 +610,38 @@ def getDate(date):
 ## 		##
 field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
     
+"""
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
+  "all": OptionalParameter(ScalarParameter(str, "")),
+  "artist": OptionalParameter(ScalarParameter(str, "")),
+  "title": OptionalParameter(ScalarParameter(str, "")),
+  "content": OptionalParameter(ScalarParameter(str, "")),
+  "table of contents or captions": OptionalParameter(ScalarParameter(str, "")),
+  "subject": OptionalParameter(ScalarParameter(str, "")),
+  "source": OptionalParameter(ScalarParameter(str, "")),
+  "bibliographic record": OptionalParameter(ScalarParameter(str, "")),
+  "publisher": OptionalParameter(ScalarParameter(str, "")),
+  "isbn": OptionalParameter(ScalarParameter(str, "")),
   "languages": 
   DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
   DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
-  "field" : MapParameter({
+  
+  })
+  
+
+	"field" : MapParameter({
     "field1": UserDefinedTypeParameter(field_types),
     "field2": UserDefinedTypeParameter(field_types),
     "field3": UserDefinedTypeParameter(field_types),
     "field4": UserDefinedTypeParameter(field_types),
     "field5": UserDefinedTypeParameter(field_types)
     })
-  })
-  
 """
+  
+
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
@@ -635,27 +650,27 @@ parameters = MapParameter({
   "copyright": 
   DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
   "key word" : MapParameter({
-    "artist": UserDefinedTypeParameter(field_types),
-    "title": UserDefinedTypeParameter(field_types),
-    "content": UserDefinedTypeParameter(field_types),
-    "table of contents or captions": UserDefinedTypeParameter(field_types),
-    "subject": UserDefinedTypeParameter(field_types),
-    "source": UserDefinedTypeParameter(field_types),
-    "bibliographic record": UserDefinedTypeParameter(field_types),
-    "publisher": UserDefinedTypeParameter(field_types),
-    "isbn": UserDefinedTypeParameter(field_types)
+	"artist": OptionalParameter(ScalarParameter(str, "")),
+	"title": OptionalParameter(ScalarParameter(str, "")),
+	"content": OptionalParameter(ScalarParameter(str, "")),
+	"table of contents or captions": OptionalParameter(ScalarParameter(str, "")),
+	"subject": OptionalParameter(ScalarParameter(str, "")),
+	"source": OptionalParameter(ScalarParameter(str, "")),
+	"bibliographic record": OptionalParameter(ScalarParameter(str, "")),
+	"publisher": OptionalParameter(ScalarParameter(str, "")),
+	"isbn": OptionalParameter(ScalarParameter(str, "")),
     })
   })
 
-"""
+
   
 empty_params = {"start date": [],
     "end date": [],
     "languages": [],
     "copyright": [],
     "all": [],
-    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
-    "field": {"field1":[], "field2":[], "field3":[], "field4":[], "field5":[]	}
+    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]}
+    #"field": {"field1":[], "field2":[], "field3":[], "field4":[], "field5":[]	}
 }
 
 valid_keys=["start date",
@@ -666,7 +681,7 @@ valid_keys=["start date",
     "artist",
     "title",
     "content",
-    "table Of contents or captions",
+    "table of contents or captions",
     "subject",
     "source",
     "bibliographic record",
