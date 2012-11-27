@@ -173,12 +173,9 @@ def get_supported_synonym(key, valid_keys):
     Pass default end date as a datetime.date object
 """
 def format_date(date, desired_format, separator, default_end=datetime.date.today()):
-=======
     If month or day is invalid (eg, mm = 21), attempts swapping month and day order
 
 def format_date(date, format, separator):
->>>>>>> Stashed changes
-
   # first, check if date is year range only (simplest format)
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
   
@@ -229,12 +226,10 @@ def _build_dates_from_year(year_match, default_end):
     if len(y2_suffix) is 2:
       y2 = int(y1_prefix+y2_suffix)
     else:
-<<<<<<< Updated upstream
       y2 = int( y1_prefix + y1_suffix[0:1] + y2_suffix)
   else:
     # no second date specified, use default
     y2 = str(default_end.year)
-=======
     	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
 	if date_match:
 	day = date_match.group("day")
