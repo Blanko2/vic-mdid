@@ -19,7 +19,7 @@ FIRST_ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&
 #&dateMiseEnLigne=indexDateFrom
 
 
-ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 #&dateMiseEnLigne=indexDateFrom
 
@@ -90,6 +90,7 @@ def build_advanced_url(keywords, params):
   end_date 	= ""
   
   if "copyright" in params:
+      
       copyright = getcopyright(params)
       del params['copyright']      
   if "languages" in params:
@@ -120,6 +121,8 @@ def build_advanced_url(keywords, params):
   print params
   print temp_optionals 
   """
+  
+
 
   for opt_parameter in temp_optionals:
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
@@ -129,12 +132,16 @@ def build_advanced_url(keywords, params):
 	  else:
 	    keywords += " " + temp_optionals[opt_parameter]
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
+	    
       else:
 	#print temp_optionals[opt_parameter]
-	keywords += " " + temp_optionals[opt_parameter][0]
+	keywords += " " + temp_optionals[opt_parameter]
 	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
-	
+
   # start with keywords, than add on any other requested optionals
+  
+  
+
   optionals_string = "&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
   
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
@@ -377,6 +384,8 @@ def count(keyword) :
       
 def get_first_search_result(url,off, page_idx) :
     url2 = re.sub("PAGEIDX", str(page_idx),url)
+    print "url2"
+    print url2
     html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url2)
     search_results_parser = BeautifulSoup(html)
     if not any_results(search_results_parser) :
@@ -410,19 +419,21 @@ def get_search_result_parser(url,off, page_idx) :
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
-    """
+    
     print "num_wanted ==="
     print num_wanted
     print "query"
     print query
     print "params"
     print params
-    """
+    print "off"
+    print off
+
     perPage = num_wanted
     off = (int)(off)
     if off<0:
       off=0
-    page_idx = page_idx = 1 + (off/50)
+    page_idx  = 1 + (off/50)
     
     
 
@@ -452,8 +463,8 @@ def search(query, params, off, num_wanted) :
     #search_results_parser = BeautifulSoup(html)
     #print "html in search\n"+str(html)
     #print "search_resultts_parser = " + str(search_results_parser)
-
-    
+    print "page_idx"
+    print page_idx
     
     num_results, num_pages,page_idx,num_unwanted, off, search_results_parser, any_result = get_first_search_result(first_url, off, page_idx)
     
@@ -582,8 +593,25 @@ def getDate(date):
 ## 		##
 ## PARAMETERS 	##
 ## 		##
-field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
+field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
     
+parameters = MapParameter({
+  "start date": OptionalParameter(ScalarParameter(str, "start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "end date")),
+  "languages": 
+  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+  "copyright": 
+  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
+  "field" : MapParameter({
+    "field1": UserDefinedTypeParameter(field_types),
+    "field2": UserDefinedTypeParameter(field_types),
+    "field3": UserDefinedTypeParameter(field_types),
+    "field4": UserDefinedTypeParameter(field_types),
+    "field5": UserDefinedTypeParameter(field_types)
+    })
+  })
+  
+"""
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
@@ -603,13 +631,16 @@ parameters = MapParameter({
     "isbn": UserDefinedTypeParameter(field_types)
     })
   })
+
+"""
   
 empty_params = {"start date": [],
     "end date": [],
     "languages": [],
     "copyright": [],
     "all": [],
-    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]}
+    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
+    "field": {"field1":[], "field2":[], "field3":[], "field4":[], "field5":[]	}
 }
 
 valid_keys=["start date",

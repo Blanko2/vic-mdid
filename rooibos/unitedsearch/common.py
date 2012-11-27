@@ -44,6 +44,7 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 or form word
 """
 def break_query_string(query):
+
     keywords = ""
     para_map = {}
 
