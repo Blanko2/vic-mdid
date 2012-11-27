@@ -148,9 +148,9 @@ def get_supported_synonym(key, valid_keys):
 	return None
   
 #=============Helper Methods ============
-""" Example desired format: ddmmyyyy
-	Can have no days, and/or no months, and 2 or 4 year-specifiers
-    Example separators: "", ".", "/", "-", ":", None
+""" Takes a string describing one or two dates and returns it as (date1, date2, error_msg)
+      Note, returns date2 as None if two_dates_wanted=False, and error_msg=None unless error found
+      (if there is an error, date(s) are None)
 
     Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
 				"[yy]yy-[yyy]y"
@@ -161,103 +161,109 @@ def get_supported_synonym(key, valid_keys):
 	Note, doesn't support BC dates, or specification of BC, AD
 
     Supported outgoing formats: "ddmmyyyy", "mmddyyyy", "yyyy"
-    
-    Returns (startDate, endDate, error_msg) where startDate and endDate are formatted as requested
-    Both dates are "" if date is unparsable or invalid
-    error_msg is None unless error was found
-    
+
     Note, date must be the entire string, or regices will break
     
     Pass default end date as a datetime.date object
 """
-def format_date(date, desired_format, separator, default_end=datetime.date.today()):
+def format_date(date, desired_format, separator, default_end=datetime.date.today(), two_dates_wanted=False):
 
   # first, check if date is year range only (simplest format)
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
   
   if year_match:
-    (d1,m1,y1),(d2,m2,y2) = _build_dates_from_year(year_match, default_end)
+    date1_tuple,date2_tuple = _build_dates_from_year(year_match, default_end, two_dates_wanted)
   
   # next, try day format matching
   else:
       day_match = re.match("^((?P<d1>(\d{2}))(?P<separator>([-/:]))(?P<m1>(\d{2}))(?P=separator)(?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<d2>(\d{2}))(?P=separator)(?P<m2>(\d{2}))(?P=separator)(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{2})))?)$", date)
       if day_match :
-	(d1,m1,y1),(d2,m2,y2) = _build_dates_from_day(day_match, default_end)
+	date1_tuple, date2_tuple = _build_dates_from_day(day_match, default_end, two_dates_wanted)
       else:
 	# dammit, unrecognised format
 	return "", "", ("Date was unparsable: %s" %(date))
 
   # have date data, now validate it
-  (d1,m1,y1),(d2,m2,y2), error_msg = _validate_date_range((d1,m1,y1),(d2,m2,y2))
+  date1_tuple,date2_tuple, error_msg = _validate_date_range(date1_tuple, date2_tuple)
   
   if error_msg:
     return "", "", error_msg
   
   # and format
-  return (_format_dates((d1,m1,y1), (d2,m2,y2), desired_format, separator), None)	# no error message
+  date1, date2 = _format_dates(date1_tuple, date2_tuple, desired_format, separator)
+  return date1, date2, None
   
 
-def _build_dates_from_year(year_match, default_end):
+def _build_dates_from_year(year_match, default_end, two_dates_wanted):
   
-  # build y1 data
-  d1 = 1	# defaults
-  m1 = 1
-  y1_prefix = year_match.group("y1_prefix")
-  y1_suffix = year_match.group("y1_suffix")
-  if y1_prefix:
-    y1 = int(y1_prefix + y1_suffix)
-  else:
-    y1_prefix = _get_default_year_prefix(int(y1_suffix))
-    y1 = int(y1_prefix+y1_suffix)
-    
-  # build y2 data
-  d2 = 31	# end of year for last year of date range - want to include whole year
-  m2 = 12
-  y2_prefix = year_match.group("y2_prefix")
-  y2_suffix = year_match.group("y2_suffix")
-  if y2_prefix and len(y2_suffix) > 1:	# have full date specified
-    y2 = int(y2_prefix + y2_suffix)
-  elif y2_suffix:
-    # no prefix specified, use data from from date
-    if len(y2_suffix) is 2:
-      y2 = int(y1_prefix+y2_suffix)
+    # build y1 data
+    d1 = 1	# defaults
+    m1 = 1
+    y1_prefix = year_match.group("y1_prefix")
+    y1_suffix = year_match.group("y1_suffix")
+    if y1_prefix:
+	y1 = int(y1_prefix + y1_suffix)
     else:
-      y2 = int( y1_prefix + y1_suffix[0:1] + y2_suffix)
-  else:
-    # no second date specified, use default
-    y2 = str(default_end.year)
+	y1_prefix = _get_default_year_prefix(int(y1_suffix))
+	y1 = int(y1_prefix+y1_suffix)
+    
+    if two_dates_wanted:
+	# build y2 data
+	d2 = 31	# end of year for last year of date range - want to include whole year
+	m2 = 12
+	y2_prefix = year_match.group("y2_prefix")
+	y2_suffix = year_match.group("y2_suffix")
+	if y2_prefix and len(y2_suffix) > 1:	# have full date specified
+	    y2 = int(y2_prefix + y2_suffix)
+	elif y2_suffix:
+	    # no prefix specified, use data from y1
+	    if len(y2_suffix) is 2:
+		y2 = int(y1_prefix+y2_suffix)
+	    else:
+		y2 = int( y1_prefix + y1_suffix[0:1] + y2_suffix)
+	else:
+	    # no second date specified, use default
+	    y2 = str(default_end.year)
 
-  return ((d1,m1,y1), (d2,m2,y2))
-
-
-
-def _build_dates_from_day(day_match, default_end):
+	return ((d1,m1,y1), (d2,m2,y2))
   
-  # build from year data
-  d1 = int(day_match.group("d1"))
-  m1 = int(day_match.group("m1"))
-  y1_prefix = day_match.group("y1_prefix")
-  y1_suffix = day_match.group("y1_suffix")
-  if y1_prefix:
-    y1 = int(y1_prefix + y1_suffix)
-  else:
-    y1_prefix = _get_default_year_prefix(int(y1_suffix))
-    y1 = int(y1_prefix+y1_suffix)
-    
-  # build y2 data
-  d2 = int(day_match.group("d2")) if day_match.group("d2") else default_end.day
-  m2 = int(day_match.group("m2")) if day_match.group("m2") else default_end.month
-  y2_prefix = day_match.group("y2_prefix")
-  y2_suffix = day_match.group("y2_suffix")
-  if y2_prefix:
-    y2 = int(y2_prefix + y2_suffix)
-  elif y2_suffix:	# but not y2_prefix
-    y2_prefix = y1_prefix
-    y2 = int(y2_prefix + y2_suffix)
-  else:		# no data specified
-    y2 = default_end.year
-    
-  return ((d1,m1,y1), (d2,m2,y2))
+    else:
+	return (d1,m1,y1), None
+  
+
+
+
+def _build_dates_from_day(day_match, default_end, two_dates_wanted):
+  
+    # build from year data
+    d1 = int(day_match.group("d1"))
+    m1 = int(day_match.group("m1"))
+    y1_prefix = day_match.group("y1_prefix")
+    y1_suffix = day_match.group("y1_suffix")
+    if y1_prefix:
+	y1 = int(y1_prefix + y1_suffix)
+    else:
+	y1_prefix = _get_default_year_prefix(int(y1_suffix))
+	y1 = int(y1_prefix+y1_suffix)
+
+    if two_dates_wanted:
+	# build y2 data
+	d2 = int(day_match.group("d2")) if day_match.group("d2") else default_end.day
+	m2 = int(day_match.group("m2")) if day_match.group("m2") else default_end.month
+	y2_prefix = day_match.group("y2_prefix")
+	y2_suffix = day_match.group("y2_suffix")
+	if y2_prefix:
+	    y2 = int(y2_prefix + y2_suffix)
+	elif y2_suffix:	# but not y2_prefix
+	    y2_prefix = y1_prefix
+	    y2 = int(y2_prefix + y2_suffix)
+	else:		# no data specified
+	    y2 = default_end.year
+	    
+	return ((d1,m1,y1), (d2,m2,y2))
+
+    else:
+	return (d1,m1,y1), None
   
     
     
@@ -271,30 +277,34 @@ def _get_default_year_prefix(year_suffix):
 
     
 # currently v simple checking, could update TODO
-def _validate_date_range((d1,m1,y1), (d2,m2,y2)):
+def _validate_date_range(date1_tuple, date2_tuple):
   
-  if y1 > y2:
-    return (d1,m1,y1), (d2,m2,y2), ("Date range cannot be negative: %s-%s" %(y1,y2))
-  else:
-    return (d1,m1,y1), (d2,m2,y2), None
-  
+    if date1_tuple and date2_tuple:
+	y1 = date1_tuple[2]
+	y2 = date2_tuple[2]
+	print date1_tuple
+	if y1 > y2:
+	    return date1_tuple, date2_tuple, ("Date range cannot be negative: %s-%s" %(y1,y2))
+    
+    return date1_tuple, date2_tuple, None
 
-def _format_dates((d1,m1,y1), (d2,m2,y2), desired_format, separator):
-  
-  if desired_format is "ddmmyyyy":
-    date1 = ("%s%s%s%s%s" %(d1,separator, m1, separator, y1))
-    date2 = ("%s%s%s%s%s" %(d2,separator, m2, separator, y2))
-    return date1,date2
-  elif desired_format is "mmddyyyy":
-    date1 = ("%s%s%s%s%s" %(m1,separator, d1, separator, y1))
-    date2 = ("%s%s%s%s%s" %(m2,separator, d2, separator, y2))
-    return date1,date2
-  elif desired_format is "yyyy":
-    date1 = str(y1)
-    date2 = str(y2)
-    return date1, date2
-  else:
-    raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
-  
-  
-  
+
+def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
+
+    d1,m1,y1 = date1_tuple
+    if date2_tuple:
+	d2,m2,y2 = date2_tuple
+    if desired_format is "ddmmyyyy":
+	date1 = ("%s%s%s%s%s" %(d1,separator, m1, separator, y1))
+	date2 = ("%s%s%s%s%s" %(d2,separator, m2, separator, y2)) if date2_tuple else None
+	return date1,date2
+    elif desired_format is "mmddyyyy":
+	date1 = ("%s%s%s%s%s" %(m1,separator, d1, separator, y1))
+	date2 = ("%s%s%s%s%s" %(m2,separator, d2, separator, y2)) if date2_tuple else None
+	return date1,date2
+    elif desired_format is "yyyy":
+	date1 = str(y1)
+	date2 = str(y2) if date2_tuple else None
+	return date1, date2
+    else:
+	raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
