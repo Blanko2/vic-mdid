@@ -133,7 +133,7 @@ def build_advanced_url(keywords, params):
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
       else:
 	#print temp_optionals[opt_parameter]
-	keywords += " " + temp_optionals[opt_parameter][0]
+	keywords += " " + temp_optionals[opt_parameter]
 	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
 	
   # start with keywords, than add on any other requested optionals
@@ -608,8 +608,25 @@ def getDate(date):
 ## 		##
 ## PARAMETERS 	##
 ## 		##
-field_types = ["artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
+field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
     
+parameters = MapParameter({
+  "start date": OptionalParameter(ScalarParameter(str, "start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "end date")),
+  "languages": 
+  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+  "copyright": 
+  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
+  "field" : MapParameter({
+    "field1": UserDefinedTypeParameter(field_types),
+    "field2": UserDefinedTypeParameter(field_types),
+    "field3": UserDefinedTypeParameter(field_types),
+    "field4": UserDefinedTypeParameter(field_types),
+    "field5": UserDefinedTypeParameter(field_types)
+    })
+  })
+  
+"""
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
@@ -629,13 +646,16 @@ parameters = MapParameter({
     "isbn": UserDefinedTypeParameter(field_types)
     })
   })
+
+"""
   
 empty_params = {"start date": [],
     "end date": [],
     "languages": [],
     "copyright": [],
     "all": [],
-    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]}
+    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
+    "field": {"field1":[], "field2":[], "field3":[], "field4":[], "field5":[]	}
 }
 
 valid_keys=["start date",
