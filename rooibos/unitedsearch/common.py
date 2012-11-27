@@ -3,6 +3,7 @@ from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GR
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 import re 
 import json
+import datetime
 
 
 API_KEY="sfypBYD5Jpu1XqYBipX8"
@@ -149,57 +150,151 @@ def get_supported_synonym(key, valid_keys):
 #=============Helper Methods ============
 """ Example desired format: ddmmyyyy
 	Can have no days, and/or no months, and 2 or 4 year-specifiers
-    Example separators: "", ".", "/", "-", None
-    
-    Will return "" if date is unparsable or invalid
+    Example separators: "", ".", "/", "-", ":", None
 
-    Supported incoming formats: "ddmmyy[yy]", "dd-mm-yy[yy]" (or any non-numeric separator), "mm-yy[yy]", "yy[yy]", None, ""
+    Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
+				"[yy]yy-[yyy]y"
+				"dd/mm/[yy]yy"
+				"[yy]yy"
 	Passing None or "" as date returns current date
 	If no day or month is specified, returns jan 1st
 	Note, doesn't support BC dates, or specification of BC, AD
 
-    If month or day is invalid (eg, mm = 21), attempts swapping month and day order
+    Supported outgoing formats: "ddmmyyyy", "mmddyyyy", "yyyy"
+    
+    Returns (startDate, endDate, error_msg) where startDate and endDate are formatted as requested
+    Both dates are "" if date is unparsable or invalid
+    error_msg is None unless error was found
+    
+    Note, date must be the entire string, or regices will break
+    
+    Pass default end date as a datetime.date object
 """
+def format_date(date, desired_format, separator, default_end=datetime.date.today()):
 
-"""
-def format_date(date, format, separator):
+  # first, check if date is year range only (simplest format)
+  year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
+  
+  if year_match:
+    (d1,m1,y1),(d2,m2,y2) = _build_dates_from_year(year_match, default_end)
+  
+  # next, try day format matching
+  else:
+      day_match = re.match("^((?P<d1>(\d{2}))(?P<separator>([-/:]))(?P<m1>(\d{2}))(?P=separator)(?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<d2>(\d{2}))(?P=separator)(?P<m2>(\d{2}))(?P=separator)(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{2})))?)$", date)
+      if day_match :
+	(d1,m1,y1),(d2,m2,y2) = _build_dates_from_day(day_match, default_end)
+      else:
+	# dammit, unrecognised format
+	return "", "", ("Date was unparsable: %s" %(date))
 
-  if isinstance(date, str) or isinstance(date, unicode):
-    # break down string into parts
+  # have date data, now validate it
+  (d1,m1,y1),(d2,m2,y2), error_msg = _validate_date_range((d1,m1,y1),(d2,m2,y2))
+  
+  if error_msg:
+    return "", "", error_msg
+  
+  # and format
+  return (_format_dates((d1,m1,y1), (d2,m2,y2), desired_format, separator), None)	# no error message
+  
 
-    # first, check if date is just a year:
-    year_match = re.match("^(\d{2,4})$", date)
-    if year_match:
-	day_int = 1
-	month_int = 1
-	year_int = int(year_match.group(0)
+def _build_dates_from_year(year_match, default_end):
+  
+  # build y1 data
+  d1 = 1	# defaults
+  m1 = 1
+  y1_prefix = year_match.group("y1_prefix")
+  y1_suffix = year_match.group("y1_suffix")
+  if y1_prefix:
+    y1 = int(y1_prefix + y1_suffix)
+  else:
+    y1_prefix = _get_default_year_prefix(int(y1_suffix))
+    y1 = int(y1_prefix+y1_suffix)
+    
+  # build y2 data
+  d2 = 31	# end of year for last year of date range - want to include whole year
+  m2 = 12
+  y2_prefix = year_match.group("y2_prefix")
+  y2_suffix = year_match.group("y2_suffix")
+  if y2_prefix and len(y2_suffix) > 1:	# have full date specified
+    y2 = int(y2_prefix + y2_suffix)
+  elif y2_suffix:
+    # no prefix specified, use data from from date
+    if len(y2_suffix) is 2:
+      y2 = int(y1_prefix+y2_suffix)
+    else:
+      y2 = int( y1_prefix + y1_suffix[0:1] + y2_suffix)
+  else:
+    # no second date specified, use default
+    y2 = str(default_end.year)
 
-    # then, try matching full date
-    else: 
-    	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
-	if date_match:
-	day = date_match.group("day")
-	month = date_match.group("month")
-	year = date_match.group("year")
-	  
-	# regex always matches day over year if one is present, and we want to treat it as month
-	if day and not month
-	  month = day
-	  day = "01"
-
-	day_int = int(day) if day else 1
-	month_int = int(month) if day else 1
-	year_int = int(year)
-
-    # format date
-    # validate date (simple validation, eg assume 31 feb is valid)
-    if day_int < 0 or day_int > 31:
-	# invalid
-	return ""
-
-
-"""
-
+  return ((d1,m1,y1), (d2,m2,y2))
 
 
 
+def _build_dates_from_day(day_match, default_end):
+  
+  # build from year data
+  d1 = int(day_match.group("d1"))
+  m1 = int(day_match.group("m1"))
+  y1_prefix = day_match.group("y1_prefix")
+  y1_suffix = day_match.group("y1_suffix")
+  if y1_prefix:
+    y1 = int(y1_prefix + y1_suffix)
+  else:
+    y1_prefix = _get_default_year_prefix(int(y1_suffix))
+    y1 = int(y1_prefix+y1_suffix)
+    
+  # build y2 data
+  d2 = int(day_match.group("d2")) if day_match.group("d2") else default_end.day
+  m2 = int(day_match.group("m2")) if day_match.group("m2") else default_end.month
+  y2_prefix = day_match.group("y2_prefix")
+  y2_suffix = day_match.group("y2_suffix")
+  if y2_prefix:
+    y2 = int(y2_prefix + y2_suffix)
+  elif y2_suffix:	# but not y2_prefix
+    y2_prefix = y1_prefix
+    y2 = int(y2_prefix + y2_suffix)
+  else:		# no data specified
+    y2 = default_end.year
+    
+  return ((d1,m1,y1), (d2,m2,y2))
+  
+    
+    
+def _get_default_year_prefix(year_suffix):
+  
+  current_year = datetime.date.today().year
+  if year_suffix <= current_year:
+    return str(current_year)[0:2]	# prefix of current year
+  else:
+    return str(current_year-100)[0:2]	# previous century
+
+    
+# currently v simple checking, could update TODO
+def _validate_date_range((d1,m1,y1), (d2,m2,y2)):
+  
+  if y1 > y2:
+    return (d1,m1,y1), (d2,m2,y2), ("Date range cannot be negative: %s-%s" %(y1,y2))
+  else:
+    return (d1,m1,y1), (d2,m2,y2), None
+  
+
+def _format_dates((d1,m1,y1), (d2,m2,y2), desired_format, separator):
+  
+  if desired_format is "ddmmyyyy":
+    date1 = ("%s%s%s%s%s" %(d1,separator, m1, separator, y1))
+    date2 = ("%s%s%s%s%s" %(d2,separator, m2, separator, y2))
+    return date1,date2
+  elif desired_format is "mmddyyyy":
+    date1 = ("%s%s%s%s%s" %(m1,separator, d1, separator, y1))
+    date2 = ("%s%s%s%s%s" %(m2,separator, d2, separator, y2))
+    return date1,date2
+  elif desired_format is "yyyy":
+    date1 = str(y1)
+    date2 = str(y2)
+    return date1, date2
+  else:
+    raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
+  
+  
+  
