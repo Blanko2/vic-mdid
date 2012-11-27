@@ -37,7 +37,28 @@ class usViewer():
 	def htmlparams(self, defaults):
 		def out(params, indent, prefix, default):
 			label = params.label if params.label else " ".join(prefix)
-			if isinstance(params, MapParameter):
+			
+			
+			if isinstance(params, DefinedListParameter):
+				print "DefinedListParameter : ----------"
+
+				options = params.options or []
+				r_content = "  "*indent + (label + ": " if params.label else "") 
+				#r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
+				r_content += "<select name=\"i_" + "_".join(prefix) + "\""
+				if params.multipleAllowed :
+				  r_content += " multiple = \"multiple\""
+				r_content += ">"
+				selected_option = default or options[0]
+				for option in options :
+				    r_content += "<option value=" + option
+				    if option == selected_option :
+				      r_content += " selected=\"selected\""
+				    r_content += ">" + option + "</option>"
+				r_content += "</select>"
+				return [r_content]
+			
+			elif isinstance(params, MapParameter):
 				r = ["  "*indent + "<div>"]
 				for index in range(len(params.parammap)-1, -1, -1) :
 				#for k in params.parammap:
@@ -58,22 +79,7 @@ class usViewer():
 				indent -= 1
 				r += ["  "*indent + "</div>"]
 				return r
-			elif isinstance(params, DefinedListParameter):
-				options = params.options or []
-				r_content = "  "*indent + (label + ": " if params.label else "") 
-				#r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
-				r_content += "<select name=\"i_" + "_".join(prefix) + "\""
-				if params.multipleAllowed :
-				  r_content += " multiple = \"multiple\""
-				r_content += ">"
-				selected_option = default or options[0]
-				for option in options :
-				    r_content += "<option value=" + option
-				    if option == selected_option :
-				      r_content += " selected=\"selected\""
-				    r_content += ">" + option + "</option>"
-				r_content += "</select>"
-				return [r_content]
+			
 			elif isinstance(params, UserDefinedTypeParameter) :
 			      options = params.type_options or []
 			      r_content = "  "*indent + (label + ": " if params.label else "")
@@ -128,20 +134,71 @@ class usViewer():
 					field_type = inputs["_".join(prefix)+"_type"]
 				if "_".join(prefix)+"_value" in inputs:
 					field_value = inputs["_".join(prefix)+"_value"]
-				return [field_type, field_value]
+				return field_type, field_value
 				#if "_".join(prefix) in inputs:
 				#	return inputs["_".join(prefix)]
 		return read(self.searcher.parameters, [])
 	
 	def perform_search(self, request, resultcount):
+		print "ddddddddddddddddddddddd"
+		print "self"
+		print self
+		print "\n\n\n\nrequest:"
+		print request
 		query = request.GET.get('q', '') or request.POST.get('q', '')
+		print "query ="
+		print query
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
 		params = {}
+		
+		# Gallica
+		if "i_field_field1_type" in request.GET: 
+		  n=1
+		  while n<=5:
+		    key = request.GET["i_field_field"+str(n)+"_type"]
+		    value = request.GET["i_field_field"+str(n)+"_value"]
+		    if value:
+		      params.update({key:value})
+		    n=n+1
+		  if "i_languages" in request.GET:
+		    lang = request.GET["i_languages"]
+		    params.update({"languages":lang})
+		  if "i_copyright" in request.GET:
+		    cr = request.GET["i_copyright"]
+		    params.update({"copyright":cr})
+		  if "i_start date" in request.GET:
+		    sd = request.GET["i_start date"]
+		    params.update({"start date":sd})
+		  if "i_start date" in request.GET:
+		    ed = request.GET["i_end date"]
+		    params.update({"end date":sd})
+		#NGA    
+		else : 
+		  for n in request.GET:
+		    print n
+		    print "="
+		    print request.GET[n]
+		    if "_opt" in n:
+		      key = n.replace("i_","").replace("_opt",'')
+		      if request.GET[n]:
+			params.update({key:request.GET[n]})
+		    
+
+		  
+		"""
 		for n in request.GET:
+			print "n ="
+			print n
+			print "="
+			print request.GET[n]
+			print "\n\n"
 			if n[:2] == "p-":
 				params[n[2:]] = request.GET[n]
+		"""
 		#args = self.readargs(request.GET)
-		result,args = self.searcher.search(query, {}, offset, resultcount)
+		#query = "keyword=,title=e,artist=e"
+		print params
+		result,args = self.searcher.search(query, params, offset, resultcount)
 		results = result.images
 
 		def resultpart(image):
@@ -209,6 +266,7 @@ class usViewer():
 			}
 		
 	def search(self, request):
+		
 		a = self.perform_search(request,50)
 		print "previous_page: %s" % a["previous_page"]
 		return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
