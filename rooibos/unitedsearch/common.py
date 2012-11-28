@@ -45,12 +45,16 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 or form word
 """
 def break_query_string(query):
+    """
     print "breaking"
     print query
+    """
     keywords = ""
     para_map = {}
+    """
     print "Query as passed to break_query_string in common.py:"
     print query
+    """
 
     
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
@@ -71,14 +75,18 @@ def break_query_string(query):
         para_map = {}
   
     # default, if query didn't follow search=... structure, simply use query itself
+    """
     print "common:"
     print keywords
     print para_map
+    """
     if keywords is "" and len(para_map) is 0 :
-	print "in if, keywords:"
 	keywords = query or ""
+	"""
+	print "in if, keywords:"
 	print keywords
 	print "\n\n"
+    """
     return keywords, para_map
     
 #========Dictionary methods ========
@@ -88,19 +96,23 @@ def merge_dictionaries(dict1, dict2, valid_keys):
     
     unsupported_parameters = {}
 
+    """
     print "dic 1 and dic2"
     print dict1
     print dict2
-
+    """
+    
     for key in dict1:
       newKey = key
       newKey2 = key.replace('-','')
-      print newKey
+      #print newKey
       if newKey in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
+	"""
 	print "newKey is "+ newKey
 	print "valid_keys"
 	print valid_keys
+	"""
 	add_to_dict(dict2, newKey, dict1[key])
       elif newKey2 in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
