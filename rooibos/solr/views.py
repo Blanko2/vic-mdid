@@ -529,10 +529,35 @@ def search(request, id=None, name=None, selected=False, json=False):
 
       
 
+    print "keywords is"
+    print keywords
+    kws_list = (str(keywords)).split(' ')
+    kws=""
+    kws_not = ""
+    
+    
+    for kw in kws_list:
+     if kw:
+      if kw[0]=='-' :
+	kw = kw.replace('\"','')
+	if kws_not is "":
+	  kws_not += kw.replace('-','')
+	else :
+	  kws_not += "+"+kw.replace('-','')
+      else:
+	kw = kw.replace('\"','')
+	if kws is "":
+	  kws += kw
+	else:
+	  kws += "+"+kw 
+	
+    print "kws = "
+    print kws
+    print "kws_not ="
+    print kws_not
 
 
-    kws = (str(keywords))
-    query_string += "keywords=" + kws.replace(' ','+')
+    query_string += "keywords=" + kws
     query_string = query_string.replace('\"','')
     
   #  query_string += ";"+str(query_list)
@@ -545,7 +570,8 @@ def search(request, id=None, name=None, selected=False, json=False):
       query_string += ' '+query.replace("\"", "").replace('_t','')
 
     
-    
+    if not kws_not is '':
+      query_string += ', '+"not="+kws_not
     
 
     print "\n\n\n\n\n--------------------------Query String is:--------------------------------"

@@ -37,6 +37,7 @@ filter_type_map = {
   'publisher': "f_publisher",
   'isbn': "f_allmetadata",
   'all': "f_allcontent",
+  'not': "f_allcontent",
   '' : "f_creator"	# default so as not to have blank string
   } # note, table is table of contents or Captions
   
@@ -49,6 +50,8 @@ URL BUILDERS
 
 """
 def build_URL(query, params):
+    print "params in build_advanced_url =========="
+    print query
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     """
@@ -76,9 +79,12 @@ def build_simple_url(keywords):
     
     
 def build_advanced_url(keywords, params):
+  
+  
+  
 
-  #print "params in build_advanced_url"
-  #print params
+  print "params in build_advanced_url"
+  print params
   if "all" in params:
     keywords += " " + getValue(params,"all")
     del params['all']
@@ -90,6 +96,7 @@ def build_advanced_url(keywords, params):
   languages 	= ""
   start_date 	= ""
   end_date 	= ""
+  opt_not_map	= {}       
   
   if "copyright" in params:
       copyright = getcopyright(params)
@@ -124,26 +131,61 @@ def build_advanced_url(keywords, params):
   """
 
   for opt_parameter in temp_optionals:
+      opt_parameter_tmp = opt_parameter.replace('-','')
+
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
 	  if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
 	    optional_type = filter_type_map[opt_parameter]
-	    print "temp_optionals[opt_parameter] = "
-	    print temp_optionals[opt_parameter]
+
 	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
+	    if opt_parameter == "not" :
+
+	      key = optional_type = filter_type_map[opt_parameter_tmp]
+	      value = temp_optionals[opt_parameter]
+	      if isinstance(key,list):
+		  key=key[0]
+	      if isinstance(value,list):
+		  value = value[0]
+	      if not key in opt_not_map:
+		  opt_not_map.update({key:[value]})
+	      else:
+	       v = opt_not_map[key]
+	       value = v.append[value]
+	       opt_not_map.update({key:value})
+	    print "not map ==========="
+	    print opt_not_map
 	  else:
 	    keywords += " " + temp_optionals[opt_parameter]
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
+      elif (opt_parameter_tmp in filter_type_map and len(temp_optionals[opt_parameter]) != 0 and len(optionals_dict) <=4):
+	     optional_type = filter_type_map[opt_parameter_tmp]
+	     optionals_dict[optional_type] = temp_optionals[opt_parameter]
+	     key = optional_type = filter_type_map[opt_parameter_tmp]
+	     value = temp_optionals[opt_parameter]
+	     if isinstance(key,list):
+		key=key[0]
+	     if isinstance(value,list):
+		value = value[0]
+	     if not key in opt_not_map:
+	       opt_not_map.update({key:[value]})
+	     else:
+	       v = opt_not_map[key]
+	       value = v.append[value]
+	       opt_not_map.update({key:value})
       else:
-	#print temp_optionals[opt_parameter]
-	keywords += " " + temp_optionals[opt_parameter]
-	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
+	  if isinstance(temp_optionals[opt_parameter],list):
+	    keywords += " " + temp_optionals[opt_parameter][0]
+	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter][0]
+	  else:
+	    keywords += " " + temp_optionals[opt_parameter]
+	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
 	
   # start with keywords, than add on any other requested optionals
   start=1
   optionals_string=""
   if keywords.strip() and not keywords.strip()=='':
     start=2
-    optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
+    optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip().replace(' ','+')
   
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
   #print optionals_dict
@@ -153,14 +195,22 @@ def build_advanced_url(keywords, params):
     index = str(i+start)	# want to index starting at 2, because keywords has already filled cat1
     print "optionals_dict  in  gallica 150"
     print optionals_dict.values()
-    ope="&ope"+index+"=MUST"
-    if index is "1":
-      ope=''
+    opt = "MUST"
+    key = optionals_dict.keys()[i]
+    value = optionals_dict.values()[i]
+    if isinstance (value,list):
+      value = value[0]
+    print "key"
+    print key
+    if key in opt_not_map:
+      not_list=opt_not_map[key]
+      if value in not_list:
+	opt="MUST_NOT"
+    
+    ope="&ope"+index+"="+opt
     optionals_string += ope
-    if isinstance(optionals_dict.values()[i], list):
-      optionals_string += "&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i][0]
-    else:
-      optionals_string += "&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i]
+    optionals_string += "&catsel"+index+"="+key+"&cat"+index+"="+value
+
   
   # shove everything into the url
   replacements = {	
@@ -409,7 +459,7 @@ def get_first_search_result(url,off, page_idx) :
     search_results_parser = BeautifulSoup(html)
     num_results = __count(search_results_parser)
     if num_results is 0:
-      return (0,1,1,0,0,search_results_parser,False)
+      return (0,1,1,0,0,search_results_parser,False)keywords
     print "----------------------------num_results:"
     print num_results
     per_page = __items_per_page(50)
@@ -669,7 +719,8 @@ empty_params = {"start date": [],
     "copyright": [],
     "all": [],
     "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
-    "field": {"field1":[], "field2":[], "field3":[], "field4":[]}
+    "field": {"field1":[], "field2":[], "field3":[], "field4":[]},
+    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
 }
 
 valid_keys=["start date",
@@ -685,4 +736,5 @@ valid_keys=["start date",
     "source",
     "bibliographic record",
     "publisher",
-    "isbn"]
+    "isbn",
+    "not"]
