@@ -45,16 +45,8 @@ def search(query, params, off, len):
     result = Result(hits, off + len if off + len < hits else None)
     """
     # build the URL 
-    print 'digi_search L~65'
-    print query
-    # needs to break query into params and keywords -- 
-    #   currently query reads as such: keywords=, params={"...":"..."}
-    print params
     url = build_URL(query, params)
-    print 'digi_search L~65'
-    print params
     params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
-    print params
     return Result(0,0), params 
     """
     for i in obj["results"]:
@@ -86,17 +78,11 @@ Builds the URL:
     if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
 """
 def build_URL(query, params):
-    # URL format= http://www.digitalnz.org/records?i[dnz_type]=Specimen&i[format]=Images&i[year]=[1620+TO+1940]&text=gug
-    # parse query into parameters -- format will always be image
-    # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
     keywords, para_map = break_query_string(query) 
-    print 'digisearcher L~90'
-    print para_map
     url = ""
-    if not para_map or len(para_map)==0:
-        url =  build_simple_URL(keywords)
-    else:
-        url =  build_complex_URL(keywords, para_map, params)
+    url =  build_simple_URL(keywords)
+    #  else:
+    #     url =  build_complex_URL(keywords, para_map, params)
     return url 
 
 
@@ -111,7 +97,8 @@ def build_simple_URL(keywords):
 """
 returns a complex search using the digitalNZ API
     format is a JSON string converted into a python object
-"""
+NOT CURRENTLY USED
+
 def build_complex_URL(keywords, para_map, params):
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     print 'digisearcher L~119 \n'
@@ -162,7 +149,7 @@ def build_complex_URL(keywords, para_map, params):
     # TODO 
     result = req.search()
     return result
-    
+"""    
 """
 ================
 #TOOLS
