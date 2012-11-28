@@ -81,7 +81,7 @@ returns a simple search using the digitalNZ API
 """
 def _build_simple_URL(keywords):
     #TODO needs to do stuff.
-    url = BASE_SEARCH_API_URL+
+    url = BASE_SEARCH_API_URL+""
     return 'a'
 """
 ================
