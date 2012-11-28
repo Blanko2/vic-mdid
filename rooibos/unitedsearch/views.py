@@ -74,7 +74,11 @@ class usViewer():
 				indent += 1
 				r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
 				r += ["  "*indent + "<div class=\"param-opt\">"]
-				r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
+				print "params and default in optional params"
+				print params.subparam
+				a = out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
+				#print a
+				r += a#out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
 				r += ["  "*indent + "</div>"]
 				indent -= 1
 				r += ["  "*indent + "</div>"]
