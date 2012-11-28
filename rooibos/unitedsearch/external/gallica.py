@@ -51,7 +51,10 @@ URL BUILDERS
 """
 def build_URL(query, params):
     print "params in build_advanced_url =========="
-    print query
+    
+    if query=="" and "adv_sidebar" in params: #From side bar
+        return build_sidebar_URL(params)
+    
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     """
@@ -77,7 +80,114 @@ def build_simple_url(keywords):
     keywords = re.sub(" ", "+", keywords)
     return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL)#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     
+ 
+def build_sidebar_URL(params):
+    copyright   = ""
+    languages     = ""
+    start_date    = ""
+    end_date  = ""
+    opt_not_map   = {}      
+    opt_or_map = {}
+    non_keywords = ["copyright" ,"languages","start date","end date","or","except","adv_sidebar"]
+  
+    if "copyright" in params:
+        copyright = getcopyright(params)   
+    if "languages" in params:
+        languages = getlanguages(params)
+    if "start date" in params:
+        start_date = getDate(params["start date"])
+    if "end date" in params:  
+        end_date = getDate(params["end date"])
+    if "or" in params:
+        opt_or_map = params["or"]
+    if "except" in params:
+        opt_not_map = params["except"]
+        
+    tmp_params = params
+    if "copyright" in params:
+        copyright = getcopyright(params)
+    if "languages" in params:
+        languages = getlanguages(params)
+    if "start date" in params:
+        start_date = getDate(params["start date"])
+    if "end date" in params:  
+        end_date = getDate(params["end date"])
+    if "or" in params:
+        opt_or_map = params["or"]
+    if "except" in params:
+        opt_not_map = params["except"]
+    for key in non_keywords:
+        if key in tmp_params:
+            del tmp_params[key]
+     
+     
+     
+    keywords = []
+
+    first = tmp_params["first"]
+    print first
     
+    del tmp_params["first"]
+    
+    key = first[0]
+    value = first[1]
+    if len(tmp_params[key])==1:
+        del tmp_params[key]
+    else:
+        l = tmp_params[key]
+        l.remove(value)
+        tmp_params.update({key:l})
+    
+    keywords.append([filter_type_map[key],value,"MUST"])
+
+    
+    for key in tmp_params:
+        wordlist = tmp_params[key]
+        print wordlist
+        for keyword in wordlist:
+            opt = "MUST"
+            if key in opt_or_map:
+                or_list = opt_or_map[key]
+                if keyword in or_list:
+                    opt="SHOULD"
+            if key in opt_not_map:
+                not_list = opt_not_map[key]
+                if keyword in not_list:
+                    opt="MUST_NOT"
+            key = filter_type_map[key]
+            sub_query = [key,keyword,opt]
+            keywords.append(sub_query)
+    
+    i = 1
+    optionals_string=""
+    
+    print "Final keyword list-------"
+    print keywords
+    
+    for sub_query in keywords:
+        index = str(i)
+        optionals_string += "&ope"+index+"="+sub_query[2]+"&catsel"+index+"="+sub_query[0]+"&cat"+index+"="+sub_query[1]
+        i=i+1
+    
+    # shove everything into the url
+    replacements = {  
+      'START': start_date,
+      'SEARCH_FILTERS': optionals_string,
+      'END': end_date,
+      'LANGUAGES': languages,
+      'COPYRIGHT': copyright
+      }
+    
+    replacer = re.compile('|'.join(replacements.keys()))
+    first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
+    #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+  
+    return first_url, params 
+ 
+
+ 
+ 
+ 
 def build_advanced_url(keywords, params):
   
   
@@ -674,7 +784,8 @@ def getDate(date):
 ## PARAMETERS 	##
 ## 		##
 field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
-    
+option_types = ["and", "or", "except"]   
+
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
@@ -682,13 +793,39 @@ parameters = MapParameter({
   DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
   DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
-  "field" : MapParameter({
+  "field" : ListParameter([
+    UserDefinedTypeParameter(field_types),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types))
+    ])
+  })
+  
+
+  
+"""
+
+parameters = MapParameter({
+  "start date": OptionalParameter(ScalarParameter(str, "start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "end date")),
+  "languages": 
+  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+  "copyright": 
+  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
+  "field" : ListParameter([
     "field1": UserDefinedTypeParameter(field_types),
     "field2": UserDefinedTypeParameter(field_types),
     "field3": UserDefinedTypeParameter(field_types),
     "field4": UserDefinedTypeParameter(field_types)
-    })
+    ])
   })
+
+"""
   
 """
 parameters = MapParameter({
@@ -719,7 +856,8 @@ empty_params = {"start date": [],
     "copyright": [],
     "all": [],
     "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
-    "field": {"field1":[], "field2":[], "field3":[], "field4":[]},
+    #"field": {"field1":[], "field2":[], "field3":[], "field4":[]},
+    "field": [],
     "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
 }
 

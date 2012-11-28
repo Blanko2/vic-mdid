@@ -56,6 +56,8 @@ def build_parameters(query, params):
       exclude += "+"+not_in
     elif not_in:
       exclude = not_in
+    if exclude:
+        params.update({"exclude words":[exclude]})
 
     artist = getValue(params, 'artist')
     keywords = getValue(params, 'title')
