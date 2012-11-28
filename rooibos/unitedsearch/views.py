@@ -160,7 +160,7 @@ class usViewer():
 		# Gallica
 		if "i_field_field1_type" in request.GET: 
 		  n=1
-		  while n<=5:
+		  while n<=4:
 		    key = request.GET["i_field_field"+str(n)+"_type"]
 		    value = request.GET["i_field_field"+str(n)+"_value"]
 		    if value:

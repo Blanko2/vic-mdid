@@ -125,8 +125,10 @@ def build_advanced_url(keywords, params):
 
   for opt_parameter in temp_optionals:
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
-	  if len(optionals_dict) < 4:		# can only support 4 optional parameters. Damn gallica
+	  if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
 	    optional_type = filter_type_map[opt_parameter]
+	    print "temp_optionals[opt_parameter] = "
+	    print temp_optionals[opt_parameter]
 	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
 	  else:
 	    keywords += " " + temp_optionals[opt_parameter]
@@ -137,15 +139,28 @@ def build_advanced_url(keywords, params):
 	unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
 	
   # start with keywords, than add on any other requested optionals
-  optionals_string = "&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
+  start=1
+  optionals_string=""
+  if keywords.strip() and not keywords.strip()=='':
+    start=2
+    optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip()
   
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
   #print optionals_dict
   
   
   for i in range(0, len(optionals_dict)):
-    index = str(i+2)	# want to index starting at 2, because keywords has already filled cat1
-    optionals_string += "&ope"+index+"=MUST"+"&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i][0]
+    index = str(i+start)	# want to index starting at 2, because keywords has already filled cat1
+    print "optionals_dict  in  gallica 150"
+    print optionals_dict.values()
+    ope="&ope"+index+"=MUST"
+    if index is "1":
+      ope=''
+    optionals_string += ope
+    if isinstance(optionals_dict.values()[i], list):
+      optionals_string += "&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i][0]
+    else:
+      optionals_string += "&catsel"+index+"="+optionals_dict.keys()[i]+"&cat"+index+"="+optionals_dict.values()[i]
   
   # shove everything into the url
   replacements = {	
@@ -420,14 +435,14 @@ def get_search_result_parser(base_url, page_idx) :
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
-    """
+    print "Gallica ------------"
     print "num_wanted ==="
     print num_wanted
     print "query"
     print query
     print "params"
     print params
-    """
+
     per_page = __items_per_page(num_wanted)
     off = (int)(off)
     if off<0:
@@ -621,8 +636,7 @@ parameters = MapParameter({
     "field1": UserDefinedTypeParameter(field_types),
     "field2": UserDefinedTypeParameter(field_types),
     "field3": UserDefinedTypeParameter(field_types),
-    "field4": UserDefinedTypeParameter(field_types),
-    "field5": UserDefinedTypeParameter(field_types)
+    "field4": UserDefinedTypeParameter(field_types)
     })
   })
   
@@ -655,7 +669,7 @@ empty_params = {"start date": [],
     "copyright": [],
     "all": [],
     "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
-    "field": {"field1":[], "field2":[], "field3":[], "field4":[], "field5":[]	}
+    "field": {"field1":[], "field2":[], "field3":[], "field4":[]}
 }
 
 valid_keys=["start date",
