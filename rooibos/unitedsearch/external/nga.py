@@ -39,17 +39,23 @@ def build_parameters(query, params):
     print keywords
     print para_map
     
-    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
+    valid_keys = parameters.parammap.keys()
+    params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     add_to_dict(params, "all words", keywords)
 
     # get the parameter values to put into the url
 
-    print "Params\n\n"
+    print "Params now-------------------------------------\n\n"
     print params
 
     all_words = getValue(params, 'all words')
     exact_phrase = getValue(params, 'exact phrase')
     exclude = getValue(params, 'exclude words')
+    not_in = getValue(params,'not')
+    if exclude and not_in:
+      exclude += "+"+not_in
+    elif not_in:
+      exclude = not_in
 
     artist = getValue(params, 'artist')
     keywords = getValue(params, 'title')

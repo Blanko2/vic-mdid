@@ -88,27 +88,23 @@ def merge_dictionaries(dict1, dict2, valid_keys):
     
     unsupported_parameters = {}
 
-    print "dic 1 and dic2"
-    print dict1
-    print dict2
+
 
     for key in dict1:
       newKey = key
       newKey2 = key.replace('-','')
-      print newKey
-      if newKey in valid_keys:	# all types of parameter defined for this class
+
+      if newKey in valid_keys or newKey=='not':	# all types of parameter defined for this class
 	# supported parameter type
-	print "newKey is "+ newKey
-	print "valid_keys"
-	print valid_keys
-	add_to_dict(dict2, newKey, dict1[key])
+
+		add_to_dict(dict2, newKey, dict1[key])
       elif newKey2 in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
-	add_to_dict(dict2, newKey, dict1[key])
+		add_to_dict(dict2, newKey, dict1[key])
       else :
 	# unsupported, so add to list of errors, and treat value as a keyword
-	add_to_dict(unsupported_parameters, key, dict1[key])
-	add_to_dict(dict2, "All Words", dict1[key])
+		add_to_dict(unsupported_parameters, key, dict1[key])
+		add_to_dict(dict2, "All Words", dict1[key])
     return dict2, unsupported_parameters
     
 #checks if key and value exist in dict and adds them
