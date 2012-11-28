@@ -106,7 +106,7 @@ def merge_dictionaries(dict1, dict2, valid_keys):
       if newKey in valid_keys or newKey=='not':	# all types of parameter defined for this class
 	# supported parameter type
 
-	"""
+
 		add_to_dict(dict2, newKey, dict1[key])
       elif newKey2 in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
@@ -168,9 +168,9 @@ def get_supported_synonym(key, valid_keys):
 	return None
   
 #=============Helper Methods ============
-Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
-    as per desired_format
-
+#Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
+#    as per desired_format
+"""
 Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
 				"[yy]yy-[yyy]y"
 				"dd/mm/[yy]yy"
