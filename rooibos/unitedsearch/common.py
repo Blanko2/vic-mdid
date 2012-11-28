@@ -49,6 +49,8 @@ def break_query_string(query):
     print query
     keywords = ""
     para_map = {}
+    print "Query as passed to break_query_string in common.py:"
+    print query
 
     
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
@@ -61,6 +63,10 @@ def break_query_string(query):
     para_map = re.findall("(?<=params=).*", query)
     if para_map and len(para_map) >= 1:
         para_map = json.loads(para_map[0])
+        para_map2 = {}
+        for key in para_map.keys():
+		  para_map2[key.strip(" +")]=para_map[key].strip(" +")
+        para_map = para_map2
     else:
         para_map = {}
   
