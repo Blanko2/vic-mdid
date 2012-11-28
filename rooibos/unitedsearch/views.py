@@ -73,7 +73,7 @@ class usViewer():
                 indent += 1
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
                 r += ["  "*indent + "</div>"]
