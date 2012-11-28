@@ -123,28 +123,35 @@ def build_sidebar_URL(params):
      
      
     keywords = []
-
-    first = tmp_params["first"]
-    print first
     
-    del tmp_params["first"]
+    if "first" in tmp_params:
+        first = tmp_params["first"]
+        print first
     
-    key = first[0]
-    value = first[1]
-    if len(tmp_params[key])==1:
-        del tmp_params[key]
+        del tmp_params["first"]
+    
+        key = first[0]
+        value = first[1]
+        if len(tmp_params[key])==1:
+            del tmp_params[key]
+        else:
+            l = tmp_params[key]
+            l.remove(value)
+            tmp_params.update({key:l})
+    
+        keywords.append([filter_type_map[key],value,"MUST"])
     else:
-        l = tmp_params[key]
-        l.remove(value)
-        tmp_params.update({key:l})
-    
-    keywords.append([filter_type_map[key],value,"MUST"])
-
+        keywords.append(["f_allcontent","","MUST"])
     
     for key in tmp_params:
         wordlist = tmp_params[key]
+        print "wordlist"
         print wordlist
         for keyword in wordlist:
+            print "processing keyword"
+            print keyword
+            print "not_list"
+            print opt_not_map
             opt = "MUST"
             if key in opt_or_map:
                 or_list = opt_or_map[key]
@@ -152,10 +159,14 @@ def build_sidebar_URL(params):
                     opt="SHOULD"
             if key in opt_not_map:
                 not_list = opt_not_map[key]
+                print "not_list"
+                print not_list
+                print keyword
                 if keyword in not_list:
                     opt="MUST_NOT"
-            key = filter_type_map[key]
-            sub_query = [key,keyword,opt]
+            if key in filter_type_map:
+                k = filter_type_map[key]
+            sub_query = [k,keyword,opt]
             keywords.append(sub_query)
     
     i = 1
@@ -498,19 +509,17 @@ def __create_image(soup, id_div) :
 def __count(soup) :
     if not soup:
       return 0
-    fragment = soup.find('div', 'fonctionBar2')
+      
+    div = soup.find('head').find('title')#.find('meta','title')
+    fixed_div = str(div.renderContents()).replace(",","").replace('.','')
+    return (int)(re.findall("\d{1,}", fixed_div)[0])
     """
-    print "fragment"
-    print fragment
-    """
-
     if not fragment:
       return 0
     div = fragment.find('div', 'fonction1')
     fixed_div = str(div.renderContents()).replace(",","").replace('.','')
-    """print "------------------fixed_div="
-    print fixed_div"""
     return (int)(re.findall("\d{1,}", fixed_div)[0])
+    """
 
 
 
@@ -716,8 +725,10 @@ def search(query, params, off, num_wanted) :
         
     # and make sure params contains all param types
     #params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
-    
-    return result, empty_params
+    a = empty_params
+    #a.update({"field":[["artist","ddd"]]})
+    #a.update({"keywords":[["artist","ddd"]]})
+    return result, a
   
   
 ##         ##

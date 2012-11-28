@@ -257,6 +257,12 @@ def getImage(json_image_identifier) :
 WHY DOES THIS RETURN EMPTY PARAMS I DONT KNOW WHY
 """
 def search(term, params, off, num_results_wanted) :
+     arg = empty_params
+     print "params in NGA"
+     print params
+     
+     
+
      #print term
      """ Get the actual results! Note, method must be called 'search'"""
      
@@ -270,6 +276,13 @@ def search(term, params, off, num_results_wanted) :
      """
      params, unsupported_params, url_base = build_parameters(term, params)
      no_query = True;
+     for key in empty_params:
+         if key in params:
+             arg.update({key:params[key]})
+             
+
+     if arg["all words"]==[u'']:
+         arg.update({"all words":[]})
      #print params
      
      for p in params:
@@ -277,7 +290,7 @@ def search(term, params, off, num_results_wanted) :
             no_query = False
      if no_query:
        print "Not searching NGA, no query given (nga.py ln 242)"
-       return Result(0, off), empty_params
+       return Result(0, off), arg
        
        
      # get the image details
@@ -285,7 +298,7 @@ def search(term, params, off, num_results_wanted) :
      website_search_results_parser = BeautifulSoup(searchhtml)
      
      if not any_results(website_search_results_parser) :
-       return Result(0, off), empty_params
+       return Result(0, off), arg
        
      list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
      
@@ -346,12 +359,18 @@ def search(term, params, off, num_results_wanted) :
      print "NGA params:"
      print params
      """
+
      
-     return resulting_images, params
+     return resulting_images, arg
      
 """
 PARAMMAP
 """     
+
+
+
+
+
 parameters = MapParameter({ 
     "all words": OptionalParameter(ScalarParameter(str)), 
     "exact phrase":

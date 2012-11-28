@@ -65,6 +65,7 @@
   </div>
   {% if html_parameters %}
   <div class="facet active-facet" id="results_sidebar_parameters">
+    <div class="facet-header">Advanced Search</div>
     <form method="GET" action=".">
       {{ html_parameters|safe }}
       <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />

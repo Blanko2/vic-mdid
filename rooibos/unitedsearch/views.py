@@ -169,6 +169,7 @@ class usViewer():
                     return inputs["_".join(prefix)]
 
             if isinstance(params, UserDefinedTypeParameter) :
+                print "I am reading !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 field_type = ""
                 field_value = ""
                 if "_".join(prefix)+"_type" in inputs:
