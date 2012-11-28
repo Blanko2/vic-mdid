@@ -360,10 +360,11 @@ def run_search(user,
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
     
-    
+    """
     print "------------------------------------------------------view.search----------------------------"
     print "request"
     print request
+    """
 
     if request.method == "POST":
         update_record_selection(request)
@@ -528,9 +529,10 @@ def search(request, id=None, name=None, selected=False, json=False):
 	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
       
-
+    """
     print "keywords is"
     print keywords
+    """
     kws_list = (str(keywords)).split(' ')
     kws=""
     kws_not = ""
