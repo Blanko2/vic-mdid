@@ -40,7 +40,7 @@ class usViewer():
             
             
             if isinstance(params, DefinedListParameter):
-                print "DefinedListParameter : ----------"
+                #print "DefinedListParameter : ----------"
 
                 options = params.options or []
                 r_content = "  "*indent + (label + ": " if params.label else "") 
@@ -83,7 +83,7 @@ class usViewer():
                 indent += 1
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
                 r += ["  "*indent + "</div>"]
@@ -281,9 +281,11 @@ class usViewer():
         #NGA    
         else : 
           for n in request.GET:
+            """
             print n
             print "="
             print request.GET[n]
+            """
             if "_opt" in n:
               key = n.replace("i_","").replace("_opt",'')
               if request.GET[n]:
@@ -303,7 +305,7 @@ class usViewer():
         """
         #args = self.readargs(request.GET)
         #query = "keyword=,title=e,artist=e"
-        print params
+        #print params
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
 
@@ -374,7 +376,7 @@ class usViewer():
     def search(self, request):
         
         a = self.perform_search(request,50)
-        print "previous_page: %s" % a["previous_page"]
+        #print "previous_page: %s" % a["previous_page"]
         return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
 
 

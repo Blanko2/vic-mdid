@@ -89,7 +89,7 @@ def build_sidebar_URL(params):
     opt_not_map   = {}      
     opt_or_map = {}
     non_keywords = ["copyright" ,"languages","start date","end date","or","except","adv_sidebar"]
-  
+    
     if "copyright" in params:
         copyright = getcopyright(params)   
     if "languages" in params:
@@ -715,9 +715,9 @@ def search(query, params, off, num_wanted) :
 
         
     # and make sure params contains all param types
-    params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
+    #params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
     
-    return result, params
+    return result, empty_params
   
   
 ##         ##

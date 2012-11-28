@@ -26,18 +26,19 @@ identifier = "nga"            # don't know what this is
     
 def build_parameters(query, params):
     # build parameters dictionary to search by
-
+    """
     print "NGA build_parameters"
     print "query"
     print query
     print "params"
     print params
-
+    """
     keywords, para_map = break_query_string(query)
-    
+    """
     print "after break query string"
     print keywords
     print para_map
+<<<<<<< HEAD
     
     valid_keys = parameters.parammap.keys()
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
@@ -46,7 +47,17 @@ def build_parameters(query, params):
     # get the parameter values to put into the url
 
     print "Params now-------------------------------------\n\n"
+=======
+    """
+    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
+    add_to_dict(params, "all words", keywords)
+
+    # get the parameter values to put into the url
+    """
+    print "Params\n\n"
+>>>>>>> ed04b86c9967486f3d6f6aaf9002f6862bf69c29
     print params
+    """
 
     all_words = getValue(params, 'all words')
     exact_phrase = getValue(params, 'exact phrase')
@@ -101,10 +112,10 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     # use a proxy handler as developing behind firewall
     proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
     opener = urllib2.build_opener(proxyHandler)
-    print "-----------url ="
+    #print "-----------url ="
 
     html = opener.open(url)
-    print url
+    #print url
     return html, howFarDownThePage
     
 
@@ -252,19 +263,20 @@ def search(term, params, off, num_results_wanted) :
      """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
      """
      off = (int)(off)     # type of off varies by searcher implementation
-	
+     """
      print "In nga.py ln 236"
      print term
      print params
+     """
      params, unsupported_params, url_base = build_parameters(term, params)
      no_query = True;
-     print params
+     #print params
      
      for p in params:
-       if params[p][0]:
-	 no_query = False
+        if params[p][0]:
+            no_query = False
      if no_query:
-       print "Not searching NGA (nga.py ln 242)"
+       print "Not searching NGA, no query given (nga.py ln 242)"
        return Result(0, off), empty_params
        
        
@@ -282,16 +294,16 @@ def search(term, params, off, num_results_wanted) :
      num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
      
      
-     print "----------------------count  NGA------------"
-     print __count(website_search_results_parser)
+     #print "----------------------count  NGA------------"
+     #print __count(website_search_results_parser)
      
      count = __count(website_search_results_parser)
-     print "___Count is ="
-     print count
+     #print "___Count is ="
+     #print count
      if off>count:
-	return search(term,params,0,50)
+        return search(term,params,0,50)
      else:
-	num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
+        num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
      """
      print"wanted"
      print num_results_wanted

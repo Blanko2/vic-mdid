@@ -1,4 +1,4 @@
-from external import digitalnz_searcher, nga, flickr, gallica, local, artstor
+from external import digitalnz_searcher, nga, flickr, gallica, local, artstor, trove
 
 """ UnitedSearchers to search. Must have name and identifier attributes defined"""
 all = [
@@ -8,4 +8,5 @@ all = [
 	gallica,
 	local,
 	artstor,
+	trove,
 ]

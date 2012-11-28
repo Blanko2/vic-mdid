@@ -45,12 +45,16 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 or form word
 """
 def break_query_string(query):
+    """
     print "breaking"
     print query
+    """
     keywords = ""
     para_map = {}
+    """
     print "Query as passed to break_query_string in common.py:"
     print query
+    """
 
     
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
@@ -71,14 +75,18 @@ def break_query_string(query):
         para_map = {}
   
     # default, if query didn't follow search=... structure, simply use query itself
+    """
     print "common:"
     print keywords
     print para_map
+    """
     if keywords is "" and len(para_map) is 0 :
-	print "in if, keywords:"
 	keywords = query or ""
+	"""
+	print "in if, keywords:"
 	print keywords
 	print "\n\n"
+    """
     return keywords, para_map
     
 #========Dictionary methods ========
@@ -88,8 +96,9 @@ def merge_dictionaries(dict1, dict2, valid_keys):
     
     unsupported_parameters = {}
 
-
-
+    """
+    """
+    
     for key in dict1:
       newKey = key
       newKey2 = key.replace('-','')
@@ -97,6 +106,7 @@ def merge_dictionaries(dict1, dict2, valid_keys):
       if newKey in valid_keys or newKey=='not':	# all types of parameter defined for this class
 	# supported parameter type
 
+	"""
 		add_to_dict(dict2, newKey, dict1[key])
       elif newKey2 in valid_keys:	# all types of parameter defined for this class
 	# supported parameter type
@@ -158,7 +168,7 @@ def get_supported_synonym(key, valid_keys):
 	return None
   
 #=============Helper Methods ============
-""" Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
+Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
     as per desired_format
 
 Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "/", ":", "-")
@@ -178,7 +188,7 @@ Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "
     Note, date must be the entire string, or regices will break
     
     Pass default end date as a datetime.date object
-"""
+
 def format_date(date, desired_format, separator, default_end=datetime.date.today(), two_dates_wanted=False):
 
 
@@ -320,4 +330,4 @@ def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
 	raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
 
   
-  
+  """
