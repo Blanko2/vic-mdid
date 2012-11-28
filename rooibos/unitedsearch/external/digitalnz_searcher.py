@@ -20,22 +20,6 @@ BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 # TODO get a University API key instead of a personal one
 API_KEY="sfypBYD5Jpu1XqYBipX8"
 
-"""
-Builds the URL:
-    if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
-"""
-def build_URL(query, params):
-    # URL format= http://www.digitalnz.org/records?i[dnz_type]=Specimen&i[format]=Images&i[year]=[1620+TO+1940]&text=gug
-    # parse query into parameters -- format will always be image
-    # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
-    keywords, para_map = break_query_string(query) 
-    url = ""
-    if not para_map or len(para_map)==0:
-        url =  build_simple_URL(keywords)
-    else:
-        url =  build_complex_URL(keywords, para_map)
-    return url 
-
 def _get(url):
     return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
 # return urllib2.urlopen(url)
@@ -97,24 +81,41 @@ def previousOffset(off, len):
 URL BUILDERS###########
 =======================
 """
+"""
+Builds the URL:
+    if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
+"""
+def build_URL(query, params):
+    # URL format= http://www.digitalnz.org/records?i[dnz_type]=Specimen&i[format]=Images&i[year]=[1620+TO+1940]&text=gug
+    # parse query into parameters -- format will always be image
+    # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
+    keywords, para_map = break_query_string(query) 
+    print 'digisearcher L~90'
+    print para_map
+    url = ""
+    if not para_map or len(para_map)==0:
+        url =  build_simple_URL(keywords)
+    else:
+        url =  build_complex_URL(keywords, para_map, params)
+    return url 
+
 
 """
 returns a simple search using the digitalNZ API
 """
 def build_simple_URL(keywords):
     req = request.DigitalNZAPI(API_KEY)
-    result = req.search(search_text=keywords)
-    print 'digitalNZ L~90'
-    print result.data.keys()   
+    result = req.search(text=keywords)
     return result
 
 """
 returns a complex search using the digitalNZ API
     format is a JSON string converted into a python object
 """
-def build_complex_URL(keywords, para_map):
-    params={}
+def build_complex_URL(keywords, para_map, params):
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
+    print 'digisearcher L~119 \n'
+    print params
     year = ''  
     # replaces the starting year value with 1500 (digitalnz's oldest search year) if not present 
     if 'start_date' in params:
@@ -122,7 +123,7 @@ def build_complex_URL(keywords, para_map):
         # year+=format_date(params['start_year'], 'yyyy', "")+' TO ' if params['start_date'] != "" else: year+=dnz_start_year+' TO '
         if params['start_date'] != "":
             #this could be shorter -- when we remove the line directly below
-            start_year=format_date(params['start_date'], 'yyyy', "")
+            start_year=format_date(params['start_date'][0], 'yyyy', "")
             year+= str(start_year) + ' TO '
         del params['start_date']
     else:
@@ -131,26 +132,37 @@ def build_complex_URL(keywords, para_map):
     # does the same for end year (y:3000) dnz accepts an arbitrarily large end year value 
     if 'end_date' in params:    
         if params['end_date'] != "": 
-            year+= format_date(params['end_date'])
+            year+= format_date(params['end_date'][0])
         del params['end_date']
     else:
         year+= str(dnz_end_year) 
     
     if 'type' in params:
-        type = params['type'] if check_valid_type(params['type']) else None 
-        del params['type']
+        type = params['type'][0] if check_valid_type(params['type'][0]) else None 
         if type:
             params['dnz_type'] = type
-    
+        del params['type']
     if 'copyright' in params:
-        usage = params['copyright'] if check_valid_usage(params['copyright']) else None
+        usage = params['copyright'] if check_valid_usage(params['copyright'][0]) else None
         if usage:
-            params['usage'] = usage
-
+            params['usage'] = usage[0]
+    if 'all' in params:
+        for t in params['all']:
+            text += str(t)+" " 
+        del params['all']
+        params['text']=text
 
     params['format'] = FORMAT_FINAL 
     params['year']=year
-
+    print '\n'
+    print params
+    # needs to send the query off to the API
+    req = request.DigitalNZAPI(API_KEY)
+    # needs to sort out parameters
+    # TODO 
+    result = req.search()
+    return result
+    
 """
 ================
 #TOOLS
@@ -158,7 +170,7 @@ def build_complex_URL(keywords, para_map):
 """
 
 def check_valid_type(type):
-    if type in dnz_valid_types: 
+    if type in dnz_valid_types:    
         return True
     else:
         return False
