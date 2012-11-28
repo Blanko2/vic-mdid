@@ -103,41 +103,41 @@ def merge_dictionaries(dict1, dict2, valid_keys):
     """
     
     for key in dict1:
-      newKey = key
-      newKey2 = key.replace('-','')
-      #print newKey
-      if newKey in valid_keys:	# all types of parameter defined for this class
-	# supported parameter type
-	"""
-	print "newKey is "+ newKey
-	print "valid_keys"
-	print valid_keys
-	"""
-	add_to_dict(dict2, newKey, dict1[key])
-      elif newKey2 in valid_keys:	# all types of parameter defined for this class
-	# supported parameter type
-	add_to_dict(dict2, newKey, dict1[key])
-      else :
-	# unsupported, so add to list of errors, and treat value as a keyword
-	add_to_dict(unsupported_parameters, key, dict1[key])
-	add_to_dict(dict2, "All Words", dict1[key])
+        newKey = key
+        newKey2 = key.replace('-','')
+        #print newKey
+        if newKey in valid_keys:	# all types of parameter defined for this class
+            # supported parameter type
+            """
+            print "newKey is "+ newKey
+            print "valid_keys"
+            print valid_keys
+            """
+            add_to_dict(dict2, newKey, dict1[key])
+        elif newKey2 in valid_keys:	# all types of parameter defined for this class
+            # supported parameter type
+            add_to_dict(dict2, newKey, dict1[key])
+        else :
+            # unsupported, so add to list of errors, and treat value as a keyword
+            add_to_dict(unsupported_parameters, key, dict1[key])
+            add_to_dict(dict2, "All Words", dict1[key])
     return dict2, unsupported_parameters
     
 #checks if key and value exist in dict and adds them
 def add_to_dict(dictionary, key, value):
   
     if isinstance(value, list):
-      if len(value) == 0:	# if empty list, make sure entry exists anyway
-	if not key in dictionary:
-	  dictionary[key] = []
-      for v in value:
-	add_to_dict(dictionary, key, v)
+        if len(value) == 0:	# if empty list, make sure entry exists anyway
+            if not key in dictionary:
+                dictionary[key] = []
+        for v in value:
+            add_to_dict(dictionary, key, v)
     else:
-      if key in dictionary:
-	  if value not in dictionary[key]:
-	      dictionary[key].append(value)
-      else:
-	  dictionary[key] = [value]	# want final result to be in a list
+        if key in dictionary:
+            if value not in dictionary[key]:
+                dictionary[key].append(value)
+        else:
+            dictionary[key] = [value]	# want final result to be in a list
   
   
 # return either the value at 0 in the dictionary argument, or "" if none exists
