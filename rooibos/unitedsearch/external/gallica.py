@@ -725,10 +725,10 @@ def search(query, params, off, num_wanted) :
         
     # and make sure params contains all param types
     #params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
-    a = empty_params
+    arg = empty_params
     #a.update({"field":[["artist","ddd"]]})
-    #a.update({"keywords":[["artist","ddd"]]})
-    return result, a
+
+    return result, arg
   
   
 ##         ##

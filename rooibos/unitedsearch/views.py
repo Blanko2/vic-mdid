@@ -169,7 +169,6 @@ class usViewer():
                     return inputs["_".join(prefix)]
 
             if isinstance(params, UserDefinedTypeParameter) :
-                print "I am reading !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 field_type = ""
                 field_value = ""
                 if "_".join(prefix)+"_type" in inputs:
@@ -193,7 +192,7 @@ class usViewer():
         if t_str in request.GET and v_str in request.GET:
             key = request.GET[t_str]
             value = request.GET[v_str]
-            if value:
+            if key and value:
                 params.update({key:[value]})
                 params.update({"first":[key,value]})
             print "params = "
@@ -215,7 +214,7 @@ class usViewer():
                     if i>0:
                         opt = request.GET[o_str]
                     
-                    if value:
+                    if key and value:
                         if not key in params:
                             params.update({key:[value]})
                             print "params = "
@@ -230,13 +229,15 @@ class usViewer():
                             if not key in or_params:
                                 or_params.update({key:[value]})
                             else:
-                                List = or_params[key].append(value)
+                                List = or_params[key]
+                                List.append(value)
                                 or_params.update({key:List})
                         if opt=="except":
                             if not key in not_params:
                                 not_params.update({key:[value]})
                             else:
-                                List = not_params[key].append(value)
+                                List = not_params[key]
+                                List.append(value)
                                 not_params.update({key:List})
                 i = i+1
             if len(not_params)>0:
