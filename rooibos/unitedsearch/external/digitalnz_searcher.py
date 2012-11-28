@@ -30,7 +30,7 @@ def build_URL(query, params):
     # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
     keywords, para_map = break_query_string(query) 
     url = ""
-    if not para_map or len(para_map_)==0:
+    if not para_map or len(para_map)==0:
         url =  build_simple_URL(keywords)
     else:
         url =  build_complex_URL(keywords, para_map)
@@ -61,8 +61,17 @@ def search(query, params, off, len):
     result = Result(hits, off + len if off + len < hits else None)
     """
     # build the URL 
+    print 'digi_search L~65'
+    print query
+    # needs to break query into params and keywords -- 
+    #   currently query reads as such: keywords=, params={"...":"..."}
+    print params
     url = build_URL(query, params)
-    return Result(0,0), {}
+    print 'digi_search L~65'
+    print params
+    params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
+    print params
+    return Result(0,0), params 
     """
     for i in obj["results"]:
         u = i["object_url"] or i["large_thumbnail_url"] or None
@@ -81,13 +90,6 @@ def previousOffset(off, len):
     return off > 0 and str(off - len)
 
 
-parameters = MapParameter({
-    "start date": OptionalParameter(ScalarParameter("start date"),"Start Date"),
-    "end date": OptionalParameter(ScalarParameter("end date"), "End Date"),
-    "type": OptionalParameter(ScalarParameter("type"), "Type"),
-    "copyright": OptionalParameter(ScalarParameter("copyright"), "Copyright"),
-    "all": ScalarParameter(str,"All")
-    })
 
 
 """
@@ -101,7 +103,7 @@ returns a simple search using the digitalNZ API
 """
 def build_simple_URL(keywords):
     req = request.DigitalNZAPI(API_KEY)
-    result = req.search(search_text="shed automobiles")
+    result = req.search(search_text=keywords)
     print 'digitalNZ L~90'
     print result.data.keys()   
     return result
@@ -111,6 +113,7 @@ returns a complex search using the digitalNZ API
     format is a JSON string converted into a python object
 """
 def build_complex_URL(keywords, para_map):
+    params={}
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     year = ''  
     # replaces the starting year value with 1500 (digitalnz's oldest search year) if not present 
@@ -120,12 +123,10 @@ def build_complex_URL(keywords, para_map):
         if params['start_date'] != "":
             #this could be shorter -- when we remove the line directly below
             start_year=format_date(params['start_date'], 'yyyy', "")
-            print 'digital_searcher L~110'
-            print start_year
-            year+= start_year + ' TO '
+            year+= str(start_year) + ' TO '
         del params['start_date']
     else:
-        year+= dnz_start_year+' TO '   
+        year+= str(dnz_start_year)+' TO '   
     
     # does the same for end year (y:3000) dnz accepts an arbitrarily large end year value 
     if 'end_date' in params:    
@@ -133,10 +134,7 @@ def build_complex_URL(keywords, para_map):
             year+= format_date(params['end_date'])
         del params['end_date']
     else:
-        year+= dnz_end_year 
-    print'digitalnz L~130'
-    print year
-    print'===='
+        year+= str(dnz_end_year) 
     
     if 'type' in params:
         type = params['type'] if check_valid_type(params['type']) else None 
@@ -160,7 +158,7 @@ def build_complex_URL(keywords, para_map):
 """
 
 def check_valid_type(type):
-    if type in dnz_valid_type: 
+    if type in dnz_valid_types: 
         return True
     else:
         return False
@@ -170,3 +168,24 @@ def check_valid_usage(usage):
         return True
     else:
         return False
+
+"""
+PARAMAP
+"""
+
+parameters = MapParameter({
+    "start date": OptionalParameter(ScalarParameter("start date"),"Start Date"),
+    "end date": OptionalParameter(ScalarParameter("end date"), "End Date"),
+    "type": OptionalParameter(ScalarParameter("type"), "Type"),
+    "copyright": OptionalParameter(ScalarParameter("copyright"), "Copyright"),
+    "all": ScalarParameter(str,"All")
+    })
+
+empty_params = {
+    'all':[],
+    'start date':[],
+    'end date':[],
+    'type':[],
+    'copyright':[]}
+    
+ 
