@@ -44,7 +44,7 @@ class usViewer():
 
                 options = params.options or []
                 r_content = "  "*indent + (label + ": " if params.label else "") 
-                #r_content += "<select name=\"i_" + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
+                #r_content += "<select name=\"i_"[0]+str( + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
                 r_content += "<select name=\"i_" + "_".join(prefix) + "\""
                 if params.multipleAllowed :
                   r_content += " multiple = \"multiple\""
@@ -66,6 +66,16 @@ class usViewer():
                     r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
                 r += ["  "*indent + "</div>"]
                 return r
+            elif isinstance(params, ListParameter):
+                r = ["  "*indent + "<div>"]
+                index =0
+                i = 0
+                for v in params.paramlist :
+                    r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[0] or None)
+                    index = index+1
+                    i = i+1
+                r += ["  "*indent + "</div>"]
+                return r
             elif isinstance(params, ScalarParameter):
                 return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
             elif isinstance(params, OptionalParameter):
@@ -76,6 +86,30 @@ class usViewer():
                 r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
+                r += ["  "*indent + "</div>"]
+                return r
+            
+            elif isinstance(params, OptionalDoubleParameter):
+                r = ["  "*indent + "<div>"]
+                indent += 2
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
+                r += ["  "*indent + "<div class=\"param-opt\">"]
+                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += ["  "*indent + "</div>"]
+                indent -= 2
+                r += ["  "*indent + "</div>"]
+                return r
+            elif isinstance(params, OptionalTripleParameter):
+                r = ["  "*indent + "<div>"]
+                indent += 2
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
+                r += ["  "*indent + "<div class=\"param-opt\">"]
+                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam3, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += ["  "*indent + "</div>"]
+                indent -= 2
                 r += ["  "*indent + "</div>"]
                 return r
             
@@ -117,6 +151,14 @@ class usViewer():
                     else :
                       r[k] = read(params.parammap[k], prefix + [k])
                 return r
+            if isinstance(params, ListParameter):
+
+                r = []
+                index = 0
+                for v in params.paramlist:
+                      r.append(read(v, prefix+[str(index)]))
+                      index = index+1
+                return r
             if isinstance(params, ScalarParameter):
                 if "_".join(prefix) in inputs:
                     return inputs["_".join(prefix)]
@@ -127,6 +169,7 @@ class usViewer():
                     return inputs["_".join(prefix)]
 
             if isinstance(params, UserDefinedTypeParameter) :
+                print "I am reading !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 field_type = ""
                 field_value = ""
                 if "_".join(prefix)+"_type" in inputs:
@@ -142,9 +185,81 @@ class usViewer():
         query = request.GET.get('q', '') or request.POST.get('q', '')
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
-        
-        # Gallica
-        if "i_field_field1_type" in request.GET: 
+        not_params = {}
+        or_params = {}
+        t_str = "i_field0_type"
+        v_str = "i_field0_value"
+        # new Gallica
+        if t_str in request.GET and v_str in request.GET:
+            key = request.GET[t_str]
+            value = request.GET[v_str]
+            if value:
+                params.update({key:[value]})
+                params.update({"first":[key,value]})
+            print "params = "
+            print params
+            i=1
+            while i<5:
+                t_str = "i_field"+str(i)+"_opt_type"
+                v_str = "i_field"+str(i)+"_opt_value"
+                o_str = "i_field"+str(i)+"_opt"
+                print t_str
+                print v_str
+                
+                if t_str in request.GET and v_str in request.GET:
+                    key = request.GET[t_str]
+                    value = request.GET[v_str]
+                    print "value = "
+                    print value
+                    opt = ""
+                    if i>0:
+                        opt = request.GET[o_str]
+                    
+                    if value:
+                        if not key in params:
+                            params.update({key:[value]})
+                            print "params = "
+                            print params
+                        else:
+                            v = params[key]
+                            v.append(value)
+                            params.update({key:v})
+                            print "params = "
+                            print params
+                        if opt=="or":
+                            if not key in or_params:
+                                or_params.update({key:[value]})
+                            else:
+                                List = or_params[key].append(value)
+                                or_params.update({key:List})
+                        if opt=="except":
+                            if not key in not_params:
+                                not_params.update({key:[value]})
+                            else:
+                                List = not_params[key].append(value)
+                                not_params.update({key:List})
+                i = i+1
+            if len(not_params)>0:
+                params.update({"except":not_params})
+            if len(or_params)>0:
+                params.update({"or":or_params})
+            
+            if "i_languages" in request.GET:
+                lang = request.GET["i_languages"]
+                params.update({"languages":lang})
+            if "i_copyright" in request.GET:
+                cr = request.GET["i_copyright"]
+                params.update({"copyright":cr})
+            if "i_start date" in request.GET:
+                sd = request.GET["i_start date"]
+                params.update({"start date":sd})
+            if "i_start date" in request.GET:
+                ed = request.GET["i_end date"]
+                params.update({"end date":sd})
+            params.update({"adv_sidebar":True})
+            print params
+        # Old Gallica
+        elif "i_field_field1_type" in request.GET: 
           n=1
           while n<=5:
             key = request.GET["i_field_field"+str(n)+"_type"]

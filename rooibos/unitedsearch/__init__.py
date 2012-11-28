@@ -96,3 +96,21 @@ class MapParameter:
 	def __init__(self, parammap, label=None):
 		self.parammap = parammap
 		self.label = label
+
+class ListParameter:
+    def __init__(self, paramlist, label=None):
+        self.paramlist = paramlist
+        self.label = label
+
+class OptionalDoubleParameter:
+    def __init__(self, subparam1, subparam2, label=None):
+        self.subparam1 = subparam1
+        self.subparam2 = subparam2
+        self.label = label
+
+class OptionalTripleParameter:
+    def __init__(self, subparam1, subparam2, subparam3, label=None):
+        self.subparam1 = subparam1
+        self.subparam2 = subparam2
+        self.subparam3 = subparam3
+        self.label = label
