@@ -57,8 +57,6 @@ class DigitalNZAPI(object):
             self.format,
             self.api_key,
             uenc(kwargs))
-        print 'request L~60'
-        print req_url
         #TODO: return this to how it was? 
         #rsp = urllib2.urlopen(req_url).read()
         rsp = self._proxy_handling(req_url).read() 
