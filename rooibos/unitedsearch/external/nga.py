@@ -234,7 +234,9 @@ def getImage(json_image_identifier) :
 #        image_info['access'] = dict_about_image['access']
         
      
-
+"""
+WHY DOES THIS RETURN EMPTY PARAMS I DONT KNOW WHY
+"""
 def search(term, params, off, num_results_wanted) :
      #print term
      """ Get the actual results! Note, method must be called 'search'"""
@@ -327,7 +329,9 @@ def search(term, params, off, num_results_wanted) :
      
      return resulting_images, params
      
-     
+"""
+PARAMMAP
+"""     
 parameters = MapParameter({ 
     "all words": OptionalParameter(ScalarParameter(str)), 
     "exact phrase":
