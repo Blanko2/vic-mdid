@@ -15,24 +15,67 @@ PER_PAGE = 20 #how many results trove actually has per page - can't change this
 
 
 def count(query) :
-    return 12345
+    url = build_URL(query)
+    search_result_parser = get_search_result_parser(url, 0)
+    return 12345#_count(search_result_parser)
 
+def _count(soup):
+    result = search_result_parser.find("div", attrs={'class':"island box primary picture"}).find("strong")
+    num = int(re.sub("[^0-9]+", "", result.text))
+    print "trove.py, _count, number of results string: "+str(num)
+    return num
+
+
+    
 def search(query, params, off, num_wanted) :
-    url = build_URL(query, params)
+    url = build_URL(query)
     search_result_parser = get_search_result_parser(url, off)
-    results = get_search_result_parser.findall("<li>", "*draggableResult")
+    print "trove.py, search, has search_result_parser: "+str(search_result_parser is not None)
+    results = search_result_parser.findAll("li", attrs={'class':re.compile("draggableResult")}, limit=20) #results double up after 20
+    for result in results:
+        print "\n\n\n\n\ntrove.py found record:"
+        #print result.prettify()
+        
+        #"""
+        title_block = result.find("dt")
+        if title_block:
+            title = title_block.text
+        else:
+            title=""#where else can we find the title?
+        print "Title = " + title
+        description = title_block.find("a")['href']
+        print "Description url = "+description if description else "None"
+        id = int(re.findall("[0-9]+", description)[0]) if description else 0
+        print "Image id = "+str(id)
+        print ".\n.\n.\n."
+        creator = result.find("dd", attrs={'class' : "creator"})
+        print "Creator = " + (creator.text if creator else "N/A")
+        kw = result.find("dd", attrs={'class' : "keywords"})
+        print "Keywords = " + (kw.text if kw else "N/A")
+        online = result.find("dd", attrs={'class' : "online singleholding"})
+        print "Online = " + (online.text if online else "N/A")
+        print "Online URL = " + str((online.find("a")['href'] if online else "N/A") or "No link")
+        thumbdd = result.find("dd", attrs={'class' : "thumbnail"})
+        thumba = thumbdd.find("a") if thumbdd else None
+        thumbimg = thumba.find("img") if thumba else None
+        thumb = thumbimg['src'] if thumbimg else ""
+        print "Thumbnail image src = "+str(thumb)
+        #"""
+    print "trove.py, search, found a page with "+str(len(results))+" results"
+    img_list = Result(0, off)
     return Result(0, off), empty_params
 
-
-def build_URL(query, params):
-    print "trove.py, build_URL( "+query+" ,  "+str(params)+" )"
+def parse_results(soup):
+    return []
+    
+def build_URL(query):
+    print "trove.py, build_URL( "+query+" )"
     fields_string=""
     fields = {}
     year_from = year_to = None
     keywords, para_map = break_query_string(query)
     print "trove.py, build_URL, query = "+query
     print "trove.py, build_URL, keywords = "+keywords
-    print "trove.py, build_URL, params = "+str(params)
     print "trove.py, build_URL, para_map = "+str(para_map)
     #params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     for key in para_map.keys():
@@ -92,8 +135,17 @@ Feed an assembled url into here, with the offset, and get a parser for 20 result
 def get_search_result_parser(base_url, offset) :
     page_url = re.sub("OFFSET", str(offset),base_url)
     print "trove.py, get_search_result_parser, page_url = "+page_url
-    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
+
+    #TODO: replace this with a WORKING html library retrieval
+    f = open("/u/students/novikovech/mdidtestpages/result.html")
+    html = ""
+    for line in f:
+        html += line
+
+    #print html
+    #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
     search_results_parser = BeautifulSoup(html)
+    print "trove.py, get_search_result_parser returns  a soup: "+str(search_results_parser is not None)
     return search_results_parser
 
 
@@ -150,7 +202,9 @@ valid_keys = empty_params = {"all words": [],
     "isbn": [],
     "issn": [],
     "publictag": [],
-    "access": []
+    "access": [],
+    "start date": [],
+    "end date": []
     }
 
 synonyms = {"all words": "",
