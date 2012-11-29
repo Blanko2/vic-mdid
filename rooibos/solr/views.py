@@ -360,10 +360,11 @@ def run_search(user,
 def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
     
-    
+    """
     print "------------------------------------------------------view.search----------------------------"
     print "request"
     print request
+    """
 
     if request.method == "POST":
         update_record_selection(request)
@@ -528,11 +529,37 @@ def search(request, id=None, name=None, selected=False, json=False):
 	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
       
+    """
+    print "keywords is"
+    print keywords
+    """
+    kws_list = (str(keywords)).split(' ')
+    kws=""
+    kws_not = ""
+    
+    
+    for kw in kws_list:
+     if kw:
+      if kw[0]=='-' :
+	kw = kw.replace('\"','')
+	if kws_not is "":
+	  kws_not += kw.replace('-','')
+	else :
+	  kws_not += "+"+kw.replace('-','')
+      else:
+	kw = kw.replace('\"','')
+	if kws is "":
+	  kws += kw
+	else:
+	  kws += "+"+kw 
+	
+    print "kws = "
+    print kws
+    print "kws_not ="
+    print kws_not
 
 
-
-    kws = (str(keywords))
-    query_string += "keywords=" + kws.replace(' ','+')
+    query_string += "keywords=" + kws
     query_string = query_string.replace('\"','')
     
   #  query_string += ";"+str(query_list)
@@ -545,7 +572,8 @@ def search(request, id=None, name=None, selected=False, json=False):
       query_string += ' '+query.replace("\"", "").replace('_t','')
 
     
-    
+    if not kws_not is '':
+      query_string += ', '+"not="+kws_not
     
 
     print "\n\n\n\n\n--------------------------Query String is:--------------------------------"

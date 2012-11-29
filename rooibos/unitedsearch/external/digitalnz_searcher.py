@@ -1,49 +1,30 @@
 import json
 import urllib2
-from rooibos.unitedsearch.external.digitalnz import request, response 
-from rooibos.unitedsearch import *
 from urllib import urlencode
-from rooibos.unitedsearch.common import *
+from rooibos.unitedsearch.common import break_query_string, merge_dictionaries 
 from django.conf import settings
 
 
 name = "DigitalNZ"
 identifier = "digitalnz"
 
-FORMAT_FINAL = "image"
-dnz_start_year=1500
-dnz_end_year=3000
-dnz_valid_types=['artwork','memorabilia','magazine','people','news','specimen','book','reference']
-dnz_valid_usage=['all rights reserved','share','modify','use commercially']
-
-BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
-# TODO get a University API key instead of a personal one
 API_KEY="sfypBYD5Jpu1XqYBipX8"
+BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
+BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
+BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.rss?api_key="+API_KEY
+# TODO get a University API key instead of a personal one
+"""
+NEED TO COMPLETELY REWRITE THIS CLASS SRSLY, NOT EVEN FUNNY
+    WHAT NEEDS TO BE DONE:
+        allow:
+        -- per_page
+        -- page
+        -- and[Category][]=Images 
 
 """
-Builds the URL:
-    if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
-"""
-def build_URL(query, params):
-    # URL format= http://www.digitalnz.org/records?i[dnz_type]=Specimen&i[format]=Images&i[year]=[1620+TO+1940]&text=gug
-    # parse query into parameters -- format will always be image
-    # formats that need to be compensated for: start date, end date, (dnz_type)=> type? 
-    keywords, para_map = break_query_string(query) 
-    url = ""
-    if not para_map or len(para_map_)==0:
-        url =  build_simple_URL(keywords)
-    else:
-        url =  build_complex_URL(keywords, para_map)
-    return url 
-
 def _get(url):
     return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
 # return urllib2.urlopen(url)
-
-def __search(query, off, len):
-    # TODO: figure out how to only get results with .object_url/.large_thumbnail_url
-    #return json.load(_get("http://api.digitalnz.org/v3/records.json?" + urlencode({ 'api_key': self.API_KEY 'text': query, 'page': int(off/len if len > 0 else 0) + 1, 'per_page': len, 'and[category][]': 'Images' })))["search"]
-    return ""
 
 def _count(searchobj):
     return 1 
@@ -61,8 +42,8 @@ def search(query, params, off, len):
     result = Result(hits, off + len if off + len < hits else None)
     """
     # build the URL 
-    url = build_URL(query, params)
-    return Result(0,0), {}
+    url = _build_URL(query, params)
+    return Result(0,0), params 
     """
     for i in obj["results"]:
         u = i["object_url"] or i["large_thumbnail_url"] or None
@@ -70,24 +51,9 @@ def search(query, params, off, len):
         result.addImage(ResultImage(i["source_url"], i["thumbnail_url"], i["title"], u and json.dumps(i)))
     return result, {}
     """
-
-def getImage(identifier):
-    i = json.loads(identifier)
-    u = i["object_url"] or i["large_thumbnail_url"]
-    return Image(u, i["thumbnail_url"], i["title"], i, identifier)
-
 def previousOffset(off, len):
     off = int(off)
     return off > 0 and str(off - len)
-
-
-parameters = MapParameter({
-    "start date": OptionalParameter(ScalarParameter("start date"),"Start Date"),
-    "end date": OptionalParameter(ScalarParameter("end date"), "End Date"),
-    "type": OptionalParameter(ScalarParameter("type"), "Type"),
-    "copyright": OptionalParameter(ScalarParameter("copyright"), "Copyright"),
-    "all": ScalarParameter(str,"All")
-    })
 
 
 """
@@ -95,72 +61,41 @@ parameters = MapParameter({
 URL BUILDERS###########
 =======================
 """
+"""
+Builds the URL:
+    if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
+"""
+def _build_URL(query, params):
+    keywords, para_map = break_query_string(query) 
+    url = ""
+    # need to put all params into keywords because
+    # dnz API accepts no useful parameters 
+    for p in params:
+        keywords+= " "+params[p]
+    url =  _build_simple_URL(keywords)
+    return url 
+
 
 """
 returns a simple search using the digitalNZ API
 """
-def build_simple_URL(keywords):
-    req = request.DigitalNZAPI(API_KEY)
-    result = req.search(search_text="shed automobiles")
-    print 'digitalNZ L~90'
-    print result.data.keys()   
-    return result
-
-"""
-returns a complex search using the digitalNZ API
-    format is a JSON string converted into a python object
-"""
-def build_complex_URL(keywords, para_map):
-    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    year = ''  
-    # replaces the starting year value with 1500 (digitalnz's oldest search year) if not present 
-    if 'start_date' in params:
-        # TODO: replace all this with stuff
-        # year+=format_date(params['start_year'], 'yyyy', "")+' TO ' if params['start_date'] != "" else: year+=dnz_start_year+' TO '
-        if params['start_date'] != "":
-            #this could be shorter -- when we remove the line directly below
-            start_year=format_date(params['start_date'], 'yyyy', "")
-            print 'digital_searcher L~110'
-            print start_year
-            year+= start_year + ' TO '
-        del params['start_date']
-    else:
-        year+= dnz_start_year+' TO '   
-    
-    # does the same for end year (y:3000) dnz accepts an arbitrarily large end year value 
-    if 'end_date' in params:    
-        if params['end_date'] != "": 
-            year+= format_date(params['end_date'])
-        del params['end_date']
-    else:
-        year+= dnz_end_year 
-    print'digitalnz L~130'
-    print year
-    print'===='
-    
-    if 'type' in params:
-        type = params['type'] if check_valid_type(params['type']) else None 
-        del params['type']
-        if type:
-            params['dnz_type'] = type
-    
-    if 'copyright' in params:
-        usage = params['copyright'] if check_valid_usage(params['copyright']) else None
-        if usage:
-            params['usage'] = usage
-
-
-    params['format'] = FORMAT_FINAL 
-    params['year']=year
-
+def _build_simple_URL(keywords):
+    #TODO needs to do stuff.
+    url = BASE_SEARCH_API_URL+""
+    return 'a'
 """
 ================
 #TOOLS
 ================
 """
 
+def get_image(identifier):
+    i = json.loads(identifier)
+    u = i["object_url"] or i["large_thumbnail_url"]
+    return Image(u, i["thumbnail_url"], i["title"], i, identifier)
+
 def check_valid_type(type):
-    if type in dnz_valid_type: 
+    if type in dnz_valid_types:    
         return True
     else:
         return False
@@ -170,3 +105,4 @@ def check_valid_usage(usage):
         return True
     else:
         return False
+
