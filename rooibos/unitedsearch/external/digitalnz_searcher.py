@@ -22,18 +22,6 @@ NEED TO COMPLETELY REWRITE THIS CLASS SRSLY, NOT EVEN FUNNY
         -- and[Category][]=Images 
 
 """
-def _get(url):
-    return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-# return urllib2.urlopen(url)
-
-def _count(searchobj):
-    return 1 
-
-def count(query):
-    #TODO: do a proper implementation
-    return 12345
-    #return _count(_search(query))
-
 def search(query, params, off, len):
     """
     off = int(off)
