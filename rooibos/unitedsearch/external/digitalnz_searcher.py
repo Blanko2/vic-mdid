@@ -9,52 +9,33 @@ name = "DigitalNZ"
 identifier = "digitalnz"
 
 API_KEY="sfypBYD5Jpu1XqYBipX8"
+CATEGORY_VALUE="&and[category][]=Images"
+
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.rss?api_key="+API_KEY
+
 # TODO get a University API key instead of a personal one
-"""
-NEED TO COMPLETELY REWRITE THIS CLASS SRSLY, NOT EVEN FUNNY
-    WHAT NEEDS TO BE DONE:
-        allow:
-        -- per_page
-        -- page
-        -- and[Category][]=Images 
+def search(query, params, offset, per_page=20):
+    # build the URL 
+    offset = _modulate_offset(int(offset), per_page)
+    page = offset/per_page +1 
+    url = _build_URL(query, params, per_page, page)
+    result_images = Result(count(
+    return params 
 
-"""
-def _get(url):
-    return urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(url)
-# return urllib2.urlopen(url)
-
-def _count(searchobj):
-    return 1 
+def previousOffset(offset, per_page):
+    offset = int(offset)
+    return offset > 0 and str(offset - per_page)
 
 def count(query):
-    #TODO: do a proper implementation
-    return 12345
-    #return _count(_search(query))
-
-def search(query, params, off, len):
-    """
-    off = int(off)
-    obj = __search(query, off, len)
-    hits = _count(obj)
-    result = Result(hits, off + len if off + len < hits else None)
-    """
-    # build the URL 
-    url = _build_URL(query, params)
-    return Result(0,0), params 
-    """
-    for i in obj["results"]:
-        u = i["object_url"] or i["large_thumbnail_url"] or None
-        # TODO: digitalnz's "Get Metadata API" doesn't seem to work---something better than using a JSON string as an identifier
-        result.addImage(ResultImage(i["source_url"], i["thumbnail_url"], i["title"], u and json.dumps(i)))
-    return result, {}
-    """
-def previousOffset(off, len):
-    off = int(off)
-    return off > 0 and str(off - len)
-
+    # need to get result, get json that composes it and then
+    # break that and get 'result_count' value
+    keywords, params = break_query_string(query)
+    search_object = _load(keywords, params) 
+    hits = search_object["search"]["result_count"] 
+    
+    return hits 
 
 """
 =======================
@@ -63,44 +44,70 @@ URL BUILDERS###########
 """
 """
 Builds the URL:
-    if there is anything inside params for the search it returns a complex URL - otherwise it returns a simple URL
+    there are only ever simple searches because digitalNZ has a weird search API that doesn't properly include its own filters
 """
-def _build_URL(query, params):
+def _build_URL(query, params, per_page=20, page):
     keywords, para_map = break_query_string(query) 
     url = ""
     # need to put all params into keywords because
     # dnz API accepts no useful parameters 
     for p in params:
-        keywords+= " "+params[p]
-    url =  _build_simple_URL(keywords)
+        keywords+= "+"+p
+    for p in para_map:
+        keywords+= "+"+p
+    url =  _build_simple_URL(keywords, per_page, page)
     return url 
 
 
 """
-returns a simple search using the digitalNZ API
+returns a search using the digitalNZ API
 """
-def _build_simple_URL(keywords):
-    #TODO needs to do stuff.
-    url = BASE_SEARCH_API_URL+""
-    return 'a'
+def _build_simple_URL(keywords, per_page, page):
+    keywords = keywords.replace(" ","+")
+    url = BASE_SEARCH_API_URL+"&text="+keywords+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
+    return url 
+
 """
 ================
 #TOOLS
 ================
 """
+def _get_url(url):
+    return urllib2.urlopen(url)
+
+def _load(keywords, params):
+    # should build a url and return the json string that it returns
+    return json.load(_get_url(_build_URL(query, params, 20, 1))
 
 def get_image(identifier):
     i = json.loads(identifier)
     u = i["object_url"] or i["large_thumbnail_url"]
     return Image(u, i["thumbnail_url"], i["title"], i, identifier)
 
-def check_valid_type(type):
+def _modulate_offset(offset, per_page):
+    modulate = offset%per_page 
+    diff_mod = per_page - modulate
+   
+    if offset != 0 and modulate != 0:
+        #offset = Minimum Necessary Change between the offset and a modulo of zero
+        if modulate < diff_mod:
+            offset -= modulate
+        else:
+            offset += diff_mod 
+    # calculate the page
+    page = offset/per_page + 1
+    return offset
+
+"""
+OBSOLETE
+"""
+def _check_valid_type(type):
     if type in dnz_valid_types:    
         return True
     else:
         return False
 
-def check_valid_usage(usage):
+def _check_valid_usage(usage):
     if usage in dnz_valid_usage:
         return True
     else:

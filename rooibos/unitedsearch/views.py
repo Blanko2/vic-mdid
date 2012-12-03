@@ -151,7 +151,7 @@ class usViewer():
                     else :
                       r[k] = read(params.parammap[k], prefix + [k])
                 return r
-            if isinstance(params, ListParameter):
+            if isdigitalnzinstance(params, ListParameter):
 
                 r = []
                 index = 0
@@ -180,21 +180,61 @@ class usViewer():
                 #   return inputs["_".join(prefix)]
         return read(self.searcher.parameters, [])
     
+
+    
     def perform_search(self, request, resultcount):
+        
+        print "request.GET:"
+
+        
         query = request.GET.get('q', '') or request.POST.get('q', '')
+        
+        if query and "=" in query and not "params={" in query:
+            kw = ""
+            par = ""
+            query_list = query.split(',')
+            for q in query_list:
+                if "=" in q:
+                    key_value = q.split("=")
+                    key = key_value[0]
+                    value = key_value[1]
+                    del key_value[0]
+                    del key_value[0]
+                    if len(key_value)>0 :
+                        for v in key_value:
+                            value += "+"+v
+                    if not par=="":
+                        par +=","
+                    if value.startswith("+"):
+                        del value[0]
+                    par += "\""+key+"\":\""+value+"\""
+                else:
+                    kw += "+"+q
+            if kw.startswith("+"):
+                del kw[0]
+            new_query = "keywords="+kw+",params={"+par+"}"
+            query = new_query
+            
+        
+
+
+        
+        
+        # Advanced search from sidebar
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
-        not_params = {}
-        or_params = {}
+        #not_params = {}
+        #or_params = {}
         t_str = "i_field0_type"
+        print "t_sr = =========="
         v_str = "i_field0_value"
         # new Gallica
         if t_str in request.GET and v_str in request.GET:
             key = request.GET[t_str]
             value = request.GET[v_str]
             if key and value:
-                params.update({key:[value]})
-                params.update({"first":[key,value]})
+                params.update({key:[[value,"and"]]})
+                params.update({"first":key})
             print "params = "
             print params
             i=1
@@ -202,8 +242,7 @@ class usViewer():
                 t_str = "i_field"+str(i)+"_opt_type"
                 v_str = "i_field"+str(i)+"_opt_value"
                 o_str = "i_field"+str(i)+"_opt"
-                print t_str
-                print v_str
+
                 
                 if t_str in request.GET and v_str in request.GET:
                     key = request.GET[t_str]
@@ -216,16 +255,13 @@ class usViewer():
                     
                     if key and value:
                         if not key in params:
-                            params.update({key:[value]})
-                            print "params = "
-                            print params
+                            params.update({key:[[value,opt]]})
                         else:
                             v = params[key]
-                            v.append(value)
+                            v.append([value,opt])
                             params.update({key:v})
-                            print "params = "
-                            print params
-                        if opt=="or":
+
+                        """if opt=="or":
                             if not key in or_params:
                                 or_params.update({key:[value]})
                             else:
@@ -238,13 +274,14 @@ class usViewer():
                             else:
                                 List = not_params[key]
                                 List.append(value)
-                                not_params.update({key:List})
+                                not_params.update({key:List})"""
                 i = i+1
+            """
             if len(not_params)>0:
                 params.update({"except":not_params})
             if len(or_params)>0:
                 params.update({"or":or_params})
-            
+            """
             if "i_languages" in request.GET:
                 lang = request.GET["i_languages"]
                 params.update({"languages":lang})
@@ -308,6 +345,7 @@ class usViewer():
         #args = self.readargs(request.GET)
         #query = "keyword=,title=e,artist=e"
         #print params
+
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
 

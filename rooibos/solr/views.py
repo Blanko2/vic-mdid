@@ -509,7 +509,6 @@ def search(request, id=None, name=None, selected=False, json=False):
     federated_search = sidebar_api_raw(
         request, federated_search_query, cached_only=True) if federated_search_query else None
 
-  
 
     query_string = ""
     """if len(criteria)>0 :
@@ -557,7 +556,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     print kws
     print "kws_not ="
     print kws_not
-
+    
+ 
+    if kws.startswith("keywords="):
+        kws = kws.replace("keywords=","")
 
     query_string += "keywords=" + kws
     query_string = query_string.replace('\"','')
@@ -567,16 +569,15 @@ def search(request, id=None, name=None, selected=False, json=False):
     
 
     for key in query_list.keys() :
-      query_string = query_string+','
-      query = key+"="+query_list[key]
-      query_string += ' '+query.replace("\"", "").replace('_t','')
+      q = key+"="+query_list[key]
+      query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
     
     if not kws_not is '':
       query_string += ', '+"not="+kws_not
     
 
-    print "\n\n\n\n\n--------------------------Query String is:--------------------------------"
+    print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
     print query_string+"\n\n\n\n\n"
  
 

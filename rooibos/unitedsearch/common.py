@@ -45,10 +45,10 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 or form word
 """
 def break_query_string(query):
-    """
+
     print "breaking"
     print query
-    """
+
     keywords = ""
     para_map = {}
     """
@@ -81,12 +81,13 @@ def break_query_string(query):
     print para_map
     """
     if keywords is "" and len(para_map) is 0 :
-	keywords = query or ""
+        keywords = query or ""
 	"""
 	print "in if, keywords:"
 	print keywords
 	print "\n\n"
     """
+    print keywords
     return keywords, para_map
     
 #========Dictionary methods ========
