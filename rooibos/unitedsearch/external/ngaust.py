@@ -66,10 +66,8 @@ def count(query):
     scraper = BeautifulSoup(_get_html(url_base, 0, 1))
     
     return _count(scraper)
-    #return _count(_get_html(_get_url(query, {}), "0", 1))
-    #return search(query, {}, 0, 1)[0].total
 
-# TODO
+
 def getImage(json_image_identifier):
 
     image_identifier = json.loads(json_image_identifier)
@@ -84,9 +82,11 @@ def getImage(json_image_identifier):
 def _get_url(query, params):
     keywords, para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    add_to_dict(params, "All Words", keywords)
+    if not keywords is u'':	# have keywords to add
+	add_to_dict(params, "All Words", keywords)
     
-    if len(params["All Words"]) is 0:
+    
+    if params.has_key('All Words'):
 	# advanced search
 	param_string = ""
 	for param in params:
@@ -98,20 +98,24 @@ def _get_url(query, params):
 	    # have made parameters string, now remove leading &
 	    param_string = param_string[1:]
 	    
-	    url_base = ADVANCED_SEARCH_BASE_URL.replace("PARAMETERS", param_string)
+	url_base = ADVANCED_SEARCH_BASE_URL.replace("PARAMETERS", param_string)
 	
     else:
 	# simple search, shove all parameters into keywords
+	remaining_params = {}
+	remaining_params['All Words'] = params['All Words'] if params.has_key('All Words') else []
+	remaining_params['display_order'] = params['display_order'] if params.has_key('display_order') else ["1"] # default
+	
 	for param in params:
 	    if not param is "All Words" and not param is "display_order":
-		add_to_dict(params, "All Words", params[param])
-		del params[param]
+		add_to_dict(remaining_params, "All Words", params[param])
 	
-	url_base = SIMPLE_SEARCH_URL_STRUCTURE.replace("VALUE", params["All Words"][0])
+	url_base = SIMPLE_SEARCH_URL_STRUCTURE.replace("VALUE", remaining_params["All Words"][0])
+	params = remaining_params
 	
     # and set order
-    if "display_order" in params:
-	order_choice = params["display_order"].title()
+    if params.has_key('display_order'):
+	order_choice = params["display_order"][0].title()
 	if order_choice in order_values:
 	    url_base = url_base.replace("ORDER_TYPE_INT", str(order_values.index(order_choice)+1))	# +1 because ngaust counts from 1, not 0
 	else:
@@ -151,16 +155,19 @@ def _get_images(scraper, num_wanted):
 	
 	caption_tag = image_div.find('div', 'GRIDCAPTION')
 	artist_tag = caption_tag.find('p', 'ARTIST')
-	artist = "%s %s" %(artist_tag.span.contents, artist_tag.span.nextSibling)	# artist last name + first name
+	if artist_tag.span.contents:
+	    artist = artist_tag.span.contents[0] + artist_tag.span.nextSibling
+	else:
+	    artist=""
+	#artist = "%s %s" %(artist_tag.span.contents, artist_tag.span.nextSibling)	# artist last name + first name
 	
 	artist_date_tag = caption_tag.find('p', 'ARTISTDATE')
-	artist_date = str(artist_date_tag.contents)
+	artist_date = artist_date_tag.contents
 	
 	link_tag = artist_date_tag.findNextSibling('p')
-	print "NGaust caption_tag %s artist_tag %s artist_date_tag %s link_tag %s" %(caption_tag, artist_tag, artist_date_tag, link_tag)
 	more_info = "http://artsearch.nga.gov.au/%s" %(link_tag.a["href"])
-	title = str(link_tag.a["title"])
-	other = str(link_tag.a.nextSibling)	# date, medium, etc
+	title = link_tag.a["title"]
+	other = link_tag.a.nextSibling	# date, medium, etc
 	
 	description = image_tag['alt']
 	image_identifier = {"thumb": thumb_url,
@@ -173,12 +180,14 @@ def _get_images(scraper, num_wanted):
 	images.append(ResultImage(image_url, thumb_url, description, json.dumps(image_identifier)))
 	
     return images
-    
+
+
 def build_empty_params(mapParameter):
     empty = {}
     for param in mapParameter.parammap.keys():
 	empty[param] = []
     return empty
+
     
 parameters = MapParameter({
     "artist": OptionalParameter(ScalarParameter(str), "Artist"),
