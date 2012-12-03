@@ -151,7 +151,7 @@ class usViewer():
                     else :
                       r[k] = read(params.parammap[k], prefix + [k])
                 return r
-            if isinstance(params, ListParameter):
+            if isdigitalnzinstance(params, ListParameter):
 
                 r = []
                 index = 0
@@ -180,8 +180,47 @@ class usViewer():
                 #   return inputs["_".join(prefix)]
         return read(self.searcher.parameters, [])
     
+
+    
     def perform_search(self, request, resultcount):
+        
+        print "request.GET:"
+
+        
         query = request.GET.get('q', '') or request.POST.get('q', '')
+        
+        if query and "=" in query and not "params={" in query:
+            kw = ""
+            par = ""
+            query_list = query.split(',')
+            for q in query_list:
+                if "=" in q:
+                    key_value = q.split("=")
+                    key = key_value[0]
+                    value = key_value[1]
+                    del key_value[0]
+                    del key_value[0]
+                    if len(key_value)>0 :
+                        for v in key_value:
+                            value += "+"+v
+                    if not par=="":
+                        par +=","
+                    if value.startswith("+"):
+                        del value[0]
+                    par += "\""+key+"\":\""+value+"\""
+                else:
+                    kw += "+"+q
+            if kw.startswith("+"):
+                del kw[0]
+            new_query = "keywords="+kw+",params={"+par+"}"
+            query = new_query
+            
+        
+
+
+        
+        
+        # Advanced search from sidebar
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
         not_params = {}
@@ -308,6 +347,7 @@ class usViewer():
         #args = self.readargs(request.GET)
         #query = "keyword=,title=e,artist=e"
         #print params
+
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
 

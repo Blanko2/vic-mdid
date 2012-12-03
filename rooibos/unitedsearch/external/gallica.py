@@ -57,7 +57,11 @@ def build_URL(query, params):
     
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-
+    print "YAHOOOOOOOOOOOOOOOOOOOOO222"
+    print "keywords"
+    print keywords
+    print "para_map"
+    print para_map
     if len(params)!=0:
 	  first_url, params = build_advanced_url(keywords, params)
       #first_url, second_url, params = build_advanced_url(keywords, params)
@@ -609,6 +613,9 @@ def search(query, params, off, num_wanted) :
     print query
     print "params"
     print params
+    
+    if '=' in query and params == {}:
+        print "YAHOOOOOOOOOOOOOOOO"
 
     per_page = __items_per_page(num_wanted)
     off = (int)(off)
