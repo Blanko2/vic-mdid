@@ -194,10 +194,6 @@ def build_sidebar_URL(params):
  
  
 def build_advanced_url(keywords, params):
-  
-  
-  
-
   print "params in build_advanced_url"
   print params
   if "all" in params:
