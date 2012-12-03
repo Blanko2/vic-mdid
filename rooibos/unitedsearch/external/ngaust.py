@@ -10,8 +10,8 @@ identifier = "ngaust"
 
 # use simple search for search by keyword
 # note, VIEW_SELECT=2 means show images and captions, order_select is whether to order by title, author, date, etc
-ADVANCED_SEARCH_BASE_URL = "http://artsearch.nga.gov.au/Search.cfm?mystartrow=OFFSET&realstartrow=OFFSET&VIEW_SELECT=2&PARAMETERS&order_select=ORDER_TYPE_INT&showrows=20"
-SIMPLE_SEARCH_URL_STRUCTURE = "http://artsearch.nga.gov.au/Search.cfm?mystartrow=OFFSET&realstartrow=OFFSET&srchmeth=1&order_select=ORDER_TYPE_INT&view_select=2&showrows=20&simple_select=1&keyword=VALUE"
+ADVANCED_SEARCH_BASE_URL = "http://artsearch.nga.gov.au/Search.cfm?mystartrow=OFFSET&realstartrow=OFFSET&VIEW_SELECT=2&PARAMETERS&order_select=ORDER_TYPE_INT&showrows=NUM_IMAGES"
+SIMPLE_SEARCH_URL_STRUCTURE = "http://artsearch.nga.gov.au/Search.cfm?mystartrow=OFFSET&realstartrow=OFFSET&srchmeth=1&order_select=ORDER_TYPE_INT&view_select=2&showrows=NUM_IMAGES&simple_select=1&keyword=VALUE"
 
 order_values = ["Artist", "Date", "Title", "Birth Date", "Accn Number", "Media", "Technique", "Impression", "Imaged"]
 url_replacement_types = {"artist": "aname", "start": "yeara", "end": "yearb", "publisher": "pub"}
@@ -38,6 +38,7 @@ def search(query, params, offset, num_wanted):
 	result = Result(total, offset+num_wanted)
 
 
+    """
     # get actual images and add to result
     first_loop = True
     num_images = 0
@@ -51,7 +52,10 @@ def search(query, params, offset, num_wanted):
 	num_wanted -= len(images)
 	num_images += len(images)
 	first_loop = False
-	
+    """
+    images = _get_images(scraper, num_wanted)
+    for image in images:
+	result.addImage(image)
     # return
     empty_params = build_empty_params(parameters)
     params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
@@ -85,8 +89,7 @@ def _get_url(query, params):
     if not keywords is u'':	# have keywords to add
 	add_to_dict(params, "All Words", keywords)
     
-    
-    if params.has_key('All Words'):
+    if not params.has_key('All Words'):
 	# advanced search
 	param_string = ""
 	for param in params:
@@ -103,23 +106,29 @@ def _get_url(query, params):
     else:
 	# simple search, shove all parameters into keywords
 	remaining_params = {}
-	remaining_params['All Words'] = params['All Words'] if params.has_key('All Words') else []
-	remaining_params['display_order'] = params['display_order'] if params.has_key('display_order') else ["1"] # default
+	if params.has_key('All Words'):
+	    remaining_params['All Words'] = params['All Words']
+	    del(params['All Words'])
+	else:
+	    remaining_params['All Words'] = []
 	
+	if params.has_key('display_order'):
+	    remaining_params['display_order'] = params['display_order']
+	    del(params['display_order'])
+	else:
+	    remaining_params['display_order'] = ["Artist"]	# default
+	    
 	for param in params:
-	    if not param is "All Words" and not param is "display_order":
-		add_to_dict(remaining_params, "All Words", params[param])
+	    add_to_dict(remaining_params, "All Words", params[param])
 	
 	url_base = SIMPLE_SEARCH_URL_STRUCTURE.replace("VALUE", remaining_params["All Words"][0])
 	params = remaining_params
 	
     # and set order
-    if params.has_key('display_order'):
-	order_choice = params["display_order"][0].title()
-	if order_choice in order_values:
-	    url_base = url_base.replace("ORDER_TYPE_INT", str(order_values.index(order_choice)+1))	# +1 because ngaust counts from 1, not 0
-	else:
-	    url_base = url_base.replace("ORDER_TYPE_INT", "1")	# default
+    
+    order_choice = params["display_order"][0].title() if params.has_key('display_order') else 'Artist'
+    if order_choice in order_values:
+	url_base = url_base.replace("ORDER_TYPE_INT", str(order_values.index(order_choice)+1))	# +1 because ngaust counts from 1, not 0
     else:
 	url_base = url_base.replace("ORDER_TYPE_INT", "1")	# default
 	
@@ -128,7 +137,8 @@ def _get_url(query, params):
     
 def _get_html(url_base, offset, num_wanted):
     
-    url = url_base.replace("OFFSET", str(offset+1))	# image to start at. NGaust is 1-indexed
+    url = url_base.replace("OFFSET", str(offset+1)).replace("NUM_IMAGES", str(num_wanted))	# image to start at. NGaust is 1-indexed
+    print "NGaust url: %s" %url
     proxyHandler = urllib2.ProxyHandler({"http": "http://localhost:3128"})
     opener = urllib2.build_opener(proxyHandler)
     html = opener.open(url)
@@ -138,8 +148,14 @@ def _count(scraper):
     
     #print "NGaust l118 scraper %s" %(scraper)
     #print "NGaust l119 count_tag %s" %(scraper.find('div', 'PAGIN'))
-    count_tag = scraper.find('div', 'PAGIN').b
-    return int(count_tag.contents[0])
+    count_tag = scraper.find('div', 'PAGIN')
+    print "NGaust scraper: %s\n\n" %scraper
+    if count_tag:
+	return int(count_tag.b.contents[0])
+    # else, maybe was an invalid search term
+    else:
+	return 0
+    
    
 
 def _get_images(scraper, num_wanted):
