@@ -49,13 +49,17 @@ class usViewer():
                 if params.multipleAllowed :
                   r_content += " multiple = \"multiple\""
                 r_content += ">"
-                selected_option = default or options[0]
+                selected = options[0]
+                if default:
+                      selected = default
+                  
                 for option in options :
-                    r_content += "<option value=" + option
-                    if option == selected_option :
-                      r_content += " selected=\"selected\""
+                    if option == selected:
+                        r_content += "<option selected=\"selected\" value=" + option
+                    else: 
+                        r_content += "<option value=" + option
                     r_content += ">" + option + "</option>"
-                r_content += "</select>"
+                r_content += "</select><br>"
                 return [r_content]
             
             elif isinstance(params, MapParameter):
@@ -71,7 +75,9 @@ class usViewer():
                 index =0
                 i = 0
                 for v in params.paramlist :
-                    r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[0] or None)
+                    print "default ========"
+                    print default
+                    r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[i] or None)
                     index = index+1
                     i = i+1
                 r += ["  "*indent + "</div>"]
@@ -95,7 +101,7 @@ class usViewer():
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
                 r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 2
                 r += ["  "*indent + "</div>"]
@@ -121,8 +127,15 @@ class usViewer():
                   
                   # select box for the type options
                   r_content += "<select name=\"i_" + "_".join(prefix) +"_type"+ "\">"
+                  selected = options[0]
+                  if default:
+                      selected = default[0]
+                  
                   for option in options :
-                    r_content += "<option value=" + option
+                    if option == selected:
+                        r_content += "<option selected=\"selected\" value=" + option
+                    else: 
+                        r_content += "<option value=" + option
                     r_content += ">" + option + "</option>"
                   r_content += "</select><br>"
                   
@@ -188,7 +201,7 @@ class usViewer():
 
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
-        
+
         if query and "=" in query and not "params={" in query:
             kw = ""
             par = ""
@@ -210,8 +223,10 @@ class usViewer():
                     par += "\""+key+"\":\""+value+"\""
                 else:
                     kw += "+"+q
+            
             if kw.startswith("+"):
                 del kw[0]
+
             new_query = "keywords="+kw+",params={"+par+"}"
             query = new_query
             
@@ -282,9 +297,9 @@ class usViewer():
             if len(or_params)>0:
                 params.update({"or":or_params})
             """
-            if "i_languages" in request.GET:
-                lang = request.GET["i_languages"]
-                params.update({"languages":lang})
+            if "i_language" in request.GET:
+                lang = request.GET["i_language"]
+                params.update({"language":lang})
             if "i_copyright" in request.GET:
                 cr = request.GET["i_copyright"]
                 params.update({"copyright":cr})
@@ -305,9 +320,9 @@ class usViewer():
             if value:
               params.update({key:value})
             n=n+1
-          if "i_languages" in request.GET:
-            lang = request.GET["i_languages"]
-            params.update({"languages":lang})
+          if "i_language" in request.GET:
+            lang = request.GET["i_language"]
+            params.update({"language":lang})
           if "i_copyright" in request.GET:
             cr = request.GET["i_copyright"]
             params.update({"copyright":cr})
@@ -410,7 +425,8 @@ class usViewer():
                 'last_page' :lastPage,
                 'hits': result.total,
                 'searcher_name': self.searcher.name,
-                'html_parameters': self.htmlparams(args)
+                'html_parameters': self.htmlparams(args),
+                'query': query
             }
         
     def search(self, request):

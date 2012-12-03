@@ -48,6 +48,12 @@ opt_type_map = {
     'and' : "MUST",
     'except' : "MUST_NOT"
     }
+    
+opt_reverse_map = {
+    "SHOULD" :"or",
+    "MUST" : "and",
+    "MUST_NOT" : "except"
+    }
 """# # # # # # # # # # #
 # # # # # TOOLS # # # # #
 """# # # # # # # # # # #
@@ -74,7 +80,7 @@ def build_URL(query, params):
     else:
 	  first_url = build_simple_url(keywords)
       #first_url , second_url = build_simple_url(keywords)
-    return first_url, params #second_url,params
+    return first_url, params,params #second_url,params
     
 
     
@@ -87,39 +93,38 @@ def build_simple_url(keywords):
  
 def build_sidebar_URL(params):
     copyright   = ""
-    languages     = ""
+    language     = ""
     start_date    = ""
     end_date  = ""
+    arg = {}
+    arg_list = []
     #opt_not_map   = {}      
     #opt_or_map = {}
-    non_keywords = ["copyright" ,"languages","start date","end date","adv_sidebar"]
+    non_keywords = ["copyright" ,"language","start date","end date","adv_sidebar"]
     
-    if "copyright" in params:
-        copyright = getcopyright(params)   
-    if "languages" in params:
-        languages = getlanguages(params)
-    if "start date" in params:
-        start_date = getDate(params["start date"])
-    if "end date" in params:  
-        end_date = getDate(params["end date"])
-    """if "or" in params:
-        opt_or_map = params["or"]
-    if "except" in params:
-        opt_not_map = params["except"]"""
+
         
     tmp_params = params
     if "copyright" in params:
         copyright = getcopyright(params)
-    if "languages" in params:
-        languages = getlanguages(params)
+        arg.update({"copyright":params["copyright"]})
+    else:
+        arg.update({"copyright":["All"]})
+    if "language" in params:
+        language = getlanguages(params)
+        arg.update({"language":params["language"]})
+    else:
+        arg.update({"language":["All"]})
     if "start date" in params:
         start_date = getDate(params["start date"])
+        arg.update({"start date":params["start date"]})
+    else :
+        arg.update({"start date":[]})
     if "end date" in params:  
         end_date = getDate(params["end date"])
-    if "or" in params:
-        opt_or_map = params["or"]
-    if "except" in params:
-        opt_not_map = params["except"]
+        arg.update({"end date":params["end date"]})
+    else :
+        arg.update({"end date":[]})
     for key in non_keywords:
         if key in tmp_params:
             del tmp_params[key]
@@ -132,8 +137,7 @@ def build_sidebar_URL(params):
         first_key = tmp_params["first"]
     
         del tmp_params["first"]
-        print "wrong here"
-        print first_key
+
 
         first_value = tmp_params[first_key][0][0]
 
@@ -147,6 +151,8 @@ def build_sidebar_URL(params):
             tmp_params.update({first_key:l})
     
         keywords.append([filter_type_map[first_key],first_value,"MUST"])
+        arg_list.append([first_key,first_value])
+        
     else:
         keywords.append(["f_allcontent","","MUST"])
     
@@ -157,29 +163,20 @@ def build_sidebar_URL(params):
         for keyword in wordlist:
             value = keyword[0]
             opt = opt_type_map[keyword[1]]
-            """
-            if key in opt_or_map:
-                or_list = opt_or_map[key]
-                if keyword in or_list:
-                    opt="SHOULD"
-            if key in opt_not_map:
-                not_list = opt_not_map[key]
-                print "not_list"
-                print not_list
-                print keyword
-                if keyword in not_list:
-                    opt="MUST_NOT"
-            """
+
             if key in filter_type_map:
                 filter_type = filter_type_map[key]
             sub_query = [filter_type,value,opt]
+            arg_list.append([keyword[1],[key,value]])
             keywords.append(sub_query)
     
     i = 1
     optionals_string=""
     
-    print "Final keyword list-------"
-    print keywords
+    while len(arg_list)<5:
+        arg_list.append([])
+
+    arg.update({"field":arg_list})
     
     for sub_query in keywords:
         index = str(i)
@@ -193,7 +190,7 @@ def build_sidebar_URL(params):
       'START': start_date,
       'SEARCH_FILTERS': optionals_string,
       'END': end_date,
-      'LANGUAGES': languages,
+      'LANGUAGES': language,
       'COPYRIGHT': copyright
       }
     
@@ -201,12 +198,12 @@ def build_sidebar_URL(params):
     first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
     #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
   
-    return first_url, params 
+    return first_url, params ,arg
  
 
  
  
- 
+# build advanced search url that is not called from adv side bar
 def build_advanced_url(keywords, params):
   print "params in build_advanced_url"
   print params
@@ -218,21 +215,33 @@ def build_advanced_url(keywords, params):
   #  keywords
   
   copyright 	= ""
-  languages 	= ""
+  language 	= ""
   start_date 	= ""
   end_date 	= ""
-  opt_not_map	= {}       
+  opt_not_map	= {}    
+  arg = {}
+  arg_list = []
   
   if "copyright" in params:
-      copyright = getcopyright(params)
-      del params['copyright']      
-  if "languages" in params:
-      languages = getlanguages(params)
-      del params['languages']
+        copyright = getcopyright(params)
+        arg.update({"copyright":params["copyright"]})
+  else:
+        arg.update({"copyright":"All"})
+  if "language" in params:
+        language = getlanguages(params)
+        arg.update({"language":params["language"]})
+  else:
+        arg.update({"language":"All"})
   if "start date" in params:
-      start_date = getDate(params["start date"])
+        start_date = getDate(params["start date"])
+        arg.update({"start date":params["start date"]})
+  else :
+        arg.update({"start date":[]})
   if "end date" in params:  
-      end_date = getDate(params["end date"])
+        end_date = getDate(params["end date"])
+        arg.update({"end date":params["end date"]})
+  else :
+        arg.update({"end date":[]})
   
   # deal with remaining optional arguments
   optionals_dict = {}
@@ -259,7 +268,7 @@ def build_advanced_url(keywords, params):
       opt_parameter_tmp = opt_parameter.replace('-','')
 
       if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
-	  if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
+	   if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
 	    optional_type = filter_type_map[opt_parameter]
 
 	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
@@ -277,9 +286,8 @@ def build_advanced_url(keywords, params):
 	       v = opt_not_map[key]
 	       value = v.append[value]
 	       opt_not_map.update({key:value})
-	    print "not map ==========="
-	    print opt_not_map
-	  else:
+
+	   else:
 	    keywords += " " + temp_optionals[opt_parameter]
 	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
       elif (opt_parameter_tmp in filter_type_map and len(temp_optionals[opt_parameter]) != 0 and len(optionals_dict) <=4):
@@ -342,7 +350,7 @@ def build_advanced_url(keywords, params):
       'START': start_date,
       'SEARCH_FILTERS': optionals_string,
       'END': end_date,
-      'LANGUAGES': languages,
+      'LANGUAGES': language,
       'COPYRIGHT': copyright
       }
     
@@ -637,7 +645,7 @@ def search(query, params, off, num_wanted) :
 
     
     #any_results
-    first_url, params = build_URL(query, params) 
+    first_url, params,arg = build_URL(query, params) 
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     
     #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage))
@@ -735,10 +743,11 @@ def search(query, params, off, num_wanted) :
         
     # and make sure params contains all param types
     #params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
-    arg = empty_params
-    #a.update({"field":[["artist","ddd"]]})
-
-    return result, arg
+    #arg = empty_params
+    #arg.update({"field":[["title","1"],["except",["title","2"]],["except",["artist","not_art"]],[],[],[],[]]})
+    if not "field" in arg:
+        arg.update({"field":[]})
+    return result, empty_params
   
   
 ##         ##
@@ -746,7 +755,7 @@ def search(query, params, off, num_wanted) :
 ##         ##
 
 def getlanguages(params) :
-    if not params['languages'] or len(params['languages']) == 0 :
+    if not params['language'] or len(params['language']) == 0 :
       #params['languages'] = 'All'
       #return "&t_language="
       return ""
@@ -763,10 +772,10 @@ def getlanguages(params) :
       "Latin": "lat"
     }
     
-    if params['languages'] == 'All' :
+    if params['language'] == 'All' :
       lang_string = ""
     else :
-      lang_string = "&t_language=" + lang_codes[params['languages']]
+      lang_string = "&t_language=" + lang_codes[params['language']]
       
     return lang_string
 
@@ -788,7 +797,7 @@ def getcopyright(params) :
       copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
     
     return copy_string    
-  
+
 ##      	##
 ## PARAMETERS 	##
 ##      	##
@@ -810,7 +819,7 @@ option_types = ["and", "or", "except"]
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
-  "languages": 
+  "language": 
   DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
   DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
@@ -873,7 +882,7 @@ parameters = MapParameter({
   
 empty_params = {"start date": [],
     "end date": [],
-    "languages": [],
+    "language": [],
     "copyright": [],
     "all": [],
     "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
@@ -884,7 +893,7 @@ empty_params = {"start date": [],
 
 valid_keys=["start date",
     "end date",
-    "languages",
+    "language",
     "copyright",
     "all",    
     "artist",
