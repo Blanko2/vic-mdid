@@ -57,13 +57,7 @@ def build_URL(query, params):
     
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-    """
-    print "params here"
-    print params
-    #check if simple or advanced search
-    print "para_map in build_URL:"
-    print para_map
-    """
+
     if len(params)!=0:
 	  first_url, params = build_advanced_url(keywords, params)
       #first_url, second_url, params = build_advanced_url(keywords, params)
@@ -512,7 +506,11 @@ def __count(soup) :
       
     div = soup.find('head').find('title')#.find('meta','title')
     fixed_div = str(div.renderContents()).replace(",","").replace('.','')
-    return (int)(re.findall("\d{1,}", fixed_div)[0])
+
+    try:
+        return (int)(re.findall("\d{1,}", fixed_div)[0])
+    except:
+        return 0
     """
     if not fragment:
       return 0
