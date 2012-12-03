@@ -41,6 +41,13 @@ filter_type_map = {
   '' : "f_creator"	# default so as not to have blank string
   } # note, table is table of contents or Captions
   
+  
+
+opt_type_map = {
+    'or' : "SHOULD",
+    'and' : "MUST",
+    'except' : "MUST_NOT"
+    }
 """# # # # # # # # # # #
 # # # # # TOOLS # # # # #
 """# # # # # # # # # # #
@@ -57,13 +64,10 @@ def build_URL(query, params):
     
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-    """
-    print "params here"
-    print params
-    #check if simple or advanced search
-    print "para_map in build_URL:"
+
+    print keywords
+
     print para_map
-    """
     if len(params)!=0:
 	  first_url, params = build_advanced_url(keywords, params)
       #first_url, second_url, params = build_advanced_url(keywords, params)
@@ -86,9 +90,9 @@ def build_sidebar_URL(params):
     languages     = ""
     start_date    = ""
     end_date  = ""
-    opt_not_map   = {}      
-    opt_or_map = {}
-    non_keywords = ["copyright" ,"languages","start date","end date","or","except","adv_sidebar"]
+    #opt_not_map   = {}      
+    #opt_or_map = {}
+    non_keywords = ["copyright" ,"languages","start date","end date","adv_sidebar"]
     
     if "copyright" in params:
         copyright = getcopyright(params)   
@@ -98,10 +102,10 @@ def build_sidebar_URL(params):
         start_date = getDate(params["start date"])
     if "end date" in params:  
         end_date = getDate(params["end date"])
-    if "or" in params:
+    """if "or" in params:
         opt_or_map = params["or"]
     if "except" in params:
-        opt_not_map = params["except"]
+        opt_not_map = params["except"]"""
         
     tmp_params = params
     if "copyright" in params:
@@ -125,21 +129,24 @@ def build_sidebar_URL(params):
     keywords = []
     
     if "first" in tmp_params:
-        first = tmp_params["first"]
-        print first
+        first_key = tmp_params["first"]
     
         del tmp_params["first"]
-    
-        key = first[0]
-        value = first[1]
-        if len(tmp_params[key])==1:
-            del tmp_params[key]
+        print "wrong here"
+        print first_key
+
+        first_value = tmp_params[first_key][0][0]
+
+
+
+        if len(tmp_params[first_key])==1:
+            del tmp_params[first_key]
         else:
-            l = tmp_params[key]
-            l.remove(value)
-            tmp_params.update({key:l})
+            l = tmp_params[first_key]
+            del l[0]
+            tmp_params.update({first_key:l})
     
-        keywords.append([filter_type_map[key],value,"MUST"])
+        keywords.append([filter_type_map[first_key],first_value,"MUST"])
     else:
         keywords.append(["f_allcontent","","MUST"])
     
@@ -148,11 +155,9 @@ def build_sidebar_URL(params):
         print "wordlist"
         print wordlist
         for keyword in wordlist:
-            print "processing keyword"
-            print keyword
-            print "not_list"
-            print opt_not_map
-            opt = "MUST"
+            value = keyword[0]
+            opt = opt_type_map[keyword[1]]
+            """
             if key in opt_or_map:
                 or_list = opt_or_map[key]
                 if keyword in or_list:
@@ -164,9 +169,10 @@ def build_sidebar_URL(params):
                 print keyword
                 if keyword in not_list:
                     opt="MUST_NOT"
+            """
             if key in filter_type_map:
-                k = filter_type_map[key]
-            sub_query = [k,keyword,opt]
+                filter_type = filter_type_map[key]
+            sub_query = [filter_type,value,opt]
             keywords.append(sub_query)
     
     i = 1
@@ -177,6 +183,8 @@ def build_sidebar_URL(params):
     
     for sub_query in keywords:
         index = str(i)
+        print "sub_query = "
+        print sub_query
         optionals_string += "&ope"+index+"="+sub_query[2]+"&catsel"+index+"="+sub_query[0]+"&cat"+index+"="+sub_query[1]
         i=i+1
     
@@ -200,10 +208,6 @@ def build_sidebar_URL(params):
  
  
 def build_advanced_url(keywords, params):
-  
-  
-  
-
   print "params in build_advanced_url"
   print params
   if "all" in params:
@@ -472,7 +476,8 @@ def __create_image(soup, id_div) :
     # images in gallica are stored in 2 main ways, so deal with each of these separately then have a default for all others
     
     # case 1 : ark images
-    # example url_containing_string: 
+    # example url_containing_string:     if '=' in query and params == {}:
+
     # background-image:url(/ark:/12148/btv1b84304008.thumbnail);background-position:center center;background-repeat:no-repeat
     regex_result = re.search("(?<=background-image:url\()(?P<url>.*)(?P<extension>\..*)\)", url_containing_string)
     if regex_result.group('extension') == '.thumbnail' :
@@ -512,7 +517,11 @@ def __count(soup) :
       
     div = soup.find('head').find('title')#.find('meta','title')
     fixed_div = str(div.renderContents()).replace(",","").replace('.','')
-    return (int)(re.findall("\d{1,}", fixed_div)[0])
+
+    try:
+        return (int)(re.findall("\d{1,}", fixed_div)[0])
+    except:
+        return 0
     """
     if not fragment:
       return 0
@@ -611,6 +620,7 @@ def search(query, params, off, num_wanted) :
     print query
     print "params"
     print params
+    
 
     per_page = __items_per_page(num_wanted)
     off = (int)(off)

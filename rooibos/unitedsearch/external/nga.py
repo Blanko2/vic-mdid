@@ -26,13 +26,13 @@ identifier = "nga"            # don't know what this is
     
 def build_parameters(query, params):
     # build parameters dictionary to search by
-    """
+
     print "NGA build_parameters"
     print "query"
     print query
     print "params"
     print params
-    """
+
     keywords, para_map = break_query_string(query)
     """
     print "after break query string"
@@ -80,8 +80,9 @@ def build_parameters(query, params):
     year1 = getValue(params, 'start date')
     year2 = getValue(params, 'end date')
     access = getValue(params, 'access')
-
-
+    
+    print "all_words : "
+    print all_words
     # build up the url
     url_base = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
 
@@ -295,6 +296,10 @@ def search(term, params, off, num_results_wanted) :
        
      # get the image details
      searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
+     
+     print "searchhtml is ======="
+     print url_base
+     
      website_search_results_parser = BeautifulSoup(searchhtml)
      
      if not any_results(website_search_results_parser) :
