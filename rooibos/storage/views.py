@@ -77,6 +77,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
     path = get_image_for_record(recordid, request.user, int(width or 100000), int(height or 100000), passwords)
     if not path:
         #raise Http404()
+        print "THUMBNAIL UNAVAILABLE - NO PATH"
         return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
     Activity.objects.create(event='media-download-image',
@@ -91,6 +92,7 @@ def retrieve_image(request, recordid, record, width=None, height=None):
     except IOError:
         logging.error("IOError: %s" % path)
         #raise Http404()
+        print "THUMBNAIL UNAVAILABLE - IO ERROR"
         return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 
@@ -199,6 +201,7 @@ def record_thumbnail(request, id, name):
     record = Record.filter_one_by_access(request.user, id)
     if record and record.tmp_extthumb:
         return HttpResponseRedirect(record.tmp_extthumb)
+    print "THUMBNAIL UNAVAILABLE - NO RECORD"
     return HttpResponseRedirect(reverse('static', args=('images/thumbnail_unavailable.png',)))
 
 

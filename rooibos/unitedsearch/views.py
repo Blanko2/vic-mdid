@@ -64,9 +64,23 @@ class usViewer():
             
             elif isinstance(params, MapParameter):
                 r = ["  "*indent + "<div>"]
+                reversed_keys = params.parammap.keys()
+
+                if "field" in reversed_keys:
+                    reversed_keys.remove("field")
+                    reversed_keys.insert(0,"field")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("start year")
+                    reversed_keys.append("start year")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("end year")
+                    reversed_keys.append("end year")
+                keys=[]
+                while len(reversed_keys)>0:
+                    keys.append(reversed_keys.pop())
                 for index in range(len(params.parammap)-1, -1, -1) :
                 #for k in params.parammap:
-                    k = params.parammap.keys()[index]
+                    k = keys[index]
                     r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
                 r += ["  "*indent + "</div>"]
                 return r
@@ -80,6 +94,14 @@ class usViewer():
                     r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[i] or None)
                     index = index+1
                     i = i+1
+                r += ["  "*indent + "</div>"]
+                return r
+            elif isinstance(params, DoubleParameter):
+                r = ["  "*indent + "<div>"]
+
+                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ScalarParameter):
@@ -102,18 +124,6 @@ class usViewer():
                 r += ["  "*indent + "<div class=\"param-opt\">"]
                 r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
-                r += ["  "*indent + "</div>"]
-                indent -= 2
-                r += ["  "*indent + "</div>"]
-                return r
-            elif isinstance(params, OptionalTripleParameter):
-                r = ["  "*indent + "<div>"]
-                indent += 2
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
-                r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam3, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 2
                 r += ["  "*indent + "</div>"]
@@ -197,8 +207,8 @@ class usViewer():
     
     def perform_search(self, request, resultcount):
         
-        #print "request.GET:"
-
+        print "request.GET:"
+        print request.GET
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
 
@@ -247,8 +257,12 @@ class usViewer():
         if t_str in request.GET and v_str in request.GET:
             key = request.GET[t_str]
             value = request.GET[v_str]
+            if "i_field0_opt" in request:
+                opt1 = request.GET["i_field0_opt"]
+            else:
+                opt1 = "and"
             if key and value:
-                params.update({key:[[value,"and"]]})
+                params.update({key:[[value,opt1]]})
                 params.update({"first":key})
             #print "params = "
             #print params
@@ -340,10 +354,12 @@ class usViewer():
             #print "="
             #print request.GET[n]
             """
-            if "_opt" in n:
-              key = n.replace("i_","").replace("_opt",'')
-              if request.GET[n]:
-                params.update({key:request.GET[n]})
+            key = n
+            
+            if "i_" in key:   
+                key = key.replace("_opt",'').replace("i_","")           
+                if request.GET[n]:
+                    params.update({key:request.GET[n]})
             
 
           
@@ -441,6 +457,7 @@ class usViewer():
 
 
     def record(self, identifier):
+        #print "in record, identifier = "+str(identifier)
         image = self.searcher.getImage(identifier)
         if isinstance(image, ResultRecord):
             return image.record
@@ -448,7 +465,7 @@ class usViewer():
                         source=image.url,
                         tmp_extthumb=image.thumb,
                         manager='unitedsearch')
-
+        #print"add_field"
         def add_field(f, v, o):
             if type(v) == list:
                 for w in v:
@@ -463,13 +480,13 @@ class usViewer():
                         value=v)
                 except:
                     pass
-
+        #print"fields added"
         n = 0
         # go through the metadata given by the searcher; just add whatever can be added---what are not standard fields are simply skipped.
         for field, value in dict(image.meta, title=image.name).iteritems():
             add_field(field, value, n)
             n += 1
-
+        #print"done the for"
         collection = get_collection()
         CollectionItem.objects.create(collection=collection, record=record)
         job = JobInfo.objects.create(func='unitedsearch_download_media', arg=simplejson.dumps({
@@ -480,30 +497,53 @@ class usViewer():
         return record
 
     def select(self, request):
+        #print request.POST
+        #print request.method
         if not request.user.is_authenticated():
             raise Http404()
         
-        if request.method == "POST":
+        if request.method in "POST":
             # TODO: maybe drop the unused given-records portion of this
-            imagesjs = simplejson.loads(request.POST.get('id', '[]'))
-            images = map(self.searcher.getImage, imagesjs)
-            urlmap = dict([(i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url, i) for i in images])
+            postid = request.POST.get('id', '[]')
+            imagesjs = json.loads(postid.strip("[]"))
+            #print "Json:"+imagesjs
+            #print self.searcher.getImage(imagesjs)
+            #images = map(self.searcher.getImage, imagesjs)
+            images = [self.searcher.getImage(imagesjs)]
+            #print "images = "+str(images)
+            urlmap = {}
+            for i in images:
+                urlmap[i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url]=i
+            #print "urlmap = "+str(urlmap)
             urls = urlmap.keys()
+            #print "urls = "+str(urls)
             # map of relevant source URLs to record IDs that already exist
             ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
+            #print "ids = "+str(ids)
             result = []
             for url in urls:
                 id = ids.get(url)
                 if id:
+                    print "got id"
                     result.append(id)
                 else:
+                    print "got record"
                     i = urlmap[url].identifier
+                    #print i
                     record = self.record(i)
+                    #print record
                     result.append(record.id)
+            print result
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r
-        return select_record(request)
+        """
+        This is where we should add the full image to the database and download it 
+        """
+        ans = select_record(request)
+        #print "ANSWER = "+str(ans)
+        #print "/ANSWER"
+        return ans
 
 class usUnionViewer(usViewer):
     def __init__(self, searcher):

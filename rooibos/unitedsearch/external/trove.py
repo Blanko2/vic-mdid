@@ -20,7 +20,7 @@ TODO: DELETE THE API KEY AFTER DEVELOPMENT,
 get a key associated with the university
 """
 TROVE_KEY = "ot2eubi7h2ef5qjn"
-api = True
+api = False
 """API technical docs:
 http://trove.nla.gov.au/general/api-technical
 """
@@ -45,6 +45,8 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
+    print "params in trove"
+    print params
     url = build_URL(query)
     print "trove.py, search, url = "+url
     search_result_parser = get_search_result_parser(url, off)
@@ -55,8 +57,8 @@ def search(query, params, off, num_wanted) :
         images = parse_api_results(search_result_parser)
     else:
         images = parse_results(search_result_parser)
-        
-    img_list = Result(len(images), int(off)+PER_PAGE)
+
+    img_list = Result(_count(search_result_parser), int(off)+PER_PAGE)
     for image in images:
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
     return img_list, empty_params
@@ -78,13 +80,14 @@ def parse_api_results(soup):
         if descId:
             desc = descId.text
         descId = work.find("contributor")
-        if descId:
+        if descId and desc in "":
             desc += "\n"+descId.text
         descId = work.find("troveurl")
-        if descId:
+        if descId and desc in "":
             desc += "\n"+descId.text
+        data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
         if thumb is not "":
-            images.append([image, thumb, desc, id])
+            images.append([image, thumb, desc, json.dumps(data)])
     return images
 
     #TODO: api or html
@@ -94,7 +97,6 @@ def parse_results(soup):
     num_loaded = 0
     debug = False
     for result in results:
-        if debug : print "\n\n\n\n\ntrove.py found record:"
         #print result.prettify()
         
         #"""
@@ -103,28 +105,23 @@ def parse_results(soup):
             title = title_block.text
         else:
             title=""#where else can we find the title?
-        if debug : print "Title = " + title
         description = title_block.find("a")['href']
-        if debug : print "Description url = "+description if description else "None"
         id = int(re.findall("[0-9]+", description)[0]) if description else 0
         if debug : print "Image id = "+str(id)
-        if debug : print ".\n.\n.\n."
         creator = result.find("dd", attrs={'class' : "creator"})
-        if debug : print "Creator = " + (creator.text if creator else "N/A")
         kw = result.find("dd", attrs={'class' : "keywords"})
-        if debug : print "Keywords = " + (kw.text if kw else "N/A")
         online = result.find("dd", attrs={'class' : "online singleholding"})
-        if debug : print "Online = " + (online.text if online else "N/A")
-        if debug : print "Online URL = " + str((online.find("a")['href'] if online else "N/A") or "No link")
         thumbdd = result.find("dd", attrs={'class' : "thumbnail"})
         thumba = thumbdd.find("a") if thumbdd else None
         thumbimg = thumba.find("img") if thumba else None
         thumb = thumbimg['src'] if thumbimg else ""
-        if debug : print "Thumbnail image src = "+(str(thumb) if thumb else "None")
         #"""
+        desc = title if title else kw.text
+        image = get_image_from_thumb(thumb)
+        data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
         if thumb:
             #images.append([TROVE_URL+description if description else get_image_from_thumb(thumb), thumb, kw.text if kw else title, str(id)])
-            images.append([get_image_from_thumb(thumb), thumb, kw.text if kw else title, str(id)])
+            images.append([image, thumb, desc, json.dumps(data)])
             num_loaded += 1
     print "trove.py, search, found a page with "+str(len(images))+" results"
     return images
@@ -242,7 +239,7 @@ def get_search_result_parser(base_url, offset) :
     if api:
         f = open("/u/students/novikovech/mdidtestpages/result.xml")
     else:
-        f = open("/u/students/novikovech/mdidtestpages/result.html")
+        f = open("/u/students/wangrui1/trove/result.html")
     html = ""
     for line in f:
         html += line
@@ -260,8 +257,23 @@ def get_search_result_parser(base_url, offset) :
 
 
 
-
-
+"""
+Required, accessed by external method to select images
+"""
+def getImage(datastring):
+    print datastring.__class__
+    data = json.loads(datastring) if isinstance(datastring, unicode) or isinstance(datastring, str) else datastring
+    print "get image from : "+str(data)
+    thumb = data.get("thumb")
+    image = data["image"]
+    desc = data["desc"]
+    print "got all data"
+    meta = {'creator':'somebody'}#use data['troveid'] to find the metadata using the api?
+    i = RecordImage(image, thumb, desc, meta, json.dumps(data))
+    print "img = "+str(i)
+    #img = RecordImage(url, thumb, name, meta, identifier)
+    #print "Constructed image: "+str(img)
+    return i
 
 
 
@@ -278,26 +290,35 @@ def get_param(param):
     return ""
 
 
-
+field_types = ["keyword","creator", "title", "subject","isbn","issn","public tag"]
+option_types = ["all of the words", "any of the words", "the phrase", "none of the words"]   
     
 """
 PARAMMAP
 """
 parameters = MapParameter({
-    "all words": OptionalParameter(ScalarParameter(str)),
-    "exact phrase":OptionalParameter(ScalarParameter(str)),
-    "exclude words": OptionalParameter(ScalarParameter(str)),
-    "creator": OptionalParameter(ScalarParameter(str)),
-    "title": OptionalParameter(ScalarParameter(str)),
-    "subject": OptionalParameter(ScalarParameter(str)),
-    "isbn": OptionalParameter(ScalarParameter(str)),
-    "issn": OptionalParameter(ScalarParameter(str)),
-    "publictag": OptionalParameter(ScalarParameter(str)),
-    "start date": OptionalParameter(ScalarParameter(str)),
-    "end date": OptionalParameter(ScalarParameter(str)),
-    "access": OptionalParameter(ScalarParameter(str))
+    "start year": OptionalParameter(ScalarParameter(str)),
+    "end year": OptionalParameter(ScalarParameter(str)),
+    "availability": DefinedListParameter(["All", "Online", "Access conditions", "Freely available", "Unknown"],  multipleAllowed=False, label="Availability"),
+    "language": DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+    "field" : ListParameter([
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        )
+        ],label="Keywords")
     })
 
+    
+    
 valid_keys = empty_params = {"all words": [],
     "exact phrase": [],
     "exclude words": [],
@@ -308,8 +329,11 @@ valid_keys = empty_params = {"all words": [],
     "issn": [],
     "publictag": [],
     "access": [],
-    "start date": [],
-    "end date": []
+    "start year": [],
+    "end year": [],
+    "availability":[],
+    "language":[],
+    "field" :[]
     }
 
 synonyms = {"all words": "",

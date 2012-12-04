@@ -182,7 +182,7 @@ def getImage(json_image_identifier) :
     
     image_identifier = json.loads(json_image_identifier)
     title, meta = __get_image_properties_from_imageSpecific_page(image_identifier['id'])
-    return Image(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
+    return RecordImage(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
     
 #    dict_about_image = json.loads(json_dict_about_image)
 #    
@@ -285,8 +285,8 @@ def search(term, params, off, num_results_wanted) :
      if is_simple_search(arg):
          arg.update({"simple_keywords":str(arg["all words"])})
          arg.update({"all words":[]})
-     #print "arg"
-     #print arg
+     print "arg"
+     print arg
 
      
      return resulting_images, arg
