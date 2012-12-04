@@ -361,9 +361,9 @@ def search(request, id=None, name=None, selected=False, json=False):
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
     
     """
-    print "------------------------------------------------------view.search----------------------------"
-    print "request"
-    print request
+    #print "------------------------------------------------------view.search----------------------------"
+    #print "request"
+    #print request
     """
 
     if request.method == "POST":
@@ -529,8 +529,8 @@ def search(request, id=None, name=None, selected=False, json=False):
 
       
     """
-    print "keywords is"
-    print keywords
+    #print "keywords is"
+    #print keywords
     """
     kws_list = (str(keywords)).split(' ')
     kws=""
@@ -552,10 +552,10 @@ def search(request, id=None, name=None, selected=False, json=False):
 	else:
 	  kws += "+"+kw 
 	
-    print "kws = "
-    print kws
-    print "kws_not ="
-    print kws_not
+    #print "kws = "
+    #print kws
+    #print "kws_not ="
+    #print kws_not
     
  
     if kws.startswith("keywords="):
@@ -577,8 +577,8 @@ def search(request, id=None, name=None, selected=False, json=False):
       query_string += ', '+"not="+kws_not
     
 
-    print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
-    print query_string+"\n\n\n\n\n"
+    #print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
+    #print query_string+"\n\n\n\n\n"
  
 
     return render_to_response('results.html',
