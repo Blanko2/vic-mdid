@@ -532,7 +532,7 @@ def getImage(json_image_identifier) :
             #'date': __scrub_html_for_property("Date", descriptive_parser),
             #'access': __scrub_html_for_property("copyright", descriptive_parser)
             }
-    print "Gallica return "
+    #print "Gallica return "
     return RecordImage(
                  image_identifier['url'],
                  image_identifier['thumb'],

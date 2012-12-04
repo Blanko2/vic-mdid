@@ -62,7 +62,8 @@ def get_media_for_record(record, user=None, passwords={}):
         owners = User.objects.filter(id__in=accessible_presentations.values('owner'))
         if not any(Record.filter_one_by_access(owner, record_id) for owner in owners):
             return Media.objects.none()
-    print "got here"+str(len(Media.objects.all()))
+        #print "how many media objects: "+str(Media.objects.count())
+        #print "data: "+str(Media.objects.all().values("record__id", "url"))
     return Media.objects.filter(
         record__id=record_id,
         storage__id__in=filter_by_access(user, Storage),
