@@ -201,7 +201,7 @@ WHY DOES THIS RETURN EMPTY PARAMS I DONT KNOW WHY
 """
 def search(term, params, off, num_results_wanted) :
      
-     arg = empty_params
+     arg = get_empty_params()
      """ Get the actual results! Note, method must be called 'search'"""
      
      """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
@@ -213,11 +213,14 @@ def search(term, params, off, num_results_wanted) :
      #print params
      params, unsupported_params, url_base = build_parameters(term, params)
      no_query = True;
+     print params
      for key in params:
-        arg.update({key:params[key]})
+        value = params[key]
+        if isinstance(value,list):
+            value = value[0]
+        arg.update({key:value})
 
-     if arg["all words"]==[u'']:
-         arg.update({"all words":[]})
+
      #print params
      
      for p in params:
@@ -280,7 +283,7 @@ def search(term, params, off, num_results_wanted) :
      #print "NGA params:"
      #print params
      if is_simple_search(arg):
-         arg.update({"simple_keywords":arg["all words"]})
+         arg.update({"simple_keywords":str(arg["all words"])})
          arg.update({"all words":[]})
      #print "arg"
      #print arg
@@ -431,3 +434,25 @@ empty_params = {"all words": [],
     "end date": [],
     "access": []
     }
+    
+def get_empty_params():
+    return {"all words": [],
+    "exact phrase": [],
+    "exclude words": [],
+    "artist": [],
+    "title": [],
+    "accession number": [],
+    "classification": [],
+    "school": [],
+    "medium": [],
+    "start date": [],
+    "end date": [],
+    "access": []
+    }
+
+def is_simple_search(arg):
+    for key in arg:
+        if not key == "all words":
+            if not arg[key]==[]:
+                return False
+    return True
