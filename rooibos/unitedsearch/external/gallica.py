@@ -44,7 +44,7 @@ def search(query, params, off, num_wanted) :
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     search_results_parser = get_search_result_parser(first_url, page_idx)
     if not search_results_parser:
-	  print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 464ish in search method"
+	  print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
 	  return Result(0, off), empty_params
     num_results = __count(search_results_parser)
     num_pages = num_results/per_page + 1
