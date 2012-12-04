@@ -27,17 +27,17 @@ identifier = "nga"            # don't know what this is
 def build_parameters(query, params):
     # build parameters dictionary to search by
 
-    print "NGA build_parameters"
-    print "query"
-    print query
-    print "params"
-    print params
+    #print "NGA build_parameters"
+    #print "query"
+    #print query
+    #print "params"
+    #print params
 
     keywords, para_map = break_query_string(query)
     """
-    print "after break query string"
-    print keywords
-    print para_map
+    #print "after break query string"
+    #print keywords
+    #print para_map
 <<<<<<< HEAD
     
     valid_keys = parameters.parammap.keys()
@@ -46,7 +46,7 @@ def build_parameters(query, params):
 
     # get the parameter values to put into the url
 
-    print "Params now-------------------------------------\n\n"
+    #print "Params now-------------------------------------\n\n"
 =======
     """
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
@@ -54,9 +54,9 @@ def build_parameters(query, params):
 
     # get the parameter values to put into the url
     """
-    print "Params\n\n"
+    #print "Params\n\n"
 >>>>>>> ed04b86c9967486f3d6f6aaf9002f6862bf69c29
-    print params
+    #print params
     """
 
     all_words = getValue(params, 'all words')
@@ -81,8 +81,8 @@ def build_parameters(query, params):
     year2 = getValue(params, 'end date')
     access = getValue(params, 'access')
     
-    print "all_words : "
-    print all_words
+    #print "all_words : "
+    #print all_words
     # build up the url
     url_base = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
 
@@ -258,28 +258,32 @@ def getImage(json_image_identifier) :
 WHY DOES THIS RETURN EMPTY PARAMS I DONT KNOW WHY
 """
 def search(term, params, off, num_results_wanted) :
-     arg = empty_params
-     print "params in NGA"
-     print params
+     
+     #print "params in NGA"
+     #print params
      
      
 
      #print term
      """ Get the actual results! Note, method must be called 'search'"""
      
-     """print [ item.encode('ascii') for item in ast.literal_eval(term) ]
+     """#print [ item.encode('ascii') for item in ast.literal_eval(term) ]
      """
      off = (int)(off)     # type of off varies by searcher implementation
      """
-     print "In nga.py ln 236"
-     print term
-     print params
+     #print "In nga.py ln 236"
+     #print term
+     #print params
      """
      params, unsupported_params, url_base = build_parameters(term, params)
+     #print "params here"
+     #print params
+     arg = get_empty_params()
+     #print "new arg"
+     #print arg
      no_query = True;
-     for key in empty_params:
-         if key in params:
-             arg.update({key:params[key]})
+     for key in params:
+        arg.update({key:params[key]})
              
 
      if arg["all words"]==[u'']:
@@ -290,15 +294,13 @@ def search(term, params, off, num_results_wanted) :
         if params[p][0]:
             no_query = False
      if no_query:
-       print "Not searching NGA, no query given (nga.py ln 242)"
+       #print "Not searching NGA, no query given (nga.py ln 242)"
        return Result(0, off), arg
        
        
      # get the image details
      searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
      
-     print "searchhtml is ======="
-     print url_base
      
      website_search_results_parser = BeautifulSoup(searchhtml)
      
@@ -323,8 +325,8 @@ def search(term, params, off, num_results_wanted) :
      else:
         num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
      """
-     print"wanted"
-     print num_results_wanted
+     #print"wanted"
+     #print num_results_wanted
      """
      if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
          tmp = 0
@@ -355,15 +357,22 @@ def search(term, params, off, num_results_wanted) :
      for i in range(len(list_of_image_ids)) :
          resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
      """
-     print "NGA params:"
-     print params
-     print empty_params
+     #print "NGA params:"
+     #print params
+     #print empty_params
      """
-     params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
+     #ep = empty_params
+     #params = merge_dictionaries(ep, params, parameters.parammap.keys())[0]
      """
-     print "NGA params:"
-     print params
+     #print "NGA params:"
+     #print params
      """
+     
+     if is_simple_search(arg):
+         arg.update({"simple_keywords":arg["all words"]})
+         arg.update({"all words":[]})
+     #print "arg"
+     #print arg
 
      
      return resulting_images, arg
@@ -373,8 +382,27 @@ PARAMMAP
 """     
 
 
+def is_simple_search(arg):
+    for key in arg:
+        if not key == "all words":
+            if not arg[key]==[]:
+                return False
+    return True
 
-
+def get_empty_params():
+    return {"all words": [],
+    "exact phrase": [],
+    "exclude words": [],
+    "artist": [],
+    "title": [],
+    "accession number": [],
+    "classification": [],
+    "school": [],
+    "medium": [],
+    "start date": [],
+    "end date": [],
+    "access": []
+    }
 
 parameters = MapParameter({ 
     "all words": OptionalParameter(ScalarParameter(str)), 

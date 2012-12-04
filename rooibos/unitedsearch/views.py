@@ -75,8 +75,8 @@ class usViewer():
                 index =0
                 i = 0
                 for v in params.paramlist :
-                    print "default ========"
-                    print default
+                    #print "default ========"
+                    #print default
                     r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[i] or None)
                     index = index+1
                     i = i+1
@@ -197,7 +197,7 @@ class usViewer():
     
     def perform_search(self, request, resultcount):
         
-        print "request.GET:"
+        #print "request.GET:"
 
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
@@ -222,10 +222,10 @@ class usViewer():
                         del value[0]
                     par += "\""+key+"\":\""+value+"\""
                 else:
-                    kw += "+"+q
-            
-            if kw.startswith("+"):
-                del kw[0]
+                    if not kw=="":
+                        kw += "+"
+                    kw += q
+
 
             new_query = "keywords="+kw+",params={"+par+"}"
             query = new_query
@@ -241,7 +241,7 @@ class usViewer():
         #not_params = {}
         #or_params = {}
         t_str = "i_field0_type"
-        print "t_sr = =========="
+        #print "t_sr = =========="
         v_str = "i_field0_value"
         # new Gallica
         if t_str in request.GET and v_str in request.GET:
@@ -250,8 +250,8 @@ class usViewer():
             if key and value:
                 params.update({key:[[value,"and"]]})
                 params.update({"first":key})
-            print "params = "
-            print params
+            #print "params = "
+            #print params
             i=1
             while i<5:
                 t_str = "i_field"+str(i)+"_opt_type"
@@ -262,8 +262,8 @@ class usViewer():
                 if t_str in request.GET and v_str in request.GET:
                     key = request.GET[t_str]
                     value = request.GET[v_str]
-                    print "value = "
-                    print value
+                    #print "value = "
+                    #print value
                     opt = ""
                     if i>0:
                         opt = request.GET[o_str]
@@ -310,7 +310,7 @@ class usViewer():
                 ed = request.GET["i_end date"]
                 params.update({"end date":sd})
             params.update({"adv_sidebar":True})
-            print params
+            #print params
         # Old Gallica
         elif "i_field_field1_type" in request.GET: 
           n=1
@@ -336,9 +336,9 @@ class usViewer():
         else : 
           for n in request.GET:
             """
-            print n
-            print "="
-            print request.GET[n]
+            #print n
+            #print "="
+            #print request.GET[n]
             """
             if "_opt" in n:
               key = n.replace("i_","").replace("_opt",'')
@@ -349,11 +349,11 @@ class usViewer():
           
         """
         for n in request.GET:
-            print "n ="
-            print n
-            print "="
-            print request.GET[n]
-            print "\n\n"
+            #print "n ="
+            #print n
+            #print "="
+            #print request.GET[n]
+            #print "\n\n"
             if n[:2] == "p-":
                 params[n[2:]] = request.GET[n]
         """
@@ -415,6 +415,10 @@ class usViewer():
             num_lastPageResult=50
           lastOffset = result.total-num_lastPageResult
           lastPage = self.__url_search_({ 'q': query, 'from': lastOffset })
+          
+        query = ""
+        if "simple_keywords" in args:
+            query = args["simple_keywords"]
 
         return {
                 'results': map(resultpart, results),

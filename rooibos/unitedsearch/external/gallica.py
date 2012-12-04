@@ -48,12 +48,28 @@ opt_type_map = {
     'and' : "MUST",
     'except' : "MUST_NOT"
     }
-    
+
+# these reverse maps are used to build args for interface to display original query
 opt_reverse_map = {
-    "SHOULD" :"or",
-    "MUST" : "and",
-    "MUST_NOT" : "except"
+    "SHOULD":"or",
+    "MUST":"and",
+    "MUST_NOT":"except"
     }
+    
+filter_reverse_map = {
+  "f_creator":'artist',
+  "f_title":'title',
+  "f_content":'content' ,
+  "f_tdm":'table',
+  "f_subject":'subject',
+  "f_source":'source',
+  "f_metadata":'Bibliographic',
+  "f_publisher":'publisher',
+  "f_allmetadata":'isbn',
+  "f_allcontent":'all',
+  '' : "all"  # default so as not to have blank string
+  }     
+
 """# # # # # # # # # # #
 # # # # # TOOLS # # # # #
 """# # # # # # # # # # #
@@ -63,7 +79,7 @@ URL BUILDERS
 
 """
 def build_URL(query, params):
-    print "params in build_advanced_url =========="
+    ##print "params in build_advanced_url =========="
     
     if query=="" and "adv_sidebar" in params: #From side bar
         return build_sidebar_URL(params)
@@ -71,40 +87,27 @@ def build_URL(query, params):
     keywords, para_map = break_query_string(query) 
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
 
-    print keywords
+    #print keywords
 
-    print para_map
+    #print para_map
     if len(params)!=0:
-	  first_url, params = build_advanced_url(keywords, params)
+	  first_url, arg = build_advanced_url(keywords, params)
       #first_url, second_url, params = build_advanced_url(keywords, params)
     else:
-	  first_url = build_simple_url(keywords)
+	  first_url,arg = build_simple_url(keywords)
       #first_url , second_url = build_simple_url(keywords)
-    return first_url, params,params #second_url,params
+    return first_url, arg #second_url,params
     
 
     
+def build_arg(params):
     
-	
-def build_simple_url(keywords):
-    keywords = re.sub(" ", "+", keywords)
-    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL)#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
-    
- 
-def build_sidebar_URL(params):
+    arg={}
     copyright   = ""
     language     = ""
     start_date    = ""
     end_date  = ""
-    arg = {}
-    arg_list = []
-    #opt_not_map   = {}      
-    #opt_or_map = {}
-    non_keywords = ["copyright" ,"language","start date","end date","adv_sidebar"]
     
-
-        
-    tmp_params = params
     if "copyright" in params:
         copyright = getcopyright(params)
         arg.update({"copyright":params["copyright"]})
@@ -125,19 +128,46 @@ def build_sidebar_URL(params):
         arg.update({"end date":params["end date"]})
     else :
         arg.update({"end date":[]})
+    return arg, params , copyright, language, start_date, end_date
+    
+	
+def build_simple_url(keywords):
+    arg = get_empty_params()
+    arg.update({"simple_keywords":keywords})
+    keywords = re.sub(" ", "+", keywords)
+    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
+    
+ 
+def build_sidebar_URL(params):
+    
+    arg = {} #dict contains params with fixed structures for result interface to desplay the query
+
+    keyword_list = [] # list contains [field,value,option] as element 
+    #opt_not_map   = {}      
+    #opt_or_map = {}
+    non_keywords = ["copyright" ,"language","start date","end date","adv_sidebar"] # parameters outside "field"
+    
+    arg, params,copyright, language, start_date, end_date = build_arg(params)
+    
+
+        
+    tmp_params = params
+    
     for key in non_keywords:
         if key in tmp_params:
             del tmp_params[key]
      
      
      
-    keywords = []
     
+    
+    # Adding the first keyword to keyword_list list (does not contain opt "or" or "except")
     if "first" in tmp_params:
         first_key = tmp_params["first"]
     
         del tmp_params["first"]
-
+        #print "wrong here"
+        #print first_key
 
         first_value = tmp_params[first_key][0][0]
 
@@ -150,16 +180,17 @@ def build_sidebar_URL(params):
             del l[0]
             tmp_params.update({first_key:l})
     
-        keywords.append([filter_type_map[first_key],first_value,"MUST"])
-        arg_list.append([first_key,first_value])
+        keyword_list.append([filter_type_map[first_key],first_value,"MUST"])
+        #arg_list.append([first_key,first_value])
         
     else:
-        keywords.append(["f_allcontent","","MUST"])
+        keyword_list.append(["f_allcontent","","MUST"])
+        #arg_list.append(["all",""])
     
     for key in tmp_params:
         wordlist = tmp_params[key]
-        print "wordlist"
-        print wordlist
+        #print "wordlist"
+        #print wordlist
         for keyword in wordlist:
             value = keyword[0]
             opt = opt_type_map[keyword[1]]
@@ -167,21 +198,21 @@ def build_sidebar_URL(params):
             if key in filter_type_map:
                 filter_type = filter_type_map[key]
             sub_query = [filter_type,value,opt]
-            arg_list.append([keyword[1],[key,value]])
-            keywords.append(sub_query)
+            #arg_list.append([keyword[1],[key,value]])
+            keyword_list.append(sub_query)
     
     i = 1
     optionals_string=""
     
-    while len(arg_list)<5:
-        arg_list.append([])
-
+    
+    arg_list = build_arg_list(keyword_list)
+    
     arg.update({"field":arg_list})
     
-    for sub_query in keywords:
+    for sub_query in keyword_list:
         index = str(i)
-        print "sub_query = "
-        print sub_query
+        #print "sub_query = "
+        #print sub_query
         optionals_string += "&ope"+index+"="+sub_query[2]+"&catsel"+index+"="+sub_query[0]+"&cat"+index+"="+sub_query[1]
         i=i+1
     
@@ -198,15 +229,77 @@ def build_sidebar_URL(params):
     first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
     #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
   
-    return first_url, params ,arg
- 
+    return first_url ,arg
 
+    
+def add_string(kw, string):
+    if string =="":
+        return kw
+    if kw=="":
+        kw += string
+    else:
+        kw += "+"+string
+    return kw
+    
+
+def merge_keyword_list(keyword_list):
+
+    temp_keyword_list = keyword_list
+    kw=""
+    not_kw=""
+
+    
+    for keyword in keyword_list :
+        if keyword[0]==filter_type_map["all"] and keyword[2]==opt_type_map["and"]:
+            kw = add_string(kw,keyword[1])
+            temp_list.remove(keyword)
+        elif keyword[0]==filter_type_map["all"] and keyword[2]==opt_type_map["exept"]:
+            not_kw = add_string(not_kw,keyword[1])
+            temp_keyword_list.remove(keyword)
+    kw_size =0
+    not_size=0
+
+    if temp_keyword_list[0][2]==opt_type_map["except"] or not kw=="":
+        kw_size =1
+    if not not_kw=="":
+        not_size=1
+    size = len(temp_keyword_list)+kw_size+not_size
+    
+    while size>5:
+       element = temp_keyword_list.pop()
+       if element[2]==opt_type_map["and"]:
+           kw = add_string(kw,element[1])
+       else:
+           not_kw = add_string(not_kw,element[1])
+       
+       if temp_keyword_list[0][2]==opt_type_map["except"] or not kw=="":
+            kw_size =1
+       if not not_kw=="":
+            not_size=1
+       size = len(temp_keyword_list)+kw_size+not_size  
+   
+    if temp_keyword_list[0][2]==opt_type_map["except"] or not kw=="":
+       temp_keyword_list.insert(0,[filter_type_map["all"],kw,opt_type_map["and"]])
+    if not not_kw=="":
+       temp_keyword_list.append([filter_type_map["all"],not_kw,opt_type_map["except"]])
  
+def build_arg_list(keyword_list):
+    # return a list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
+    arg_list = []
+    for keyword in keyword_list:
+        if arg_list==[]:
+            arg_list.append([filter_reverse_map[keyword[0]],keyword[1]])
+        else:
+            arg_list.append([opt_reverse_map[keyword[2]],[filter_reverse_map[keyword[0]], keyword[1]]])
+    while len(arg_list)<5:
+        arg_list.append([])
+    #print "arg_list is ---------"
+    #print arg_list
+    return arg_list
  
-# build advanced search url that is not called from adv side bar
 def build_advanced_url(keywords, params):
-  print "params in build_advanced_url"
-  print params
+  #print "params in build_advanced_url"
+  #print params
   if "all" in params:
     keywords += " " + getValue(params,"all")
     del params['all']
@@ -214,68 +307,80 @@ def build_advanced_url(keywords, params):
   #  dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
   #  keywords
   
-  copyright 	= ""
-  language 	= ""
-  start_date 	= ""
-  end_date 	= ""
-  opt_not_map	= {}    
-  arg = {}
-  arg_list = []
   
-  if "copyright" in params:
-        copyright = getcopyright(params)
-        arg.update({"copyright":params["copyright"]})
-  else:
-        arg.update({"copyright":"All"})
-  if "language" in params:
-        language = getlanguages(params)
-        arg.update({"language":params["language"]})
-  else:
-        arg.update({"language":"All"})
-  if "start date" in params:
-        start_date = getDate(params["start date"])
-        arg.update({"start date":params["start date"]})
-  else :
-        arg.update({"start date":[]})
-  if "end date" in params:  
-        end_date = getDate(params["end date"])
-        arg.update({"end date":params["end date"]})
-  else :
-        arg.update({"end date":[]})
+  #opt_not_map	= {}    
+  keyword_list = []
+  arg = {} #dict contains params with fixed structures for result interface to desplay the query
+  arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
+
+  
+  arg, params, copyright, language, start_date, end_date = build_arg(params)
   
   # deal with remaining optional arguments
   optionals_dict = {}
   keyworded_optionals = {}
-  unsupported_parameters = {}
+  #unsupported_parameters = {}
   
   # grab the "key word" dictionary out of params 
   # merge it with the rest of params
-  temp_optionals = {}
+  #temp_params = {}
+  """
   if "key word" in params:
-      temp_optionals = getValue(params, "key word")    
+      print "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+      temp_params = getValue(params, "key word")    
       del params['key word']
-      temp_optionals, unsupported_parameters = merge_dictionaries(params, temp_optionals, valid_keys )
+      temp_params, unsupported_parameters = merge_dictionaries(params, temp_params, valid_keys )
   else:
-      temp_optionals = params
+  """
+  temp_params = params
   # dont need params anymore
   """
   print 'Temp Optionals ==========================================================' 
   print params
-  print temp_optionals 
+  print temp_params 
   """
 
-  for opt_parameter in temp_optionals:
-      opt_parameter_tmp = opt_parameter.replace('-','')
+  for opt_parameter in temp_params:
+      fixed_opt_parameter = opt_parameter.replace('-','')
+      if fixed_opt_parameter=="not":
+          fixed_opt_parameter="all"
+      opt = "and"
+      if opt_parameter.startswith('-') or opt_parameter=="not":
+          opt = "except"
+      if fixed_opt_parameter in filter_type_map:
+          filter_type = filter_type_map[fixed_opt_parameter]
+      else:
+          filter_type = filter_type["all"]
+          fixed_opt_parameter = "all"
+          
+      value = temp_params[opt_parameter]
+      if isinstance(value, list):
+          value = value[0]
+      if opt=="except" :
+          keyword_list.append([filter_type,value,opt_type_map[opt]])
+      else:
+          # if opt is "and", adds as the first element
+          keyword_list.insert(0,[filter_type,value,opt_type_map[opt]])
 
-      if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
-	   if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
+   
+  if len(keywords)>0:
+       keyword_list.insert(0,[filter_type_map["all"],keywords,opt_type_map["and"]])
+       
+  if keyword_list[0][2]=="except":
+       keyword_list.insert(0,[filter_type_map["all"],"",opt_type_map["and"]])
+       
+  if len(keyword_list)>5:
+      keyword_list= merge_keyword_list(keyword_list)
+      """
+      if (opt_parameter in filter_type_map and len(temp_params[opt_parameter]) != 0 ): 	# supported paramet+historical+dataflesh:+Olympiaer type and existing value
+	  if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
 	    optional_type = filter_type_map[opt_parameter]
 
-	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
+	    optionals_dict[optional_type] = temp_params[opt_parameter]
 	    if opt_parameter == "not" :
 
-	      key = optional_type = filter_type_map[opt_parameter_tmp]
-	      value = temp_optionals[opt_parameter]
+	      key = optional_type = filter_type_map[fixed_opt_parameter]
+	      value = temp_params[opt_parameter]
 	      if isinstance(key,list):
 		  key=key[0]
 	      if isinstance(value,list):
@@ -286,15 +391,16 @@ def build_advanced_url(keywords, params):
 	       v = opt_not_map[key]
 	       value = v.append[value]
 	       opt_not_map.update({key:value})
-
-	   else:
-	    keywords += " " + temp_optionals[opt_parameter]
-	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
-      elif (opt_parameter_tmp in filter_type_map and len(temp_optionals[opt_parameter]) != 0 and len(optionals_dict) <=4):
-	     optional_type = filter_type_map[opt_parameter_tmp]
-	     optionals_dict[optional_type] = temp_optionals[opt_parameter]
-	     key = optional_type = filter_type_map[opt_parameter_tmp]
-	     value = temp_optionals[opt_parameter]
+	    print "not map ==========="
+	    print opt_not_map
+	  else:
+	    keywords += " " + temp_params[opt_parameter]
+	    keyworded_optionals[opt_parameter] = temp_params[opt_parameter]
+      elif (fixed_opt_parameter in filter_type_map and len(temp_params[opt_parameter]) != 0 and len(optionals_dict) <=4):
+	     optional_type = filter_type_map[fixed_opt_parameter]
+	     optionals_dict[optional_type] = temp_params[opt_parameter]
+	     key = optional_type = filter_type_map[fixed_opt_parameter]
+	     value = temp_params[opt_parameter]
 	     if isinstance(key,list):
 		key=key[0]
 	     if isinstance(value,list):
@@ -306,24 +412,27 @@ def build_advanced_url(keywords, params):
 	       value = v.append[value]
 	       opt_not_map.update({key:value})
       else:
-	  if isinstance(temp_optionals[opt_parameter],list):
-	    keywords += " " + temp_optionals[opt_parameter][0]
-	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter][0]
+	  if isinstance(temp_params[opt_parameter],list):
+	    keywords += " " + temp_params[opt_parameter][0]
+	    #unsupported_parameters[opt_parameter] = temp_params[opt_parameter][0]
 	  else:
-	    keywords += " " + temp_optionals[opt_parameter]
-	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter]
-	
+	    keywords += " " + temp_params[opt_parameter]
+	    #unsupported_parameters[opt_parameter] = temp_params[opt_parameter]
+	  """
+	  
   # start with keywords, than add on any other requested optionals
+  
+  """
   start=1
   optionals_string=""
   if keywords.strip() and not keywords.strip()=='':
     start=2
     optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip().replace(' ','+')
-  
+  """
   # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
   #print optionals_dict
   
-  
+  """
   for i in range(0, len(optionals_dict)):
     index = str(i+start)	# want to index starting at 2, because keywords has already filled cat1
     print "optionals_dict  in  gallica 150"
@@ -343,6 +452,23 @@ def build_advanced_url(keywords, params):
     ope="&ope"+index+"="+opt
     optionals_string += ope
     optionals_string += "&catsel"+index+"="+key+"&cat"+index+"="+value
+  """
+  
+  
+  arg_list = build_arg_list(keyword_list)
+  
+  arg.update({"field":arg_list})
+  
+  i = 1
+  optionals_string=""
+  for sub_query in keyword_list:
+        index = str(i)
+        #print "sub_query = "
+        #print sub_query
+        optionals_string += "&ope"+index+"="+sub_query[2]+"&catsel"+index+"="+sub_query[0]+"&cat"+index+"="+sub_query[1]
+        i=i+1
+    
+    # shove everything into the url
 
   
   # shove everything into the url
@@ -358,7 +484,7 @@ def build_advanced_url(keywords, params):
   first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
   #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
   
-  return first_url, optionals_dict #second_url, optionals_dict
+  return first_url, arg #second_url, optionals_dict
 """    
 def get_optional_search_filters(params) :
     
@@ -579,7 +705,9 @@ def getImage(json_image_identifier) :
 """
     
 def count(keyword) :
-      first_url, params = build_URL(keyword, {})
+      #print "keyword"
+      #print keyword
+      first_url, arg = build_URL(keyword, {})
       #num_results, num_pages,page_idx,unwanted,off,search_results_parser,any_result = get_first_search_result(first_url, 0, 1)
       soup = get_search_result_parser(first_url, 1)
       return __count(soup)
@@ -621,6 +749,7 @@ def get_search_result_parser(base_url, page_idx) :
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
+    """
     print "Gallica ------------"
     print "num_wanted ==="
     print num_wanted
@@ -628,7 +757,7 @@ def search(query, params, off, num_wanted) :
     print query
     print "params"
     print params
-    
+    """
 
     per_page = __items_per_page(num_wanted)
     off = (int)(off)
@@ -645,7 +774,7 @@ def search(query, params, off, num_wanted) :
 
     
     #any_results
-    first_url, params,arg = build_URL(query, params) 
+    first_url ,arg = build_URL(query, params) 
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     
     #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage))
@@ -653,13 +782,13 @@ def search(query, params, off, num_wanted) :
     #num_results = __count(search_results_parser)
     #num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     
-    
+    """
     print "DEBUGGING SEARCH\n\n"
     print "1st_URL: "+first_url
     #print "2nd_URL: "+second_url
     print "params: "+str(params)
     print "query: "+str(query)
-
+    """
     #html, unwanted = __get_first_search_resultsHtml(url, off, __items_per_page(perPage)) #Do it again because num_wanted has been changed
     #search_results_parser = BeautifulSoup(html)
     #print "html in search\n"+str(html)
@@ -671,8 +800,8 @@ def search(query, params, off, num_wanted) :
     
     search_results_parser = get_search_result_parser(first_url, page_idx)
     if not search_results_parser:
-	  print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 464ish in search method"
-	  return Result(0, off), empty_params
+	  #print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 464ish in search method"
+	  return Result(0, off), arg
     num_results = __count(search_results_parser)
     num_pages = num_results/per_page + 1
     num_unwanted = off%per_page
@@ -684,7 +813,7 @@ def search(query, params, off, num_wanted) :
 	  search_results_parser = get_search_result_parser(first_url, page_idx)
     
     if __count(search_results_parser) is 0:
-	  return Result(0, off), empty_params
+	  return Result(0, off), arg
 	  
 	  """
     if not any_result:
@@ -714,8 +843,8 @@ def search(query, params, off, num_wanted) :
             
         # find start points for image data
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
-        print "image_id_divs"
-        print len(image_id_divs)
+        #print "image_id_divs"
+        #print len(image_id_divs)
         while num_unwanted>0:
 		  num_unwanted = num_unwanted-1
 		  del image_id_divs[0]
@@ -745,9 +874,8 @@ def search(query, params, off, num_wanted) :
     #params, unsupported_parameters = merge_dictionaries(params, empty_params, valid_keys)
     #arg = empty_params
     #arg.update({"field":[["title","1"],["except",["title","2"]],["except",["artist","not_art"]],[],[],[],[]]})
-    if not "field" in arg:
-        arg.update({"field":[]})
-    return result, empty_params
+
+    return result, arg
   
   
 ##         ##
@@ -879,17 +1007,30 @@ parameters = MapParameter({
   })
 
 """
-  
+
+def get_empty_params():
+    return {"start date": [],
+    "end date": [],
+    "language": [],
+    "copyright": [],
+    "all": [],
+    "field": [],
+    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
+    }
+
 empty_params = {"start date": [],
     "end date": [],
     "language": [],
     "copyright": [],
     "all": [],
-    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
+    #"key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
     #"field": {"field1":[], "field2":[], "field3":[], "field4":[]},
     "field": [],
     "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
 }
+
+
+
 
 valid_keys=["start date",
     "end date",
