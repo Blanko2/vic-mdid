@@ -64,9 +64,23 @@ class usViewer():
             
             elif isinstance(params, MapParameter):
                 r = ["  "*indent + "<div>"]
+                reversed_keys = params.parammap.keys()
+
+                if "field" in reversed_keys:
+                    reversed_keys.remove("field")
+                    reversed_keys.insert(0,"field")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("start year")
+                    reversed_keys.append("start year")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("end year")
+                    reversed_keys.append("end year")
+                keys=[]
+                while len(reversed_keys)>0:
+                    keys.append(reversed_keys.pop())
                 for index in range(len(params.parammap)-1, -1, -1) :
                 #for k in params.parammap:
-                    k = params.parammap.keys()[index]
+                    k = keys[index]
                     r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
                 r += ["  "*indent + "</div>"]
                 return r
@@ -80,6 +94,14 @@ class usViewer():
                     r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[i] or None)
                     index = index+1
                     i = i+1
+                r += ["  "*indent + "</div>"]
+                return r
+            elif isinstance(params, DoubleParameter):
+                r = ["  "*indent + "<div>"]
+
+                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ScalarParameter):
@@ -102,18 +124,6 @@ class usViewer():
                 r += ["  "*indent + "<div class=\"param-opt\">"]
                 r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
-                r += ["  "*indent + "</div>"]
-                indent -= 2
-                r += ["  "*indent + "</div>"]
-                return r
-            elif isinstance(params, OptionalTripleParameter):
-                r = ["  "*indent + "<div>"]
-                indent += 2
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
-                r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam3, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 2
                 r += ["  "*indent + "</div>"]
@@ -197,8 +207,8 @@ class usViewer():
     
     def perform_search(self, request, resultcount):
         
-        #print "request.GET:"
-
+        print "request.GET:"
+        print request.GET
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
 
@@ -247,8 +257,12 @@ class usViewer():
         if t_str in request.GET and v_str in request.GET:
             key = request.GET[t_str]
             value = request.GET[v_str]
+            if "i_field0_opt" in request:
+                opt1 = request.GET["i_field0_opt"]
+            else:
+                opt1 = "and"
             if key and value:
-                params.update({key:[[value,"and"]]})
+                params.update({key:[[value,opt1]]})
                 params.update({"first":key})
             #print "params = "
             #print params
@@ -340,9 +354,11 @@ class usViewer():
             #print "="
             #print request.GET[n]
             """
-            if "_opt" in n:
-              key = n.replace("i_","").replace("_opt",'')
-              if request.GET[n]:
+            key = n
+   
+            key = key.replace("_opt",'').replace("i_","")
+            
+            if request.GET[n]:
                 params.update({key:request.GET[n]})
             
 
