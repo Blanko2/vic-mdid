@@ -421,6 +421,7 @@ class usViewer():
 
 
     def record(self, identifier):
+        print "in record, identifier = "+str(identifier)
         image = self.searcher.getImage(identifier)
         if isinstance(image, ResultRecord):
             return image.record
@@ -428,7 +429,7 @@ class usViewer():
                         source=image.url,
                         tmp_extthumb=image.thumb,
                         manager='unitedsearch')
-
+        print"add_field"
         def add_field(f, v, o):
             if type(v) == list:
                 for w in v:
@@ -443,13 +444,13 @@ class usViewer():
                         value=v)
                 except:
                     pass
-
+        print"fields added"
         n = 0
         # go through the metadata given by the searcher; just add whatever can be added---what are not standard fields are simply skipped.
         for field, value in dict(image.meta, title=image.name).iteritems():
             add_field(field, value, n)
             n += 1
-
+        print"done the for"
         collection = get_collection()
         CollectionItem.objects.create(collection=collection, record=record)
         job = JobInfo.objects.create(func='unitedsearch_download_media', arg=simplejson.dumps({
@@ -460,26 +461,43 @@ class usViewer():
         return record
 
     def select(self, request):
+        print request.POST
+        print request.method
         if not request.user.is_authenticated():
             raise Http404()
         
-        if request.method == "POST":
+        if request.method in "POST":
             # TODO: maybe drop the unused given-records portion of this
-            imagesjs = simplejson.loads(request.POST.get('id', '[]'))
-            images = map(self.searcher.getImage, imagesjs)
-            urlmap = dict([(i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url, i) for i in images])
+            postid = request.POST.get('id', '[]')
+            imagesjs = json.loads(postid.strip("[]"))
+            print "Json:"+imagesjs
+            #print self.searcher.getImage(imagesjs)
+            #images = map(self.searcher.getImage, imagesjs)
+            images = [self.searcher.getImage(imagesjs)]
+            print "images = "+str(images)
+            urlmap = {}
+            for i in images:
+                urlmap[i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url]=i
+            print "urlmap = "+str(urlmap)
             urls = urlmap.keys()
+            print "urls = "+str(urls)
             # map of relevant source URLs to record IDs that already exist
             ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
+            print "ids = "+str(ids)
             result = []
             for url in urls:
                 id = ids.get(url)
                 if id:
+                    print "got id"
                     result.append(id)
                 else:
+                    print "got record"
                     i = urlmap[url].identifier
+                    print i
                     record = self.record(i)
+                    print record
                     result.append(record.id)
+            print result
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r

@@ -532,7 +532,7 @@ def __count(soup) :
 
 
 
-"""
+
 #not used atm, would be used by getImage
 
 def __scrub_html_for_property(property_name, html) :
@@ -546,29 +546,26 @@ def __scrub_html_for_property(property_name, html) :
     
     return "None"
     
-"""
 
 
-"""
-#Wasn't used anyway
+
+#Uses by unitedsearch/views.py to select images
 def getImage(json_image_identifier) :
-    
     image_identifier = json.loads(json_image_identifier)
     descriptive_parser = BeautifulSoup(image_identifier['descriptive_html'])
-    
     meta = {'title': image_identifier['title'],
             'author': __scrub_html_for_property("Author", descriptive_parser),
             #'date': __scrub_html_for_property("Date", descriptive_parser),
             #'access': __scrub_html_for_property("copyright", descriptive_parser)
             }
-    
-    return Image(url, params = build_URL(query, pa,
+    print "Gallica return "
+    return RecordImage(
                  image_identifier['url'],
                  image_identifier['thumb'],
                  image_identifier['title'],
                  meta,
-                 json_image_identifier))
-"""
+                 json_image_identifier)
+
     
 def count(keyword) :
       first_url, params = build_URL(keyword, {})
