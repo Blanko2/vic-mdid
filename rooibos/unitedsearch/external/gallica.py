@@ -1,7 +1,7 @@
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
 from rooibos.unitedsearch import *              # other search tools
-from rooibos.unitedsearch.common import * 	# methods common to all databases
+from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
@@ -44,41 +44,39 @@ def search(query, params, off, num_wanted) :
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     search_results_parser = get_search_result_parser(first_url, page_idx)
     if not search_results_parser:
-	  print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
-	  return Result(0, off), empty_params
+      print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
+      return Result(0, off), empty_params
     num_results = __count(search_results_parser)
     num_pages = num_results/per_page + 1
     num_unwanted = off%per_page
     if page_idx>num_pages :
-	  page_idx = num_pages
-	  num_unwanted = 0
-	  off = (num_pages-1)*per_page
-	  search_results_parser = get_search_result_parser(first_url, page_idx)
+      page_idx = num_pages
+      num_unwanted = 0
+      off = (num_pages-1)*per_page
+      search_results_parser = get_search_result_parser(first_url, page_idx)
     if __count(search_results_parser) is 0:
-	  return Result(0, off), empty_params
+      return Result(0, off), empty_params
     num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
     if num_wanted <0 :
       num_wanted =0
     while len(images) < num_wanted:
         if not first_round :
-		  if page_idx>=num_pages:
-			break
-		  page_idx = page_idx+1
-		  search_results_parser = get_search_result_parser(first_url, page_idx)
+          if page_idx>=num_pages:
+            break
+          page_idx = page_idx+1
+          search_results_parser = get_search_result_parser(first_url, page_idx)
         else :
             first_round = False
         # find start points for image data
         image_id_divs = search_results_parser.findAll('div', 'resultat_id')
-        print "image_id_divs"
-        print len(image_id_divs)
         while num_unwanted>0:
-		  num_unwanted = num_unwanted-1
-		  del image_id_divs[0]
-		  #result = Result(num_results, off+len(images))
-		# build images
+          num_unwanted = num_unwanted-1
+          del image_id_divs[0]
+          #result = Result(num_results, off+len(images))
+        # build images
         for div in image_id_divs :
-		  images.append(__create_image(search_results_parser, div))
-		# discard any excess
+          images.append(__create_image(search_results_parser, div))
+        # discard any excess
     if len(images) > num_wanted :
             while len(images) > num_wanted :
                 images.pop()
@@ -139,85 +137,6 @@ def getDate(date):
   return date
   
 
-## 		##
-## PARAMETERS 	##
-## 		##
-
-# optional categories that can be searched by in the url
-# Gallica only allows 5 options at once, thus we consider one of those
-# to always be 'Keywords'
-filter_type_map = {
-  'artist' : "f_creator",
-  'title': "f_title",
-  'content': "f_content",
-  'table' : "f_tdm",
-  'subject': "f_subject",
-  'source': "f_source",
-  'Bibliographic': "f_metadata",
-  'publisher': "f_publisher",
-  'isbn': "f_allmetadata",
-  'all': "f_allcontent",
-  'not': "f_allcontent",
-  '' : "f_creator"	# default so as not to have blank string
-} # note, table is table of contents or Captions
-
-opt_type_map = {
-    'or' : "SHOULD",
-    'and' : "MUST",
-    'except' : "MUST_NOT"
-}
-
-field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
-option_types = ["and", "or", "except"]   
-
-parameters = MapParameter({
-  "start date": OptionalParameter(ScalarParameter(str, "start date")),
-  "end date": OptionalParameter(ScalarParameter(str, "end date")),
-  "languages": 
-  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
-  "copyright": 
-  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
-  "field" : ListParameter([
-    UserDefinedTypeParameter(field_types),
-    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
-    UserDefinedTypeParameter(field_types)),
-    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
-    UserDefinedTypeParameter(field_types)),
-    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
-    UserDefinedTypeParameter(field_types)),
-    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
-    UserDefinedTypeParameter(field_types))
-    ])
-})
-  
-empty_params = {"start date": [],
-    "end date": [],
-    "languages": [],
-    "copyright": [],
-    "all": [],
-    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
-    "field": [],
-    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
-}
-
-valid_keys=["start date",
-    "end date",
-    "languages",
-    "copyright",
-    "all",    
-    "artist",
-    "title",
-    "content",
-    "table Of contents or captions",
-    "subject",
-    "source",
-    "bibliographic record",
-    "publisher",
-    "isbn",
-    "not"]
-
-
-
 """
 =======================
 URL BUILDERS
@@ -230,13 +149,13 @@ def build_URL(query, params):
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
 
     if len(params)!=0:
-	  first_url, params = build_advanced_url(keywords, params)
+      first_url, params = build_advanced_url(keywords, params)
       #first_url, second_url, params = build_advanced_url(keywords, params)
     else:
-	  first_url = build_simple_url(keywords)
+      first_url = build_simple_url(keywords)
       #first_url , second_url = build_simple_url(keywords)
     return first_url, params #second_url,params
-	
+    
 def build_simple_url(keywords):
     keywords = re.sub(" ", "+", keywords)
     return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL)#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
@@ -310,139 +229,135 @@ def build_sidebar_URL(params):
     
     # shove everything into the url
     replacements = {  
-      'START': start_date,
-      'SEARCH_FILTERS': optionals_string,
-      'END': end_date,
-      'LANGUAGES': languages,
-      'COPYRIGHT': copyright
+        'START': start_date,
+        'SEARCH_FILTERS': optionals_string,
+        'END': end_date,
+        'LANGUAGES': languages,
+        'COPYRIGHT': copyright
      }
     replacer = re.compile('|'.join(replacements.keys()))
     first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
     return first_url, params 
  
 def build_advanced_url(keywords, params):
-  if "all" in params:
-    keywords += " " + getValue(params,"all")
-    del params['all']
-  #Pulls out five things: Keywords, 2 Dates, copyright and languages, then deletes them from the 
-  #  dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
-  #  keywords
-  
-  copyright 	= ""
-  languages 	= ""
-  start_date 	= ""
-  end_date 	= ""
-  opt_not_map	= {}       
-  
-  if "copyright" in params:
-      copyright = getcopyright(params)
-      del params['copyright']      
-  if "languages" in params:
-      languages = getlanguages(params)
-      del params['languages']
-  if "start date" in params:
-      start_date = getDate(params["start date"])
-  if "end date" in params:  
-      end_date = getDate(params["end date"])
-  
-  # deal with remaining optional arguments
-  optionals_dict = {}
-  keyworded_optionals = {}
-  unsupported_parameters = {}
-  
-  # grab the "key word" dictionary out of params 
-  # merge it with the rest of params
-  temp_optionals = {}
-  if "key word" in params:
-      temp_optionals = getValue(params, "key word")    
-      del params['key word']
-      temp_optionals, unsupported_parameters = merge_dictionaries(params, temp_optionals, valid_keys )
-  else:
-      temp_optionals = params
-  # dont need params anymore
-
-  for opt_parameter in temp_optionals:
-      opt_parameter_tmp = opt_parameter.replace('-','')
-
-      if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ): 	# supported parameter type and existing value
-	  if len(optionals_dict) <=4:		# can only support 4 optional parameters. Damn gallica
-	    optional_type = filter_type_map[opt_parameter]
-
-	    optionals_dict[optional_type] = temp_optionals[opt_parameter]
-	    if opt_parameter == "not" :
-
-	      key = optional_type = filter_type_map[opt_parameter_tmp]
-	      value = temp_optionals[opt_parameter]
-	      if isinstance(key,list):
-		  key=key[0]
-	      if isinstance(value,list):
-		  value = value[0]
-	      if not key in opt_not_map:
-		  opt_not_map.update({key:[value]})
-	      else:
-	       v = opt_not_map[key]
-	       value = v.append[value]
-	       opt_not_map.update({key:value})
-	  else:
-	    keywords += " " + temp_optionals[opt_parameter]
-	    keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
-      elif (opt_parameter_tmp in filter_type_map and len(temp_optionals[opt_parameter]) != 0 and len(optionals_dict) <=4):
-	     optional_type = filter_type_map[opt_parameter_tmp]
-	     optionals_dict[optional_type] = temp_optionals[opt_parameter]
-	     key = optional_type = filter_type_map[opt_parameter_tmp]
-	     value = temp_optionals[opt_parameter]
-	     if isinstance(key,list):
-		key=key[0]
-	     if isinstance(value,list):
-		value = value[0]
-	     if not key in opt_not_map:
-	       opt_not_map.update({key:[value]})
-	     else:
-	       v = opt_not_map[key]
-	       value = v.append[value]
-	       opt_not_map.update({key:value})
+    if "all" in params:
+        keywords += " " + getValue(params,"all")
+        del params['all']
+    #Pulls out five things: Keywords, 2 Dates, copyright and languages, then deletes them from the 
+    #  dict and pulls out up to four optional parameters -- all remaining parameters are dumped into
+    #  keywords
+    
+    copyright   = ""
+    languages   = ""
+    start_date  = ""
+    end_date    = ""
+    opt_not_map = {}       
+    
+    if "copyright" in params:
+            copyright = getcopyright(params)
+            del params['copyright']      
+    if "languages" in params:
+            languages = getlanguages(params)
+            del params['languages']
+    if "start date" in params:
+            start_date = getDate(params["start date"])
+    if "end date" in params:  
+            end_date = getDate(params["end date"])
+    
+    # deal with remaining optional arguments
+    optionals_dict = {}
+    keyworded_optionals = {}
+    unsupported_parameters = {}
+    # grab the "key word" dictionary out of params 
+    # merge it with the rest of params
+    temp_optionals = {}
+    if "key word" in params:
+            temp_optionals = getValue(params, "key word")    
+            del params['key word']
+            temp_optionals, unsupported_parameters = merge_dictionaries(params, temp_optionals, valid_keys )
+    else:
+            temp_optionals = params
+    # dont need params anymore
+    for opt_parameter in temp_optionals:
+            opt_parameter_tmp = opt_parameter.replace('-','')
+            if (opt_parameter in filter_type_map and len(temp_optionals[opt_parameter]) != 0 ):     # supported parameter type and existing value
+      if len(optionals_dict) <=4:       # can only support 4 optional parameters. Damn gallica
+        optional_type = filter_type_map[opt_parameter]
+        optionals_dict[optional_type] = temp_optionals[opt_parameter]
+        
+                if opt_parameter == "not" :
+          key = optional_type = filter_type_map[opt_parameter_tmp]
+          value = temp_optionals[opt_parameter]
+          if isinstance(key,list):
+            key=key[0]
+          if isinstance(value,list):
+            value = value[0]
+          if not key in opt_not_map:
+            opt_not_map.update({key:[value]})
+          else:
+            v = opt_not_map[key]
+            value = v.append[value]
+            opt_not_map.update({key:value})
       else:
-	  if isinstance(temp_optionals[opt_parameter],list):
-	    keywords += " " + temp_optionals[opt_parameter][0]
-	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter][0]
-	  else:
-	    keywords += " " + temp_optionals[opt_parameter]
-	    unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter] 
-  # start with keywords, than add on any other requested optionals
-  start=1
-  optionals_string=""
-  if keywords.strip() and not keywords.strip()=='':
-    start=2
-    optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip().replace(' ','+') 
-  # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
-  for i in range(0, len(optionals_dict)):
-    index = str(i+start)	# want to index starting at 2, because keywords has already filled cat1
-    opt = "MUST"
-    key = optionals_dict.keys()[i]
-    value = optionals_dict.values()[i]
-    if isinstance (value,list):
-      value = value[0]
-    if key in opt_not_map:
-      not_list=opt_not_map[key]
-      if value in not_list:
-	opt="MUST_NOT" 
-    ope="&ope"+index+"="+opt
-    optionals_string += ope
-    optionals_string += "&catsel"+index+"="+key+"&cat"+index+"="+value 
+        keywords += " " + temp_optionals[opt_parameter]
+        keyworded_optionals[opt_parameter] = temp_optionals[opt_parameter]
+            elif (opt_parameter_tmp in filter_type_map and len(temp_optionals[opt_parameter]) != 0 and len(optionals_dict) <=4):
+         optional_type = filter_type_map[opt_parameter_tmp]
+         optionals_dict[optional_type] = temp_optionals[opt_parameter]
+         key = optional_type = filter_type_map[opt_parameter_tmp]
+         value = temp_optionals[opt_parameter]
+         if isinstance(key,list):
+        key=key[0]
+         if isinstance(value,list):
+        value = value[0]
+         if not key in opt_not_map:
+           opt_not_map.update({key:[value]})
+         else:
+           v = opt_not_map[key]
+           value = v.append[value]
+           opt_not_map.update({key:value})
+            else:
+      if isinstance(temp_optionals[opt_parameter],list):
+        keywords += " " + temp_optionals[opt_parameter][0]
+        unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter][0]
+      else:
+          keywords += " " + temp_optionals[opt_parameter]
+        unsupported_parameters[opt_parameter] = temp_optionals[opt_parameter] 
+    # start with keywords, than add on any other requested optionals
+    start=1
+    optionals_string=""
+    if keywords.strip() and not keywords.strip()=='':
+        start=2
+        optionals_string = optionals_string+"&catsel1="+filter_type_map["all"]+"&cat1="+keywords.strip().replace(' ','+') 
+    # needs to check for the correct input -- dont want to get lists of strings -- need strings!!!
+    for i in range(0, len(optionals_dict)):
+        index = str(i+start)    # want to index starting at 2, because keywords has already filled cat1
+        opt = "MUST"
+        key = optionals_dict.keys()[i]
+        value = optionals_dict.values()[i]
+        if isinstance (value,list):
+            value = value[0]
+        if key in opt_not_map:
+            not_list=opt_not_map[key]
+            if value in not_list:
+    opt="MUST_NOT" 
+        ope="&ope"+index+"="+opt
+        optionals_string += ope
+        optionals_string += "&catsel"+index+"="+key+"&cat"+index+"="+value 
 
-  # shove everything into the url
-  replacements = {	
-      'START': start_date,
-      'SEARCH_FILTERS': optionals_string,
-      'END': end_date,
-      'LANGUAGES': languages,
-      'COPYRIGHT': copyright
-      } 
-  replacer = re.compile('|'.join(replacements.keys()))
-  first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
-  #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
-  
-  return first_url, optionals_dict #second_url, optionals_dict
+    # shove everything into the url
+    replacements = {    
+            'START': start_date,
+            'SEARCH_FILTERS': optionals_string,
+            'END': end_date,
+            'LANGUAGES': languages,
+            'COPYRIGHT': copyright
+            } 
+    replacer = re.compile('|'.join(replacements.keys()))
+    first_url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
+    #second_url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+    
+    return first_url, optionals_dict #second_url, optionals_dict
 
 
 """
@@ -509,3 +424,83 @@ def __count(soup) :
         return (int)(re.findall("\d{1,}", fixed_div)[0])
     except:
         return 0
+
+
+##      ##
+## PARAMETERS   ##
+##      ##
+
+# optional categories that can be searched by in the url
+# Gallica only allows 5 options at once, thus we consider one of those
+# to always be 'Keywords'
+filter_type_map = {
+  'artist' : "f_creator",
+  'title': "f_title",
+  'content': "f_content",
+  'table' : "f_tdm",
+  'subject': "f_subject",
+  'source': "f_source",
+  'Bibliographic': "f_metadata",
+  'publisher': "f_publisher",
+  'isbn': "f_allmetadata",
+  'all': "f_allcontent",
+  'not': "f_allcontent",
+  '' : "f_creator"  # default so as not to have blank string
+} # note, table is table of contents or Captions
+
+opt_type_map = {
+    'or' : "SHOULD",
+    'and' : "MUST",
+    'except' : "MUST_NOT"
+}
+
+field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
+option_types = ["and", "or", "except"]   
+
+parameters = MapParameter({
+  "start date": OptionalParameter(ScalarParameter(str, "start date")),
+  "end date": OptionalParameter(ScalarParameter(str, "end date")),
+  "languages": 
+  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+  "copyright": 
+  DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
+  "field" : ListParameter([
+    UserDefinedTypeParameter(field_types),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types)),
+    OptionalDoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+    UserDefinedTypeParameter(field_types))
+    ])
+})
+  
+empty_params = {"start date": [],
+    "end date": [],
+    "languages": [],
+    "copyright": [],
+    "all": [],
+    "key word": {"artist":[], "title":[], "content":[], "table of contents or captions":[], "subject":[], "source":[], "bibliographic record":[], "publisher":[], "isbn":[]},
+    "field": [],
+    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
+}
+
+valid_keys=["start date",
+    "end date",
+    "languages",
+    "copyright",
+    "all",    
+    "artist",
+    "title",
+    "content",
+    "table Of contents or captions",
+    "subject",
+    "source",
+    "bibliographic record",
+    "publisher",
+    "isbn",
+    "not"]
+
+
