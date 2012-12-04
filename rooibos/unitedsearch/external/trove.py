@@ -38,6 +38,8 @@ def _count(soup):
         num = int(result)
     else:
         result = soup.find("div", attrs={'id':"pictures"}).find("div", attrs={'class':"hdrresult"}).find("strong")
+        if not result:
+            result = soup.find("div", attrs={'id':"pictures"}).find("div", attrs={'class':"hdrresult"}).find("b")
         num = int(re.sub("[^0-9]+", "", result.text))
     print "trove.py, _count, number of results string: "+str(num)
     return num
@@ -45,21 +47,36 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
+    off = int(off) #just in case
     print "params in trove"
     print params
     url = build_URL(query)
     print "trove.py, search, url = "+url
     search_result_parser = get_search_result_parser(url, off)
     print "trove.py, search, has search_result_parser: "+str(search_result_parser is not None)
-
+    total = _count(search_result_parser)
+    num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
+    result = [];
     #TODO: api or html
-    if api:
-        images = parse_api_results(search_result_parser)
-    else:
-        images = parse_results(search_result_parser)
-
-    img_list = Result(_count(search_result_parser), int(off)+PER_PAGE)
-    for image in images:
+    while num_wanted>0:
+        if api:
+            images = parse_api_results(search_result_parser)
+        else:
+            images = parse_results(search_result_parser)
+        #now images is all images found on page
+        num_got = len(images)
+        for i in images:
+            if num_wanted > 0:
+                if i[1] not in "":#has thumbnail
+                    result.append(i)
+                    num_wanted -= 1
+                off+=1#move the offset
+        if len(images) is PER_PAGE and num_wanted > 0:#not last page of results
+            #maybe wait here to be nice to trove's servers
+            search_result_parser = get_search_result_parser(url, off)#get next page, remember off is modified in loop above
+    
+    img_list = Result(total, off)
+    for image in result:
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
     return img_list, empty_params
     #return Result(0, off), empty_params
@@ -86,13 +103,13 @@ def parse_api_results(soup):
         if descId and desc in "":
             desc += "\n"+descId.text
         data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
-        if thumb is not "":
-            images.append([image, thumb, desc, json.dumps(data)])
+        #if thumb is not "":
+        images.append([image, thumb, desc, json.dumps(data)])
     return images
 
     #TODO: api or html
 def parse_results(soup):
-    results = soup.findAll("li", attrs={'class':re.compile("draggableResult")}, limit=20) #results double up after 20
+    results = soup.findAll("li", attrs={'class':re.compile("draggableResult")}, limit=20) #results double up after 20 TODO: what if less than 20 results found?
     images = []
     num_loaded = 0
     debug = False
@@ -122,6 +139,9 @@ def parse_results(soup):
         if thumb:
             #images.append([TROVE_URL+description if description else get_image_from_thumb(thumb), thumb, kw.text if kw else title, str(id)])
             images.append([image, thumb, desc, json.dumps(data)])
+            num_loaded += 1
+        else:
+            images.append([image, "", desc, json.dumps(data)])
             num_loaded += 1
     print "trove.py, search, found a page with "+str(len(images))+" results"
     return images
@@ -239,7 +259,7 @@ def get_search_result_parser(base_url, offset) :
     if api:
         f = open("/u/students/novikovech/mdidtestpages/result.xml")
     else:
-        f = open("/u/students/wangrui1/trove/result.html")
+        f = open("/u/students/novikovech/mdidtestpages/result.html")
     html = ""
     for line in f:
         html += line
