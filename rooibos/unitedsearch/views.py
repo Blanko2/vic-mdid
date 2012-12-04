@@ -355,11 +355,11 @@ class usViewer():
             #print request.GET[n]
             """
             key = n
-   
-            key = key.replace("_opt",'').replace("i_","")
             
-            if request.GET[n]:
-                params.update({key:request.GET[n]})
+            if "i_" in key:   
+                key = key.replace("_opt",'').replace("i_","")           
+                if request.GET[n]:
+                    params.update({key:request.GET[n]})
             
 
           

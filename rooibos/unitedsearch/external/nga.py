@@ -285,8 +285,8 @@ def search(term, params, off, num_results_wanted) :
      if is_simple_search(arg):
          arg.update({"simple_keywords":str(arg["all words"])})
          arg.update({"all words":[]})
-     #print "arg"
-     #print arg
+     print "arg"
+     print arg
 
      
      return resulting_images, arg
