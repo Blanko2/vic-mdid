@@ -273,8 +273,8 @@ def build_sidebar_URL(params):
         opt_not_map = params["except"]
     for key in non_keywords:
         if key in tmp_params:
+            del tmp_params[key]
     keywords = []
-    
     if "first" in tmp_params:
         first_key = tmp_params["first"]
         del tmp_params["first"]
