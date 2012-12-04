@@ -20,7 +20,7 @@ TODO: DELETE THE API KEY AFTER DEVELOPMENT,
 get a key associated with the university
 """
 TROVE_KEY = "ot2eubi7h2ef5qjn"
-api = True
+api = False
 """API technical docs:
 http://trove.nla.gov.au/general/api-technical
 """
@@ -45,6 +45,8 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
+    print "params in trove"
+    print params
     url = build_URL(query)
     print "trove.py, search, url = "+url
     search_result_parser = get_search_result_parser(url, off)
@@ -242,7 +244,7 @@ def get_search_result_parser(base_url, offset) :
     if api:
         f = open("/u/students/novikovech/mdidtestpages/result.xml")
     else:
-        f = open("/u/students/novikovech/mdidtestpages/result.html")
+        f = open("/u/students/wangrui1/trove/result.html")
     html = ""
     for line in f:
         html += line
@@ -278,26 +280,35 @@ def get_param(param):
     return ""
 
 
-
+field_types = ["keyword","creator", "title", "subject","isbn","issn","public tag"]
+option_types = ["all of the words", "any of the words", "the phrase", "none of the words"]   
     
 """
 PARAMMAP
 """
 parameters = MapParameter({
-    "all words": OptionalParameter(ScalarParameter(str)),
-    "exact phrase":OptionalParameter(ScalarParameter(str)),
-    "exclude words": OptionalParameter(ScalarParameter(str)),
-    "creator": OptionalParameter(ScalarParameter(str)),
-    "title": OptionalParameter(ScalarParameter(str)),
-    "subject": OptionalParameter(ScalarParameter(str)),
-    "isbn": OptionalParameter(ScalarParameter(str)),
-    "issn": OptionalParameter(ScalarParameter(str)),
-    "publictag": OptionalParameter(ScalarParameter(str)),
-    "start date": OptionalParameter(ScalarParameter(str)),
-    "end date": OptionalParameter(ScalarParameter(str)),
-    "access": OptionalParameter(ScalarParameter(str))
+    "start year": OptionalParameter(ScalarParameter(str)),
+    "end year": OptionalParameter(ScalarParameter(str)),
+    "availability": DefinedListParameter(["All", "Online", "Access conditions", "Freely available", "Unknown"],  multipleAllowed=False, label="Availability"),
+    "language": DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+    "field" : ListParameter([
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        )
+        ],label="Keywords")
     })
 
+    
+    
 valid_keys = empty_params = {"all words": [],
     "exact phrase": [],
     "exclude words": [],
@@ -308,8 +319,11 @@ valid_keys = empty_params = {"all words": [],
     "issn": [],
     "publictag": [],
     "access": [],
-    "start date": [],
-    "end date": []
+    "start year": [],
+    "end year": [],
+    "availability":[],
+    "language":[],
+    "field" :[]
     }
 
 synonyms = {"all words": "",

@@ -114,3 +114,9 @@ class OptionalTripleParameter:
         self.subparam2 = subparam2
         self.subparam3 = subparam3
         self.label = label
+
+class DoubleParameter:
+    def __init__(self, subparam1, subparam2, label=None):
+        self.subparam1 = subparam1
+        self.subparam2 = subparam2
+        self.label = label
