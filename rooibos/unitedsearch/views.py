@@ -207,8 +207,8 @@ class usViewer():
     
     def perform_search(self, request, resultcount):
         
-        print "unitedsearch/views.py.perform_search: request.GET:"
-        print request.GET
+        #print "unitedsearch/views.py.perform_search: request.GET:"
+        #print request.GET
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
 
