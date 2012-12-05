@@ -104,17 +104,6 @@ def _load(keywords, params):
     return json.load(_get_url(_build_URL(keywords, params, 20, 1)))
 
 
-# ====== GETTERS ========
-# =======================
-
-def getImage(identifier):
-    url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
-    image_object = _load(url)['record'] 
-    location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
-    thumbnail_url = image_object["thumbnail_url"]
-    title = image_object["title"]
-    return Image(location_url, thumbnail_url, title, image_object, identifier) 
-
 """
 modulates the offset to match a multiple of the page length -- if offset%per_page!=0 it changes to be the closest value
 to it which makes offset%per_page==0
@@ -132,6 +121,18 @@ def _modulate_offset(offset, per_page):
     # calculate the page
     page = offset/per_page + 1
     return offset
+
+# ====== GETTERS ========
+# =======================
+
+def getImage(identifier):
+    url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
+    image_object = _load(url)['record'] 
+    location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
+    thumbnail_url = image_object["thumbnail_url"]
+    title = image_object["title"]
+    return Image(location_url, thumbnail_url, title, image_object, identifier) 
+
 
 """
 ++++++++++++++++++++++++++
