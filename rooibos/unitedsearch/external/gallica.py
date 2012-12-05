@@ -449,12 +449,64 @@ def getcopyright(params) :
 
 def getDate(date):
     return date
+
+def get_empty_params():
+    return {"start date": [],
+    "end date": [],
+    "language": [],
+    "copyright": [],
+    "all": [],
+    "field": [],
+    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
+    }
  
 """ 
 =================
 PARAMETERS   ##
 =================
 """
+
+# optional categories that can be searched by in the url
+# Gallica only allows 5 options at once, thus we consider one of those
+# to always be 'Keywords'
+filter_type_map = {
+  'artist' : "f_creator",
+  'title': "f_title",
+  'content': "f_content",
+  'table' : "f_tdm",
+  'subject': "f_subject",
+  'source': "f_source",
+  'Bibliographic': "f_metadata",
+  'publisher': "f_publisher",
+  'isbn': "f_allmetadata",
+  'all': "f_allcontent",
+  'not': "f_allcontent",
+  '' : "f_creator"	# default so as not to have blank string
+  } # note, table is table of contents or Captions
+opt_type_map = {
+    'or' : "SHOULD",
+    'and' : "MUST",
+    'except' : "MUST_NOT"
+    }
+# these reverse maps are used to build args for interface to display original query
+opt_reverse_map = {
+    "SHOULD":"or",
+    "MUST":"and",
+    "MUST_NOT":"except"
+    }
+filter_reverse_map = {
+  "f_creator":'artist',
+  "f_title":'title',
+  "f_content":'content' ,
+  "f_tdm":'table',
+  "f_subject":'subject',
+  "f_source":'source',
+  "f_metadata":'Bibliographic',
+  "f_publisher":'publisher',
+  "f_allmetadata":'isbn',
+  "f_allcontent":'all',
+  '' : "all"  # default so as not to have blank string
+  }    
 field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
 option_types = ["and", "or", "except"]   
 
