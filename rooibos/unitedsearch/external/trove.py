@@ -217,7 +217,7 @@ def build_URL(query, params):
         date = build_date(year_from, year_to)
         if date not in "":
             url += ("" if first else "+") + date
-        return url
+        return url+"&s=OFFSET"
 
     else:
         id=0
@@ -395,7 +395,7 @@ valid_keys = empty_params = {"all words": [],
     "isbn": [],
     "issn": [],
     "publictag": [],
-    "access": [],
+    #"access": [],
     "start year": [],
     "end year": [],
     "availability":[],
