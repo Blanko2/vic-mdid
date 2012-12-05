@@ -137,7 +137,7 @@ def build_advanced_url(keywords, params):
       if fixed_opt_parameter in filter_type_map:
           filter_type = filter_type_map[fixed_opt_parameter]
       else:
-          filter_type = filter_type["all"]
+          filter_type = filter_type_map["all"]
           fixed_opt_parameter = "all"
       value = temp_params[opt_parameter]
       if isinstance(value, list):
