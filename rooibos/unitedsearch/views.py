@@ -345,24 +345,10 @@ class usViewer():
           if "i_end date" in request.GET:
             ed = request.GET["i_end date"]
             params.update({"end date":ed})
-        #Trove:
-        elif "i_field0_opt_type"in request.GET:
+        #Trove and NGA
+        else :
             params = request.GET
-        #NGA    
-        else : 
-          for n in request.GET:
-            """
-            #print n
-            #print "="
-            #print request.GET[n]
-            """
-            key = n
-            
-            if "i_" in key:
-                key = key.replace("_opt",'').replace("i_","")           
-                if request.GET[n]:
-                    #params.update({key:request.GET[n]})
-                    params[key]=request.GET[n]
+
             
 
           
