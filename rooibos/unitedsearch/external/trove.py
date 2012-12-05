@@ -20,12 +20,13 @@ TODO: DELETE THE API KEY AFTER DEVELOPMENT,
 get a key associated with the university
 """
 TROVE_KEY = "ot2eubi7h2ef5qjn"
-api = False
+api = True
+
 """API technical docs:
 http://trove.nla.gov.au/general/api-technical
 """
 def count(query) :
-    url = build_URL(query)
+    url = build_URL(query, {})
     search_result_parser = get_search_result_parser(url, 0)
     #return 12345
     return _count(search_result_parser)
@@ -41,19 +42,15 @@ def _count(soup):
         if not result:
             result = soup.find("div", attrs={'id':"pictures"}).find("div", attrs={'class':"hdrresult"}).find("b")
         num = int(re.sub("[^0-9]+", "", result.text))
-    print "trove.py, _count, number of results string: "+str(num)
+    #print "trove.py, _count, number of results string: "+str(num)
     return num
 
 
     
 def search(query, params, off, num_wanted) :
     off = int(off) #just in case
-    print "params in trove"
-    print params
-    url = build_URL(query)
-    print "trove.py, search, url = "+url
-    search_result_parser = get_search_result_parser(url, off)
-    print "trove.py, search, has search_result_parser: "+str(search_result_parser is not None)
+    url, kw = build_URL(query, params)
+    search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
     total = _count(search_result_parser)
     num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
     result = [];
@@ -71,14 +68,16 @@ def search(query, params, off, num_wanted) :
                     result.append(i)
                     num_wanted -= 1
                 off+=1#move the offset
-        if len(images) is PER_PAGE and num_wanted > 0:#not last page of results
+        if len(images) is (100 if api else PER_PAGE) and num_wanted > 0:#not last page of results
             #maybe wait here to be nice to trove's servers
-            search_result_parser = get_search_result_parser(url, off)#get next page, remember off is modified in loop above
+            search_result_parser = get_search_result_parser(url, off, 100)#get next page, remember off is modified in loop above
     
     img_list = Result(total, off)
     for image in result:
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
-    return img_list, empty_params
+    res = dict(empty_params)
+    res["all words"] = kw
+    return img_list, res
     #return Result(0, off), empty_params
 
     
@@ -169,45 +168,51 @@ def get_image_from_thumb(thumb):
     no idea what to turn it into, main page:
     http://content.cdlib.org/ark:/13030/kt3v19r78d/
     """
-    
     return url
-def build_URL(query):
-    print "trove.py, build_URL( "+query+" )"
+def build_URL(query, params):
     fields_string=""
     fields = {}
     year_from = year_to = None
     keywords, para_map = break_query_string(query)
+    params, kw = parse_sidebar_params(params)
+    keywords += kw
+    para_map = dict(para_map.items() + params.items())
+    """
     print "trove.py, build_URL, query = "+query
+    print "trove.py, build_URL, params = "+str(params)
     print "trove.py, build_URL, keywords = "+keywords
     print "trove.py, build_URL, para_map = "+str(para_map)
+    """
     #params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     for key in para_map.keys():
-        print "trove.py, build_URL, for key in para_map.keys loop, key = "+key+", value = "+para_map[key]
-        if key in "start_date":
-            print "trove.py, build_URL, start date found, and is "+para_map[key]
+        if "start_date" in key:
             year_from = int(para_map[key])
             del(para_map[key])
-        elif key in "end_date":
-            print "trove.py, build_URL, end date found, and is "+para_map[key]
+        elif "end_date" in key:
             year_to = int(para_map[key])
             del(para_map[key])
         else:
-            param = get_param(key)#if key is valid(or synonym) param is it's correct name for trove, otherwise key is unsupported and param is "" (keyword)
+            param = get_param(key)
             if param is "":#key unsupported
-                keywords += " "+para_map[key]
+                keywords += "+"+para_map[key]
             else:
-                fields[param] = para_map[key]# fields will now contain all supported parameters and their values
+                fields[param] = para_map[key]
+                # fields will now contain all supported parameters and their values
     if api:
         url = API_URL.replace("TROVE_KEY", TROVE_KEY)
+        first = True
         if keywords:
             url += keywords.strip().replace(" ", "+").replace("++", "+")
         for key in fields.keys():
+            if first:
+                url += "+"
+                first=False
             val = fields[key]
-            if " " in val or "+" in val:
-                val = "\""+val+"\""
-            url += "+"+key+'%3A'+val.replace(" ", "+").replace("++", "+")
-        url += build_date(year_from, year_to)
-        return url
+            url += key+'%3A'+'%28'+val.replace(" ", "+").replace("++", "+").replace("\"", '%22')+'%29'
+        date = build_date(year_from, year_to)
+        if date not in "":
+            url += ("" if first else "+") + date
+        return url+"&s=OFFSET", keywords
 
     else:
         id=0
@@ -221,11 +226,43 @@ def build_URL(query):
         url = BASE_SEARCH_URL.replace("FIELDS", fields_string)
         url = url.replace("DATE", build_date(year_from, year_to))
         url = url.replace("FORMAT", "")
-    return url
-    
+    return url, keywords
+
+def parse_sidebar_params(params):
+    params = dict(params)
+    result = {}
+    keywords = ""
+    for i in range(0, 10):
+        if "i_field"+str(i)+"_opt_type" in params and "i_field"+str(i)+"_opt" in params and "i_field"+str(i)+"_opt_value" in params:
+            #the parameter
+            param = params["i_field"+str(i)+"_opt_type"][0]
+            del params["i_field"+str(i)+"_opt_type"]
+            #all, none, the, any
+            ptype = params["i_field"+str(i)+"_opt"][0]
+            del params["i_field"+str(i)+"_opt"]
+            #value
+            value = params["i_field"+str(i)+"_opt_value"][0]
+            del params["i_field"+str(i)+"_opt_value"]
+            if value not in "":
+                param = get_param(param)
+                operator = "AND" if ptype in "and" else "NOT" if ptype in "none" else "OR" if ptype in "any" else ""
+                if param in "":
+                    keywords += ("" if keywords in "" else "+"+operator+"+")+ ("%22"+value+"%22" if ptype in "the" else value)
+                else:
+                    v = result[param]+"+"+operator+"+" if param in result else (operator+"+" if ptype in "none" else "")
+                    result[param]= v + ("%22"+value+"%22" if ptype in "the" else value)
+    if "i_start year_opt" in params:
+        result["start_date"] = params["i_start year_opt"][0]
+    if "i_end year_opt" in params:
+        result["end_date"] = params["i_end year_opt"][0]
+    #for p in params:
+        
+    #print"Trove sidebar params parsed: "+str(result)
+    return result, keywords
+
+
 
 def build_field(id, field, f_type, term):
-    print "trove.py, build_field("+str(id)+", "+field+", "+f_type+", "+term+")"
     amp = ""
     if id > 0:
         amp = "&"
@@ -236,13 +273,15 @@ def build_field(id, field, f_type, term):
     return amp+"q-field"+str(id)+"="+field+"&q-type"+str(id)+"="+f_type+"&q-term"+str(id)+"="+term
 
 def build_date(year_from, year_to):
-    print "trove.py, build_date("+str(year_from)+", "+str(year_to)+")"
     if not year_from:
         if not year_to:
             return "" #no date entered
-        return "" # let's not bother with those who don't enter start year TODO: maybe we can auto set start since end is actually set
+        if api:
+            year_from = "*"
+        else:
+            return ""
     if not year_to: #start year is set, but not end year
-        year_to = 3000
+        year_to = "*" if api else 3000
     if api:
         return "date:["+str(year_from)+"+TO+"+str(year_to)+"]"
     return "&q-year1-date="+str(year_from)+"&q-year2-date="+str(year_to)
@@ -250,8 +289,10 @@ def build_date(year_from, year_to):
 """
 Feed an assembled url into here, with the offset, and get a parser for 20 results
 """
-def get_search_result_parser(base_url, offset) :
+def get_search_result_parser(base_url, offset, per_page) :
     page_url = re.sub("OFFSET", str(offset),base_url)
+    if api:
+        page_url += "&n="+str(per_page)
     #page_url = "http://api.trove.nla.gov.au/result?key="+TROVE_KEY+"&zone=picture&q=cat"
     print "trove.py, get_search_result_parser, page_url = "+page_url
 
@@ -267,7 +308,7 @@ def get_search_result_parser(base_url, offset) :
     #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
     #print html
     search_results_parser = BeautifulSoup(html)
-    print "trove.py, get_search_result_parser returns  a soup: "+str(search_results_parser is not None)
+    #print "trove.py, get_search_result_parser returns  a soup: "+str(search_results_parser is not None)
     return search_results_parser
 
 
@@ -287,10 +328,8 @@ def getImage(datastring):
     thumb = data.get("thumb")
     image = data["image"]
     desc = data["desc"]
-    print "got all data"
     meta = {'creator':'somebody'}#use data['troveid'] to find the metadata using the api?
     i = RecordImage(image, thumb, desc, meta, json.dumps(data))
-    print "img = "+str(i)
     #img = RecordImage(url, thumb, name, meta, identifier)
     #print "Constructed image: "+str(img)
     return i
@@ -348,7 +387,7 @@ valid_keys = empty_params = {"all words": [],
     "isbn": [],
     "issn": [],
     "publictag": [],
-    "access": [],
+    #"access": [],
     "start year": [],
     "end year": [],
     "availability":[],

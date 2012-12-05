@@ -46,8 +46,8 @@ or form word
 """
 def break_query_string(query):
 
-    print "breaking"
-    print query
+    #print "breaking"
+    #print query
 
     keywords = ""
     para_map = {}

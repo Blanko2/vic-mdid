@@ -72,7 +72,7 @@ class usViewer():
                 if "start year" in reversed_keys:
                     reversed_keys.remove("start year")
                     reversed_keys.append("start year")
-                if "start year" in reversed_keys:
+                if "end year" in reversed_keys:
                     reversed_keys.remove("end year")
                     reversed_keys.append("end year")
                 keys=[]
@@ -207,8 +207,8 @@ class usViewer():
     
     def perform_search(self, request, resultcount):
         
-        print "request.GET:"
-        print request.GET
+        #print "unitedsearch/views.py.perform_search: request.GET:"
+        #print request.GET
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
 
@@ -320,10 +320,9 @@ class usViewer():
             if "i_start date" in request.GET:
                 sd = request.GET["i_start date"]
                 params.update({"start date":sd})
-            if "i_start date" in request.GET:
+            if "i_end date" in request.GET:
                 ed = request.GET["i_end date"]
-                params.update({"end date":sd})
-            params.update({"adv_sidebar":True})
+                params.update({"end date":ed})
             #print params
         # Old Gallica
         elif "i_field_field1_type" in request.GET: 
@@ -343,23 +342,13 @@ class usViewer():
           if "i_start date" in request.GET:
             sd = request.GET["i_start date"]
             params.update({"start date":sd})
-          if "i_start date" in request.GET:
+          if "i_end date" in request.GET:
             ed = request.GET["i_end date"]
-            params.update({"end date":sd})
-        #NGA    
-        else : 
-          for n in request.GET:
-            """
-            #print n
-            #print "="
-            #print request.GET[n]
-            """
-            key = n
-            
-            if "i_" in key:   
-                key = key.replace("_opt",'').replace("i_","")           
-                if request.GET[n]:
-                    params.update({key:request.GET[n]})
+            params.update({"end date":ed})
+        #Trove and NGA
+        else :
+            params = request.GET
+
             
 
           
