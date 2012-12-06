@@ -10,14 +10,14 @@ from gallica_parser import *
 name = "Gallica"        # database name the user will recognise
 identifier = "gallica"  # identifier for view, urls
 
-BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=50&p=PAGEIDX" 
+#BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&pageNumber=PAGENUMBER&lang=EN&tri=&n=50&p=PAGEIDX" 
 BASE_URL = "http://gallica.bnf.fr"
-BASE_FIRST_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&n=50&p=PAGEIDX&pageNumber=200000&lang=EN"
+BASE_SIMPLE_SEARCH_URL = "http://gallica.bnf.fr/Search?ArianeWireIndex=index&f_typedoc=images&q=QUERY&n=50&p=PAGEIDX&pageNumber=200000&lang=EN"
 #ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
-FIRST_ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=200000&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGEIDX&pageNumber=200000&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 #&dateMiseEnLigne=indexDateFrom
 
-ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
+#ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
     query, params = parse_gallica(keyword,{})
@@ -110,7 +110,7 @@ def build_simple_url(keywords):
     arg = get_empty_params()
     arg.update({"simple_keywords":keywords})
     keywords = re.sub(" ", "+", keywords)
-    return re.sub("QUERY", keywords, BASE_FIRST_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
+    return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
  
 def build_advanced_url(params):
 
@@ -139,7 +139,7 @@ def build_advanced_url(params):
       'COPYRIGHT': copyright
       }
     replacer = re.compile('|'.join(replacements.keys()))
-    url = replacer.sub(lambda m: replacements[m.group(0)], FIRST_ADVANCED_SEARCH_URL_STRUCTURE)
+    url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
     print url
     return url, arg 
 
@@ -239,14 +239,6 @@ def getImage(json_image_identifier) :
                  meta,
                  json_image_identifier))
 
-def add_string(kw, string):
-    if string =="":
-        return kw
-    if kw=="":
-        kw += string
-    else:
-        kw += "+"+string
-    return kw
 
 
 
@@ -375,25 +367,7 @@ opt_type_map = {
     'and' : "MUST",
     'except' : "MUST_NOT"
     }
-# these reverse maps are used to build args for interface to display original query
-opt_reverse_map = {
-    "SHOULD":"or",
-    "MUST":"and",
-    "MUST_NOT":"except"
-    }
-filter_reverse_map = {
-  "f_creator":'artist',
-  "f_title":'title',
-  "f_content":'content' ,
-  "f_tdm":'table',
-  "f_subject":'subject',
-  "f_source":'source',
-  "f_metadata":'Bibliographic',
-  "f_publisher":'publisher',
-  "f_allmetadata":'isbn',
-  "f_allcontent":'all',
-  '' : "all"  # default so as not to have blank string
-  }    
+
 field_types = ["all","artist", "title", "content", "table of contents or captions", "subject", "source", "bibliographic record", "publisher", "isbn"]
 option_types = ["and", "or", "except"]   
 
@@ -424,5 +398,3 @@ empty_params = {"start date": [],
     "all": [],
     "field": []
 }
-
-
