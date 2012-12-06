@@ -212,6 +212,7 @@ class usViewer():
         
         query = request.GET.get('q', '') or request.POST.get('q', '')
 
+
         if query and "=" in query and not "params={" in query:
             kw = ""
             par = ""
@@ -237,134 +238,14 @@ class usViewer():
                     kw += q
 
 
-            new_query = "keywords="+kw+",params={"+par+"}"
-            query = new_query
-            
-        
+            query = "keywords="+kw+",params={"+par+"}"
 
 
-        
-        
-        # Advanced search from sidebar
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
-        #not_params = {}
-        #or_params = {}
-        t_str = "i_field0_type"
-        #print "t_sr = =========="
-        v_str = "i_field0_value"
-        # new Gallica
-        if t_str in request.GET and v_str in request.GET:
-            key = request.GET[t_str]
-            value = request.GET[v_str]
-            if "i_field0_opt" in request:
-                opt1 = request.GET["i_field0_opt"]
-            else:
-                opt1 = "and"
-            if key and value:
-                params.update({key:[[value,opt1]]})
-                params.update({"first":key})
-            #print "params = "
-            #print params
-            i=1
-            while i<5:
-                t_str = "i_field"+str(i)+"_opt_type"
-                v_str = "i_field"+str(i)+"_opt_value"
-                o_str = "i_field"+str(i)+"_opt"
-
-                
-                if t_str in request.GET and v_str in request.GET:
-                    key = request.GET[t_str]
-                    value = request.GET[v_str]
-                    #print "value = "
-                    #print value
-                    opt = ""
-                    if i>0:
-                        opt = request.GET[o_str]
-                    
-                    if key and value:
-                        if not key in params:
-                            params.update({key:[[value,opt]]})
-                        else:
-                            v = params[key]
-                            v.append([value,opt])
-                            params.update({key:v})
-
-                        """if opt=="or":
-                            if not key in or_params:
-                                or_params.update({key:[value]})
-                            else:
-                                List = or_params[key]
-                                List.append(value)
-                                or_params.update({key:List})
-                        if opt=="except":
-                            if not key in not_params:
-                                not_params.update({key:[value]})
-                            else:
-                                List = not_params[key]
-                                List.append(value)
-                                not_params.update({key:List})"""
-                i = i+1
-            """
-            if len(not_params)>0:
-                params.update({"except":not_params})
-            if len(or_params)>0:
-                params.update({"or":or_params})
-            """
-            if "i_language" in request.GET:
-                lang = request.GET["i_language"]
-                params.update({"language":lang})
-            if "i_copyright" in request.GET:
-                cr = request.GET["i_copyright"]
-                params.update({"copyright":cr})
-            if "i_start date" in request.GET:
-                sd = request.GET["i_start date"]
-                params.update({"start date":sd})
-            if "i_end date" in request.GET:
-                ed = request.GET["i_end date"]
-                params.update({"end date":ed})
-            #print params
-        # Old Gallica
-        elif "i_field_field1_type" in request.GET: 
-          n=1
-          while n<=5:
-            key = request.GET["i_field_field"+str(n)+"_type"]
-            value = request.GET["i_field_field"+str(n)+"_value"]
-            if value:
-              params.update({key:value})
-            n=n+1
-          if "i_language" in request.GET:
-            lang = request.GET["i_language"]
-            params.update({"language":lang})
-          if "i_copyright" in request.GET:
-            cr = request.GET["i_copyright"]
-            params.update({"copyright":cr})
-          if "i_start date" in request.GET:
-            sd = request.GET["i_start date"]
-            params.update({"start date":sd})
-          if "i_end date" in request.GET:
-            ed = request.GET["i_end date"]
-            params.update({"end date":ed})
-        #Trove and NGA
-        else :
-            params = request.GET
-
-            
-
-          
-        """
-        for n in request.GET:
-            #print "n ="
-            #print n
-            #print "="
-            #print request.GET[n]
-            #print "\n\n"
-            if n[:2] == "p-":
-                params[n[2:]] = request.GET[n]
-        """
-        #args = self.readargs(request.GET)
-        #query = "keyword=,title=e,artist=e"
-        #print params
+        for key in request.GET:
+            if key.startswith("i_"):
+                params.update({key[2:]:request.GET[key]})
 
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
