@@ -478,11 +478,19 @@ class usViewer():
         #print"done the for"
         collection = get_collection()
         CollectionItem.objects.create(collection=collection, record=record)
+        """
+        This is where we should add the full image to the database and download it 
+        """
         job = JobInfo.objects.create(func='unitedsearch_download_media', arg=simplejson.dumps({
             'record': record.id,
             'url': image.url
         }))
-        job.run()
+        print "job "+job.arg
+        print "job.run()"
+        print str(job.run())
+        import time
+        time.wait(0)
+        print "now returning from record"
         return record
 
     def select(self, request):
@@ -490,7 +498,7 @@ class usViewer():
         #print request.method
         if not request.user.is_authenticated():
             raise Http404()
-        
+
         if request.method in "POST":
             # TODO: maybe drop the unused given-records portion of this
             postid = request.POST.get('id', '[]')
@@ -526,12 +534,9 @@ class usViewer():
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r
-        """
-        This is where we should add the full image to the database and download it 
-        """
         ans = select_record(request)
         #print "ANSWER = "+str(ans)
-        #print "/ANSWER"
+        print "/ANSWER"
         return ans
 
 class usUnionViewer(usViewer):

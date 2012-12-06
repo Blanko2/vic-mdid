@@ -10,12 +10,15 @@ import mimetypes
 import urllib2
 
 @register_worker('unitedsearch_download_media')
-def dummy_download_media(job):
+def unitedsearch_download_media(job):
 	logging.info('unitedsearch download media started for %s' % job)
+	print "unitedsearch_download_media"
 	jobinfo = None
 	while jobinfo == None:
 		try:
+			print "get JobInfo: "+str(job.arg)
 			jobinfo = JobInfo.objects.get(id=job.arg)
+			print "got JobInfo"
 		except Exception, ex:
 			print ex
 

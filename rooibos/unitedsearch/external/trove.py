@@ -3,6 +3,7 @@ from BeautifulSoup import BeautifulSoup         # html parser
 #from rooibos.settings_local import TROVE_KEY
 from rooibos.unitedsearch import *              # other search tools
 from rooibos.unitedsearch.common import *   # methods common to all databases
+from rooibos.settings_local import *
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 
@@ -26,8 +27,8 @@ api = True
 http://trove.nla.gov.au/general/api-technical
 """
 def count(query) :
-    url = build_URL(query, {})
-    search_result_parser = get_search_result_parser(url, 0)
+    url, keywords = build_URL(query, {})
+    search_result_parser = get_search_result_parser(url, 1, 0)
     #return 12345
     return _count(search_result_parser)
 
@@ -297,14 +298,17 @@ def get_search_result_parser(base_url, offset, per_page) :
     print "trove.py, get_search_result_parser, page_url = "+page_url
 
     #TODO: replace this with a WORKING html library retrieval
-    if api:
-        f = open("/u/students/novikovech/mdidtestpages/result.xml")
+    if TROVE_DEBUG:
+        if api:
+            f = open("/u/students/novikovech/mdidtestpages/result.xml")
+        else:
+            f = open("/u/students/novikovech/mdidtestpages/result.html")
+        html = ""
+        for line in f:
+            html += line
     else:
-        f = open("/u/students/novikovech/mdidtestpages/result.html")
-    html = ""
-    for line in f:
-        html += line
-
+        #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
+        html = urllib2.open(page_url)
     #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
     #print html
     search_results_parser = BeautifulSoup(html)
