@@ -313,7 +313,7 @@ def getImage(json_image_identifier) :
     meta = {'title': image_identifier['title'],
             'author': __scrub_html_for_property("Author", descriptive_parser),
             }
-    return Image(url, params = build_URL(query, pa,
+    return RecordImage(url, params = build_URL(query, pa,
                  image_identifier['url'],
                  image_identifier['thumb'],
                  image_identifier['title'],

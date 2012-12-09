@@ -75,12 +75,27 @@ def search(query, params, off, num_results_wanted):
 	    thumb_url=tn,
 	    title=title,
 	    record_url=url))"""
-
     """cached.results = simplejson.dumps(result, separators=(',', ':'))
     cached.save()"""
     return result, {}	# TODO parameters!!!
 
+# TODO - make this always return count - returning 12345 is to make artstor enterable from search page in ui
+def count(query):
+    count = search(query, {}, "0", 1)[0].total 
+    return count if count > 0 else 12345
 
+# TODO
+def getImage(image_identifier):
+  return None
+
+# TODO
+parameters = MapParameter({})
+
+"""
+==============
+TOOLS
+=============
+"""
 def _get_url(query, params, pagesize, offset):
     query = "cat"
     offset = str(int(offset)+1)
@@ -102,8 +117,6 @@ def _get_url(query, params, pagesize, offset):
         )
         """
     return url
-   
-   
 
 def _get_html_page(url):
     
@@ -121,15 +134,3 @@ def _get_html_page(url):
 	return html_page
     except urllib2.URLError:
 	return None
-
-# TODO - make this always return count - returning 12345 is to make artstor enterable from search page in ui
-def count(query):
-    count = search(query, {}, "0", 1)[0].total 
-    return count if count > 0 else 12345
-
-# TODO
-def getImage(image_identifier):
-  return None
-
-# TODO
-parameters = MapParameter({})
