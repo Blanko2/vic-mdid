@@ -372,10 +372,11 @@ class usViewer():
             'url': image.url
         }))
         print "job "+job.arg
+        job.run()
         print "job.run()"
-        print str(job.run())
-        import time
-        time.wait(0)
+        #print str(job.status)
+        #import time
+        #time.wait(0)
         print "now returning from record"
         return record
 

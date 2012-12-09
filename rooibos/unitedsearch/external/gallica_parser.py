@@ -24,14 +24,11 @@ def parse_gallica_sidebar(params):
         print params
         header = "field"
         tail = "_opt"
- 
-        
         i = 0
         type_key = "field0_type"
         value_key = "field0_value"
         opt_key = "field0"
         query_list=[]
-
         while i<5 :
             if i>0:
                 type_key = "field"+str(i)+"_opt_type"
@@ -54,8 +51,6 @@ def parse_gallica_sidebar(params):
             if opt_key in params:
                 del params[opt_key]
             i += 1
-        
-        
         
         params.update({"query_list":query_list})
         print "params in parser"
@@ -98,7 +93,6 @@ def add_entry(query_list,entry):
     return ql
 
 def parse_gallica(query, params):
-  
     # Case1: advansed search called from side bar
     if "field0_type" in params:
         return parse_gallica_sidebar(params)
@@ -114,7 +108,6 @@ def parse_gallica(query, params):
     #Case 3: regular adv search
     params = add_keyword_to_params(keywords,params)
     return parse_gallica_adv_search(params)
-
 
 def remove_all_words(keywords,params):
     if "All Words" in params:
