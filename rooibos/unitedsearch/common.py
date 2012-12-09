@@ -138,17 +138,20 @@ def add_to_dict(dictionary, key, value):
 def getValue(dictionary, key):
   # check if key exists
   # else set to ""
-  if key in dictionary:
-     value = dictionary[key]
-     if isinstance(value, list):
-	value_string = ""
-	for li in value:
-	  value_string += li+" "
-	value = value_string.strip()
-  else:
-    value = ""
-  return value
-  
+    print "dictionary"
+    print dictionary
+    if key in dictionary:
+        value = dictionary[key]
+        if isinstance(value, list):
+            value_string = ""
+            for li in value:
+                value_string += li+" "
+                value = value_string.strip()
+        else:
+            value = ""
+        return value
+    else:
+        return ""
 
 synonyms_lists = [["artist","author","painter"],
 	    ["subject","keyword","all","all words"]]
