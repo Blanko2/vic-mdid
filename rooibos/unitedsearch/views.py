@@ -15,6 +15,8 @@ import searchers
 
 import sys
 import traceback
+from rooibos.unitedsearch.external.gallica_parser import *
+
 
 class usViewer():
     def __init__(self, searcher, mynamespace):
@@ -34,7 +36,7 @@ class usViewer():
         u = self.url_search()
         return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
-    def htmlparams(self, defaults):
+    def htmlparams(self, defaults):    
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
             
@@ -209,11 +211,13 @@ class usViewer():
         
         #print "unitedsearch/views.py.perform_search: request.GET:"
         #print request.GET
-        
+        searcher_identifier = self.searcher.identifier
         query = request.GET.get('q', '') or request.POST.get('q', '')
-
-
+        print "AAAAAAAAAAAAAAA"
+        print query
         if query and "=" in query and not "params={" in query:
+            # Case : adv search query from simple search side bar
+            # Todo: merge with translator
             kw = ""
             par = ""
             query_list = query.split(',')
@@ -242,9 +246,38 @@ class usViewer():
                 kw = kw[:-1]
 
             query = "keywords="+kw+",params={"+par+"}"
+        if query:
+            print "query"
+        elif searcher_identifier=="gallica":
+            # Case 2: gallica adv search from side bar
+            params = get_params(request)
+            query = build_query(params)
         else:
-            while query.endswith('\\'):
-                query = query[:-1]
+            # Case 3: other adv search from side bar
+            print "processing case 3"
+            query2 = ""
+            params = get_params(request)
+            print params
+            all_words_key = all_words_map[searcher_identifier]
+            kw = ''
+            while kw.endswith('\\'):
+                kw = kw[:-1]
+            if all_words_key in params:
+                kw = params[all_words_key]
+                del params[all_words_key]
+            for key in params:
+                if isinstance(params[key],list):
+                    params.update({key:params[key][0]})
+            params = str(params)
+            query2 = "keywords="+kw+",params="+params.replace('\'','\"').replace('u\"','\"')
+            print query2
+
+        
+        
+
+
+
+
         
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
@@ -449,3 +482,22 @@ def union_select(request, sid="local"):
 
 def union_search(request, sid="local"):
     return union(request, sid).search(request)
+
+    
+def get_params(request):
+        params = {}
+        for key in request.GET:
+            if key.startswith('i_'):
+                params.update({key[2:]:request.GET[key]})
+        keys = params.keys()
+        for key in keys:
+            key2 = key+"_opt"
+            if key in params and key2 in params:
+                params.update({key:params[key2]})
+                del params[key2]
+        return params    
+# Todo: remove this into translator?
+all_words_map = {
+    'gallica' : 'all',
+    'nga' : 'all words'
+}

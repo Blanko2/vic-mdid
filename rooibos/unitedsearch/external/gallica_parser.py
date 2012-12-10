@@ -6,8 +6,62 @@ import re
 import json
 
 
-
-
+def build_query(params):
+        print "start"
+        print params
+        query = ""
+        para_map = {}
+        i = 0
+        type_key = "field0_type"
+        value_key = "field0_value"
+        opt_key = "field0"
+        query_list=[]
+        while i<5 :
+            if i>0:
+                type_key = "field"+str(i)+"_opt_type"
+                value_key = "field"+str(i)+"_opt_value"
+                opt_key = "field"+str(i)+""
+            if type_key and value_key in params:
+                field_type = params[type_key]
+                value  = str(params[value_key])
+                print "###############"+str(i)
+                print field_type
+                print value
+                opt = ""
+                if opt_key in params:
+                    opt = opt_map[params[opt_key]]
+                if field_type and value and not value=="":
+                    print "DDDDDDDDDDDDDDDDDDDD"+str(i)
+                    print field_type
+                    print value
+                    entry_key= str(opt+field_type)
+                    para_map = update_para_map(para_map,entry_key,value)
+            if type_key in params:
+                del params[type_key]
+            if value_key in params:
+                del params[value_key]
+            if opt_key in params:
+                del params[opt_key]
+            i += 1
+        print "para_map"
+        print para_map
+        kw = ""
+        if "all" in para_map:
+            kw = para_map["all"]
+            del para_map["all"]
+        query = "keywords="+kw+",params="+str(para_map)
+        query = query.replace('\'','\"')
+        print "gallica query"
+        print query
+        return query
+    
+def update_para_map(para_map,key,value):
+    if not key in para_map:
+        para_map.update({key:value})
+    else:
+        value = para_map[key]+"+"+value
+        para_map.update({key:value})
+    return para_map
 
 def parse_params(query, params):
     for key in query:
@@ -41,7 +95,7 @@ def parse_gallica_sidebar(params):
                     opt = params[opt_key]
                 else:
                     opt = "and"
-                if field_type and value and opt and not value=="":
+                if field_type and value and not value=="":
                     entry = [field_type,value,opt]
                     query_list = add_entry(query_list,entry)
             if type_key in params:
@@ -67,7 +121,14 @@ def parse_gallica_adv_search(params):
         opt = "and"
         value = params[key]
         if isinstance(value, list):
-            value = list_to_str(value)
+            value = value[0]
+    if key in para_map:
+        para_map.update({key:value})
+    else:
+        value = para_map[key]+"+"+value
+        para_map.update({key:value})
+
+        value = list_to_str(value)
         if key.startswith('-'):
             opt = "except"
             fixed_key = key[1:]
@@ -214,6 +275,12 @@ def list_to_str(l):
            v +="+"
        v += e
     return v
+
+opt_map = {
+    'and':'',
+    'or':'?',
+    'except':'-'
+    }    
     
 valid_keys=["start date",
     "end date",
