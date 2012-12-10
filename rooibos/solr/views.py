@@ -560,7 +560,8 @@ def search(request, id=None, name=None, selected=False, json=False):
  
     if kws.startswith("keywords="):
         kws = kws.replace("keywords=","")
-
+    while kws.endswith('\\'):
+        kws = kws[:-1]
     query_string += "keywords=" + kws
     query_string = query_string.replace('\"','')
     
@@ -569,7 +570,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     
 
     for key in query_list.keys() :
-      q = key+"="+query_list[key]
+      value = query_list[key]
+      while value.endswith('\\'):
+          value = value[:-1]
+      q = key+"="+value
       query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
     

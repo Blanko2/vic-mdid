@@ -199,18 +199,7 @@ def getImage(json_image_identifier) :
 """
 WHY DOES THIS RETURN EMPTY PARAMS I DONT KNOW WHY
 """
-def search(term, req, off, num_results_wanted) :
-    print "NGA "+str(req)
-    params = {}
-    for n in req:
-        key = n
-        if "i_" in key and "_opt" in key:
-            key = key.replace("_opt",'').replace("i_","")
-            if req[n]:
-                #params.update({key:request.GET[n]})
-                params[key]=req[n]
-
-
+def search(query, params, off, num_results_wanted) :
     arg = get_empty_params()
     """ Get the actual results! Note, method must be called 'search'"""
 
@@ -218,12 +207,16 @@ def search(term, req, off, num_results_wanted) :
     """#print [ item.encode('ascii') for item in ast.literal_eval(term) ]
     off = (int)(off)     # type of off varies by searcher implementation
 
-    #print "In nga.py ln 236"
+    print "In nga.py ln 236"
     #print term
     #print params
-    params, unsupported_params, url_base = build_parameters(term, params)
+    params, unsupported_params, url_base = build_parameters(query, params)
     no_query = True;
     print params
+    for key in params:
+        key2 = key+"_opt"
+        if key2 in params:
+            params.update({key:params[key2]})
     for key in params:
         value = params[key]
         if isinstance(value,list):
@@ -255,7 +248,7 @@ def search(term, req, off, num_results_wanted) :
 
     count = __count(website_search_results_parser)
     if off>count:
-        return search(term,params,0,50)
+        return search(query,params,0,50)
     else:
         num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
 

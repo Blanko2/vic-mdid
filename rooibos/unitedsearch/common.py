@@ -53,6 +53,8 @@ def break_query_string(query):
     else:
         keywords=""
     para_map = re.findall("(?<=params=).*", query)
+    print "para_map ="
+    print para_map
     if para_map and len(para_map) >= 1:
         para_map = json.loads(para_map[0])
         para_map2 = {}
@@ -116,8 +118,6 @@ def add_to_dict(dictionary, key, value):
 def getValue(dictionary, key):
   # check if key exists
   # else set to ""
-    print "dictionary"
-    print dictionary
     if key in dictionary:
         value = dictionary[key]
         if isinstance(value, list):
