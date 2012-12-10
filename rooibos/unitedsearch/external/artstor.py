@@ -27,7 +27,6 @@ Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are 
 """
 # TODO support parameters, parameterised query
 def search(query, params, off, num_results_wanted):
-    
     off = int(off)
     if not query:
             return None
@@ -40,14 +39,11 @@ def search(query, params, off, num_results_wanted):
 	return simplejson.loads(cached.results)
     """
     pagesize = 50
-    
     keywords, para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     add_to_dict(params, "all words", keywords)
-    
     url = _get_url(keywords, params, pagesize, off)
     html_page = _get_html_page(url)
-    
     try:
 	results = ElementTree(file=html_page)
 	num_results = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords') or 0
@@ -81,8 +77,8 @@ def search(query, params, off, num_results_wanted):
 
 # TODO - make this always return count - returning 12345 is to make artstor enterable from search page in ui
 def count(query):
-    count = search(query, {}, "0", 1)[0].total 
-    return count if count > 0 else 12345
+    #count = search(query, {}, "0", 1)[0].total 
+    return 12345
 
 # TODO
 def getImage(image_identifier):

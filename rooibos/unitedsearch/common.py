@@ -45,25 +45,13 @@ query is in form search=search_type, keywords=words (space-separated), params={"
 or form word
 """
 def break_query_string(query):
-
-    #print "breaking"
-    #print query
-
     keywords = ""
     para_map = {}
-    """
-    print "Query as passed to break_query_string in common.py:"
-    print query
-    """
-
-    
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
-
     if keywords and len(keywords) >= 1:
         keywords = keywords[0] #now keywords is a string from that list.
     else:
         keywords=""
-      
     para_map = re.findall("(?<=params=).*", query)
     if para_map and len(para_map) >= 1:
         para_map = json.loads(para_map[0])
@@ -75,18 +63,8 @@ def break_query_string(query):
         para_map = {}
   
     # default, if query didn't follow search=... structure, simply use query itself
-    """
-    print "common:"
-    print keywords
-    print para_map
-    """
     if keywords is "" and len(para_map) is 0 :
         keywords = query or ""
-	"""
-	print "in if, keywords:"
-	print keywords
-	print "\n\n"
-    """
     print keywords
     return keywords, para_map
     
@@ -193,8 +171,6 @@ Supported incoming formats: "dd/mm/[yy]yy-dd/mm/[yy]yy" (permitted separators: "
     Pass default end date as a datetime.date object
 
 def format_date(date, desired_format, separator, default_end=datetime.date.today(), two_dates_wanted=False):
-
-
   # first, check if date is year range only (simplest format)
   year_match = re.match("^((?P<y1_prefix>(\d{2}|\d{0}))(?P<y1_suffix>(\d{2}))(\w?\-\w?(?P<y2_prefix>(\d{2}|\d{0}))(?P<y2_suffix>(\d{1,2})))?)$", date)
   
@@ -222,7 +198,6 @@ def format_date(date, desired_format, separator, default_end=datetime.date.today
   
 
 def _build_dates_from_year(year_match, default_end, two_dates_wanted):
-  
     # build y1 data
     d1 = 1	# defaults
     m1 = 1
@@ -259,7 +234,6 @@ def _build_dates_from_year(year_match, default_end, two_dates_wanted):
 
 
 def _build_dates_from_day(day_match, default_end, two_dates_wanted):
-
     # build from year data
     d1 = int(day_match.group("d1"))
     m1 = int(day_match.group("m1"))
@@ -284,15 +258,12 @@ def _build_dates_from_day(day_match, default_end, two_dates_wanted):
 	    y2 = int(y2_prefix + y2_suffix)
 	else:		# no data specified
 	    y2 = default_end.year
-
 	return ((d1,m1,y1), (d2,m2,y2))
-	
     else:
 	return (d1,m1,y1), None
 
     
 def _get_default_year_prefix(year_suffix):
-  
   current_year = datetime.date.today().year
   if year_suffix <= current_year:
     return str(current_year)[0:2]	# prefix of current year
@@ -302,18 +273,15 @@ def _get_default_year_prefix(year_suffix):
     
 # currently v simple checking, could update TODO
 def _validate_date_range(date1_tuple, date2_tuple):
-  
     if date1_tuple and date2_tuple:
 	y1 = date1_tuple[2]
 	y2 = date2_tuple[2]
 	if y1 > y2:
 	    return date1_tuple, date2_tuple, ("Date range cannot be negative: %s-%s" %(y1,y2))
-    
     return date1_tuple, date2_tuple, None
   
 
 def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
-
     d1,m1,y1 = date1_tuple
     if date2_tuple:
 	d2,m2,y2 = date2_tuple
@@ -331,6 +299,4 @@ def _format_dates(date1_tuple, date2_tuple, desired_format, separator):
 	return date1, date2
     else:
 	raise NotImplementedError("%s is not a supported date format (update unitedsearch.common._format_dates() if desired" %(desired_format))
-
-  
-  """
+"""
