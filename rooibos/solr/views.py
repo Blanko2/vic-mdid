@@ -358,6 +358,8 @@ def run_search(user,
 
 
 def search(request, id=None, name=None, selected=False, json=False):
+    
+    print "solr search\n\n\n!!!!!!\n\n\n"
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
     
     """
@@ -407,10 +409,12 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     if selected:
         selected = request.session.get('selected_records', ())
-
+	
+	
     (hits, records, search_facets, orfacet, query, fields) = run_search(user, collection, criteria, keywords, sort, page, pagesize,
                                                          orquery, selected, remove, produce_facets=False)
 
+    print "solr.views 414 criteria %s keywords %s hits %s records %s" %(criteria, keywords, hits, records)
     if json:
         return (hits, records, viewmode)
 
@@ -697,7 +701,36 @@ def search_json(request, id=None, name=None, selected=False):
     return dict(html=html)
 
 
+def find_in_db(request, collection_id=None, field_id=None, value=None):
+    print "in Find_IN_DB!!!!\n\n\n\n\n\n"
+    
+    collection = collection_id and get_object_or_404(filter_by_access(request.user, Collection), id=collection_id) or None
+
+    print "solr.views 709 field_id %s" %field_id
+    if field_id:
+	field = get_object_or_404(Field, id=field_id)
+    if request.method == "POST":
+	raise NotImplementedError("Can't post to find_in_db")
+
+    user = request.user
+
+    # item has been downloaded, just find it in the database
+    # rather than searching all searchers
+    print "solr.views collection %s field %s value %s" %(collection, field, value)
+
+    values = FieldValue.objects.filter(field=field, value=value, record__collection=collection)
+    print "solr.views 719 values %s" %values.values()
+
+    
+    return render_to_response('searcher-results.html',
+	{'results': values,
+	'searcher_name': collection},
+	context_instance=RequestContext(request))
+	
+  
+# Browse downloaded images
 def browse(request, id=None, name=None):
+
     collections = filter_by_access(request.user, Collection)
     collections = apply_collection_visibility_preferences(request.user, collections)
     collections = collections.annotate(num_records=Count('records')).filter(num_records__gt=0).order_by('title')
@@ -713,7 +746,7 @@ def browse(request, id=None, name=None):
                                             kwargs={'id': collection.id, 'name': collection.name}))
 
     collection = id and get_object_or_404(collections, id=id) or collections[0]
-
+    
     fields = cache.get('browse_fields_%s' % collection.id)
     if fields:
         fields = list(Field.objects.filter(id__in=fields))
@@ -735,6 +768,7 @@ def browse(request, id=None, name=None):
         field = fields[0]
 
     values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value', distinct=False)).order_by('value')
+    print "solr.views 741 collection %s field %s manager %s" %(collection, field.__class__.__name__, FieldValue.objects)
 
     if request.GET.has_key('s'):
         start = values.filter(value__lt=request.GET['s']).count() / 50 + 1
@@ -751,6 +785,7 @@ def browse(request, id=None, name=None):
                               context_instance=RequestContext(request))
 
 
+                                 
 def overview(request):
 
     collections = filter_by_access(request.user, Collection)
