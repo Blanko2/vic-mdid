@@ -57,21 +57,6 @@ def build_parameters(query, params):
     url_base = re.sub(" ", "+", url_base)
     return params, unsupported_parameters, url_base
 
-    
-
-def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
-    # set up fields for any type of search
-    search_results_per_page = 25
-    search_page_num = str(1 + (index_offset/search_results_per_page))   
-    howFarDownThePage = index_offset % search_results_per_page
-    url = url_base + "&page="+search_page_num
-    # use a proxy handler as developing behind firewall
-    #proxyHandler = urllib2.ProxyHandler({"https": "www-cache.ecs.vuw.ac.nz:8080"})
-    #opener = urllib2.build_opener(proxyHandler)
-    proxy_url = proxy_opener()
-    html = proxy_url.open(url)
-    return html, howFarDownThePage
-
 def any_results(html_parser) :
     return __count(html_parser) != 0 
 
@@ -205,20 +190,9 @@ def search(query, params, off, num_results_wanted) :
     resulting_images = Result(__count(website_search_results_parser), off+num_results_wanted)
     for i in range(len(list_of_image_ids)) :
         resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
-    #print "NGA params:"
-    #print params
-    #print empty_params
-    #ep = empty_params
-    #params = merge_dictionaries(ep, params, parameters.parammap.keys())[0]
-    #print "NGA params:"
-    #print params
     if is_simple_search(arg):
         arg.update({"simple_keywords":str(arg["all words"])})
         arg.update({"all words":[]})
-    print "arg"
-    print arg
-
-
     return resulting_images, arg
 
 """
@@ -229,9 +203,6 @@ TOOLS
 
 def __parse_html_for_image_details(website_search_results_parser, maxNumResults, firstIdIndex):
     list_of_image_ids, thumb_urls, image_descriptions = __create_imageId_array_from_html_page(website_search_results_parser, maxNumResults, firstIdIndex)
-
-    #thumb_urls, image_descriptions = __create_arrays_for_thumbnailUrls_imageDescriptions(website_search_results_parser, maxNumResults)
-
     return (list_of_image_ids, thumb_urls, image_descriptions)
 
 def __createImage(id, thumb, description) :
