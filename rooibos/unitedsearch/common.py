@@ -1,11 +1,13 @@
 from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
+from rooibos import settings_local
 import re 
 import json
+import urllib2
 import datetime
 
-
+PROXY_URL="www-cache2.ecs.vuw.ac.nz:8080"
 API_KEY="sfypBYD5Jpu1XqYBipX8"
 
 """ Methods for all UnitedSearch searchers """
@@ -154,21 +156,30 @@ def getValue(dictionary, key):
         return ""
 
 synonyms_lists = [["artist","author","painter"],
-	    ["subject","keyword","all","all words"]]
-	    
+        ["subject","keyword","all","all words"]]
+
 # return a supported synonym of key if one exists, or None
 def get_supported_synonym(key, valid_keys):
-  
-  for syn_list in synonyms_lists:
-    if key.lower() in syn_list:
-      # find synonmym for key which works for valid_keys as well
-      valid_syns = list(set(syn_list) & set(valid_keys))
-      
-      if len(valid_syns) > 0:
-	# found (at least) a match!
-	return valid_syns[0]
-      else:	# assumes no two synonyms lists are overlapping. If any do, change this
-	return None
+    for syn_list in synonyms_lists:
+        if key.lower() in syn_list:
+            # find synonmym for key which works for valid_keys as well
+            valid_syns = list(set(syn_list) & set(valid_keys))
+            if len(valid_syns) > 0:
+                # found (at least) a match!
+                return valid_syns[0]
+            else:	# assumes no two synonyms lists are overlapping. If any do, change this
+                return None
+
+"""
+Creates a ProxyHandler for the University Proxy
+"""
+def proxy_opener():
+    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    password_mgr.add_password(None, PROXY_URL, settings_local.username, settings_local.password)
+
+    proxy_handler = urllib2.ProxyHandler({"http":PROXY_URL})
+    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
+    return urllib2.build_opener(proxy_handler, proxy_auth_handler)
   
 #=============Helper Methods ============
 #Takes a single date or date range and returns (date1, date2, error_msg) where dates are formatted
