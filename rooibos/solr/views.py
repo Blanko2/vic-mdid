@@ -706,12 +706,11 @@ def search_json(request, id=None, name=None, selected=False):
     return dict(html=html)
 
 
+# get all database records from collection with specified field and value and display as search results
 def find_in_db(request, collection_id=None, field_id=None, value=None):
-    print "in Find_IN_DB!!!!\n\n\n\n\n\n"
-
+    
     collection = collection_id and get_object_or_404(filter_by_access(request.user, Collection), id=collection_id) or None
 
-    print "solr.views 709 field_id %s" %field_id
     if field_id:
 	field = get_object_or_404(Field, id=field_id)
     if request.method == "POST":
@@ -719,26 +718,19 @@ def find_in_db(request, collection_id=None, field_id=None, value=None):
 
     user = request.user
 
-    # item has been downloaded, just find it in the database
-    # rather than searching all searchers
-    #print "solr.views collection %s field %s value %s" %(collection, field, value)
-
     record_ids = FieldValue.objects.filter(field=field, value=value, record__collection=collection).values_list('record', flat=True)
-    print "solr.views 726 ids %s" %record_ids
     
     records = Record.objects.filter(id__in=record_ids).values_list('tmp_extthumb', 'name', 'source')
-    print "solr.views 729 records %s" %records
     
     keys = ['thumb_url', 'title', 'record_url']
     dicts = []
     for value_set in records:
 	dicts.append(dict(zip(keys,value_set)))
-    print "solr.views 735 %s" %dicts
     
     related_pages = [{"url": 'solr-browse', "title": "Back to Browse"}]
     return render_to_response('searcher-results.html',
 	{'results': dicts,
-	'hits': len(records),		# TODO, make this use count
+	'hits': len(records),		# TODO, make this use count (more efficient)
 	'browse': True,
 	'searcher_name': collection},
 	context_instance=RequestContext(request))
