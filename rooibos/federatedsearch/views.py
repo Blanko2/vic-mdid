@@ -34,7 +34,6 @@ source_classes = [
 
 def sidebar_api_raw(request, query, cached_only=False):
     print "sidebar_api_raw-----------"
-    print request
     print query
 
     sources = dict(
