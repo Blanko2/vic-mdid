@@ -7,7 +7,7 @@ import json
 import urllib2
 import datetime
 
-PROXY_URL="www-cache2.ecs.vuw.ac.nz:8080"
+PROXY_URL="www-cache.ecs.vuw.ac.nz:8080"
 API_KEY="sfypBYD5Jpu1XqYBipX8"
 
 """ Methods for all UnitedSearch searchers """
@@ -176,8 +176,9 @@ Creates a ProxyHandler for the University Proxy
 def proxy_opener():
     password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     password_mgr.add_password(None, PROXY_URL, settings_local.username, settings_local.password)
-
-    proxy_handler = urllib2.ProxyHandler({"http":PROXY_URL})
+    
+    #settings_local.username+":"+settings_local.password+"@"+
+    proxy_handler = urllib2.ProxyHandler({"http":PROXY_URL,"https":settings_local.username+":"+settings_local.password+"@"+PROXY_URL})
     proxy_auth_handler = urllib2.ProxyBasicAuthHandler(password_mgr)
     return urllib2.build_opener(proxy_handler, proxy_auth_handler)
   
