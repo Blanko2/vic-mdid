@@ -523,7 +523,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     """
     query_list = dict()
     
-    crit_pattern = re.compile("(?P<type>.*?\_t):\"(?P<value>.*?)\"")
+    crit_pattern = re.compile("(?P<type>.*?(\_t)?):\"?(?P<value>.*?)\"?$")
     #crit_pattern = re.compile("(?P<type>.*?\_t):(?P<value>.*?)")
     for c in criteria :
       m = crit_pattern.match(c)
@@ -721,7 +721,7 @@ def find_in_db(request, collection_id=None, field_id=None, value=None):
 
     # item has been downloaded, just find it in the database
     # rather than searching all searchers
-    print "solr.views collection %s field %s value %s" %(collection, field, value)
+    #print "solr.views collection %s field %s value %s" %(collection, field, value)
 
     record_ids = FieldValue.objects.filter(field=field, value=value, record__collection=collection).values_list('record', flat=True)
     print "solr.views 726 ids %s" %record_ids
