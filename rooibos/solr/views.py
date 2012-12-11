@@ -27,6 +27,7 @@ import copy
 import random
 import logging
 import string
+import json
 
 
 
@@ -358,7 +359,15 @@ def run_search(user,
 
 
 def search(request, id=None, name=None, selected=False, json=False):
+    
+    print "solr search\n\n\n!!!!!!\n\n\n"
     collection = id and get_object_or_404(filter_by_access(request.user, Collection), id=id) or None
+    
+    """
+    #print "------------------------------------------------------view.search----------------------------"
+    #print "request"
+    #print request
+    """
 
     if request.method == "POST":
         update_record_selection(request)
@@ -401,10 +410,12 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     if selected:
         selected = request.session.get('selected_records', ())
-
+	
+	
     (hits, records, search_facets, orfacet, query, fields) = run_search(user, collection, criteria, keywords, sort, page, pagesize,
                                                          orquery, selected, remove, produce_facets=False)
 
+    print "solr.views 414 criteria %s keywords %s hits %s records %s" %(criteria, keywords, hits, records)
     if json:
         return (hits, records, viewmode)
 
@@ -503,7 +514,6 @@ def search(request, id=None, name=None, selected=False, json=False):
     federated_search = sidebar_api_raw(
         request, federated_search_query, cached_only=True) if federated_search_query else None
 
-  
 
     query_string = ""
     """if len(criteria)>0 :
@@ -513,7 +523,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     """
     query_list = dict()
     
-    crit_pattern = re.compile("(?P<type>.*?\_t):\"(?P<value>.*?)\"")
+    crit_pattern = re.compile("(?P<type>.*?(\_t)?):\"?(?P<value>.*?)\"?$")
     #crit_pattern = re.compile("(?P<type>.*?\_t):(?P<value>.*?)")
     for c in criteria :
       m = crit_pattern.match(c)
@@ -523,23 +533,61 @@ def search(request, id=None, name=None, selected=False, json=False):
 	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
       
-
-
-
-    kws = (str(keywords))
-    query_string += "keywords=" + kws.replace(' ','+')
+    """
+    #print "keywords is"
+    #print keywords
+    """
+    kws_list = (str(keywords)).split(' ')
+    kws=""
+    kws_not = ""
+    
+    
+    for kw in kws_list:
+     if kw:
+      if kw[0]=='-' :
+	kw = kw.replace('\"','')
+	if kws_not is "":
+	  kws_not += kw.replace('-','')
+	else :
+	  kws_not += "+"+kw.replace('-','')
+      else:
+	kw = kw.replace('\"','')
+	if kws is "":
+	  kws += kw
+	else:
+	  kws += "+"+kw 
+	
+    #print "kws = "
+    #print kws
+    #print "kws_not ="
+    #print kws_not
+    
+ 
+    if kws.startswith("keywords="):
+        kws = kws.replace("keywords=","")
+    while kws.endswith('\\'):
+        kws = kws[:-1]
+    query_string += "keywords=" + kws
+    query_string = query_string.replace('\"','')
     
   #  query_string += ";"+str(query_list)
     
+    
 
     for key in query_list.keys() :
-      query = key+"="+query_list[key]
-      query_string += ' '+query.replace("\"", "")
+      value = query_list[key]
+      while value.endswith('\\'):
+          value = value[:-1]
+      q = key+"="+value
+      query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
+    
+    if not kws_not is '':
+      query_string += ', '+"not="+kws_not
+    
 
-
-    print "\n\n\n\n\n--------------------------Query String is:--------------------------------"
-    print query_string+"\n\n\n\n\n"
+    #print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
+    #print query_string+"\n\n\n\n\n"
  
 
     return render_to_response('results.html',
@@ -658,7 +706,40 @@ def search_json(request, id=None, name=None, selected=False):
     return dict(html=html)
 
 
+# get all database records from collection with specified field and value and display as search results
+def find_in_db(request, collection_id=None, field_id=None, value=None):
+    
+    collection = collection_id and get_object_or_404(filter_by_access(request.user, Collection), id=collection_id) or None
+
+    if field_id:
+	field = get_object_or_404(Field, id=field_id)
+    if request.method == "POST":
+	raise NotImplementedError("Can't post to find_in_db")
+
+    user = request.user
+
+    record_ids = FieldValue.objects.filter(field=field, value=value, record__collection=collection).values_list('record', flat=True)
+    
+    records = Record.objects.filter(id__in=record_ids).values_list('tmp_extthumb', 'name', 'source')
+    
+    keys = ['thumb_url', 'title', 'record_url']
+    dicts = []
+    for value_set in records:
+	dicts.append(dict(zip(keys,value_set)))
+    
+    related_pages = [{"url": 'solr-browse', "title": "Back to Browse"}]
+    return render_to_response('searcher-results.html',
+	{'results': dicts,
+	'hits': len(records),		# TODO, make this use count (more efficient)
+	'browse': True,
+	'searcher_name': collection},
+	context_instance=RequestContext(request))
+    
+    
+  
+# Browse downloaded images
 def browse(request, id=None, name=None):
+
     collections = filter_by_access(request.user, Collection)
     collections = apply_collection_visibility_preferences(request.user, collections)
     collections = collections.annotate(num_records=Count('records')).filter(num_records__gt=0).order_by('title')
@@ -674,7 +755,7 @@ def browse(request, id=None, name=None):
                                             kwargs={'id': collection.id, 'name': collection.name}))
 
     collection = id and get_object_or_404(collections, id=id) or collections[0]
-
+    
     fields = cache.get('browse_fields_%s' % collection.id)
     if fields:
         fields = list(Field.objects.filter(id__in=fields))
@@ -696,6 +777,7 @@ def browse(request, id=None, name=None):
         field = fields[0]
 
     values = FieldValue.objects.filter(field=field, record__collection=collection).values('value').annotate(freq=Count('value', distinct=False)).order_by('value')
+    print "solr.views 741 collection %s field %s manager %s" %(collection, field.__class__.__name__, FieldValue.objects)
 
     if request.GET.has_key('s'):
         start = values.filter(value__lt=request.GET['s']).count() / 50 + 1
@@ -712,6 +794,7 @@ def browse(request, id=None, name=None):
                               context_instance=RequestContext(request))
 
 
+                                 
 def overview(request):
 
     collections = filter_by_access(request.user, Collection)
@@ -744,7 +827,6 @@ def fieldvalue_autocomplete(request):
 
 
 def search_form(request):
-
     collections = filter_by_access(request.user, Collection)
     collections = apply_collection_visibility_preferences(request.user, collections)
     if not collections:
