@@ -11,6 +11,7 @@ def build_query(params):
         print params
         query = ""
         para_map = {}
+        temp_params = params.copy()
         i = 0
         type_key = "field0_type"
         value_key = "field0_value"
@@ -24,14 +25,10 @@ def build_query(params):
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = str(params[value_key])
-                print "###############"+str(i)
-                print field_type
-                print value
                 opt = ""
                 if opt_key in params:
                     opt = opt_map[params[opt_key]]
                 if field_type and value and not value=="":
-                    print "DDDDDDDDDDDDDDDDDDDD"+str(i)
                     print field_type
                     print value
                     entry_key= str(opt+field_type)
@@ -45,12 +42,18 @@ def build_query(params):
             i += 1
         print "para_map"
         print para_map
+        for entry_key in params:
+            value = params[entry_key]
+            if isinstance(value,list):
+                value = value[0]
+            if not value =='':
+                para_map = update_para_map(para_map,entry_key,value)
         kw = ""
         if "all" in para_map:
             kw = para_map["all"]
             del para_map["all"]
         query = "keywords="+kw+",params="+str(para_map)
-        query = query.replace('\'','\"')
+        query = query.replace('\'','\"').replace('u\"','\"')
         print "gallica query"
         print query
         return query
@@ -115,6 +118,25 @@ def parse_gallica_adv_search(params):
     query_list = []
     temp_params = params.copy()
     for key in params:
+        if key in field_types:
+            opt = ''
+            fixed_key = key
+            if key.startswith('-') or key.startswith('?'):
+                opt = key[0]
+                fixed_key = key[1:]
+            entry = [fixed_key, params[key], opt_type_map[opt]]
+            query_list = add_entry(query_list, entry)
+            del temp_params[key]
+    temp_params.update({"query_list":query_list})
+    params = temp_params
+    return None, params
+                
+        
+"""        
+def parse_gallica_adv_search(params):
+    query_list = []
+    temp_params = params.copy()
+    for key in params:
         print "params"
         print params
         fixed_key = key
@@ -122,11 +144,11 @@ def parse_gallica_adv_search(params):
         value = params[key]
         if isinstance(value, list):
             value = value[0]
-    if key in para_map:
-        para_map.update({key:value})
+    if key in params        :
+        temp_params.update({key:value})
     else:
         value = para_map[key]+"+"+value
-        para_map.update({key:value})
+        temp_params.update({key:value})
 
         value = list_to_str(value)
         if key.startswith('-'):
@@ -144,7 +166,8 @@ def parse_gallica_adv_search(params):
        query_list = merge_query_list(query_list)
     params.update({"query_list":query_list})
     return None, params
-            
+"""
+
 def add_entry(query_list,entry):
     ql = query_list
     if entry[2]=="and":
@@ -153,8 +176,9 @@ def add_entry(query_list,entry):
         ql.append(entry)
     return ql
 
-def parse_gallica(query, params):
+def parse_gallica(keywords, params):
     # Case1: advansed search called from side bar
+    """
     if "field0_type" in params:
         return parse_gallica_sidebar(params)
     params = {}
@@ -163,13 +187,14 @@ def parse_gallica(query, params):
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     keywords, params = remove_all_words(keywords,params)
     #Case 2: simple search
-    if len(params)==0:
+    """
+    if params=={}:
         return keywords, None
     
     #Case 3: regular adv search
     params = add_keyword_to_params(keywords,params)
     return parse_gallica_adv_search(params)
-
+"""
 def remove_all_words(keywords,params):
     if "All Words" in params:
         if not keywords=="":
@@ -180,7 +205,7 @@ def remove_all_words(keywords,params):
         keywords += kw
         del params["All Words"]
     return keywords,params
-
+"""
 def add_keyword_to_params(keywords,params):
     if not "all" in params:
         if keywords and not keywords =="":
@@ -281,6 +306,12 @@ opt_map = {
     'or':'?',
     'except':'-'
     }    
+
+opt_type_map = {
+    '':'and',
+    '?':'or',
+    '-':'except'
+    }
     
 valid_keys=["start date",
     "end date",

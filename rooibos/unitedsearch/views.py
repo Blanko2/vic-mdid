@@ -246,16 +246,19 @@ class usViewer():
                 kw = kw[:-1]
 
             query = "keywords="+kw+",params={"+par+"}"
-        if query:
-            print "query"
-        elif searcher_identifier=="gallica":
-            # Case 2: gallica adv search from side bar
+            #Todo: translate query
+
+        elif query:
+            #Todo: translate query
+            print query
+        elif searcher_identifier == "gallica" or searcher_identifier == "trove":
+            # Case: gallica adv search from side bar
             params = get_params(request)
             query = build_query(params)
         else:
-            # Case 3: other adv search from side bar
+            # Case: other adv search from side bar
             print "processing case 3"
-            query2 = ""
+            query = ""
             params = get_params(request)
             print params
             all_words_key = all_words_map[searcher_identifier]
@@ -269,8 +272,8 @@ class usViewer():
                 if isinstance(params[key],list):
                     params.update({key:params[key][0]})
             params = str(params)
-            query2 = "keywords="+kw+",params="+params.replace('\'','\"').replace('u\"','\"')
-            print query2
+            query = "keywords="+kw+",params="+params.replace('\'','\"').replace('u\"','\"')
+            print query
 
         
         

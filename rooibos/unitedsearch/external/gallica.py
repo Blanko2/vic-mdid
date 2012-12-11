@@ -324,7 +324,10 @@ def getcopyright(params) :
     if params['copyright'] == 'All' :
         copy_string = ""
     else :
-        copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
+        copyright_str = params['copyright']
+        if isinstance(copyright_str,list):
+            copyright_str=copyright_str[0]
+        copy_string = "&t_free_access=" + copyright_codes[copyright_str]
     return copy_string    
 
 def getDate(date):
@@ -336,8 +339,7 @@ def get_empty_params():
     "languages": [],
     "copyright": [],
     "all": [],
-    "field": [],
-    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
+    "field": []
     }
  
 """ 

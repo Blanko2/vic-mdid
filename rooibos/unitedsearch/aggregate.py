@@ -7,6 +7,7 @@ def federatedSearchSource(searcher):
 	
 	class Search(FederatedSearch):
 		def hits_count(self, keyword):
+            #Todo: Pass keyword into Translator
 			"""
 			numHits = searcher.search(keyword, {}, 0, 0)
 			if not numHits:
