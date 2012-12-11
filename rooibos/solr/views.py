@@ -27,6 +27,7 @@ import copy
 import random
 import logging
 import string
+import json
 
 
 
@@ -564,7 +565,8 @@ def search(request, id=None, name=None, selected=False, json=False):
  
     if kws.startswith("keywords="):
         kws = kws.replace("keywords=","")
-
+    while kws.endswith('\\'):
+        kws = kws[:-1]
     query_string += "keywords=" + kws
     query_string = query_string.replace('\"','')
     
@@ -573,7 +575,10 @@ def search(request, id=None, name=None, selected=False, json=False):
     
 
     for key in query_list.keys() :
-      q = key+"="+query_list[key]
+      value = query_list[key]
+      while value.endswith('\\'):
+          value = value[:-1]
+      q = key+"="+value
       query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
     
@@ -703,7 +708,7 @@ def search_json(request, id=None, name=None, selected=False):
 
 def find_in_db(request, collection_id=None, field_id=None, value=None):
     print "in Find_IN_DB!!!!\n\n\n\n\n\n"
-    
+
     collection = collection_id and get_object_or_404(filter_by_access(request.user, Collection), id=collection_id) or None
 
     print "solr.views 709 field_id %s" %field_id
@@ -718,15 +723,27 @@ def find_in_db(request, collection_id=None, field_id=None, value=None):
     # rather than searching all searchers
     print "solr.views collection %s field %s value %s" %(collection, field, value)
 
-    values = FieldValue.objects.filter(field=field, value=value, record__collection=collection)
-    print "solr.views 719 values %s" %values.values()
-
+    record_ids = FieldValue.objects.filter(field=field, value=value, record__collection=collection).values_list('record', flat=True)
+    print "solr.views 726 ids %s" %record_ids
     
+    records = Record.objects.filter(id__in=record_ids).values_list('tmp_extthumb', 'name', 'source')
+    print "solr.views 729 records %s" %records
+    
+    keys = ['thumb_url', 'title', 'record_url']
+    dicts = []
+    for value_set in records:
+	dicts.append(dict(zip(keys,value_set)))
+    print "solr.views 735 %s" %dicts
+    
+    related_pages = [{"url": 'solr-browse', "title": "Back to Browse"}]
     return render_to_response('searcher-results.html',
-	{'results': values,
+	{'results': dicts,
+	'hits': len(records),		# TODO, make this use count
+	'browse': True,
 	'searcher_name': collection},
 	context_instance=RequestContext(request))
-	
+    
+    
   
 # Browse downloaded images
 def browse(request, id=None, name=None):

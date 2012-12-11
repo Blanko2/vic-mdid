@@ -231,16 +231,21 @@ class usViewer():
                         par +=","
                     if value.startswith("+"):
                         del value[0]
+                    while value.endswith('\\'):
+                        value = value[:-1]
                     par += "\""+key+"\":\""+value+"\""
                 else:
                     if not kw=="":
                         kw += "+"
                     kw += q
-
+            while kw.endswith('\\'):
+                kw = kw[:-1]
 
             query = "keywords="+kw+",params={"+par+"}"
-
-
+        else:
+            while query.endswith('\\'):
+                query = query[:-1]
+        
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
         for key in request.GET:
@@ -367,10 +372,11 @@ class usViewer():
             'url': image.url
         }))
         print "job "+job.arg
+        job.run()
         print "job.run()"
-        print str(job.run())
-        import time
-        time.wait(0)
+        #print str(job.status)
+        #import time
+        #time.wait(0)
         print "now returning from record"
         return record
 

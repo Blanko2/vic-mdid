@@ -24,14 +24,11 @@ def parse_gallica_sidebar(params):
         print params
         header = "field"
         tail = "_opt"
- 
-        
         i = 0
         type_key = "field0_type"
         value_key = "field0_value"
         opt_key = "field0"
         query_list=[]
-
         while i<5 :
             if i>0:
                 type_key = "field"+str(i)+"_opt_type"
@@ -55,8 +52,6 @@ def parse_gallica_sidebar(params):
                 del params[opt_key]
             i += 1
         
-        
-        
         params.update({"query_list":query_list})
         print "params in parser"
         print params
@@ -64,11 +59,15 @@ def parse_gallica_sidebar(params):
 
 def parse_gallica_adv_search(params):
     query_list = []
-    temp_params = params
+    temp_params = params.copy()
     for key in params:
+        print "params"
+        print params
         fixed_key = key
         opt = "and"
         value = params[key]
+        if isinstance(value, list):
+            value = list_to_str(value)
         if key.startswith('-'):
             opt = "except"
             fixed_key = key[1:]
@@ -94,11 +93,11 @@ def add_entry(query_list,entry):
     return ql
 
 def parse_gallica(query, params):
-  
     # Case1: advansed search called from side bar
     if "field0_type" in params:
         return parse_gallica_sidebar(params)
     params = {}
+    print query
     keywords,para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
     keywords, params = remove_all_words(keywords,params)
@@ -110,18 +109,21 @@ def parse_gallica(query, params):
     params = add_keyword_to_params(keywords,params)
     return parse_gallica_adv_search(params)
 
-
 def remove_all_words(keywords,params):
     if "All Words" in params:
         if not keywords=="":
             keywords += "+"
-        keywords += params["All Words"]
+        kw = params["All Words"]
+        if isinstance(kw,list):
+            kw = kw[0]
+        keywords += kw
         del params["All Words"]
     return keywords,params
 
 def add_keyword_to_params(keywords,params):
     if not "all" in params:
-        params.update({"all":keywords})
+        if keywords and not keywords =="":
+            params.update({"all":keywords})
     else:
         kw = params["all"]
         kw += "+"+keywords
@@ -204,8 +206,15 @@ def merge_query_list(keyword_list):
        temp_keyword_list.insert(0,[filter_type_map["all"],kw,opt_type_map["and"]])
     if not not_kw=="":
        temp_keyword_list.append([filter_type_map["all"],not_kw,opt_type_map["except"]])
-       
-       
+
+def list_to_str(l):
+    v = ""
+    for e in l:
+       if not v=="":
+           v +="+"
+       v += e
+    return v
+    
 valid_keys=["start date",
     "end date",
     "languages",

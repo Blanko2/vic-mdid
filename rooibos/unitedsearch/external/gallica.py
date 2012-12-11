@@ -101,6 +101,8 @@ URL BUILDERS
 ======================
 """
 def build_URL(keywords, params):
+    if not keywords and not params:
+        return build_simple_url('')
     if keywords:
         return build_simple_url(keywords)
     else:
@@ -110,10 +112,10 @@ def build_simple_url(keywords):
     arg = get_empty_params()
     arg.update({"simple_keywords":keywords})
     keywords = re.sub(" ", "+", keywords)
+    print re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
  
 def build_advanced_url(params):
-
     arg = {} #dict contains params with fixed structures for result interface to desplay the query
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
     arg, params, copyright, languages, start_date, end_date = build_arg(params)
@@ -127,6 +129,7 @@ def build_advanced_url(params):
     for sub_query in keyword_list:
         index = str(i)
         filter_type = filter_type_map[sub_query[0]]
+        value = sub_query[1]
         opt = opt_type_map[sub_query[2]]
         optionals_string += "&ope"+index+"="+opt+"&catsel"+index+"="+filter_type+"&cat"+index+"="+sub_query[1]
         i=i+1
@@ -142,8 +145,6 @@ def build_advanced_url(params):
     url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
     print url
     return url, arg 
-
-
 
 
 """
@@ -232,7 +233,7 @@ def getImage(json_image_identifier) :
     meta = {'title': image_identifier['title'],
             'author': __scrub_html_for_property("Author", descriptive_parser),
             }
-    return Image(url, params = build_URL(query, pa,
+    return RecordImage(url, params = build_URL(query, pa,
                  image_identifier['url'],
                  image_identifier['thumb'],
                  image_identifier['title'],

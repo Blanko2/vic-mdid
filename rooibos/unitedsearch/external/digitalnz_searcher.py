@@ -34,7 +34,6 @@ def search(query, params, offset, per_page=20):
         thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
         image = ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
-    
     return result,  params 
 
 # not worked on but should work anyway
@@ -51,7 +50,6 @@ def count(query, parameters={}):
         params = merge_dictionaries(parameters, params, params.keys())
     search_object = _load(keywords, params) 
     hits = int(search_object["search"]["result_count"]) 
-    
     return hits 
 
 """
@@ -131,7 +129,7 @@ def getImage(identifier):
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
-    return Image(location_url, thumbnail_url, title, image_object, identifier) 
+    return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
 
 
 """
