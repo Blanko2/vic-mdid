@@ -168,23 +168,22 @@ def format_date(date, format, separator):
     # first, check if date is just a year:
     year_match = re.match("^(\d{2,4})$", date)
     if year_match:
-	day_int = 1
-	month_int = 1
-	year_int = int(year_match.group(0)
-
-    # then, try matching full date
+      day_int = 1
+      month_int = 1
+      year_int = int(year_match.group(0))
+      # then, try matching full date
     else:
-    	date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
-	if date_match:
+      date_match = ("^(?P<day>(\d{0,2}))(?P<separator>\D?)(?P<month>(\d{0,2}))((?P=separator)|\D)(?P<year>(\d{2,4}))$", date)
+      if date_match:
 	day = date_match.group("day")
 	month = date_match.group("month")
 	year = date_match.group("year")
 	  
 	# regex always matches day over year if one is present, and we want to treat it as month
-	if day and not month
+	if day and not month:
 	  month = day
 	  day = "01"
-
+	  
 	day_int = int(day) if day else 1
 	month_int = int(month) if day else 1
 	year_int = int(year)

@@ -23,6 +23,7 @@ class usViewer():
 			url(r'^select/', self.select, name='select'))
 		self.searcher = searcher
 		self.namespace = mynamespace
+		
 	
 	def url_select(self):
 		return reverse(self.namespace + ':select')
@@ -134,8 +135,10 @@ class usViewer():
 		return read(self.searcher.parameters, [])
 	
 	def perform_search(self, request, resultcount):
+		
 		query = request.GET.get('q', '') or request.POST.get('q', '')
 		offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
+		
 		params = {}
 		for n in request.GET:
 			if n[:2] == "p-":
