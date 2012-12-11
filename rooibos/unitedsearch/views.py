@@ -112,7 +112,7 @@ class usViewer():
                 r = ["  "*indent + "<div>"]
                 indent += 1
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
-                r += ["  "*indent + "<div class=\"param-opt\">"]
+                r += ["  "*indent + "<div class=\"param-opt\">"]http://www.victoria.ac.nz/ecs/
                 r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
@@ -251,7 +251,7 @@ class usViewer():
         elif query:
             #Todo: translate query
             print query
-        elif searcher_identifier == "gallica" or searcher_identifier == "trove":
+        elif searcher_identifier== "gallica" or searcher_identifier == "trove":
             # Case: gallica adv search from side bar
             params = get_params(request)
             query = build_query(params)

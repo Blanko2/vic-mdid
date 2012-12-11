@@ -523,9 +523,9 @@ def search(request, id=None, name=None, selected=False, json=False):
     for c in criteria :
       m = crit_pattern.match(c)
       if query_list.has_key(str(m.group('type'))) :
-	    query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+        query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
       else:
-	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+        query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
       
     """
