@@ -4,30 +4,34 @@ import rooibos.unitedseach.common
 """
 generating language for the vic-MDID query language
 """
+searcher_identity='default'
 
 query_lang=[
+    '-',
+    '+',
+    '?',
     'keywords',
     'creator',
     'title',
     'start date',
-    'end date']
+    'end date',
+    'year',
+    'decade',
+    'century'
+    ]
 
-
-def searcher_translator(query_string, searcher_identity):
-    #translate between the query_lang and the 
-    # searcher dictionary
-    
+def searcher_translator(self, query, searcher_identity):
+    self.searcher_identity = searcher_identity 
     #use searcher id to get the correct dictionary 
-    query_string, params = common.break_query_string(query_string) 
+    keywords, params = common.break_query_string(query) 
+    #need to check if params contains values such as '+/?/-creator'
+    keywords += _check_valid(params)
     searcher_dictionary = searcher_to_dict(searcher_identity)
-    params = ""
-    keywords = "" 
-    searcher_query = "q=keywords:"+keywords+", params:"+params
-    return searcher_query
-
+    translated_dictionary = _translate(keywords, parameters, searcher_dictionary)
+    return translated_dictionary 
 
 """
-returns the searcher_dictionary equivalent to the 
+Returns the searcher_dictionary equivalent to the 
 searcher received
 """
 def searcher_to_dict(searcher_identity):
@@ -39,8 +43,27 @@ def searcher_to_dict(searcher_identity):
         'trove' : translator.trove_dict
     }.get(searcher_identity, translator.empty_dict)
    
-def translate(searcher_dict):
-    #do the actual translation
-    #create a new dictionary and populate 
-    # it with the values received from the 
-    # query string
+def _translate(self, keywords, parameters, searcher_dict):
+    translated_dictionary={} 
+    translated_keywords = searcher_dict['keywords'] 
+    if keywords:
+        translated_dictionary[translated_keywords] = keywords 
+    for key in parameters:
+        key_value = parameters[key]
+        translated_key = searcher_dict[key]
+        translated_dict[translated_key] = key_value
+    return translated_dict 
+"""
++ and - and ? not implemented
+NGA does not have an or
+"""
+def _check_valid(parameters):
+    keywords=""
+    for p in parameters:
+        if p not in query_lang:
+            keywords+="+"parameters[p]
+    return keywords     
+
+     
+
+
