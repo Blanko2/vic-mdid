@@ -583,7 +583,7 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     
     if not kws_not is '':
-      query_string += ', '+"not="+kws_not
+      query_string += ', '+"-="+kws_not
     
 
     #print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"

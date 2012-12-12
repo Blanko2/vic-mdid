@@ -6,76 +6,6 @@ import re
 import json
 
 
-def build_query(params):
-        print "start"
-        print params
-        query = ""
-        para_map = {}
-        temp_params = params.copy()
-        i = 0
-        type_key = "field0_type"
-        value_key = "field0_value"
-        opt_key = "field0"
-        query_list=[]
-        while i<5 :
-            if i>0:
-                type_key = "field"+str(i)+"_opt_type"
-                value_key = "field"+str(i)+"_opt_value"
-                opt_key = "field"+str(i)+""
-            if type_key and value_key in params:
-                field_type = params[type_key]
-                value  = str(params[value_key])
-                opt = ""
-                if opt_key in params:
-                    opt = opt_map[params[opt_key]]
-                if field_type and value and not value=="":
-                    print field_type
-                    print value
-                    entry_key= str(opt+field_type)
-                    para_map = update_para_map(para_map,entry_key,value)
-            if type_key in params:
-                del params[type_key]
-            if value_key in params:
-                del params[value_key]
-            if opt_key in params:
-                del params[opt_key]
-            i += 1
-        print "para_map"
-        print para_map
-        for entry_key in params:
-            value = params[entry_key]
-            if isinstance(value,list):
-                value = value[0]
-            if not value =='':
-                para_map = update_para_map(para_map,entry_key,value)
-        kw = ""
-        if "all" in para_map:
-            kw = para_map["all"]
-            del para_map["all"]
-        query = "keywords="+kw+",params="+str(para_map)
-        query = query.replace('\'','\"').replace('u\"','\"')
-        print "gallica query"
-        print query
-        return query
-    
-def update_para_map(para_map,key,value):
-    if not key in para_map:
-        para_map.update({key:value})
-    else:
-        value = para_map[key]+"+"+value
-        para_map.update({key:value})
-    return para_map
-
-def parse_params(query, params):
-    for key in query:
-        if key.startswith("i_"):
-            params.update({key.replace("i_",''):query[key]})
-    return params
-
-
-
-
-
 def parse_gallica_sidebar(params):
         print "original params"
         print params
@@ -118,15 +48,17 @@ def parse_gallica_adv_search(params):
     query_list = []
     temp_params = params.copy()
     for key in params:
-        if key in field_types:
-            opt = ''
-            fixed_key = key
-            if key.startswith('-') or key.startswith('?'):
+        opt = ''
+        fixed_key = key
+        if key.startswith('-') or key.startswith('?'):
                 opt = key[0]
                 fixed_key = key[1:]
+        if fixed_key in field_types:
             entry = [fixed_key, params[key], opt_type_map[opt]]
             query_list = add_entry(query_list, entry)
             del temp_params[key]
+    print "final query_list"
+    print query_list
     temp_params.update({"query_list":query_list})
     params = temp_params
     return None, params
@@ -176,24 +108,18 @@ def add_entry(query_list,entry):
         ql.append(entry)
     return ql
 
-def parse_gallica(keywords, params):
-    # Case1: advansed search called from side bar
-    """
-    if "field0_type" in params:
-        return parse_gallica_sidebar(params)
-    params = {}
-    print query
-    keywords,para_map = break_query_string(query)
-    params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-    keywords, params = remove_all_words(keywords,params)
-    #Case 2: simple search
-    """
-    if params=={}:
-        return keywords, None
-    
-    #Case 3: regular adv search
-    params = add_keyword_to_params(keywords,params)
-    return parse_gallica_adv_search(params)
+def parse_gallica(params):
+    print "-----------gallica parser---------"
+    print params
+    if "all" in params and len(params)==1:
+        i = 1
+        return params['all'],None
+    else:
+        return parse_gallica_adv_search(params)
+    return "cat",{}
+        
+
+
 """
 def remove_all_words(keywords,params):
     if "All Words" in params:

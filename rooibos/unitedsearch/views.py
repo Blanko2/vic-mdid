@@ -16,6 +16,8 @@ import searchers
 import sys
 import traceback
 from rooibos.unitedsearch.external.gallica_parser import *
+#from rooibos.unitedsearch.external.translator.query_language import *
+from rooibos.unitedsearch.external.translator.query_parser import *
 
 
 class usViewer():
@@ -112,7 +114,7 @@ class usViewer():
                 r = ["  "*indent + "<div>"]
                 indent += 1
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
-                r += ["  "*indent + "<div class=\"param-opt\">"]http://www.victoria.ac.nz/ecs/
+                r += ["  "*indent + "<div class=\"param-opt\">"]
                 r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
@@ -164,7 +166,7 @@ class usViewer():
                 
         return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
-    
+    """
     def readargs(self, getdata):
         inputs = dict([(n[2:], getdata[n]) for n in getdata if n[:2] == "i_"])
         def read(params, prefix):
@@ -204,7 +206,7 @@ class usViewer():
                 #if "_".join(prefix) in inputs:
                 #   return inputs["_".join(prefix)]
         return read(self.searcher.parameters, [])
-    
+    """
 
     
     def perform_search(self, request, resultcount):
@@ -212,83 +214,21 @@ class usViewer():
         #print "unitedsearch/views.py.perform_search: request.GET:"
         #print request.GET
         searcher_identifier = self.searcher.identifier
+        all_query = request.GET.copy()
         query = request.GET.get('q', '') or request.POST.get('q', '')
-        print "AAAAAAAAAAAAAAA"
+        print "query ================================="
         print query
-        if query and "=" in query and not "params={" in query:
-            # Case : adv search query from simple search side bar
-            # Todo: merge with translator
-            kw = ""
-            par = ""
-            query_list = query.split(',')
-            for q in query_list:
-                if "=" in q:
-                    key_value = q.split("=")
-                    key = key_value[0]
-                    value = key_value[1]
-                    del key_value[0]
-                    del key_value[0]
-                    if len(key_value)>0 :
-                        for v in key_value:
-                            value += "+"+v
-                    if not par=="":
-                        par +=","
-                    if value.startswith("+"):
-                        del value[0]
-                    while value.endswith('\\'):
-                        value = value[:-1]
-                    par += "\""+key+"\":\""+value+"\""
-                else:
-                    if not kw=="":
-                        kw += "+"
-                    kw += q
-            while kw.endswith('\\'):
-                kw = kw[:-1]
-
-            query = "keywords="+kw+",params={"+par+"}"
-            #Todo: translate query
-
-        elif query:
-            #Todo: translate query
-            print query
-        elif searcher_identifier== "gallica" or searcher_identifier == "trove":
-            # Case: gallica adv search from side bar
-            params = get_params(request)
-            query = build_query(params)
-        else:
-            # Case: other adv search from side bar
-            print "processing case 3"
-            query = ""
-            params = get_params(request)
-            print params
-            all_words_key = all_words_map[searcher_identifier]
-            kw = ''
-            while kw.endswith('\\'):
-                kw = kw[:-1]
-            if all_words_key in params:
-                kw = params[all_words_key]
-                del params[all_words_key]
-            for key in params:
-                if isinstance(params[key],list):
-                    params.update({key:params[key][0]})
-            params = str(params)
-            query = "keywords="+kw+",params="+params.replace('\'','\"').replace('u\"','\"')
-            print query
-
-        
-        
-
-
-
-
-        
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
+        """
         params = {}
         for key in request.GET:
             if key.startswith("i_"):
                 params.update({key[2:]:request.GET[key]})
-
-        result,args = self.searcher.search(query, params, offset, resultcount)
+        """
+        
+        params = parse(request,searcher_identifier)
+        
+        result,args = self.searcher.search(None, params, offset, resultcount)
         results = result.images
 
         def resultpart(image):
@@ -322,7 +262,8 @@ class usViewer():
             prev_off = result.total-len(result.images)-50
           if prev_off <0:
             prev_off=0
-          prev = self.__url_search_({ 'q': query, 'from': prev_off })
+          all_query.update({'from':prev_off})
+          prev = self.__url_search_(all_query)
 
         nextPage = None
         
@@ -331,17 +272,20 @@ class usViewer():
         lastPage = None
         
         if int(offset)>0:
-          firstPage = self.__url_search_({ 'q': query, 'from': 0 })
+          all_query.update({'from':0})
+          firstPage = self.__url_search_(all_query)
         
         if (int(result.nextoffset)<int(result.total)):
-          nextPage = self.__url_search_({ 'q': query, 'from': result.nextoffset })
+          all_query.update({'from':result.nextoffset})
+          nextPage = self.__url_search_(all_query)
           
         if (nextPage):
           num_lastPageResult = result.total%50
           if num_lastPageResult==0:
             num_lastPageResult=50
           lastOffset = result.total-num_lastPageResult
-          lastPage = self.__url_search_({ 'q': query, 'from': lastOffset })
+          all_query.update({'from':lastOffset})
+          lastPage = self.__url_search_(all_query)
           
         query = ""
         if "simple_keywords" in args:

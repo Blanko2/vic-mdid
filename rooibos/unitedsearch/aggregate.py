@@ -16,6 +16,8 @@ def federatedSearchSource(searcher):
 			"""
 			#once the count method is implemented in each database, 
 			# switch to this:
+			print "keyword"
+			print keyword
 			return searcher.count(keyword)
 
 		def get_label(self):
