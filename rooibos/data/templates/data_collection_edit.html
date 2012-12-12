@@ -12,6 +12,24 @@
             if (!confirm("Are you sure you want to delete this collection?"))
                 event.preventDefault();
         });
+
+	// suggest saving before user leaves page
+	var unsaved_changes = false;
+	$('#edit-form').keypress(function() {
+	    unsaved_changes = true;
+	    $('#submit_button').css("font-weight", "bolder");
+	});
+	$('#edit-form').submit(function() {
+	    unsaved_changes = false;
+	});
+	$(window).bind('beforeunload', function() {
+	    if (unsaved_changes) {
+		var r = confirm("You have unsaved changes. Press ok to save them, cancel to discard.");
+		if (r==true) {
+		    $('#edit-form').submit();
+		}
+	    }
+	});
     });
 </script>
 {% endblock %}
@@ -88,7 +106,7 @@
 
 <h2>{{ collection.title }}</h2>
 
-<form action="." method="POST" class="vertical">{% csrf_token %}
+<form action="." method="POST" class="vertical" id="edit-form">{% csrf_token %}
 
 
 {{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}
@@ -100,7 +118,7 @@
 
 <div class="row">
     <br />
-    <input type="submit" value="{% if collection.id %}Update{% else %}Create{% endif %}" />
+    <input type="submit" value="{% if collection.id %}Update{% else %}Create{% endif %}" id="submit_button"/>
     <a href="{% url data-collections-manage %}">Cancel</a>
 </div>
 

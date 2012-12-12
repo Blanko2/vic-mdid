@@ -18,7 +18,11 @@
 
 	$(window).bind('beforeunload', function() {
 	    if (unsaved_changes)
-		return 'Contining will abandon this presentation';
+		var r = confirm("You have unsaved changes. Press ok to save them, cancel to discard.");
+		if (r==true){
+		    unsaved_changes = false;
+		    $('form').submit();
+		} // else, keep leaving...
 	});
     });
 </script>
@@ -59,6 +63,10 @@
     {% if next %}
     <a href="{{ next }}">Cancel</a>
     {% endif %}
+</div>
+
+<div id='dialog' style='display:none;'>
+    <p>Hi</p>
 </div>
 
 </form>
