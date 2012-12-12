@@ -17,6 +17,7 @@ import sys
 import traceback
 
 class usViewer():
+
     def __init__(self, searcher, mynamespace):
         self.urlpatterns = patterns('',
             url(r'^search/', self.search, name='search'),
@@ -96,7 +97,6 @@ class usViewer():
             elif isinstance(params, DoubleParameter):
                 print 'doubleparameter'
                 r = ["  "*indent + "<div>"]
-
                 r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
 

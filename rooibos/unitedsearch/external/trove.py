@@ -22,6 +22,7 @@ get a key associated with the university
 """
 TROVE_KEY = "ot2eubi7h2ef5qjn"
 api = True
+TROVE_DEBUG = False
 
 """API technical docs:
 http://trove.nla.gov.au/general/api-technical
@@ -87,11 +88,39 @@ def parse_api_results(soup):
     works = soup.findAll("work")
     for work in works:
         id = work["id"]
-        thumb=""
         thumbId = work.find("identifier", attrs={'linktype':'thumbnail'})
+        thumb= None
         if thumbId:
-            thumb = thumbId.text
-        image = get_image_from_thumb(thumb)
+            thumb = thumbId.text.replace("&amp;", "&")
+        """
+        if not thumb:
+            text = work.find("identifier", attrs={'linktype':'fulltext'})
+            thumb = text.text.replace("&amp;", "&") if text else None
+        if not thumb:
+            trove = work.find("troveUrl")
+            thumb = trove.text.replace("&amp;", "&") if trove else None
+        """
+        if thumb and thumb not in "":
+            image = thumb
+            thumb = get_image_from_thumb(thumb)
+            #thumbnail is full image as attempted by get_image_from_thumb
+            #link is to the original thumbnail so we can see what went wrong
+            if not thumb:
+                thumb = "../../../../static/images/thumbnail_unavailable.png"
+                #this image source is not implemented, but didn't fail
+        else:
+            thumb = "../../../../static/images/nothumbnail.jpg"
+            image=None
+            #thumbnail wasn't included in the data we got from api
+            text = work.find("identifier", attrs={'linktype':'fulltext'})
+            image = text.text.replace("&amp;", "&") if text else None
+            if not image:
+                trove = work.find("troveUrl")
+                image = trove.text.replace("&amp;", "&") if trove else None
+                #at worst, this should take you to troveUrl
+                if not image:
+                    print "\n\n\n\n\n\n\n\nSomething went horribly wrong in trove.py, no troveUrl in record:"
+                    print "work:\n"+str(work)
         desc = ""
         descId = work.find("title")
         if descId:
@@ -135,6 +164,9 @@ def parse_results(soup):
         #"""
         desc = title if title else kw.text
         image = get_image_from_thumb(thumb)
+        if not image:
+            image = thumb
+            thumb = ""
         data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
         if thumb:
             #images.append([TROVE_URL+description if description else get_image_from_thumb(thumb), thumb, kw.text if kw else title, str(id)])
@@ -146,20 +178,58 @@ def parse_results(soup):
     print "trove.py, search, found a page with "+str(len(images))+" results"
     return images
 
-def get_image_from_thumb(thumb):
-    url = thumb.replace("_t.", ".")
+def get_image_from_thumb(url):
+    if "static.flickr.com" in url:
+        return url.replace("_t.", ".")
     if "quod.lib.umich.edu" in url:
+        #if it's part of a smaller collection, i think, entryid will change to x-<something>, can't guess what
         arts = re.findall("[^_]+", re.findall("[^jpg]+", re.findall("[^/]*.jpg", url)[0])[0].strip('.'))
-        if arts and len(arts) is 2:
-            return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?viewid="+arts[0]+"_"+arts[1]+".JPG;cc=musart;entryid=x-"+arts[0]+"-SL-"+arts[1]+";quality=m800;view=image"
-    url = url.replace("/SML/", "/LRG/")
-    url = url.replace("_DAMt", "_DAMl").replace("t.jpg", "r.jpg")
-    url = url.replace(".JPG.jpg", ".JPG")
+        col = re.findall("[^/]+/thumb", url)[0].split("/")[0]
+        if len(arts) is 2:
+            return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?c="+col+"&cc="+col+"&entryid=" +arts[0]+"-"+arts[1]+ "&viewid=" +arts[0]+"_"+arts[1]+ "&width=10000&height=10000&res=3"
+        elif len(arts) is 1:
+            return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?c="+col+"&cc="+col+"&entryid=" +arts[0]+ "&viewid=" +arts[0]+ "&width=10000&height=10000&res=3"
+            #&res=quality divider, set to 3 by default, higher numbers shrink picture
+        return url #or fail
+    if "artsearch.nga.gov.au" in url:
+        return url.replace("/SML/", "/LRG/")
+    if "http://acms.sl.nsw.gov.au" in url:
+        return url.replace("_DAMt", "_DAMl").replace("t.jpg", "r.jpg")
+    if "territorystories" in url:
+        return url.replace(".JPG.jpg", ".JPG")
     url = url.replace("/thum/", "/full/").replace("s.jpg", ".jpg")
-    if "thumbnail.exe" in url:
-        url = url.replace("thumbnail.exe", "getimage.exe") + "&DMSCALE=0&DMWIDTH=0"
-    url = url.replace("/thumbnail/", "/reference/")
-
+    if "images.slsa.sa.gov.au" in url:
+        return url.replace("/mpcimgt/", "/mpcimg/")
+    if "recordsearch.naa.gov.au" in url:
+        num = re.findall("Number=([0-9]*)", url)[0]
+        return "http://recordsearch.naa.gov.au/NAAMedia/ShowImage.asp?T=P&S=1&B="+num
+    if "lib.uwm.edu" in url:
+        return url.replace("thumbnail.exe", "getimage.exe") + "&DMSCALE=0&DMWIDTH=0"
+    #url = url.replace("/thumbnail/", "/reference/")
+    if "nla.gov.au" in url:
+        return url.replace("-t", "-v")
+    if "www.leodis.net" in url:
+        return url
+    if "slv.vic.gov.au" in url: #sometimes digital.slv, sometimes www.slv
+        #don't know how to get full size image, sorry
+        return None
+    if "digitallibrary.usc.edu" in url: #don't know how to get full image
+        return None
+    if "slwa.wa.gov.au" in url:
+        return url.replace(".png", ".jpg")
+    if "salemhistory.net" in url:
+        col = re.findall("CISOROOT=/[^&]+", url)[0].split("=/")[1]
+        image = re.findall("CISOPTR=[^&]+", url)[0].split("=")[1]
+        return "http://photos.salemhistory.net/utils/getprintimage/collection/"+col+"/id/"+image+"/scale/100/width/10000/height/10000"
+        return url.replace("", "")
+    if "" in url:
+        return url.replace("", "")
+    if "" in url:
+        return url.replace("", "")
+    if "" in url:
+        return url.replace("", "")
+    if "" in url:
+        return url.replace("", "")
     """
     http://quod.lib.umich.edu/m/musart/thumb/1/2/5/1958_1.125.jpg
     turns to
@@ -169,7 +239,7 @@ def get_image_from_thumb(thumb):
     no idea what to turn it into, main page:
     http://content.cdlib.org/ark:/13030/kt3v19r78d/
     """
-    return url
+    return None#url
 def build_URL(query, params):
     fields_string=""
     fields = {}
@@ -308,7 +378,8 @@ def get_search_result_parser(base_url, offset, per_page) :
             html += line
     else:
         #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
-        html = urllib2.open(page_url)
+        opener = proxy_opener()
+        html = opener.open(page_url)
     #html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
     #print html
     search_results_parser = BeautifulSoup(html)
