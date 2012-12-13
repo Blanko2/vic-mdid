@@ -57,8 +57,8 @@ def parse_complex_sidebar(params):
         query_list=[]
         while i<5 :
             if i>0:
-                type_key = "field"+str(i)+"_opt_type"
-                value_key = "field"+str(i)+"_opt_value"
+                type_key = "field"+str(i)+"_type"
+                value_key = "field"+str(i)+"_value"
                 opt_key = "field"+str(i)+""
             if type_key and value_key in params:
                 field_type = params[type_key]
@@ -157,14 +157,9 @@ def update_para_map(para_map,key,value):
 def get_params(request):
         params = {}
         for key in request.GET:
-            if key.startswith('i_'):
+            if key.startswith('i_') and not key.endswith("_opt"):
                 params.update({key[2:]:request.GET[key]})
-        keys = params.keys()
-        for key in keys:
-            key2 = key+"_opt"
-            if key in params and key2 in params:
-                params.update({key:params[key2]})
-                del params[key2]
+
         return params    
         
 

@@ -112,7 +112,6 @@ def count(keyword):
 
 def getImage(json_image_identifier) :
     # return an Image
-
     image_identifier = json.loads(json_image_identifier)
     title, meta = __get_image_properties_from_imageSpecific_page(image_identifier['id'])
     return RecordImage(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
@@ -120,19 +119,18 @@ def getImage(json_image_identifier) :
 
 """
 """
-def search(query, params, off, num_results_wanted) :
+def search(query ,params, off, num_results_wanted) :
+    print "nga"
+    print query
+    print params
+    query = "cat"
+    params = {"all words":"cat"}
     arg = get_empty_params()
     """ Get the actual results! Note, method must be called 'search'"""
     off = (int)(off)     # type of off varies by searcher implementation
-
-    print "In nga.py ln 236"
     params, unsupported_params, url_base = build_parameters(query, params)
     no_query = True;
-    print params
-    for key in params:
-        key2 = key+"_opt"
-        if key2 in params:
-            params.update({key:params[key2]})
+
     for key in params:
         value = params[key]
         if isinstance(value,list):
@@ -142,36 +140,25 @@ def search(query, params, off, num_results_wanted) :
         if params[p][0]:
             no_query = False
     if no_query:
-        #print "Not searching NGA, no query given (nga.py ln 242)"
         return Result(0, off), arg
-
     # get the image details
     searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
-
     website_search_results_parser = BeautifulSoup(searchhtml)
-
     if not any_results(website_search_results_parser) :
         return Result(0, off), arg
-
     list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
-
     # ensure the correct number of images found
     num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
-
     count = __count(website_search_results_parser)
     if off>count:
         return search(query,params,0,50)
     else:
         num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
-
-    #print"wanted"
-    #print num_results_wanted
     if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
         tmp = 0
         while len(list_of_image_ids) < num_results_wanted and tmp<1:
             searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off+len(list_of_image_ids))
             website_search_results_parser = BeautifulSoup(searchhtml)
-
             results = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
             if len(results[0])==0:
                 break
@@ -182,7 +169,6 @@ def search(query, params, off, num_results_wanted) :
                 list_of_image_ids.append(results[0][i])
                 thumbnail_urls.append(results[1][i])
                 image_descriptions.append(results[2][i])
-
     if (len(list_of_image_ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and image_descriptions self-regulate to never be more
         while (len(list_of_image_ids) > num_results_wanted) :
             list_of_image_ids.pop()
@@ -193,6 +179,8 @@ def search(query, params, off, num_results_wanted) :
     if is_simple_search(arg):
         arg.update({"simple_keywords":str(arg["all words"])})
         arg.update({"all words":[]})
+    print 'NGA ===== 180'
+    print arg
     return resulting_images, arg
 
 """
@@ -313,19 +301,6 @@ parameters = MapParameter({
     "access": OptionalParameter(ScalarParameter(str))
     })
     
-empty_params = {"all words": [],
-    "exact phrase": [],
-    "exclude words": [],
-    "artist": [],
-    "title": [],
-    "accession number": [],
-    "classification": [],
-    "school": [],
-    "medium": [],
-    "start date": [],
-    "end date": [],
-    "access": []
-    }
     
 def get_empty_params():
     return {"all words": [],

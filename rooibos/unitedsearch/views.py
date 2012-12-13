@@ -42,14 +42,9 @@ class usViewer():
     def htmlparams(self, defaults):    
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
-            
-            
             if isinstance(params, DefinedListParameter):
-                #print "DefinedListParameter : ----------"
-
                 options = params.options or []
                 r_content = "  "*indent + (label + ": " if params.label else "") 
-                #r_content += "<select name=\"i_"[0]+str( + "_".join(prefix) + "\"" + ("" or default and " value=\"" + default + "\"") + ">"
                 r_content += "<select name=\"i_" + "_".join(prefix) + "\""
                 if params.multipleAllowed :
                   r_content += " multiple = \"multiple\""
@@ -70,7 +65,6 @@ class usViewer():
             elif isinstance(params, MapParameter):
                 r = ["  "*indent + "<div>"]
                 reversed_keys = params.parammap.keys()
-
                 if "field" in reversed_keys:
                     reversed_keys.remove("field")
                     reversed_keys.insert(0,"field")
@@ -94,8 +88,6 @@ class usViewer():
                 index =0
                 i = 0
                 for v in params.paramlist :
-                    #print "default ========"
-                    #print default
                     r += out(v, indent+1, [str(prefix[0])+str(index)], default and default[i] or None)
                     index = index+1
                     i = i+1
@@ -113,9 +105,9 @@ class usViewer():
             elif isinstance(params, OptionalParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 1
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix+ ["opt"]) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
+                r += out(params.subparam, indent + 1, prefix , default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
                 r += ["  "*indent + "</div>"]
@@ -124,46 +116,39 @@ class usViewer():
             elif isinstance(params, OptionalDoubleParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 2
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix+ ["opt"]) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 2
                 r += ["  "*indent + "</div>"]
                 return r
             
             elif isinstance(params, UserDefinedTypeParameter) :
-                  options = params.type_options or []
-                  r_content = "  "*indent + (label + ": " if params.label else "")
-                  
-                  r_content += "<div>"
-                  
-                  # select box for the type options
-                  r_content += "<select name=\"i_" + "_".join(prefix) +"_type"+ "\">"
-                  selected = options[0]
-                  if default:
-                      selected = default[0]
-                  
-                  for option in options :
-                    if option == selected:
-                        r_content += "<option selected=\"selected\" value=" + option
-                    else: 
-                        r_content += "<option value=" + option
-                    r_content += ">" + option + "</option>"
-                  r_content += "</select><br>"
-                  
-                  # textbox for value
-                  if default and len(default) >0:
-                    value = default[1]
-                  else:
-                    value = ""
-                  r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
-                  
-                  r_content += "</div>"
-                  
-                  return [r_content]
-                
+                options = params.type_options or []
+                r_content = "  "*indent + (label + ": " if params.label else "")
+                r_content += "<div>"
+                # select box for the type options
+                r_content += "<select name=\"i_" + "_".join(prefix) +"_type"+ "\">"
+                selected = options[0]
+                if default:
+                    selected = default[0]
+                for option in options :
+                  if option == selected:
+                      r_content += "<option selected=\"selected\" value=" + option
+                  else: 
+                      r_content += "<option value=" + option
+                  r_content += ">" + option + "</option>"
+                r_content += "</select><br>"
+                # textbox for value
+                if default and len(default) >0:
+                  value = default[1]
+                else:
+                  value = ""
+                r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
+                r_content += "</div>"
+                return [r_content]        
         return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
     """
@@ -207,12 +192,7 @@ class usViewer():
                 #   return inputs["_".join(prefix)]
         return read(self.searcher.parameters, [])
     """
-
-    
     def perform_search(self, request, resultcount):
-        
-        #print "unitedsearch/views.py.perform_search: request.GET:"
-        #print request.GET
         searcher_identifier = self.searcher.identifier
         all_query = request.GET.copy()
         query = request.GET.get('q', '') or request.POST.get('q', '')
@@ -249,28 +229,18 @@ class usViewer():
                 }
 
         prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
-        
-        
-        
         prev = None
-        
         if int(offset)>0 :
-
           prev_off =int(offset)-50
-          
           if prev_off > int(result.total):
             prev_off = result.total-len(result.images)-50
           if prev_off <0:
             prev_off=0
           all_query.update({'from':prev_off})
           prev = self.__url_search_(all_query)
-
         nextPage = None
-        
         firstPage = None
-        
         lastPage = None
-        
         if int(offset)>0:
           all_query.update({'from':0})
           firstPage = self.__url_search_(all_query)
@@ -305,11 +275,8 @@ class usViewer():
             }
         
     def search(self, request):
-        
         a = self.perform_search(request,50)
-        #print "previous_page: %s" % a["previous_page"]
         return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
-
 
     def record(self, identifier):
         #print "in record, identifier = "+str(identifier)
