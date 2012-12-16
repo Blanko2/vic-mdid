@@ -109,6 +109,8 @@ def add_entry(query_list,entry):
     return ql
 
 def parse_gallica(params):
+    if not params:
+        return "cat",{}
     print "-----------gallica parser---------"
     print params
     if "all" in params and len(params)==1:

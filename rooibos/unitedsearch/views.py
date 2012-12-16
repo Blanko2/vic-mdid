@@ -195,9 +195,8 @@ class usViewer():
     def perform_search(self, request, resultcount):
         searcher_identifier = self.searcher.identifier
         all_query = request.GET.copy()
-        query = request.GET.get('q', '') or request.POST.get('q', '')
-        print "query ================================="
-        print query
+        #query = request.GET.get('q', '') or request.POST.get('q', '')
+
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         """
         params = {}
@@ -206,7 +205,7 @@ class usViewer():
                 params.update({key[2:]:request.GET[key]})
         """
         
-        params = parse(request,searcher_identifier)
+        query, params = parse(request,searcher_identifier)
         
         result,args = self.searcher.search(None, params, offset, resultcount)
         results = result.images
@@ -257,9 +256,9 @@ class usViewer():
           all_query.update({'from':lastOffset})
           lastPage = self.__url_search_(all_query)
           
-        query = ""
+        query_language = ""
         if "simple_keywords" in args:
-            query = args["simple_keywords"]
+            query_language = args["simple_keywords"]
 
         return {
                 'results': map(resultpart, results),
@@ -271,7 +270,7 @@ class usViewer():
                 'hits': result.total,
                 'searcher_name': self.searcher.name,
                 'html_parameters': self.htmlparams(args),
-                'query': query
+                'query': query_language
             }
         
     def search(self, request):

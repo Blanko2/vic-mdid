@@ -29,10 +29,10 @@ def parse(request, identifier):
         # Case : User input query language
         query = parse_query_language(query)
         #Todo : pass to translator
-        return {"all":"cat"}
+        return query,None
     elif query:
         #Todo : pass to translator
-        return {"all":"cat"}
+        return query, None
     else :
         return parse_sidebar(request,identifier)
 
@@ -86,14 +86,14 @@ def parse_complex_sidebar(params):
                 value = value[0]
             if not value =='':
                 para_map = update_para_map(para_map,entry_key,value)
-        return para_map
+        return None, para_map
 
 #Parse regular sidebar         
 def parse_regular_sidebar(params):
         for key in params:
             if isinstance(params[key],list):
                     params.update({key:params[key][0]})
-        return params
+        return None, params
         
 def parse_query_language(query):        
             kw = ""
