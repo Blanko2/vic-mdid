@@ -38,10 +38,7 @@ class usViewer():
     def htmlparams(self, defaults):
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
-            print "VIEWS ----------------- 40"
-            print params.label
             if isinstance(params, DefinedListParameter):
-                print 'defined list parameter'
                 options = params.options or []
                 r_content = "  "*indent + (label + ": " if params.label else "") 
                 r_content += "<select name=\"i_" + "_".join(prefix) + "\""
@@ -62,7 +59,6 @@ class usViewer():
                 return [r_content]
             
             elif isinstance(params, MapParameter):
-                print 'map parameter'
                 r = ["  "*indent + "<div>"]
                 reversed_keys = params.parammap.keys()
                 if "field" in reversed_keys:
@@ -84,7 +80,6 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ListParameter):
-                print 'list parameter'
                 r = ["  "*indent + "<div>"]
                 index =0
                 i = 0
@@ -95,7 +90,6 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, DoubleParameter):
-                print 'doubleparameter'
                 r = ["  "*indent + "<div>"]
                 r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
                 r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
@@ -103,10 +97,8 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ScalarParameter):
-                print 'scalarparameters'
                 return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
             elif isinstance(params, OptionalParameter):
-                print 'optional params'
                 r = ["  "*indent + "<div>"]
                 indent += 1
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
@@ -116,9 +108,7 @@ class usViewer():
                 indent -= 1
                 r += ["  "*indent + "</div>"]
                 return r
-            
             elif isinstance(params, OptionalDoubleParameter):
-                print 'opt double params'
                 r = ["  "*indent + "<div>"]
                 indent += 2
                 r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
@@ -129,9 +119,7 @@ class usViewer():
                 indent -= 2
                 r += ["  "*indent + "</div>"]
                 return r
-            
             elif isinstance(params, UserDefinedTypeParameter) :
-                print 'user def params'
                 options = params.type_options or []
                 r_content = "  "*indent + (label + ": " if params.label else "")
                 r_content += "<div>"
@@ -155,8 +143,6 @@ class usViewer():
                 r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
                 r_content += "</div>"
                 return [r_content]
-        print "VIEWS ================= 151"
-        print self.searcher.parameters.parammap        
         return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
     
@@ -229,21 +215,17 @@ class usViewer():
                     kw += q
             while kw.endswith('\\'):
                 kw = kw[:-1]
-
             query = "keywords="+kw+",params={"+par+"}"
         else:
             while query.endswith('\\'):
                 query = query[:-1]
-        
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
         params = {}
         for key in request.GET:
             if key.startswith("i_"):
                 params.update({key[2:]:request.GET[key]})
-
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
-
         def resultpart(image):
             if isinstance(image, ResultRecord):
                 return {
@@ -275,21 +257,17 @@ class usViewer():
         lastPage = None
         if int(offset)>0:
           firstPage = self.__url_search_({ 'q': query, 'from': 0 })
-        
         if (int(result.nextoffset)<int(result.total)):
           nextPage = self.__url_search_({ 'q': query, 'from': result.nextoffset })
-          
         if (nextPage):
           num_lastPageResult = result.total%50
           if num_lastPageResult==0:
             num_lastPageResult=50
           lastOffset = result.total-num_lastPageResult
           lastPage = self.__url_search_({ 'q': query, 'from': lastOffset })
-          
         query = ""
         if "simple_keywords" in args:
             query = args["simple_keywords"]
-
         return {
                 'results': map(resultpart, results),
                 'select_url': self.url_select(),
@@ -398,8 +376,6 @@ class usViewer():
             r['id'] = simplejson.dumps(result)
             request.POST = r
         ans = select_record(request)
-        #print "ANSWER = "+str(ans)
-        print "/ANSWER"
         return ans
 
 class usUnionViewer(usViewer):

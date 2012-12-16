@@ -3,14 +3,17 @@ import urllib2
 from urllib import urlencode
 from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, proxy_opener 
 from django.conf import settings
+from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
 from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
 
 name = "DigitalNZ"
 identifier = "digitalnz"
 
-API_KEY="sfypBYD5Jpu1XqYBipX8"
+API_KEY = settings_local.DNZ_API_KEY
 CATEGORY_VALUE="&and[category][]=Images"
+#rights exist but I can't find out where the parameters for them lie
+RIGHTS_VALUE="&and[rights][]="
 
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
@@ -34,17 +37,13 @@ def search(query, params, offset, per_page=20):
         thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
         image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
-    return result, empty_params 
+    return result, get_empty_params() 
 
-# not worked on but should work anyway
 def previousOffset(offset, per_page):
     offset = int(offset)
     return offset > 0 and str(offset - per_page)
 
-# count should be done
 def count(query, parameters={}):
-    # need to get result, get json that composes it and then
-    # break that and get 'result_count' value
     keywords, params = break_query_string(query)
     if parameters != {}:
         params = merge_dictionaries(parameters, params, params.keys())
@@ -57,31 +56,20 @@ def count(query, parameters={}):
 URL BUILDERS###########
 =======================
 """
-"""
-Builds the URL:
-    there are several facets you can include and modifiers to those facets
-"""
 def _build_URL(query, params, per_page, page):
+    """
+    Builds the URL:
+        there are several facets you can include and modifiers to those facets
+    """
     keywords, para_map = break_query_string(query) 
     url = ""
     # need to change this to add in the facets correctly 
-    params, unsupported_params = merge_dictionaries(para_map, params, empty_params.keys()) 
-    """ 
-    facets = CATEGORY_VALUE
-    for p in params:
-        if params[p] != []:
-            facets += "&"+modifier+"["+p+"][]="+params[p]
-    for p in unsupported_params:
-        if unsupported_params[p] != []:
-            keywords += "+"+p
-    """
+    params, unsupported_params = merge_dictionaries(para_map, params, get_empty_params().keys()) 
     url =  _build_simple_URL(keywords, per_page, page)
     return url 
 
-"""
-returns a search url with all the given keywords, at the given page and with the number or specified results per page
-"""
 def _build_simple_URL(keywords, per_page, page):
+    """ returns a search url with all the given keywords, at the given page and with the number or specified results per page """
     keywords = keywords.replace(" ","+")
     url = BASE_SEARCH_API_URL+"&text="+keywords+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
     return url 
@@ -95,30 +83,23 @@ def _get_url(url):
     html = proxy_url.open(url)
     return html 
 
-"""
-returns a python object from the resulting json string from the given url
-"""
 def _load_url(url):
+    """ Returns a python object from the resulting json string from the given url """
     return json.load(_get_url(url))
 
-"""
-creates a url from a given query and loads the resulting json string into a python object
-"""
 def _load(keywords, params):
+    """ creates a url from a given query and loads the resulting json string into a python object """
     # should build a url and return the json string that it returns
     url = _build_URL(keywords, params, 20, 1)
     result_json = _get_url(url)    
     return json.load(result_json)
 
 
-"""
-modulates the offset to match a multiple of the page length -- if offset%per_page!=0 it changes to be the closest value
-to it which makes offset%per_page==0
-""" 
 def _modulate_offset(offset, per_page):
+    """ modulates the offset to match a multiple of the page length -- if offset%per_page!=0 it changes to be the closest value
+    to it which makes offset%per_page==0 """ 
     modulate = offset%per_page 
     diff_mod = per_page - modulate
-   
     if offset != 0 and modulate != 0:
         #offset = Minimum Necessary Change between the offset and a modulo of zero
         if modulate < diff_mod:
@@ -141,7 +122,13 @@ def getImage(identifier):
     return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
 
 def get_empty_params():
-    return empty_params
+    return {
+    "keywords":[],
+    "creator":[],
+    "century":[],
+    "decade":[],
+    "year":[]
+    }
 
 """
 ++++++++++++++++++++++++++
@@ -171,10 +158,3 @@ parameters = MapParameter({
     "decade":OptionalParameter(ScalarParameter(str)),
     "year":OptionalParameter(ScalarParameter(str))
     })
-empty_params = {
-    "keywords":[],
-    "creator":[],
-    "century":[],
-    "decade":[],
-    "year":[]
-    }
