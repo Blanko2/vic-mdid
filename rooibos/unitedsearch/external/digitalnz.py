@@ -3,7 +3,8 @@ import urllib2
 from urllib import urlencode
 from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, proxy_opener 
 from django.conf import settings
-
+import rooibos.unitedsearch as unitedsearch
+from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
 
 name = "DigitalNZ"
 identifier = "digitalnz"
@@ -15,26 +16,25 @@ BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 END_METADATA_LOCATION_URL=".json?"+API_KEY
 
-BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.rss?api_key="+API_KEY
+BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
     # build the URL 
     offset = _modulate_offset(int(offset), per_page)
-    nex_offset = offset+per_page
+    next_offset = offset+per_page
     page = offset/per_page +1 
-    
     url = _build_URL(query, params, per_page, page)
-    result_object = _load(url) 
+    result_object = _load_url(url) 
     hits = count(query, parameters = params) 
-    result = Result(hits, next_offset if next_offset < hits else None) 
+    result = unitedsearch.Result(hits, next_offset) 
     # add images
-    for object in result_objecti["results"]:
+    for object in result_object['search']["results"]:
         thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
-        image = ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
+        image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
-    return result,  params 
+    return result, empty_params 
 
 # not worked on but should work anyway
 def previousOffset(offset, per_page):
@@ -59,17 +59,22 @@ URL BUILDERS###########
 """
 """
 Builds the URL:
-    there are only ever simple searches because digitalNZ has a weird search API that doesn't properly include its own filters
+    there are several facets you can include and modifiers to those facets
 """
 def _build_URL(query, params, per_page, page):
     keywords, para_map = break_query_string(query) 
     url = ""
-    # need to put all params and para_map into keywords because
-    # dnz API accepts no useful parameters 
+    # need to change this to add in the facets correctly 
+    params, unsupported_params = merge_dictionaries(para_map, params, empty_params.keys()) 
+    """ 
+    facets = CATEGORY_VALUE
     for p in params:
-        keywords+= "+"+p
-    for p in para_map:
-        keywords+= "+"+p
+        if params[p] != []:
+            facets += "&"+modifier+"["+p+"][]="+params[p]
+    for p in unsupported_params:
+        if unsupported_params[p] != []:
+            keywords += "+"+p
+    """
     url =  _build_simple_URL(keywords, per_page, page)
     return url 
 
@@ -93,7 +98,7 @@ def _get_url(url):
 """
 returns a python object from the resulting json string from the given url
 """
-def _load(url):
+def _load_url(url):
     return json.load(_get_url(url))
 
 """
@@ -102,10 +107,8 @@ creates a url from a given query and loads the resulting json string into a pyth
 def _load(keywords, params):
     # should build a url and return the json string that it returns
     url = _build_URL(keywords, params, 20, 1)
-    print "digitalnz"
-    print url
-    
-    return json.load(_get_url(_build_URL(keywords, params, 20, 1)))
+    result_json = _get_url(url)    
+    return json.load(result_json)
 
 
 """
@@ -137,6 +140,8 @@ def getImage(identifier):
     title = image_object["title"]
     return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
 
+def get_empty_params():
+    return empty_params
 
 """
 ++++++++++++++++++++++++++
@@ -154,3 +159,22 @@ def _check_valid_usage(usage):
     else:
         return False
 
+"""
+=============
+PARAMETERS
+=============
+"""
+parameters = MapParameter({
+    "keywords":OptionalParameter(ScalarParameter(str)),
+    "creator":OptionalParameter(ScalarParameter(str)),
+    "century":OptionalParameter(ScalarParameter(str)),
+    "decade":OptionalParameter(ScalarParameter(str)),
+    "year":OptionalParameter(ScalarParameter(str))
+    })
+empty_params = {
+    "keywords":[],
+    "creator":[],
+    "century":[],
+    "decade":[],
+    "year":[]
+    }
