@@ -21,7 +21,16 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGE
 #ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
-    query, params = parse_gallica({"all":"cat"})
+    print "__________________________________________________________"
+    print keyword
+    params = searcher_translator( keyword, identifier)
+    print "translator:"
+    print params
+    params = {"all":"cat"}
+    query, params = parse_gallica(params)
+    print query
+    print params
+    print "_________________________________________________________"
     url, arg = build_URL(query,params)
     soup = get_search_result_parser(url, 1)
     return __count(soup)
@@ -103,8 +112,7 @@ URL BUILDERS
 """
 def build_URL(query, params):
     if query and not params:
-        #Todo: translate
-        params = {"all":"cat"}
+        params = searcher_translator(query, identifier)
     query, params = parse_gallica(params)
     if not query and not params:
         return build_simple_url('')

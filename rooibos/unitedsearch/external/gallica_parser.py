@@ -114,7 +114,6 @@ def parse_gallica(params):
     print "-----------gallica parser---------"
     print params
     if "all" in params and len(params)==1:
-        i = 1
         return params['all'],None
     else:
         return parse_gallica_adv_search(params)

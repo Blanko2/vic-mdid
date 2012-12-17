@@ -31,6 +31,8 @@ def searcher_translator(query, searcher_id):
     #need to check if params contains values such as '+/?/-creator'
     keywords += _check_valid(params)
     translated_dictionary = _translate_words(params)
+    print "translated_dictionary"
+    print translated_dictionary
     return translated_dictionary 
 
 """
@@ -61,6 +63,7 @@ def _translate_words(parameters):
     translated_dictionary={}
     for word in parameters:
         translated_word = word
+        modifier = None
         for mod in query_mods:
             if word.startswith(mod):
                 modifier = _translate(mod)
