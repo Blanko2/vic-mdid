@@ -24,9 +24,9 @@ query_lang=[
     'rights'
     ]
 
-def searcher_translator(query, searcher_identity):
-    self.searcher_identity = searcher_identity 
-    self.searcher_dictionary = searcher_to_dict(searcher_identity)
+def searcher_translator(query, searcher_id):
+    searcher_identity = searcher_id
+    searcher_dictionary = searcher_to_dict(searcher_id)
     keywords, params = common.break_query_string(query) 
     #need to check if params contains values such as '+/?/-creator'
     keywords += _check_valid(params)
