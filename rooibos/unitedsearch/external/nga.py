@@ -21,6 +21,7 @@ name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # searcher identifier 
 
 def build_parameters(query, params):
+    """ builds parameters using the results received from the sidebar """
     # build parameters dictionary to search by
     keywords, para_map = break_query_string(query)
     # get the parameter values to put into the url
@@ -37,10 +38,8 @@ def build_parameters(query, params):
         exclude = not_in
     if exclude:
         params.update({"exclude words":[exclude]})
-
     artist = getValue(params, 'artist')
     keywords = getValue(params, 'title')
-
     accession_number = getValue(params, 'accession number')
     school = getValue(params, 'school')
     classification = getValue(params, 'classification')
