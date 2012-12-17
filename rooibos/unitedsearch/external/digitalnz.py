@@ -70,7 +70,7 @@ def _build_URL(self, query, params, per_page, page):
     # keywords, para_map = break_query_string(query) 
     url = ""
     if not params:
-    """ checks if the query comes from the sidebar - if not, it needs translating"""
+        """ checks if the query comes from the sidebar - if not, it needs translating"""
         query_terms = translator.searcher_translator(query, self.identifier)
         url =  _build_simple_URL(query_terms, per_page, page)
         return url 
