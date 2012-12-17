@@ -205,7 +205,7 @@ class usViewer():
         
         query, params = parse(request,searcher_identifier)
         
-        result,args = self.searcher.search(None, params, offset, resultcount)
+        result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
         def resultpart(image):
             if isinstance(image, ResultRecord):
