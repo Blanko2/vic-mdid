@@ -6,7 +6,7 @@ from django.conf import settings
 from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
 from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
-from rooibos.unitedsearch.external.translator import query_language as translator
+from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 
 name = "DigitalNZ"
 identifier = "digitalnz"
@@ -71,7 +71,8 @@ def _build_URL(query, params, per_page, page):
     url = ""
     if not params:
         """ checks if the query comes from the sidebar - if not, it needs translating"""
-        query_terms = translator.searcher_translator(query, identifier)
+        translator = Query_Language(identifier) 
+        query_terms = Query_Language.searcher_translator(translator, query)
         url =  _build_simple_URL(query_terms, per_page, page)
         return url 
     params, unsupported_params = merge_dictionaries(para_map, params, get_empty_params().keys()) 
@@ -81,7 +82,9 @@ def _build_URL(query, params, per_page, page):
 
 def _build_simple_URL(query_terms, per_page, page):
     """ returns a search url with all the given keywords, at the given page and with the number or specified results per page """
-    if query_terms['text']:
+    facets=""
+    keywords=""
+    if 'text' in query_terms:
         keywords=query_terms['text']   
         del query_terms['text']
     for q in query_terms:
