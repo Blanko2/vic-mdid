@@ -24,7 +24,7 @@ query_lang=[
     'rights'
     ]
 
-def searcher_translator(self, query, searcher_identity):
+def searcher_translator(query, searcher_identity):
     self.searcher_identity = searcher_identity 
     self.searcher_dictionary = searcher_to_dict(searcher_identity)
     keywords, params = common.break_query_string(query) 
