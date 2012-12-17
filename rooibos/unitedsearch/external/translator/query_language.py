@@ -29,24 +29,22 @@ class Query_Language:
         self.searcher_identity = searcher_id
 
     def searcher_translator(self, query):
+        """ Translates the given universal query into parameters accepted by the searchers""" 
         self.searcher_dictionary = self.searcher_to_dict(self.searcher_identity)
         keywords, params = break_query_string(query) 
-        print 'query language'
         #need to check if params contains values such as '+/?/-creator'
         keywords += self._check_valid(params)
         translated_dictionary = self._translate_words(params)
         k = self._translate('keywords')
-        print k
         keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
         translated_dictionary[k] = keywords
-        print self.searcher_dictionary
         return translated_dictionary 
 
-    """
-    Returns the searcher_dictionary equivalent to the 
-    searcher received
-    """
     def searcher_to_dict(self, searcher_identity):
+        """
+        Returns the searcher_dictionary equivalent to the 
+        searcher received
+        """
         return {
             'gallica' : gallica_dict.dictionary,
             'nga' : nga_dict.dictionary,
@@ -80,9 +78,6 @@ class Query_Language:
         return translated_dictionary
 
     def _translate(self, word):
-        """ can be a unicode -- does casting to check for the values"""
+        """ can be a string or  unicode -- does casting to check for the values"""
         return self.searcher_dictionary[str(word)] if str(word) in self.searcher_dictionary else self.searcher_dictionary['keywords'] 
         
-       #TODO
-        """
-            FINISH THIS -- convert all unicode to string somewhere somehow """ 

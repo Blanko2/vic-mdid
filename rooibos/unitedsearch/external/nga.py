@@ -115,18 +115,21 @@ def getImage(json_image_identifier) :
     title, meta = __get_image_properties_from_imageSpecific_page(image_identifier['id'])
     return RecordImage(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
 
-
-"""
-"""
-def search(query ,params, off, num_results_wanted) :
+def search(query, params, off, num_results_wanted) :
+    """ 
+    Gets search results - method must be called `search`
+    query -- search query
+    params -- parameters received from sidebar - if not sidebar they are empty
+    off -- offset - number of images to offset the result by
+    num_results_wanted -- images per page
+    """
     print "nga"
     print query
     print params
     query = "cat"
     params = {"all words":"cat"}
     arg = get_empty_params()
-    """ Get the actual results! Note, method must be called 'search'"""
-    off = (int)(off)     # type of off varies by searcher implementation
+    off = (int)(off)    
     params, unsupported_params, url_base = build_parameters(query, params)
     no_query = True;
 
@@ -178,8 +181,6 @@ def search(query ,params, off, num_results_wanted) :
     if is_simple_search(arg):
         arg.update({"simple_keywords":str(arg["all words"])})
         arg.update({"all words":[]})
-    print 'NGA ===== 180'
-    print arg
     return resulting_images, arg
 
 """
