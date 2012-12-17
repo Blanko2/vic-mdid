@@ -112,7 +112,6 @@ class usViewer():
                 indent -= 1
                 r += ["  "*indent + "</div>"]
                 return r
-            
             elif isinstance(params, OptionalDoubleParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 2
@@ -124,7 +123,6 @@ class usViewer():
                 indent -= 2
                 r += ["  "*indent + "</div>"]
                 return r
-            
             elif isinstance(params, UserDefinedTypeParameter) :
                 options = params.type_options or []
                 r_content = "  "*indent + (label + ": " if params.label else "")
@@ -209,7 +207,6 @@ class usViewer():
         
         result,args = self.searcher.search(None, params, offset, resultcount)
         results = result.images
-
         def resultpart(image):
             if isinstance(image, ResultRecord):
                 return {
@@ -243,11 +240,9 @@ class usViewer():
         if int(offset)>0:
           all_query.update({'from':0})
           firstPage = self.__url_search_(all_query)
-        
         if (int(result.nextoffset)<int(result.total)):
           all_query.update({'from':result.nextoffset})
           nextPage = self.__url_search_(all_query)
-          
         if (nextPage):
           num_lastPageResult = result.total%resultcount
           if num_lastPageResult==0:
@@ -255,11 +250,9 @@ class usViewer():
           lastOffset = result.total-num_lastPageResult
           all_query.update({'from':lastOffset})
           lastPage = self.__url_search_(all_query)
-          
         query_language = ""
         if "simple_keywords" in args:
             query_language = args["simple_keywords"]
-
         return {
                 'results': map(resultpart, results),
                 'select_url': self.url_select(),
@@ -368,8 +361,6 @@ class usViewer():
             r['id'] = simplejson.dumps(result)
             request.POST = r
         ans = select_record(request)
-        #print "ANSWER = "+str(ans)
-        print "/ANSWER"
         return ans
 
 class usUnionViewer(usViewer):

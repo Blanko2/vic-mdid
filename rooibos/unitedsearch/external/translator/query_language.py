@@ -20,7 +20,8 @@ query_lang=[
     'end date',
     'year',
     'decade',
-    'century'
+    'century',
+    'rights'
     ]
 
 def searcher_translator(self, query, searcher_identity):
@@ -29,7 +30,7 @@ def searcher_translator(self, query, searcher_identity):
     keywords, params = common.break_query_string(query) 
     #need to check if params contains values such as '+/?/-creator'
     keywords += _check_valid(params)
-    params = _translate_words(params)
+    translated_dictonary = _translate_words(params)
     return translated_dictionary 
 
 """
@@ -38,12 +39,13 @@ searcher received
 """
 def searcher_to_dict(searcher_identity):
     return {
-        'gallica' : translator.gallica_dict,
-        'nga' : translator.nga_dict,
-        'digitalnz' : translator.digitalnz_dict,
-        'artstor' : translator.artstor_dict,
-        'trove' : translator.trove_dict
-    }.get(searcher_identity, translator.empty_dict)
+        'gallica' : translator.gallica_dict.dictionary,
+        'nga' : translator.nga_dict.dictionary,
+        'digitalnz' : translator.digitalnz_dict.dictionary,
+        'artstor' : translator.artstor_dict.dictionary,
+        'trove' : translator.trove_dict.dictionary,
+        'ngaust' : translator.ngaust_dict.dictionary
+    }.get(searcher_identity, translator.empty_dict.dictionary)
    
 """
 + and - and ? not implemented
@@ -52,7 +54,7 @@ NGA does not have an or
 def _check_valid(self, parameters):
     keywords=""
     for p in parameters:
-        if p not in self.query_lang and p != '-':
+        if p not in self.query_lang and p != '-' and not p[0] = '-':
             keywords+="+"parameters[p]
     return keywords     
 
@@ -69,5 +71,6 @@ def _translate_words(self, parameters):
     return translated_dictionary
 
 def _translate(self, word):
-    return searcher_dictionary[word] 
-        
+    return self.searcher_dictionary[word] if self.searcher_dictionary[word] else self.searcher_dictionary['keywords'] 
+    
+    
