@@ -123,14 +123,16 @@ def search(query, params, off, num_results_wanted) :
     off -- offset - number of images to offset the result by
     num_results_wanted -- images per page
     """
+    print "nga"
+    print query
+    print params
+    query = "cat"
+    params = {"all words":"cat"}
     arg = get_empty_params()
     off = (int)(off)    
     params, unsupported_params, url_base = build_parameters(query, params)
     no_query = True;
-    for key in params:
-        key2 = key+"_opt"
-        if key2 in params:
-            params.update({key:params[key2]})
+
     for key in params:
         value = params[key]
         if isinstance(value,list):

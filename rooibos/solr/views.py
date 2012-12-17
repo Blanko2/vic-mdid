@@ -528,9 +528,9 @@ def search(request, id=None, name=None, selected=False, json=False):
     for c in criteria :
       m = crit_pattern.match(c)
       if query_list.has_key(str(m.group('type'))) :
-	    query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+        query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
       else:
-	    query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+        query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
 
       
     """
@@ -583,7 +583,7 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     
     if not kws_not is '':
-      query_string += ', '+"not="+kws_not
+      query_string += ', '+"-="+kws_not
     
 
     #print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"

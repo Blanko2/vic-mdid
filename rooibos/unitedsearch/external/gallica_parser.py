@@ -6,19 +6,6 @@ import re
 import json
 
 
-
-
-
-def parse_params(query, params):
-    for key in query:
-        if key.startswith("i_"):
-            params.update({key.replace("i_",''):query[key]})
-    return params
-
-
-
-
-
 def parse_gallica_sidebar(params):
         print "original params"
         print params
@@ -41,7 +28,7 @@ def parse_gallica_sidebar(params):
                     opt = params[opt_key]
                 else:
                     opt = "and"
-                if field_type and value and opt and not value=="":
+                if field_type and value and not value=="":
                     entry = [field_type,value,opt]
                     query_list = add_entry(query_list,entry)
             if type_key in params:
@@ -61,13 +48,41 @@ def parse_gallica_adv_search(params):
     query_list = []
     temp_params = params.copy()
     for key in params:
+        opt = ''
+        fixed_key = key
+        if key.startswith('-') or key.startswith('?'):
+                opt = key[0]
+                fixed_key = key[1:]
+        if fixed_key in field_types:
+            entry = [fixed_key, params[key], opt_type_map[opt]]
+            query_list = add_entry(query_list, entry)
+            del temp_params[key]
+    print "final query_list"
+    print query_list
+    temp_params.update({"query_list":query_list})
+    params = temp_params
+    return None, params
+                
+        
+"""        
+def parse_gallica_adv_search(params):
+    query_list = []
+    temp_params = params.copy()
+    for key in params:
         print "params"
         print params
         fixed_key = key
         opt = "and"
         value = params[key]
         if isinstance(value, list):
-            value = list_to_str(value)
+            value = value[0]
+    if key in params        :
+        temp_params.update({key:value})
+    else:
+        value = para_map[key]+"+"+value
+        temp_params.update({key:value})
+
+        value = list_to_str(value)
         if key.startswith('-'):
             opt = "except"
             fixed_key = key[1:]
@@ -83,7 +98,8 @@ def parse_gallica_adv_search(params):
        query_list = merge_query_list(query_list)
     params.update({"query_list":query_list})
     return None, params
-            
+"""
+
 def add_entry(query_list,entry):
     ql = query_list
     if entry[2]=="and":
@@ -92,23 +108,20 @@ def add_entry(query_list,entry):
         ql.append(entry)
     return ql
 
-def parse_gallica(query, params):
-    # Case1: advansed search called from side bar
-    if "field0_type" in params:
-        return parse_gallica_sidebar(params)
-    params = {}
-    print query
-    keywords,para_map = break_query_string(query)
-    params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-    keywords, params = remove_all_words(keywords,params)
-    #Case 2: simple search
-    if len(params)==0:
-        return keywords, None
-    
-    #Case 3: regular adv search
-    params = add_keyword_to_params(keywords,params)
-    return parse_gallica_adv_search(params)
+def parse_gallica(params):
+    if not params:
+        return "cat",{}
+    print "-----------gallica parser---------"
+    print params
+    if "all" in params and len(params)==1:
+        return params['all'],None
+    else:
+        return parse_gallica_adv_search(params)
+    return "cat",{}
+        
 
+
+"""
 def remove_all_words(keywords,params):
     if "All Words" in params:
         if not keywords=="":
@@ -119,7 +132,7 @@ def remove_all_words(keywords,params):
         keywords += kw
         del params["All Words"]
     return keywords,params
-
+"""
 def add_keyword_to_params(keywords,params):
     if not "all" in params:
         if keywords and not keywords =="":
@@ -214,6 +227,18 @@ def list_to_str(l):
            v +="+"
        v += e
     return v
+
+opt_map = {
+    'and':'',
+    'or':'?',
+    'except':'-'
+    }    
+
+opt_type_map = {
+    '':'and',
+    '?':'or',
+    '-':'except'
+    }
     
 valid_keys=["start date",
     "end date",

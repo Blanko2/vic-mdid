@@ -15,6 +15,10 @@ import searchers
 
 import sys
 import traceback
+from rooibos.unitedsearch.external.gallica_parser import *
+#from rooibos.unitedsearch.external.translator.query_language import *
+from rooibos.unitedsearch.external.translator.query_parser import *
+
 
 class usViewer():
 
@@ -35,7 +39,7 @@ class usViewer():
         u = self.url_search()
         return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
 
-    def htmlparams(self, defaults):
+    def htmlparams(self, defaults):    
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
             if isinstance(params, DefinedListParameter):
@@ -101,9 +105,9 @@ class usViewer():
             elif isinstance(params, OptionalParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 1
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix+ ["opt"]) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + label]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam, indent + 1, prefix + ["opt"], default and default[0] if isinstance(default, list) else default or None)
+                r += out(params.subparam, indent + 1, prefix , default and default[0] if isinstance(default, list) else default or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 1
                 r += ["  "*indent + "</div>"]
@@ -111,10 +115,10 @@ class usViewer():
             elif isinstance(params, OptionalDoubleParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 2
-                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
+                r += ["  "*indent + "<input name=\"i_" + "_".join(prefix+ ["opt"]) + "\" type=\"checkbox\" class=\"param-opt-a\"" + (" checked=\"true\"" if default else "") + "> " + "Add Field"]
                 r += ["  "*indent + "<div class=\"param-opt\">"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
                 r += ["  "*indent + "</div>"]
                 indent -= 2
                 r += ["  "*indent + "</div>"]
@@ -142,10 +146,10 @@ class usViewer():
                   value = ""
                 r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
                 r_content += "</div>"
-                return [r_content]
+                return [r_content]        
         return "\n".join(out(self.searcher.parameters, 0, [], defaults))
 
-    
+    """
     def readargs(self, getdata):
         inputs = dict([(n[2:], getdata[n]) for n in getdata if n[:2] == "i_"])
         def read(params, prefix):
@@ -185,45 +189,22 @@ class usViewer():
                 #if "_".join(prefix) in inputs:
                 #   return inputs["_".join(prefix)]
         return read(self.searcher.parameters, [])
-    
+    """
     def perform_search(self, request, resultcount):
-        query = request.GET.get('q', '') or request.POST.get('q', '')
-        if query and "=" in query and not "params={" in query:
-            kw = ""
-            par = ""
-            query_list = query.split(',')
-            for q in query_list:
-                if "=" in q:
-                    key_value = q.split("=")
-                    key = key_value[0]
-                    value = key_value[1]
-                    del key_value[0]
-                    del key_value[0]
-                    if len(key_value)>0 :
-                        for v in key_value:
-                            value += "+"+v
-                    if not par=="":
-                        par +=","
-                    if value.startswith("+"):
-                        del value[0]
-                    while value.endswith('\\'):
-                        value = value[:-1]
-                    par += "\""+key+"\":\""+value+"\""
-                else:
-                    if not kw=="":
-                        kw += "+"
-                    kw += q
-            while kw.endswith('\\'):
-                kw = kw[:-1]
-            query = "keywords="+kw+",params={"+par+"}"
-        else:
-            while query.endswith('\\'):
-                query = query[:-1]
+        searcher_identifier = self.searcher.identifier
+        all_query = request.GET.copy()
+        #query = request.GET.get('q', '') or request.POST.get('q', '')
+
         offset = request.GET.get('from', '') or request.POST.get('from', '') or "0"
+        """
         params = {}
         for key in request.GET:
             if key.startswith("i_"):
                 params.update({key[2:]:request.GET[key]})
+        """
+        
+        query, params = parse(request,searcher_identifier)
+        
         result,args = self.searcher.search(query, params, offset, resultcount)
         results = result.images
         def resultpart(image):
@@ -246,28 +227,32 @@ class usViewer():
         prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
         prev = None
         if int(offset)>0 :
-          prev_off =int(offset)-50
+          prev_off =int(offset)-resultcount
           if prev_off > int(result.total):
-            prev_off = result.total-len(result.images)-50
+            prev_off = result.total-len(result.images)-resultcount
           if prev_off <0:
             prev_off=0
-          prev = self.__url_search_({ 'q': query, 'from': prev_off })
+          all_query.update({'from':prev_off})
+          prev = self.__url_search_(all_query)
         nextPage = None
         firstPage = None
         lastPage = None
         if int(offset)>0:
-          firstPage = self.__url_search_({ 'q': query, 'from': 0 })
+          all_query.update({'from':0})
+          firstPage = self.__url_search_(all_query)
         if (int(result.nextoffset)<int(result.total)):
-          nextPage = self.__url_search_({ 'q': query, 'from': result.nextoffset })
+          all_query.update({'from':result.nextoffset})
+          nextPage = self.__url_search_(all_query)
         if (nextPage):
-          num_lastPageResult = result.total%50
+          num_lastPageResult = result.total%resultcount
           if num_lastPageResult==0:
-            num_lastPageResult=50
+            num_lastPageResult=resultcount
           lastOffset = result.total-num_lastPageResult
-          lastPage = self.__url_search_({ 'q': query, 'from': lastOffset })
-        query = ""
+          all_query.update({'from':lastOffset})
+          lastPage = self.__url_search_(all_query)
+        query_language = ""
         if "simple_keywords" in args:
-            query = args["simple_keywords"]
+            query_language = args["simple_keywords"]
         return {
                 'results': map(resultpart, results),
                 'select_url': self.url_select(),
@@ -278,7 +263,7 @@ class usViewer():
                 'hits': result.total,
                 'searcher_name': self.searcher.name,
                 'html_parameters': self.htmlparams(args),
-                'query': query
+                'query': query_language
             }
         
     def search(self, request):
@@ -401,3 +386,22 @@ def union_select(request, sid="local"):
 
 def union_search(request, sid="local"):
     return union(request, sid).search(request)
+
+    
+def get_params(request):
+        params = {}
+        for key in request.GET:
+            if key.startswith('i_'):
+                params.update({key[2:]:request.GET[key]})
+        keys = params.keys()
+        for key in keys:
+            key2 = key+"_opt"
+            if key in params and key2 in params:
+                params.update({key:params[key2]})
+                del params[key2]
+        return params    
+# Todo: remove this into translator?
+all_words_map = {
+    'gallica' : 'all',
+    'nga' : 'all words'
+}

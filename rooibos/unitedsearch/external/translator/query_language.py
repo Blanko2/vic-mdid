@@ -60,7 +60,7 @@ class Query_Language:
     def _check_valid(self, parameters):
         keywords=""
         for p in parameters:
-            if p not in query_lang and p != '-' and p[0] != '-':
+            if p not in self.query_lang and p != '-' and p[0] != '-':
                 keywords += parameters[p]
         return keywords     
 
@@ -68,11 +68,12 @@ class Query_Language:
         translated_dictionary={}
         for word in parameters:
             translated_word = word
-            for mod in query_mods:
+            modifier = None
+            for mod in self.query_mods:
                 if word.startswith(mod):
                     modifier = _translate(mod)
                     translated_word = word[len(mod):]
-            translated_word = modifier+"_"+_translate(translated_word) if modifier else _translate(translated_word)   
+            translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word)   
             translated_dictionary[translated_word] = parameters[word] 
         return translated_dictionary
 

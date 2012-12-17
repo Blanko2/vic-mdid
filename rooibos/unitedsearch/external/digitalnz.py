@@ -11,7 +11,7 @@ from rooibos.unitedsearch.external.translator.query_language import Query_Langua
 name = "DigitalNZ"
 identifier = "digitalnz"
 
-API_KEY = settings_local.DNZ_API_KEY
+API_KEY = ""#settings_local.DNZ_API_KEY
 CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
@@ -25,6 +25,8 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
+    query = "cat"
+    params = {}
     # build the URL 
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page

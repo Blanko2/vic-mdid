@@ -5,6 +5,7 @@ from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from gallica_parser import * 
+from rooibos.unitedsearch.external.translator.query_language import *
 
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise
@@ -20,27 +21,21 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGE
 #ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
-    query, params = parse_gallica(keyword,{})
-    url, arg = build_URL(query,params)
+
+    url, arg = build_URL(keyword,{})
     soup = get_search_result_parser(url, 1)
     return __count(soup)
 
 def get_search_result_parser(base_url, page_idx) :
     page_url = re.sub("PAGEIDX", str(page_idx),base_url)
-    html = urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
+    opener = proxy_opener()
+    html = opener.open(page_url)#urllib2.build_opener(urllib2.ProxyHandler({"http": "http://localhost:3128"})).open(page_url)
     search_results_parser = BeautifulSoup(html)
     return search_results_parser
 
 """ Do the search, return the results and the parameters dictionary used (must have
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
-    
-    print query
-    query, params = parse_gallica(query, params)
-    print "query = "
-    print query
-    print "params = "
-    print params
     per_page = __items_per_page(num_wanted)
     off = (int)(off)
     if off<0:
@@ -100,13 +95,17 @@ def search(query, params, off, num_wanted) :
 URL BUILDERS
 ======================
 """
-def build_URL(keywords, params):
-    if not keywords and not params:
-        return build_simple_url('')
-    if keywords:
-        return build_simple_url(keywords)
-    else:
-        return build_advanced_url(params)
+def build_URL(query, params):
+    if query and not params:
+        ql = Query_Language(identifier)
+        params = ql.searcher_translator(query)
+    print params
+    query, params = parse_gallica(params)
+    
+    print params
+    if query :
+        return build_simple_url(query)
+    return build_advanced_url(params)
     
 def build_simple_url(keywords):
     arg = get_empty_params()
@@ -324,7 +323,10 @@ def getcopyright(params) :
     if params['copyright'] == 'All' :
         copy_string = ""
     else :
-        copy_string = "&t_free_access=" + copyright_codes[params['copyright']]
+        copyright_str = params['copyright']
+        if isinstance(copyright_str,list):
+            copyright_str=copyright_str[0]
+        copy_string = "&t_free_access=" + copyright_codes[copyright_str]
     return copy_string    
 
 def getDate(date):
@@ -336,8 +338,7 @@ def get_empty_params():
     "languages": [],
     "copyright": [],
     "all": [],
-    "field": [],
-    "option": {"opt1":'',"opt2":'',"opt3":'',"opt4":'',"opt5":''}
+    "field": []
     }
  
 """ 
@@ -392,10 +393,4 @@ parameters = MapParameter({
     ])
   })
   
-empty_params = {"start date": [],
-    "end date": [],
-    "languages": [],
-    "copyright": [],
-    "all": [],
-    "field": []
-}
+
