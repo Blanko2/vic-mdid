@@ -1,5 +1,5 @@
 from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict 
-import rooibos.unitedsearch.common
+from  rooibos.unitedsearch.common import break_query_string 
 
 """
 generating language for the vic-MDID query language
@@ -27,10 +27,10 @@ query_lang=[
 def searcher_translator(query, searcher_id):
     searcher_identity = searcher_id
     searcher_dictionary = searcher_to_dict(searcher_id)
-    keywords, params = common.break_query_string(query) 
+    keywords, params = break_query_string(query) 
     #need to check if params contains values such as '+/?/-creator'
     keywords += _check_valid(params)
-    translated_dictonary = _translate_words(params)
+    translated_dictionary = _translate_words(params)
     return translated_dictionary 
 
 """
