@@ -117,7 +117,7 @@ def parse_query_language(query):
                     while value.endswith('\\'):
                         value = value[:-1]
                     par += "\""+key+"\":\""+value+"\""
-            else:
+                else:
                     if not kw=="":
                         kw += "+"
                     kw += q
@@ -128,7 +128,8 @@ def parse_query_language(query):
                     par += ","
                 par += not_query
             query = "keywords="+kw+",params={"+par+"}"
-            return {"all":"cat"}
+            print "parsed query :   "+query
+            return query
 
 
 
