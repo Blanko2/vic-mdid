@@ -10,5 +10,6 @@ dictionary={
     'year':'start date',
     'decade':'start date',
     'century':'start date',
-    'rights': 'copyright'
+    'rights': 'copyright',
+    '': 'all'
 }
