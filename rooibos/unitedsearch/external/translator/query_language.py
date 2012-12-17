@@ -71,7 +71,7 @@ class Query_Language:
             modifier = None
             for mod in self.query_mods:
                 if word.startswith(mod):
-                    modifier = _translate(mod)
+                    modifier = self._translate(mod)
                     translated_word = word[len(mod):]
             translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word)   
             translated_dictionary[translated_word] = parameters[word] 
