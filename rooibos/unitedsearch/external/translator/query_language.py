@@ -1,4 +1,4 @@
-from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict 
+from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict 
 import rooibos.unitedsearch.common
 
 """
