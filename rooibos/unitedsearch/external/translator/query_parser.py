@@ -63,13 +63,13 @@ def parse_complex_sidebar(params):
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = str(params[value_key])
-                opt = ""
+                opt = "and"
                 if opt_key in params:
-                    opt = opt_map[params[opt_key]]
+                    opt = params[opt_key]
                 if field_type and value and not value=="":
                     print field_type
                     print value
-                    entry_key= str(opt+field_type)
+                    entry_key= str(opt+"_"+field_type)
                     para_map = update_para_map(para_map,entry_key,value)
             if type_key in params:
                 del params[type_key]
