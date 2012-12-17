@@ -59,7 +59,7 @@ def count(query, parameters={}):
 URL BUILDERS###########
 =======================
 """
-def _build_URL(self, query, params, per_page, page):
+def _build_URL(query, params, per_page, page):
     """
     Builds the URL:
         query -- the query received by the searcher
@@ -71,7 +71,7 @@ def _build_URL(self, query, params, per_page, page):
     url = ""
     if not params:
         """ checks if the query comes from the sidebar - if not, it needs translating"""
-        query_terms = translator.searcher_translator(query, self.identifier)
+        query_terms = translator.searcher_translator(query, identifier)
         url =  _build_simple_URL(query_terms, per_page, page)
         return url 
     params, unsupported_params = merge_dictionaries(para_map, params, get_empty_params().keys()) 
