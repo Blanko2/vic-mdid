@@ -5,7 +5,7 @@ import rooibos.unitedsearch.common
 generating language for the vic-MDID query language
 """
 searcher_identity='default'
-searcher_dictionary = empty_dict
+searcher_dictionary = empty_dict.dictionary
 
 query_mods=[
     '-',
