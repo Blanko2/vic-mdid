@@ -1,11 +1,11 @@
-import rooibos.unitedsearch.external.translator 
-import rooibos.unitedseach.common
+from . import * 
+import rooibos.unitedsearch.common
 
 """
 generating language for the vic-MDID query language
 """
 searcher_identity='default'
-searcher_dictionary=translator.empty_dict
+searcher_dictionary = empty_dict
 
 query_mods=[
     '-',
@@ -39,23 +39,22 @@ searcher received
 """
 def searcher_to_dict(searcher_identity):
     return {
-        'gallica' : translator.gallica_dict.dictionary,
-        'nga' : translator.nga_dict.dictionary,
-        'digitalnz' : translator.digitalnz_dict.dictionary,
-        'artstor' : translator.artstor_dict.dictionary,
-        'trove' : translator.trove_dict.dictionary,
-        'ngaust' : translator.ngaust_dict.dictionary
-    }.get(searcher_identity, translator.empty_dict.dictionary)
+        'gallica' : gallica_dict.dictionary,
+        'nga' : nga_dict.dictionary,
+        'digitalnz' : digitalnz_dict.dictionary,
+        'artstor' : artstor_dict.dictionary,
+        'trove' : trove_dict.dictionary,
+        'ngaust' : ngaust_dict.dictionary
+    }.get(searcher_identity, empty_dict.dictionary)
    
 """
-+ and - and ? not implemented
 NGA does not have an or
 """
 def _check_valid(self, parameters):
     keywords=""
     for p in parameters:
         if p not in self.query_lang and p != '-' and p[0] != '-':
-            keywords+="+"parameters[p]
+            keywords += parameters[p]
     return keywords     
 
 def _translate_words(self, parameters):
