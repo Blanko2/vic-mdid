@@ -230,9 +230,9 @@ class usViewer():
         prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
         prev = None
         if int(offset)>0 :
-          prev_off =int(offset)-50
+          prev_off =int(offset)-resultcount
           if prev_off > int(result.total):
-            prev_off = result.total-len(result.images)-50
+            prev_off = result.total-len(result.images)-resultcount
           if prev_off <0:
             prev_off=0
           all_query.update({'from':prev_off})
@@ -249,9 +249,9 @@ class usViewer():
           nextPage = self.__url_search_(all_query)
           
         if (nextPage):
-          num_lastPageResult = result.total%50
+          num_lastPageResult = result.total%resultcount
           if num_lastPageResult==0:
-            num_lastPageResult=50
+            num_lastPageResult=resultcount
           lastOffset = result.total-num_lastPageResult
           all_query.update({'from':lastOffset})
           lastPage = self.__url_search_(all_query)

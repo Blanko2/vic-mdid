@@ -36,7 +36,7 @@ def get_search_result_parser(base_url, page_idx) :
 all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
     print query
-    query, params = parse_gallica(params)
+
     print "query = "
     print query
     print "params = "
@@ -100,11 +100,15 @@ def search(query, params, off, num_wanted) :
 URL BUILDERS
 ======================
 """
-def build_URL(keywords, params):
-    if not keywords and not params:
+def build_URL(query, params):
+    if query and not params:
+        #Todo: translate
+        params = {"all":"cat"}
+    query, params = parse_gallica(params)
+    if not query and not params:
         return build_simple_url('')
-    if keywords:
-        return build_simple_url(keywords)
+    if query:
+        return build_simple_url(query)
     else:
         return build_advanced_url(params)
     
