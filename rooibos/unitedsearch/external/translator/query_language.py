@@ -66,7 +66,7 @@ def _translate_words(self, parameters):
             if word.startswith(mod):
                 modifier = _translate(mod)
                 translated_word = word[len(mod):]
-        translated_word = modifier+_translate(translated_word) if modifier else _translate(translated_word)   
+        translated_word = modifier+"_"+_translate(translated_word) if modifier else _translate(translated_word)   
         translated_dictionary[translated_word] = parameters[word] 
     return translated_dictionary
 
