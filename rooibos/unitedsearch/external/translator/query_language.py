@@ -54,7 +54,7 @@ NGA does not have an or
 def _check_valid(self, parameters):
     keywords=""
     for p in parameters:
-        if p not in self.query_lang and p != '-' and not p[0] = '-':
+        if p not in self.query_lang and p != '-' and p[0] != '-':
             keywords+="+"parameters[p]
     return keywords     
 

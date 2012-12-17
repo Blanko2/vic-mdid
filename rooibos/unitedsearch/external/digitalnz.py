@@ -6,6 +6,7 @@ from django.conf import settings
 from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
 from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
+from rooibos.unitedsearch.external.translator import query_language as translator
 
 name = "DigitalNZ"
 identifier = "digitalnz"
@@ -42,10 +43,12 @@ def search(query, params, offset, per_page=20):
     return result, get_empty_params() 
 
 def previousOffset(offset, per_page):
+    """ the image offset for the previous page """
     offset = int(offset)
     return offset > 0 and str(offset - per_page)
 
 def count(query, parameters={}):
+    """ returns the number of hits"""
     keywords, params = break_query_string(query)
     if parameters != {}:
         params = merge_dictionaries(parameters, params, params.keys())
@@ -58,22 +61,42 @@ def count(query, parameters={}):
 URL BUILDERS###########
 =======================
 """
-def _build_URL(query, params, per_page, page):
+def _build_URL(self, query, params, per_page, page):
     """
     Builds the URL:
-        there are several facets you can include and modifiers to those facets
+        query -- the query received by the searcher
+        params -- params from the sidebar - if these exist then there shouldn't be a query
+        per_page -- number of images per page
+        page -- page to retrieve images from
     """
-    keywords, para_map = break_query_string(query) 
+    # keywords, para_map = break_query_string(query) 
     url = ""
-    # need to change this to add in the facets correctly 
+    if not params:
+        """ checks if the query comes from the sidebar - if not, it needs translating"""
+        query_terms = translator.searcher_translator(query, self.identifier)
+        url =  _build_simple_URL(query_terms, per_page, page)
+        return url 
     params, unsupported_params = merge_dictionaries(para_map, params, get_empty_params().keys()) 
-    url =  _build_simple_URL(keywords, per_page, page)
+    # make dictionary from sidebar terms
+    # call buildsmpleurl
     return url 
 
-def _build_simple_URL(keywords, per_page, page):
+def _build_simple_URL(query_terms, per_page, page):
     """ returns a search url with all the given keywords, at the given page and with the number or specified results per page """
+    if query_terms['text']:
+        keywords=query_terms['text']   
+        del query_terms['text']
+    for q in query_terms:
+        q_split = q.split()
+        if len(q_split)>1:   
+            query_mod = q_split[0]
+            facet = q_split[1] 
+        else:   
+            query_mod = 'and'
+            facet = q
+        facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
     keywords = keywords.replace(" ","+")
-    url = BASE_SEARCH_API_URL+"&text="+keywords+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
+    url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
     return url 
 """
 ================
@@ -81,6 +104,7 @@ def _build_simple_URL(keywords, per_page, page):
 ================
 """
 def _get_url(url):
+    """ retrieves the created url """
     proxy_url = proxy_opener()
     html = proxy_url.open(url)
     return html 
@@ -131,22 +155,6 @@ def get_empty_params():
     "decade":[],
     "year":[]
     }
-
-"""
-++++++++++++++++++++++++++
-OBSOLETE
-"""
-def _check_valid_type(type):
-    if type in dnz_valid_types:    
-        return True
-    else:
-        return False
-
-def _check_valid_usage(usage):
-    if usage in dnz_valid_usage:
-        return True
-    else:
-        return False
 
 """
 =============
