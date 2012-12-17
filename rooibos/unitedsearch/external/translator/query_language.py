@@ -50,18 +50,18 @@ def searcher_to_dict(searcher_identity):
 """
 NGA does not have an or
 """
-def _check_valid(self, parameters):
+def _check_valid(parameters):
     keywords=""
     for p in parameters:
-        if p not in self.query_lang and p != '-' and p[0] != '-':
+        if p not in query_lang and p != '-' and p[0] != '-':
             keywords += parameters[p]
     return keywords     
 
-def _translate_words(self, parameters):
+def _translate_words(parameters):
     translated_dictionary={}
     for word in parameters:
         translated_word = word
-        for mod in self.query_mods:
+        for mod in query_mods:
             if word.startswith(mod):
                 modifier = _translate(mod)
                 translated_word = word[len(mod):]
@@ -69,7 +69,7 @@ def _translate_words(self, parameters):
         translated_dictionary[translated_word] = parameters[word] 
     return translated_dictionary
 
-def _translate(self, word):
-    return self.searcher_dictionary[word] if self.searcher_dictionary[word] else self.searcher_dictionary['keywords'] 
+def _translate(word):
+    return searcher_dictionary[word] if searcher_dictionary[word] else searcher_dictionary['keywords'] 
     
     
