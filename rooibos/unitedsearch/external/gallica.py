@@ -5,6 +5,7 @@ from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from gallica_parser import * 
+from rooibos.unitedsearch.external.translator.query_language import *
 
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise

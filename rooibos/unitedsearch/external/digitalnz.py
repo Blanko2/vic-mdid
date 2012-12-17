@@ -10,7 +10,7 @@ from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParamete
 name = "DigitalNZ"
 identifier = "digitalnz"
 
-API_KEY = settings_local.DNZ_API_KEY
+API_KEY = ""#settings_local.DNZ_API_KEY
 CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
