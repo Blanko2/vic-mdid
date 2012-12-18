@@ -61,29 +61,23 @@ def m_search(request, database):
 	dbSearcher = usViewer(searchersmap[database])
 	results = dbSearcher.search(request)
 	
-	def strip_ident(dic):
-	  del dic["identifier"]
-	
-	map(strip_ident, results["results"])
-	jsonStrings = map(json.dumps, results["results"])
-	
-	for i in range(len(results["results"])):
-	  results["results"][i]["json"] = jsonStrings[i]
-	
 	indices = [i for i in range(len(results))]
 	resultsObjects = map(grid_classify_3, results['results'], indices)
 
 	return render_to_response('mobileSearch.html', {'searchDatabase':database, 'databases':searcherNodes, 'searchTerm':searchTerm, 'results':resultsObjects, 'offset':str(offset), 'nextPage':str(offset+6), 'lastPage':str((offset-6) if (offset-6) >= 0 else 0)})   
 
-def m_showImage(request):
-	#imageData = json.loads()
-	jsonData = request.POST.get('jsonOutput')
-	print jsonData
-	jsonData = json.loads(jsonData)
-	return render_to_response('imageViewer.html', {'imageData':jsonData})
-
-def m_presentation(request, course, lecture):
-	return HttpResponse("Hello, course is:"+course+" lecture is:"+lecture)
+def m_showImage(request, database):
+	ident = request.POST.get('identifier')
+	
+	for s in searchers.all:
+	  if s.identifier in database:
+	    searcher = s
+	
+	#ident = urlencode(ident)
+	
+	imgMeta = searcher.getImage(ident)
+	print imgMeta.meta
+	return render_to_response('imageViewer.html', {'imageData':imgMeta})
 
 def m_presentationList(request):
 	
