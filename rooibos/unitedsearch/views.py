@@ -9,15 +9,15 @@ from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GR
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 from django.conf.urls.defaults import *
 from urllib import urlencode
+from . import query_parser, common, aggregate, searchers, ResultRecord, ResultImage, RecordImage  
+from . import ScalarParameter, OptionalParameter, DefinedListParameter, UserDefinedTypeParameter, MapParameter, ListParameter
+from . import OptionalDoubleParameter, OptionalTripleParameter, DoubleParameter  
 from common import *
-from . import *
+from query_parser import parse
 import searchers
-
 import sys
 import traceback
 from rooibos.unitedsearch.external.gallica_parser import *
-#from rooibos.unitedsearch.external.translator.query_language import *
-from rooibos.unitedsearch.external.translator.query_parser import *
 
 
 class usViewer():

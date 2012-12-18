@@ -22,7 +22,11 @@ class Query_Language:
         'year',
         'decade',
         'century',
-        'rights'
+        'rights',
+        'school',
+        'accession number',
+        'medium',
+        'access'
         ]
     
     def __init__(self, searcher_id):
@@ -62,6 +66,7 @@ class Query_Language:
         for p in parameters:
             if p not in self.query_lang and p != '-' and p[0] != '-':
                 keywords += parameters[p]
+                del parameters[p]
         return keywords     
 
     def _translate_words(self, parameters):
