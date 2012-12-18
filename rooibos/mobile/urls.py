@@ -11,7 +11,6 @@ urlpatterns = patterns('',
     url(r'^$', m_main, name="mobile-main"),
     url(r'search/results', m_search_redirect, name="mobile-search-redirect"),
     url(r'search/(?P<database>[a-z0-9A-Z]*)/results', m_search, name="mobile-search"),
-    url(r'search/image', m_showImage, name="mobile-image-view"),
-    url(r'presentations/(?P<course>[a-z0-9A-Z]*)/(?P<lecture>[a-z0-9A-Z]*)', m_presentation, name="show-presentation" ),
-    url(r'presentations/list', m_presentationList, name="mobile-presentation-list")
+    url(r'search/image/(?P<database>[a-z0-9A-Z]*)', m_showImage, name="mobile-image-view"),
+    url(r'presentations/list', m_browse, name="mobile-presentation-list")
 )

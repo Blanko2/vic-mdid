@@ -67,12 +67,6 @@ def search(query, params, off, num_results_wanted):
 	title = image.findtext('{http://purl.org/dc/elements/1.1/}title')
 	result.addImage(url, thumb_url, title, {})
 	# TODO make sure url, thumb_url are accurate and always exist, make actual image identifier, rather than {}
-	"""result['records'].append(dict(
-	    thumb_url=tn,
-	    title=title,
-	    record_url=url))"""
-    """cached.results = simplejson.dumps(result, separators=(',', ':'))
-    cached.save()"""
     return result, {}	# TODO parameters!!!
 
 # TODO - make this always return count - returning 12345 is to make artstor enterable from search page in ui

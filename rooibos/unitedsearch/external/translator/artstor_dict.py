@@ -1,5 +1,5 @@
 """
-Dictionary for Gallica translation
+Dictionary for Artstor translation
 """
 dictionary={
     'creator'   : ''

@@ -17,6 +17,7 @@ CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
 
+LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 END_METADATA_LOCATION_URL=".json?"+API_KEY
@@ -89,8 +90,6 @@ def _build_simple_URL(query_terms, per_page, page):
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
     keywords = keywords.replace(" ","+")
     url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
-    print 'digitalNZ ======= 103'
-    print url
     return url 
 """
 ================
@@ -139,9 +138,12 @@ def _modulate_offset(offset, per_page):
 # ====== GETTERS ========
 # =======================
 
+def get_logo():
+    return LOGO_URL
+
 def getImage(identifier):
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
-    image_object = _load(url)['record'] 
+    image_object = _load_url(url)['record'] 
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
