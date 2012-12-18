@@ -224,6 +224,8 @@ def browse(request, manage=False):
         get['ut'] = '1'
     elif get.has_key('ut'):
         del get['ut']
+    
+    print tags
 
     if request.user.is_authenticated():
         existing_tags = Tag.objects.usage_for_model(OwnedWrapper,
@@ -265,7 +267,7 @@ def browse(request, manage=False):
         presentations = filter_by_access(request.user, Presentation )
 
     presentations = presentations.select_related('owner').filter(q, qp, qk, qv).order_by('title')
-
+    
     if request.method == "POST":
 
         if manage and (request.POST.get('hide') or request.POST.get('unhide')) and request.user.has_perm('presentation.publish_presentations'):
