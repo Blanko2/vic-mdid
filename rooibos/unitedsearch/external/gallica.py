@@ -21,7 +21,6 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGE
 #ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=ITEMSPERPAGE&p=PAGENUMBER&lang=EN&adva=1&adv=1&reset=&urlReferer=%2Fadvancedsearch%3Flang%3DEN&enreg=&tri=SEARCH_FILTERS&date=daTo&daFr=START&daTo=ENDLANGUAGES&t_typedoc=images&dateMiseEnLigne=indexDateFrom&firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
-
     url, arg = build_URL(keyword,{})
     soup = get_search_result_parser(url, 1)
     return __count(soup)
@@ -33,9 +32,9 @@ def get_search_result_parser(base_url, page_idx) :
     search_results_parser = BeautifulSoup(html)
     return search_results_parser
 
-""" Do the search, return the results and the parameters dictionary used (must have
-all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
 def search(query, params, off, num_wanted) :
+    """ Do the search, return the results and the parameters dictionary used (must have
+    all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
     per_page = __items_per_page(num_wanted)
     off = (int)(off)
     if off<0:
@@ -238,9 +237,6 @@ def getImage(json_image_identifier) :
                  image_identifier['title'],
                  meta,
                  json_image_identifier))
-
-
-
 
 
 #TODO replace with _
