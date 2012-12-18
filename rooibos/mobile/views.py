@@ -74,9 +74,9 @@ def m_showImage(request, database):
 	    searcher = s
 	
 	#ident = urlencode(ident)
-	
+	print "IDENTIFIER---------> "+searcher.identifier
 	imgMeta = searcher.getImage(ident)
-	print imgMeta.meta
+	
 	return render_to_response('imageViewer.html', {'imageData':imgMeta})
 
 def m_presentationList(request):
