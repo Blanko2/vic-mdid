@@ -1,14 +1,13 @@
 from BeautifulSoup import BeautifulSoup      # html parser
-import urllib2                               # fetch html
-import re                                   # regular expressions
 from rooibos.unitedsearch import *       # other website search parts
-import json                                 # tool for encoding and decoding complex structures to/from string
 from rooibos.unitedsearch.common import merge_dictionaries, proxy_opener, break_query_string, add_to_dict, getValue 
-
+from rooibos.unitedsearch.external.translator.query_language import Query_Language
+import json                                 # tool for encoding and decoding complex structures to/from string
+import re                                   # regular expressions
+import urllib2                               # fetch html
 """
 Searcher for the National Gallery of Art website
 """
-
 
 BASE_SIMPLE_SEARCH_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
 BASE_ADVANCED_SEARCH_URL = "https://images.nga.gov/en/search/show_advanced_search_page/?service=search&action=do_advanced_search&language=en&form_name=default"
@@ -21,26 +20,23 @@ name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # searcher identifier 
 
 def build_parameters(query, params):
+    """ builds parameters """
     # build parameters dictionary to search by
-    keywords, para_map = break_query_string(query)
-    # get the parameter values to put into the url
-    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    add_to_dict(params, "all words", keywords)
-    # get the parameter values to put into the url
+    if not params:
+        translator = Query_Language(identifier)
+        params = translator.searcher_translator(query)
     all_words = getValue(params, 'all words')
     exact_phrase = getValue(params, 'exact phrase')
     exclude = getValue(params, 'exclude words')
-    not_in = getValue(params,'not')
+    not_in = getValue(params,'-')
     if exclude and not_in:
         exclude += "+"+not_in
     elif not_in:
         exclude = not_in
     if exclude:
         params.update({"exclude words":[exclude]})
-
     artist = getValue(params, 'artist')
     keywords = getValue(params, 'title')
-
     accession_number = getValue(params, 'accession number')
     school = getValue(params, 'school')
     classification = getValue(params, 'classification')
@@ -55,7 +51,7 @@ def build_parameters(query, params):
     url_base += "&open_access="+access
     # replace all whitespace from the parameters
     url_base = re.sub(" ", "+", url_base)
-    return params, unsupported_parameters, url_base
+    return params,  url_base
 
 def any_results(html_parser) :
     return __count(html_parser) != 0 
@@ -67,11 +63,9 @@ def __create_imageId_array_from_html_page(website_search_results_parser, maxWant
     # typical image_ids_text would be ['111', '2531', '13', '5343'], we find this, then break into an array of 4 numbers (list_of_image_ids)
     regex_for_image_ids_text = re.compile("\[\'\d{1,}\'.*\]")    #look for ['digit(s)'...]
     image_ids_text = regex_for_image_ids_text.findall(jsBlock_containing_list_of_image_ids)
-
     regex_for_list_of_image_ids = re.compile("(?<=\')\d+(?=\')")    # digits surrounded by ' '
     if image_ids_text[0]:
         list_of_image_ids = regex_for_list_of_image_ids.findall(image_ids_text[0])
-
     thumb_urls = []
     image_descriptions = []
     containing_divs = website_search_results_parser.findAll('div', 'pictureBox')  # class = 'pictureBox'
@@ -116,27 +110,25 @@ def getImage(json_image_identifier) :
     title, meta = __get_image_properties_from_imageSpecific_page(image_identifier['id'])
     return RecordImage(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
 
-
-"""
-"""
 def search(query, params, off, num_results_wanted) :
+    """ 
+    Gets search results - method must be called `search`
+    query -- search query
+    params -- parameters received from sidebar - if not sidebar they are empty
+    off -- offset - number of images to offset the result by
+    num_results_wanted -- images per page
+    """
     arg = get_empty_params()
-    """ Get the actual results! Note, method must be called 'search'"""
-    off = (int)(off)     # type of off varies by searcher implementation
-    params, unsupported_params, url_base = build_parameters(query, params)
+    off = (int)(off)    
+    params,  url_base = build_parameters(query, params)
     no_query = True;
-    for key in params:
-        key2 = key+"_opt"
-        if key2 in params:
-            params.update({key:params[key2]})
     for key in params:
         value = params[key]
         if isinstance(value,list):
             value = value[0]
+        
+        no_query=False
         arg.update({key:value})
-    for p in params:
-        if params[p][0]:
-            no_query = False
     if no_query:
         return Result(0, off), arg
     # get the image details
@@ -163,7 +155,6 @@ def search(query, params, off, num_results_wanted) :
             if len(results[0])<25 :
                 tmp=1
             for i in range(0, len(results[0])) :
-                # if not results[0][i] in list_of_image_ids:
                 list_of_image_ids.append(results[0][i])
                 thumbnail_urls.append(results[1][i])
                 image_descriptions.append(results[2][i])
@@ -177,8 +168,6 @@ def search(query, params, off, num_results_wanted) :
     if is_simple_search(arg):
         arg.update({"simple_keywords":str(arg["all words"])})
         arg.update({"all words":[]})
-    print 'NGA ===== 180'
-    print arg
     return resulting_images, arg
 
 """
@@ -202,7 +191,6 @@ def __createImage(id, thumb, description) :
 def __get_image_properties_from_imageSpecific_page(id) :
     """ Slower but more thorough method for finding metadata """
     page_url = BASE_IMAGE_PROPERTIES_URL + "?asset=" + id
-    #    html = urllib2.build_opener(urllib2.ProxyHandler({"https": "http://localhost:3128"})).open(page_url)
     proxy_url = proxy_opener()
     html = proxy_url.open(page_url)
     page_html_parser = BeautifulSoup(html)
@@ -223,61 +211,11 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     search_page_num = str(1 + (index_offset/search_results_per_page))   
     howFarDownThePage = index_offset % search_results_per_page
     url = url_base + "&page="+search_page_num
+    print url
     # use a proxy handler as developing behind firewall
-    # proxyHandler = urllib2.ProxyHandler({"https": "http://localhost:3128"})
-    #opener = urllib2.build_opener(proxyHandler)
     proxy_url = proxy_opener()
     html = proxy_url.open(url)
     return html, howFarDownThePage
-
-"""
-def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :
-    #Ids are in the javascript block following the div id=autoShowSimilars
-    #Note, will need re-writing if html changes
-    #jsBlock_containing_list_of_image_ids = website_search_results_parser.find('input', id="autoShowSimilars").next.renderContents()
-
-    # typical image_ids_text would be ['111', '2531', '13', '5343'], we find this, then break into an array of 4 numbers (list_of_image_ids)
-    regex_for_image_ids_text = re.compile("\[\'\d{1,}\'.*\]")    #look for ['digit(s)'...]
-    image_ids_text = regex_for_image_ids_text.findall(jsBlock_containing_list_of_image_ids)
-
-    regex_for_list_of_image_ids = re.compile("(?<=\')\d+(?=\')")    # digits surrounded by ' '
-    if image_ids_text[0]:
-        list_of_image_ids = regex_for_list_of_image_ids.findall(image_ids_text[0])
-
-
-    thumb_urls = []
-    image_descriptions = []
-
-    containing_divs = website_search_results_parser.findAll('div', 'pictureBox')  # class = 'pictureBox'
-
-    #maxWanted = maxWanted if (maxWanted < len(containing_divs)) else len(containing_divs)
-    maxWanted = len(list_of_image_ids)
-    # get metadata for each image. Note, metadata div class depends on whether the image is available to the website
-    for i in range(0, maxWanted) :
-        metadata_div = containing_divs[i].find('img', 'mainThumbImage imageDraggable')
-        if not metadata_div :    # couldn't find by normal class name, use alternative
-            metadata_div = containing_divs[i].find('img', 'mainThumbImage ')   # class type if image not available
-        # encode to UTF-8 because description might contain accents from other languages
-        thumb_urls.append(BASE_THUMBNAIL_LOCATION_URL+metadata_div['src'].encode("UTF-8"))
-        image_descriptions.append(metadata_div['title'].encode("UTF-8"))
-
-
-
-    # only want maxWanted list_of_image_ids starting at firstIdIndex
-    if (firstIdIndex > 0) :    # at start
-        while firstIdIndex>0 :
-            firstIdIndex = firstIdIndex -1
-            del list_of_image_ids[0]     # remove the first. Note this is not efficient, is there a better way?
-            del thumb_urls[0]
-            del image_descriptions[0]
-    if (len(list_of_image_ids) > maxWanted) :     # at end
-        while (len(list_of_image_ids) > maxWanted) :
-            list_of_image_ids.pop()
-            thumb_urls.pop()
-            image_descriptions.pop()
-
-    return (list_of_image_ids, thumb_urls, image_descriptions)
-"""
 """
 =============
 PARAMMAP

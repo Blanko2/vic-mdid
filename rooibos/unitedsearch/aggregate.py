@@ -7,6 +7,7 @@ def federatedSearchSource(searcher):
 	
 	class Search(FederatedSearch):
 		def hits_count(self, keyword):
+            #Todo: Pass keyword into Translator
 			"""
 			numHits = searcher.search(keyword, {}, 0, 0)
 			if not numHits:
@@ -15,6 +16,8 @@ def federatedSearchSource(searcher):
 			"""
 			#once the count method is implemented in each database, 
 			# switch to this:
+			print "keyword"
+			print keyword
 			return searcher.count(keyword)
 
 		def get_label(self):
