@@ -48,13 +48,14 @@ def parse_gallica_adv_search(params):
     query_list = []
     temp_params = params.copy()
     for key in params:
-        opt = ''
+        opt = 'and'
         fixed_key = key
-        if key.startswith('-') or key.startswith('?'):
-                opt = key[0]
-                fixed_key = key[1:]
+        if '_' in key:
+                pair = key.split('_')
+                opt = pair[0]
+                fixed_key = pair[1]
         if fixed_key in field_types:
-            entry = [fixed_key, params[key], opt_type_map[opt]]
+            entry = [fixed_key, params[key], opt]
             query_list = add_entry(query_list, entry)
             del temp_params[key]
     print "final query_list"
