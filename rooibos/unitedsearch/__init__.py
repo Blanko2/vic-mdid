@@ -1,7 +1,7 @@
 class Result:
 	""" Holds the image-metadata pairs found by a search of a database. """
 	
-	def __init__(self, total, nextoffset):
+	def __init__(self, total,nextoffset):
 		""" total is how many images were found by the search. Note,
 		the actual Result object doesn't store all of them, only some"""
 		self.nextoffset = nextoffset
