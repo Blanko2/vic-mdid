@@ -7,11 +7,12 @@ from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
 from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
+from digitalnz_parser import parse_parameters
 
 name = "DigitalNZ"
 identifier = "digitalnz"
 
-API_KEY = ""#settings_local.DNZ_API_KEY
+API_KEY = settings_local.DNZ_API_KEY
 CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
@@ -25,8 +26,6 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
-    query = "cat"
-    params = {}
     # build the URL 
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page
@@ -49,10 +48,7 @@ def previousOffset(offset, per_page):
 
 def count(query, parameters={}):
     """ returns the number of hits"""
-    keywords, params = break_query_string(query)
-    if parameters != {}:
-        params = merge_dictionaries(parameters, params, params.keys())
-    search_object = _load(keywords, params) 
+    search_object = _load(query, parameters) 
     hits = int(search_object["search"]["result_count"]) 
     return hits 
 
@@ -71,15 +67,8 @@ def _build_URL(query, params, per_page, page):
     """
     # keywords, para_map = break_query_string(query) 
     url = ""
-    if not params:
-        """ checks if the query comes from the sidebar - if not, it needs translating"""
-        translator = Query_Language(identifier) 
-        query_terms = Query_Language.searcher_translator(translator, query)
-        url =  _build_simple_URL(query_terms, per_page, page)
-        return url 
-    params, unsupported_params = merge_dictionaries(para_map, params, get_empty_params().keys()) 
-    # make dictionary from sidebar terms
-    # call buildsmpleurl
+    query_terms = _translate_query(query) if not params else parse_parameters(params)
+    url =  _build_simple_URL(query_terms, per_page, page)
     return url 
 
 def _build_simple_URL(query_terms, per_page, page):
@@ -100,12 +89,20 @@ def _build_simple_URL(query_terms, per_page, page):
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
     keywords = keywords.replace(" ","+")
     url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
+    print 'digitalNZ ======= 103'
+    print url
     return url 
 """
 ================
 #TOOLS
 ================
 """
+def _translate_query(query):
+    """ checks if the query comes from the sidebar - if not, it needs translating"""
+    translator = Query_Language(identifier) 
+    query_terms = translator.searcher_translator(query)
+    return query_terms
+
 def _get_url(url):
     """ retrieves the created url """
     proxy_url = proxy_opener()
@@ -116,10 +113,10 @@ def _load_url(url):
     """ Returns a python object from the resulting json string from the given url """
     return json.load(_get_url(url))
 
-def _load(keywords, params):
+def _load(query, params):
     """ creates a url from a given query and loads the resulting json string into a python object """
     # should build a url and return the json string that it returns
-    url = _build_URL(keywords, params, 20, 1)
+    url = _build_URL(query, params, 20, 1)
     result_json = _get_url(url)    
     return json.load(result_json)
 
