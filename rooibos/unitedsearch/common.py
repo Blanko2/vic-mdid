@@ -119,7 +119,7 @@ def getValue(dictionary, key):
                 value_string += li+" "
                 value = value_string.strip()
         else:
-            value = ""
+            value = str(value)
         return value
     else:
         return ""
