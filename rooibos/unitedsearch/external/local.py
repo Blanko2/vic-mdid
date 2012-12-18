@@ -1,7 +1,7 @@
 import json
 import urllib2
 import re
-from rooibos.unitedsearch import *
+from rooibos.unitedsearch import RecordImage, MapParameter, Result, ResultImage
 from rooibos.unitedsearch.common import *
 from rooibos.settings_local import *
 
@@ -42,13 +42,13 @@ def build_url(query, params, off, len):
     return url
 
 def parse_data(raw_data):
-    print "raw_data type:"+str(raw_data.__class__)
+    #print "raw_data type:"+str(raw_data.__class__)
     if not raw_data:
         return {}, 0, 0
     count = re.findall("[0-9]+", raw_data)[0]
     count = int(count) if count else 0
     data = raw_data.strip("0123456789")
-    print "local.py, count = "+str(count)+", data("+str(data.__class__)+") = "+str(data)
+    #print "local.py, count = "+str(count)+", data("+str(data.__class__)+") = "+str(data)
     data = json.loads(data)
     for k in data.keys():
         data[k] = json.loads(data[k])
@@ -57,7 +57,7 @@ def parse_data(raw_data):
 
     
 def get_data(url):
-    print "lacal.py getting data from url: "+str(url)
+    #print "lacal.py getting data from url: "+str(url)
     opener = proxy_opener()
     data = opener.open(url)
     html = ""
@@ -76,7 +76,10 @@ def count(keyword):
     return count
 
 def getImage(identifier):
-	i = int(identifier)
-	return ResultRecord(Record.filter_one_by_access(AnonymousUser(), i), identifier)
+    print "in local.py getImage, identifier = "+identifier
+    data = json.loads(identifier)
+    img = RecordImage(data['url'], data['thumb'], data['name'], {'idno':data['idno'], 'name':data['name']}, json.dumps(data))
+    print "made image"
+    return img
 
 parameters = MapParameter({})
