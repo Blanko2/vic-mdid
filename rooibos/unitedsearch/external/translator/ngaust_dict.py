@@ -1,5 +1,5 @@
 """
-Dictionary for Gallica translation
+Dictionary for National Gallery of Australia translation
 """
 dictionary={
     'creator'   : ''
