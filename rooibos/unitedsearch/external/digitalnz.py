@@ -37,7 +37,9 @@ def search(query, params, offset, per_page=20):
     result = unitedsearch.Result(hits, next_offset) 
     # add images
     for object in result_object['search']["results"]:
-        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
+        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or object["thumbnail_url"] or None 
+        #TODO - when there is no thumbnail_url use the getMetadata API to grab the thumbnail
+        # should only be done after fixing getImage()
         image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
     return result, get_empty_params() 
@@ -105,8 +107,6 @@ def _translate_query(query):
 def _get_url(url):
     """ retrieves the created url """
     proxy_url = proxy_opener()
-    print 'dnz ===108'
-    print url
     html = proxy_url.open(url)
     return html 
 
@@ -144,6 +144,7 @@ def get_logo():
     return LOGO_URL
 
 def getImage(identifier):
+    #TODO parse html when cannot find a location_url 
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
     image_object = _load_url(url)['record'] 
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
