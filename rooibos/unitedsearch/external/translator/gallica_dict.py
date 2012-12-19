@@ -11,6 +11,10 @@ dictionary={
     'decade':'start date',
     'century':'start date',
     'rights': 'copyright',
+    'isbn':'isbn',
+    'source':'source',
+    'table':'table',
+    'subject':'subject',
     '-':'except',
     '?':'or',
     '': 'all'

@@ -14,9 +14,9 @@ def parse_trove_query(url, query_terms, empty_arg):
         arg["end year"] = query_terms["end year"]
         del(query_terms["end year"])
     if (not year_from == "*") or (not year_to=="*"):
-        data_tag = "data:["+year_from+" TO "+year_to+"]" 
+        date_tag = "date:["+year_from+"%20TO%20"+year_to+"]" 
     else:
-        data_tag = None
+        date_tag = None
     if "availability" in query_terms and not query_terms["availability"] == "All":
         availability = query_terms["availability"]
         arg["availability"] = availability
@@ -36,8 +36,8 @@ def parse_trove_query(url, query_terms, empty_arg):
                 arg_indexes.insert(0,arg_entry)
             else:
                 arg_indexes.append(arg_entry)
-    if  data_tag:
-        url = add_index(url,data_tag)
+    if  date_tag:
+        url = add_index(url,date_tag)
     if availability_tag:
         url += availability_tag
     url += "&s=OFFSET"
