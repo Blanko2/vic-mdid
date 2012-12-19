@@ -326,7 +326,9 @@ def getcopyright(params) :
     return copy_string    
 
 def get_logo():
-    return LOGO_URL 
+    return LOGO_URL
+def get_searcher_page():
+    return BASE_URL
 
 def getDate(date):
     return date

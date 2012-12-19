@@ -282,6 +282,8 @@ class usViewer():
                 'last_page' :lastPage,
                 'hits': result.total,
                 'searcher_name': self.searcher.name,
+                'searcher_logo': self.searcher.get_logo(),
+                'searcher_url': self.searcher.get_searcher_page(),
                 'html_parameters': self.htmlparams(args),
                 'query': query_language
             }
