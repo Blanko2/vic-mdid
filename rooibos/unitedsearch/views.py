@@ -55,9 +55,9 @@ class usViewer():
                   
                 for option in options :
                     if option == selected:
-                        r_content += "<option selected=\"selected\" value=" + option
+                        r_content += "<option selected=\"selected\" value=" + '\"'+option+'\"'
                     else: 
-                        r_content += "<option value=" + option
+                        r_content += "<option value=" + '\"'+option+'\"'
                     r_content += ">" + option + "</option>"
                 r_content += "</select><br>"
                 return [r_content]
@@ -94,9 +94,9 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, DoubleParameter):
-                r = ["  "*indent + "<div>"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+                r = ["  "*indent + "<div>"]                
+                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
 
                 r += ["  "*indent + "</div>"]
                 return r
@@ -320,8 +320,6 @@ class usViewer():
         return record
 
     def select(self, request):
-        #print request.POST
-        #print request.method
         if not request.user.is_authenticated():
             raise Http404()
 
@@ -329,20 +327,12 @@ class usViewer():
             # TODO: maybe drop the unused given-records portion of this
             postid = request.POST.get('id', '[]')
             imagesjs = json.loads(postid.strip("[]"))
-            #print "Json:"+imagesjs
-            #print self.searcher.getImage(imagesjs)
-            #images = map(self.searcher.getImage, imagesjs)
             images = [self.searcher.getImage(imagesjs)]
-            #print "images = "+str(images)
             urlmap = {}
             for i in images:
                 urlmap[i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url]=i
-            #print "urlmap = "+str(urlmap)
             urls = urlmap.keys()
-            #print "urls = "+str(urls)
-            # map of relevant source URLs to record IDs that already exist
             ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
-            #print "ids = "+str(ids)
             result = []
             for url in urls:
                 id = ids.get(url)
@@ -352,9 +342,7 @@ class usViewer():
                 else:
                     print "got record"
                     i = urlmap[url].identifier
-                    #print i
                     record = self.record(i)
-                    #print record
                     result.append(record.id)
             print result
             r = request.POST.copy()

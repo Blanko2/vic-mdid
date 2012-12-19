@@ -38,15 +38,12 @@ def parse(request, identifier):
 def parse_sidebar(request,identifier):
     params = get_params(request)
     if identifier in complex_searcher:
-        print "pass to complex_sidebar"
-        return parse_complex_sidebar(params)
+        return parse_complex_sidebar(params,identifier)
     else:
         return parse_regular_sidebar(params)
 
 # Parse query for sidebar contains UserDefinedTypeParameter: gallica, trove
-def parse_complex_sidebar(params):
-        print "start"
-        print params
+def parse_complex_sidebar(params,identifier):
         para_map = {}
         temp_params = params.copy()
         i = 0
@@ -62,14 +59,13 @@ def parse_complex_sidebar(params):
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = str(params[value_key])
-                opt = ""
+                opt = default_mod[identifier]
                 if opt_key in params:
-                    opt = opt_map[params[opt_key]]
+                    opt = str(params[opt_key])
                 if field_type and value and not value=="":
-                    print field_type
-                    print value
-                    entry_key= str(opt+field_type)
-                    para_map = update_para_map(para_map,entry_key,value)
+                    entry_key= str(opt+'_'+field_type)
+                    params[entry_key] = value
+                    #para_map = update_para_map(para_map,entry_key,value)
             if type_key in params:
                 del params[type_key]
             if value_key in params:
@@ -77,8 +73,6 @@ def parse_complex_sidebar(params):
             if opt_key in params:
                 del params[opt_key]
             i += 1
-        print "para_map"
-        print para_map
         for entry_key in params:
             value = params[entry_key]
             if isinstance(value,list):
@@ -127,7 +121,6 @@ def parse_query_language(query):
                     par += ","
                 par += not_query
             query = "keywords="+kw+",params={"+par+"}"
-            print "parsed query :   "+query
             return query
 
 
@@ -171,7 +164,12 @@ all_words_map = {
 opt_map = {
     'and':'',
     'or':'?',
-    'except':'-'
+    'except':'-',
+    'all':'',
+    'none':'-',
+    'the':'+',
+    'any':'?',
+    'not':'-'
     }    
 
 opt_type_map = {
@@ -180,5 +178,9 @@ opt_type_map = {
     '-':'except'
     }
     
-
+default_mod = {
+    'gallica':'and',
+    'trove':'all of the words'
+    }
+    
 complex_searcher = ["gallica", "trove"]

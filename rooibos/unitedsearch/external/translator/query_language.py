@@ -1,6 +1,6 @@
 from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict 
 from  rooibos.unitedsearch.common import break_query_string 
-
+import urllib
 class Query_Language:
     """
     generating language for the vic-MDID query language
@@ -26,7 +26,14 @@ class Query_Language:
         'school',
         'accession number',
         'medium',
-        'access'
+        'access',
+        'start year',
+        'end year',
+        "subject",
+        "language",
+        "isbn",
+        "issn",
+        "tag"
         ]
     
     def __init__(self, searcher_id):
@@ -40,8 +47,9 @@ class Query_Language:
         keywords += self._check_valid(params)
         translated_dictionary = self._translate_words(params)
         k = self._translate('keywords')
-        keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
-        translated_dictionary[k] = keywords
+        if not keywords=="" :
+            keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
+            translated_dictionary[k] = str(keywords)
         return translated_dictionary 
 
     def searcher_to_dict(self, searcher_identity):
@@ -65,7 +73,7 @@ class Query_Language:
         keywords=""
         for p in parameters:
             if p not in self.query_lang and p != '-' and p[0] != '-':
-                keywords += parameters[p]
+                keywords += str(parameters[p])
                 del parameters[p]
         return keywords     
 
@@ -79,7 +87,7 @@ class Query_Language:
                     modifier = self._translate(mod)
                     translated_word = word[len(mod):]
             translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word)   
-            translated_dictionary[translated_word] = parameters[word] 
+            translated_dictionary[translated_word] = str(parameters[word]) 
         return translated_dictionary
 
     def _translate(self, word):
