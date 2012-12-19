@@ -83,28 +83,33 @@ class Query_Language:
        
     def _check_valid(self, parameters):
         keywords=""
+        del_list = []
         for p in parameters:
             if p not in self.query_lang and not p[0] in self.query_mods:
                 keywords += str(parameters[p])
-                del parameters[p]
+                del_list.append(p)
             elif p[0] in self.query_mods and len(p)>0:
                 if p[1:] not in self.query_lang:
                     keywords += str(parameters[p])
-                    del parameters[p]
+                    del_list.append(p)
+        for p in del_list:
+            if p in parameters:
+                del parameters[p]
         return keywords     
 
     def _translate_words(self, parameters):
         translated_dictionary={}
         for word in parameters:
+            print "word = "+word
             translated_word = word
             modifier = None
             for mod in self.query_mods:
-                print "Processing mod +"+mod+"           "+word
                 if word.startswith(mod):
                     modifier = self._translate(mod)
                     print modifier
                     translated_word = word[len(mod):]
-            translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word)   
+            translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word) 
+            print "translated_word ======="+translated_word
             translated_dictionary[translated_word] = str(parameters[word]) 
         return translated_dictionary
 

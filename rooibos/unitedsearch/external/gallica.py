@@ -97,7 +97,8 @@ def build_URL(query, params):
     if query and not params:
         ql = Query_Language(identifier)
         params = ql.searcher_translator(query)
-    print params
+
+
     query, params = parse_gallica(params)
     
     print params
@@ -109,7 +110,6 @@ def build_simple_url(keywords):
     arg = get_empty_params()
     arg.update({"simple_keywords":keywords})
     keywords = re.sub(" ", "+", keywords)
-    print re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
     return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
  
 def build_advanced_url(params):
@@ -140,6 +140,7 @@ def build_advanced_url(params):
       }
     replacer = re.compile('|'.join(replacements.keys()))
     url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
+    url = url.replace(' ','+')
     print url
     return url, arg 
 
