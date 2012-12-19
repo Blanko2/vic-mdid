@@ -80,12 +80,12 @@ def _build_simple_URL(query_terms, per_page, page):
         keywords=query_terms['text']   
         del query_terms['text']
     for q in query_terms:
-        q_split = q.split()
+        q_split = q.split('_')
         if len(q_split)>1:   
             query_mod = q_split[0]
             facet = q_split[1] 
         else:   
-            qpi_keuery_mod = 'and'
+            query_mod = 'and'
             facet = q
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
     keywords = keywords.replace(" ","+")

@@ -14,6 +14,8 @@ dictionary={
     'accession number':'accession number',
     'classification':'classification',
     'school':'school',
-    'medium':'medium'
+    'medium':'medium',
+    'exclude words':'exclude words',
+    'exact phrase':'exact phrase'
 }
 
