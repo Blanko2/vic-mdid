@@ -32,7 +32,7 @@ def search(query, params, off, num_results_wanted):
     
     # query and params both come from sidebar, so should have exactly one.
     if not query and not params:
-	return Result(0, off), {}
+	return Result(0, off), get_empty_parameters()
     elif query and params:
 	print "artstor 34, shouldn't have reached here... Have both query (%s) and params (%s)" %(query, params)
 	raise NotImplementedError
@@ -60,7 +60,7 @@ def search(query, params, off, num_results_wanted):
     except ExpatError:		# XML parsing error
 	num_results = 0
     if not num_results:		# other type of error or no results found
-	return Result(0, off), {}	# return None?
+	return Result(0, off), get_empty_parameters()	# return None?
 
     #pages = int(math.ceil(float(total) / pagesize))
 
@@ -78,7 +78,7 @@ def search(query, params, off, num_results_wanted):
 	#print "artstor 79 add image:\n\turl %s\n\tthumb %s\n\ttitle %s" %(url, tn, title)
 	result.addImage(ResultImage(url, tn, title, {}))
 	# TODO make sure url, thumb_url are accurate and always exist, make actual image identifier, rather than {}
-    return result, {}	# TODO parameters!!!
+    return result, get_empty_parameters()	# TODO parameters!!!
 
     
 def count(query):
@@ -91,7 +91,22 @@ def getImage(image_identifier):
   return None
 
 # TODO
-parameters = MapParameter({})
+parameters = MapParameter({
+    "keywords": OptionalParameter(ScalarParameter(str), "Keywords"),
+    "creator": OptionalParameter(ScalarParameter(str), "Creator"),
+    "title": OptionalParameter(ScalarParameter(str), "Title"),
+    "subject": OptionalParameter(ScalarParameter(str), "Subject")
+    })
+    
+    
+def get_empty_parameters() :
+    return {
+	"keywords": [],
+	"creator": [],
+	"title": [],
+	"subject": []
+    }
+    
 
 """
 ==============
@@ -101,7 +116,7 @@ TOOLS
 
 def _parse_parameters(params_dict):
     # TODO
-    return {'': "cat"}
+    return {'': "hat"}
     
 def _get_url(query_dict, pagesize, offset):
     offset = str(int(offset)+1)
