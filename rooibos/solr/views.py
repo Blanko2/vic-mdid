@@ -544,7 +544,9 @@ def search(request, id=None, name=None, selected=False, json=False):
     query_terms=""
     
     for kw in kws_list:
-        if "=" in kw:
+	if kw is '':	# empty search
+	    pass	# nothing to do
+        elif "=" in kw:
             if not query_terms == "":
                 query_terms += ", "
             query_terms += kw
