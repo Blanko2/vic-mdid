@@ -80,7 +80,8 @@ class usViewer():
                 for index in range(len(params.parammap)-1, -1, -1) :
                 #for k in params.parammap:
                     k = keys[index]
-                    r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
+                    r += out(params.parammap[k], indent + 1, prefix + [k],
+			default != None and default[k] != None and default[k])
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ListParameter):
@@ -95,8 +96,10 @@ class usViewer():
                 return r
             elif isinstance(params, DoubleParameter):
                 r = ["  "*indent + "<div>"]                
-                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
+                r += out(params.subparam1, indent + 1, 
+		    prefix + ["opt"], default and default[0] or None)
+                r += out(params.subparam2, indent + 1,
+		    prefix + ["opt"], default and default[1] or None)
 
                 r += ["  "*indent + "</div>"]
                 return r
