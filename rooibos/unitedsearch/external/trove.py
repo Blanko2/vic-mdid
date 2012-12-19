@@ -6,10 +6,13 @@ from rooibos.unitedsearch.common import *   # methods common to all databases
 from rooibos.settings_local import *
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
+from rooibos.unitedsearch.external.translator.query_language import Query_Language 
+from rooibos.unitedsearch.external.trove_parser import parse_trove_query
 
 name = "Trove"
 identifier = "trove"
 
+LOGO_URL=""
 TROVE_URL = "http://trove.nla.gov.au"
 BASE_URL = "http://trove.nla.gov.au/picture/result?"
 API_URL = "http://api.trove.nla.gov.au/result?key=TROVE_KEY&zone=picture&q="
@@ -28,9 +31,8 @@ TROVE_DEBUG = False
 http://trove.nla.gov.au/general/api-technical
 """
 def count(query) :
-    url, keywords = build_URL(query, {})
+    url,arg = build_URL(query, {})
     search_result_parser = get_search_result_parser(url, 1, 0)
-    #return 12345
     return _count(search_result_parser)
 
 def _count(soup):
@@ -51,7 +53,7 @@ def _count(soup):
     
 def search(query, params, off, num_wanted) :
     off = int(off) #just in case
-    url, kw = build_URL(query, params)
+    url, arg = build_URL(query, params)
     search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
     total = _count(search_result_parser)
     num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
@@ -77,9 +79,9 @@ def search(query, params, off, num_wanted) :
     img_list = Result(total, off)
     for image in result:
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
-    res = dict(empty_params)
-    res["all words"] = kw
-    return img_list, res
+    #res = dict(empty_params)
+    #res["all words"] = kw
+    return img_list, arg
     #return Result(0, off), empty_params
 
     
@@ -115,7 +117,7 @@ def parse_api_results(soup):
             text = work.find("identifier", attrs={'linktype':'fulltext'})
             image = text.text.replace("&amp;", "&") if text else None
             if not image:
-                trove = work.find("troveUrl")
+                trove = work.find("troveurl")
                 image = trove.text.replace("&amp;", "&") if trove else None
                 #at worst, this should take you to troveUrl
                 if not image:
@@ -240,122 +242,17 @@ def get_image_from_thumb(url):
     http://content.cdlib.org/ark:/13030/kt3v19r78d/
     """
     return None#url
-def build_URL(query, params):
-    fields_string=""
-    fields = {}
-    year_from = year_to = None
-    keywords, para_map = break_query_string(query)
-    params, kw = parse_sidebar_params(params)
-    keywords += kw
-    para_map = dict(para_map.items() + params.items())
-    """
-    print "trove.py, build_URL, query = "+query
-    print "trove.py, build_URL, params = "+str(params)
-    print "trove.py, build_URL, keywords = "+keywords
-    print "trove.py, build_URL, para_map = "+str(para_map)
-    """
-    #params, unsupported_parameters = merge_dictionaries(para_map, params, valid_keys)
-    for key in para_map.keys():
-        if "start_date" in key:
-            year_from = int(para_map[key])
-            del(para_map[key])
-        elif "end_date" in key:
-            year_to = int(para_map[key])
-            del(para_map[key])
-        else:
-            param = get_param(key)
-            if param is "":#key unsupported
-                keywords += "+"+para_map[key]
-            else:
-                fields[param] = para_map[key]
-                # fields will now contain all supported parameters and their values
-    if api:
-        url = API_URL.replace("TROVE_KEY", TROVE_KEY)
-        first = True
-        if keywords:
-            url += keywords.strip().replace(" ", "+").replace("++", "+")
-        for key in fields.keys():
-            if first:
-                url += "+"
-                first=False
-            val = fields[key]
-            url += key+'%3A'+'%28'+val.replace(" ", "+").replace("++", "+").replace("\"", '%22')+'%29'
-        date = build_date(year_from, year_to)
-        if date not in "":
-            url += ("" if first else "+") + date
-        return url+"&s=OFFSET", keywords
 
-    else:
-        id=0
-        if keywords:
-            fields_string += build_field(id, "", "all", keywords.strip().replace(" ", "+").replace("++", "+"))
-            id += 1
-        for key in fields.keys():
-            fields_string += build_field(id, key, "all", fields[key])
-            id+=1
+def build_URL(query, query_terms):
+    if not query_terms:
+        query_language = Query_Language(identifier)
+        query_terms = query_language.searcher_translator(query)    
+    
+    url = API_URL.replace("TROVE_KEY", TROVE_KEY)
+    arg = empty_arg()
+    url, arg = parse_trove_query(url, query_terms,arg)
+    return url, arg
 
-        url = BASE_SEARCH_URL.replace("FIELDS", fields_string)
-        url = url.replace("DATE", build_date(year_from, year_to))
-        url = url.replace("FORMAT", "")
-    return url, keywords
-
-def parse_sidebar_params(params):
-    params = dict(params)
-    result = {}
-    keywords = ""
-    for i in range(0, 10):
-        if "i_field"+str(i)+"_opt_type" in params and "i_field"+str(i)+"_opt" in params and "i_field"+str(i)+"_opt_value" in params:
-            #the parameter
-            param = params["i_field"+str(i)+"_opt_type"][0]
-            del params["i_field"+str(i)+"_opt_type"]
-            #all, none, the, any
-            ptype = params["i_field"+str(i)+"_opt"][0]
-            del params["i_field"+str(i)+"_opt"]
-            #value
-            value = params["i_field"+str(i)+"_opt_value"][0]
-            del params["i_field"+str(i)+"_opt_value"]
-            if value not in "":
-                param = get_param(param)
-                operator = "AND" if ptype in "and" else "NOT" if ptype in "none" else "OR" if ptype in "any" else ""
-                if param in "":
-                    keywords += ("" if keywords in "" else "+"+operator+"+")+ ("%22"+value+"%22" if ptype in "the" else value)
-                else:
-                    v = result[param]+"+"+operator+"+" if param in result else (operator+"+" if ptype in "none" else "")
-                    result[param]= v + ("%22"+value+"%22" if ptype in "the" else value)
-    if "i_start year_opt" in params:
-        result["start_date"] = params["i_start year_opt"][0]
-    if "i_end year_opt" in params:
-        result["end_date"] = params["i_end year_opt"][0]
-    #for p in params:
-        
-    #print"Trove sidebar params parsed: "+str(result)
-    return result, keywords
-
-
-
-def build_field(id, field, f_type, term):
-    amp = ""
-    if id > 0:
-        amp = "&"
-    if field is "all words":
-        field = ""
-    if field and field is not "":
-        field = field + "%3A"
-    return amp+"q-field"+str(id)+"="+field+"&q-type"+str(id)+"="+f_type+"&q-term"+str(id)+"="+term
-
-def build_date(year_from, year_to):
-    if not year_from:
-        if not year_to:
-            return "" #no date entered
-        if api:
-            year_from = "*"
-        else:
-            return ""
-    if not year_to: #start year is set, but not end year
-        year_to = "*" if api else 3000
-    if api:
-        return "date:["+str(year_from)+"+TO+"+str(year_to)+"]"
-    return "&q-year1-date="+str(year_from)+"&q-year2-date="+str(year_to)
         
 """
 Feed an assembled url into here, with the offset, and get a parser for 20 results
@@ -413,7 +310,8 @@ def getImage(datastring):
 
 
 
-
+def get_logo():
+    return LOGO_URL
 
 """
 Check if given param is valid or under different name(creator=artist, etc), return as empty param (keyword) if not
@@ -424,17 +322,16 @@ def get_param(param):
     return ""
 
 
-field_types = ["keyword","creator", "title", "subject","isbn","issn","public tag"]
+field_types = ["keyword","creator", "title", "subject","isbn","issn","language"]
 option_types = ["all of the words", "any of the words", "the phrase", "none of the words"]   
-    
+
 """
 PARAMMAP
 """
 parameters = MapParameter({
     "start year": OptionalParameter(ScalarParameter(str)),
     "end year": OptionalParameter(ScalarParameter(str)),
-    "availability": DefinedListParameter(["All", "Online", "Access conditions", "Freely available", "Unknown"],  multipleAllowed=False, label="Availability"),
-    "language": DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+    "availability": DefinedListParameter(["All", "Online", "Access conditions", "Freely available"],  multipleAllowed=False, label="Availability"),
     "field" : ListParameter([
         DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
         UserDefinedTypeParameter(field_types)
@@ -451,9 +348,27 @@ parameters = MapParameter({
         ],label="Keywords")
     })
 
+
+def empty_arg():
+    return {
+    "keyword": [],
+    "exact phrase": [],
+    "exclude words": [],
+    "creator": [],
+    "title": [],
+    "subject": [],
+    "isbn": [],
+    "issn": [],
+    "publictag": [],
+    #"access": [],
+    "start year": [],
+    "end year": [],
+    "availability":[],
+    "language":[],
+    "field" :[]
+        }
     
-    
-valid_keys = empty_params = {"all words": [],
+valid_keys = empty_params = {"keyword": [],
     "exact phrase": [],
     "exclude words": [],
     "creator": [],
@@ -470,7 +385,7 @@ valid_keys = empty_params = {"all words": [],
     "field" :[]
     }
 
-synonyms = {"all words": "",
+synonyms = {"keyword": "",
     "creator" : "creator",
     "author" : "creator",
     "artist" : "creator",

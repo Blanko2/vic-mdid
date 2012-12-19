@@ -7,8 +7,6 @@ import json
 
 
 def parse_gallica_sidebar(params):
-        print "original params"
-        print params
         header = "field"
         tail = "_opt"
         i = 0
@@ -40,8 +38,6 @@ def parse_gallica_sidebar(params):
             i += 1
         
         params.update({"query_list":query_list})
-        print "params in parser"
-        print params
         return None,params
 
 def parse_gallica_adv_search(params):
@@ -58,48 +54,10 @@ def parse_gallica_adv_search(params):
             entry = [fixed_key, params[key], opt]
             query_list = add_entry(query_list, entry)
             del temp_params[key]
-    print "final query_list"
-    print query_list
     temp_params.update({"query_list":query_list})
     params = temp_params
     return None, params
-                
-        
-"""        
-def parse_gallica_adv_search(params):
-    query_list = []
-    temp_params = params.copy()
-    for key in params:
-        print "params"
-        print params
-        fixed_key = key
-        opt = "and"
-        value = params[key]
-        if isinstance(value, list):
-            value = value[0]
-    if key in params        :
-        temp_params.update({key:value})
-    else:
-        value = para_map[key]+"+"+value
-        temp_params.update({key:value})
 
-        value = list_to_str(value)
-        if key.startswith('-'):
-            opt = "except"
-            fixed_key = key[1:]
-        if key in field_types:
-            entry = [fixed_key, value, opt]
-            query_list = add_entry(query_list,entry)
-            del temp_params[key]
-        elif not opt=="and":
-            del temp_params[key]
-            
-    params = temp_params
-    if len(query_list)>5:
-       query_list = merge_query_list(query_list)
-    params.update({"query_list":query_list})
-    return None, params
-"""
 
 def add_entry(query_list,entry):
     ql = query_list
@@ -112,8 +70,7 @@ def add_entry(query_list,entry):
 def parse_gallica(params):
     if not params:
         return "cat",{}
-    print "-----------gallica parser---------"
-    print params
+
     if "all" in params and len(params)==1:
         return params['all'],None
     else:
@@ -122,18 +79,7 @@ def parse_gallica(params):
         
 
 
-"""
-def remove_all_words(keywords,params):
-    if "All Words" in params:
-        if not keywords=="":
-            keywords += "+"
-        kw = params["All Words"]
-        if isinstance(kw,list):
-            kw = kw[0]
-        keywords += kw
-        del params["All Words"]
-    return keywords,params
-"""
+
 def add_keyword_to_params(keywords,params):
     if not "all" in params:
         if keywords and not keywords =="":
