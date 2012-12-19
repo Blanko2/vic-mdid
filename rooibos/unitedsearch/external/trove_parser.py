@@ -1,6 +1,4 @@
 
-
-
 def parse_trove_query(url, query_terms, empty_arg):
     url = url
     year_from = "*"
