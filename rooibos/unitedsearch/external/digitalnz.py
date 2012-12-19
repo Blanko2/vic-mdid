@@ -18,6 +18,7 @@ CATEGORY_VALUE="&and[category][]=Images"
 RIGHTS_VALUE="&and[rights][]="
 
 LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
+SEARCHER_URL="http://digitalnz.org/"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 END_METADATA_LOCATION_URL=".json?api_key="+API_KEY
@@ -28,6 +29,8 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
 def search(query, params, offset, per_page=20):
     # build the URL 
+    if not query and params=={}:
+        return unitedsearch.Result(0, offset), get_empty_params()
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page
     page = offset/per_page +1 
@@ -37,7 +40,9 @@ def search(query, params, offset, per_page=20):
     result = unitedsearch.Result(hits, next_offset) 
     # add images
     for object in result_object['search']["results"]:
-        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
+        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or object["thumbnail_url"] or None 
+        #TODO - when there is no thumbnail_url use the getMetadata API to grab the thumbnail
+        # should only be done after fixing getImage()
         image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
     return result, get_empty_params() 
@@ -83,7 +88,7 @@ def _build_simple_URL(query_terms, per_page, page):
         q_split = q.split('_')
         if len(q_split)>1:   
             query_mod = q_split[0]
-            facet = q_split[1] 
+            facet = q[len(query_mod)+1:]
         else:   
             query_mod = 'and'
             facet = q
@@ -105,8 +110,6 @@ def _translate_query(query):
 def _get_url(url):
     """ retrieves the created url """
     proxy_url = proxy_opener()
-    print 'dnz ===108'
-    print url
     html = proxy_url.open(url)
     return html 
 
@@ -140,10 +143,14 @@ def _modulate_offset(offset, per_page):
 # ====== GETTERS ========
 # =======================
 
+def get_searcher_page():
+    return SEARCHER_URL
+
 def get_logo():
     return LOGO_URL
 
 def getImage(identifier):
+    #TODO parse html when cannot find a location_url 
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
     image_object = _load_url(url)['record'] 
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]

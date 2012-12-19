@@ -18,7 +18,9 @@ BASE_URL = "http://trove.nla.gov.au/picture/result?"
 API_URL = "http://api.trove.nla.gov.au/result?key=TROVE_KEY&zone=picture&q="
 BASE_SEARCH_URL = "http://trove.nla.gov.au/picture/result?FIELDSDATEFORMAT&s=OFFSET"
 PER_PAGE = 20 #how many results trove actually has per page - can't change this
-
+#LOGO_URL = "http://trove.nla.gov.au/static/37451/img/trove-logo-v2.gif"
+LOGO_URL = "http://trove.nla.gov.au/general-test/files/2012/01/API-light.png"
+#LOGO_URL = "http://trove.nla.gov.au/general-test/files/2012/01/API-dark.png"
 """
 TODO: DELETE THE API KEY AFTER DEVELOPMENT,
 get a key associated with the university
@@ -52,8 +54,12 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
+
     off = int(off) #just in case
+    
     url, arg = build_URL(query, params)
+    if url.endswith("&q=&s=OFFSET"):
+        return Result(0, off), arg
     search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
     total = _count(search_result_parser)
     num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
@@ -312,7 +318,8 @@ def getImage(datastring):
 
 def get_logo():
     return LOGO_URL
-
+def get_searcher_page():
+    return TROVE_URL
 """
 Check if given param is valid or under different name(creator=artist, etc), return as empty param (keyword) if not
 """
