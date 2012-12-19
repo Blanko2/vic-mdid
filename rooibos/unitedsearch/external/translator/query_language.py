@@ -4,15 +4,29 @@ from  rooibos.unitedsearch.common import break_query_string
 class Query_Language:
     """
     generating language for the vic-MDID query language
+    all dictionaries need a 'keywords' equivalent and the 
+    query language written here can compensate for any added
+    keys that are not present in other dictionaries
+    ie: if a key exists in one dict but not another, this class
+    will put the values into keywords for the searcher that doesnt
+    have it. 
+    
     """
     searcher_identity='default'
     searcher_dictionary = empty_dict.dictionary
 
+    """ query mods are the modifiers for the passed keys. 
+        '-' = without,
+        '+' = and/exact phrase,
+        '?' = or"""
     query_mods=[
         '-',
         '+',
         '?',
     ]
+    """ if a searcher has a key that needs to be included -
+    it does not fit spec with a pre-existing key - then add it 
+    here """
     query_lang=[
         'keywords',
         'creator',
@@ -58,9 +72,6 @@ class Query_Language:
             'ngaust' : ngaust_dict.dictionary
         }.get(searcher_identity, empty_dict.dictionary)
        
-    """
-    NGA does not have an or
-    """
     def _check_valid(self, parameters):
         keywords=""
         for p in parameters:
