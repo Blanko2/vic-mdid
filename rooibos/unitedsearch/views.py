@@ -320,6 +320,7 @@ class usViewer():
         return record
 
     def select(self, request):
+        print request.method
         if not request.user.is_authenticated():
             raise Http404()
 
@@ -337,14 +338,14 @@ class usViewer():
             for url in urls:
                 id = ids.get(url)
                 if id:
-                    print "got id"
+                    #print "got id"
                     result.append(id)
                 else:
-                    print "got record"
+                    #print "got record"
                     i = urlmap[url].identifier
                     record = self.record(i)
                     result.append(record.id)
-            print result
+            #print result
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r

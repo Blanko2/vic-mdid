@@ -17,9 +17,10 @@ CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
 
+LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
-END_METADATA_LOCATION_URL=".json?"+API_KEY
+END_METADATA_LOCATION_URL=".json?api_key="+API_KEY
 
 BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
@@ -84,13 +85,11 @@ def _build_simple_URL(query_terms, per_page, page):
             query_mod = q_split[0]
             facet = q_split[1] 
         else:   
-            query_mod = 'and'
+            qpi_keuery_mod = 'and'
             facet = q
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
     keywords = keywords.replace(" ","+")
     url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
-    print 'digitalNZ ======= 103'
-    print url
     return url 
 """
 ================
@@ -106,6 +105,8 @@ def _translate_query(query):
 def _get_url(url):
     """ retrieves the created url """
     proxy_url = proxy_opener()
+    print 'dnz ===108'
+    print url
     html = proxy_url.open(url)
     return html 
 
@@ -139,13 +140,17 @@ def _modulate_offset(offset, per_page):
 # ====== GETTERS ========
 # =======================
 
+def get_logo():
+    return LOGO_URL
+
 def getImage(identifier):
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
-    image_object = _load(url)['record'] 
+    image_object = _load_url(url)['record'] 
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
-    return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    img = unitedsearch.RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    return img 
 
 def get_empty_params():
     return {

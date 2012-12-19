@@ -1,5 +1,33 @@
 {% extends "master.html" %}
 
+{% block javascript %}
+{{ block.super }}
+<script type='text/javascript'>
+    $(document).ready(function() {
+	// remind user if they close without saving
+	var unsaved_changes = false;
+	$('form').submit(function() {
+	    unsaved_changes = false;
+	    // note, don't need to unbold submit button - submission reloads the page
+	});
+	$('form').keypress(function() {
+	    unsaved_changes = true;
+	    $('#submit_button').css('font-weight', 'bolder');
+	});
+	
+
+	$(window).bind('beforeunload', function() {
+	    if (unsaved_changes)
+		var r = confirm("You have unsaved changes. Press ok to save them, cancel to discard.");
+		if (r==true){
+		    unsaved_changes = false;
+		    $('form').submit();
+		} // else, keep leaving...
+	});
+    });
+</script>
+
+{% endblock %}
 {% block content %}
 
 <h1>Create new presentation</h1>
@@ -31,10 +59,14 @@
 
 
 <div class="row">
-    <input type="submit" value="Create" />
+    <input type="submit" value="Create" id="submit_button"/>
     {% if next %}
     <a href="{{ next }}">Cancel</a>
     {% endif %}
+</div>
+
+<div id='dialog' style='display:none;'>
+    <p>Hi</p>
 </div>
 
 </form>
