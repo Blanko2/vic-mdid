@@ -2,5 +2,11 @@
 Dictionary for Artstor translation
 """
 dictionary={
-    'creator'   : ''
+    '-': 'not',
+    '+': 'and',
+    'q': 'or',
+    'keywords': '',
+    'creator'   : 'dc.creator',
+    'title': 'dc.title',
+    'subject': 'dc.subject'
 }
