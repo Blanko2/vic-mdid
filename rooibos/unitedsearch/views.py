@@ -330,34 +330,34 @@ class usViewer():
             # TODO: maybe drop the unused given-records portion of this
             postid = request.POST.get('id', '[]')
             imagesjs = json.loads(postid.strip("[]"))
-            print "Json:"+imagesjs
-            print self.searcher.getImage(imagesjs)
+            #print "Json:"+imagesjs
+            #print self.searcher.getImage(imagesjs)
             #images = map(self.searcher.getImage, imagesjs)
             images = [self.searcher.getImage(imagesjs)]
-            print "images = "+str(images)
+            #print "images = "+str(images)
             urlmap = {}
             for i in images:
                 urlmap[i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url]=i
-            print "urlmap = "+str(urlmap)
+            #print "urlmap = "+str(urlmap)
             urls = urlmap.keys()
-            print "urls = "+str(urls)
+            #print "urls = "+str(urls)
             # map of relevant source URLs to record IDs that already exist
             ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
-            print "ids = "+str(ids)
+            #print "ids = "+str(ids)
             result = []
             for url in urls:
                 id = ids.get(url)
                 if id:
-                    print "got id"
+                    #print "got id"
                     result.append(id)
                 else:
-                    print "got record"
+                    #print "got record"
                     i = urlmap[url].identifier
-                    print i
+                    #print i
                     record = self.record(i)
-                    print record
+                    #print record
                     result.append(record.id)
-            print result
+            #print result
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r
