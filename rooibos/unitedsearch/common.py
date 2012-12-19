@@ -60,9 +60,9 @@ def break_query_string(query):
     if para_map and len(para_map) >= 1:
         para_map = json.loads(para_map[0])
         para_map2 = {}
-        for key in para_map.keys():
-		  para_map2[key.strip(" +")]=para_map[key].strip(" +")
-        para_map = para_map2
+        #for key in para_map.keys():
+		  #para_map2[key.strip(" +")]=para_map[key].strip(" +")
+        #para_map = para_map2
     else:
         para_map = {}
   
