@@ -22,8 +22,8 @@ from rooibos.unitedsearch.external.translator.query_language import Query_Langua
 
 name = "Artstor US"
 identifier = "artstor"
-HOMEPAGE_URL = ""
-LOGO_URL = ""
+HOMEPAGE_URL = "http://www.artstor.org/index.shtml"
+LOGO_URL = "http://www.artstor.org/images/global/g-artstor-logo.gif"
 
 """ UNITEDSEARCH VERSION OF ARTSTOR
 Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are under common interface
