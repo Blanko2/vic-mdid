@@ -77,10 +77,10 @@ class usViewer():
                 if "end year" in reversed_keys:
                     reversed_keys.remove("end year")
                     reversed_keys.append("end year")
-                if "start year" in reversed_keys:
+                if "start date" in reversed_keys:
                     reversed_keys.remove("start date")
                     reversed_keys.append("start date")
-                if "end year" in reversed_keys:
+                if "end date" in reversed_keys:
                     reversed_keys.remove("end date")
                     reversed_keys.append("end date")
                 keys=[]
