@@ -68,12 +68,21 @@ class usViewer():
                 if "field" in reversed_keys:
                     reversed_keys.remove("field")
                     reversed_keys.insert(0,"field")
+                if "keywords" in reversed_keys:
+                    reversed_keys.remove("keywords")
+                    reversed_keys.insert(0,"keywords")
                 if "start year" in reversed_keys:
                     reversed_keys.remove("start year")
                     reversed_keys.append("start year")
                 if "end year" in reversed_keys:
                     reversed_keys.remove("end year")
                     reversed_keys.append("end year")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("start date")
+                    reversed_keys.append("start date")
+                if "end year" in reversed_keys:
+                    reversed_keys.remove("end date")
+                    reversed_keys.append("end date")
                 keys=[]
                 while len(reversed_keys)>0:
                     keys.append(reversed_keys.pop())
@@ -85,7 +94,7 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ListParameter):
-                r = ["  "*indent + "<div>"]
+                r = ["  "*indent + (label + ": " if params.label else "")+"<div>"]
                 index =0
                 i = 0
                 for v in params.paramlist :
@@ -96,15 +105,14 @@ class usViewer():
                 return r
             elif isinstance(params, DoubleParameter):
                 r = ["  "*indent + "<div>"]                
-                r += out(params.subparam1, indent + 1, 
-		    prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1,
-		    prefix + ["opt"], default and default[1] or None)
+                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
 
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ScalarParameter):
                 return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
+         
             elif isinstance(params, OptionalParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 1

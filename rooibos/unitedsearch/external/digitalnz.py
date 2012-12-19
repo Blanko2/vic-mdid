@@ -5,7 +5,7 @@ from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, 
 from django.conf import settings
 from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
-from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
+from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter, UserDefinedTypeParameter, DefinedListParameter,DoubleParameter, ListParameter
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 from digitalnz_parser import parse_parameters
 
@@ -158,7 +158,8 @@ def get_empty_params():
     "creator":[],
     "century":[],
     "decade":[],
-    "year":[]
+    "year":[],
+    "field":[]
     }
 
 """
@@ -166,10 +167,26 @@ def get_empty_params():
 PARAMETERS
 =============
 """
+
+field_types = ['category', 'display_collection', 'creator', 'placename', 'year', 'decade', 'century', 'language', 'content_partner', 'rights', 'collection']
+modifier_types = ['and','or','without']
+
 parameters = MapParameter({
-    "keywords":OptionalParameter(ScalarParameter(str)),
-    "creator":OptionalParameter(ScalarParameter(str)),
-    "century":OptionalParameter(ScalarParameter(str)),
-    "decade":OptionalParameter(ScalarParameter(str)),
-    "year":OptionalParameter(ScalarParameter(str))
+    "keywords":ScalarParameter(str,label="keywords"),
+    "field" : ListParameter([
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        )
+        ],label="Facets")
     })
+
+

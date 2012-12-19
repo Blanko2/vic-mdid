@@ -180,7 +180,8 @@ opt_type_map = {
     
 default_mod = {
     'gallica':'and',
-    'trove':'all of the words'
+    'trove':'all of the words',
+    'digitalnz':'and'
     }
     
-complex_searcher = ["gallica", "trove"]
+complex_searcher = ["gallica", "trove","digitalnz"]
