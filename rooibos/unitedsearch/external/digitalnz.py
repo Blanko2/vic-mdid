@@ -29,6 +29,8 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
 def search(query, params, offset, per_page=20):
     # build the URL 
+    if not query and params=={}:
+        return unitedsearch.Result(0, offset), get_empty_params()
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page
     page = offset/per_page +1 
