@@ -149,7 +149,8 @@ def getImage(identifier):
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
-    return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    img = unitedsearch.RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    return img 
 
 def get_empty_params():
     return {
