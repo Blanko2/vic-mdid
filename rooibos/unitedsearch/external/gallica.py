@@ -1,3 +1,20 @@
+"""
+Gallica searcher -- voted most likely to break
+
+Because Gallica has several idiosyncracies and works on an HTML scraper,
+this searcher is the most likely to break at some point.
+Things to note:
+    Gallica accepts a maximum of 5 advanced parameters and one of them is
+     (in our implementation) always keywords 
+     so really it accepts 4 + keywords
+    
+    Anything to do with BeautifulSoup is HTML scraping/parsing
+    
+    Searcher coming in from the sidebar are parsed in gallica_parser.py 
+        this is the same as in all searchers, but Gallica's is quite 
+        persnicketty
+
+""" 
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
 from rooibos.unitedsearch import *              # other search tools
@@ -45,7 +62,7 @@ def search(query, params, off, num_wanted) :
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     search_results_parser = get_search_result_parser(url, page_idx)
     if not search_results_parser:
-        print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
+        print "GALLICA.ERROR: Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
         return Result(0, off), arg
     num_results = __count(search_results_parser)
     num_pages = num_results/per_page + 1
@@ -94,14 +111,12 @@ URL BUILDERS
 ======================
 """
 def build_URL(query, params):
+    """ determines if the url should be simple or advanced and launches
+    corresponding method"""
     if query and not params:
         ql = Query_Language(identifier)
         params = ql.searcher_translator(query)
-
-
     query, params = parse_gallica(params)
-    
-    print params
     if query :
         return build_simple_url(query)
     return build_advanced_url(params)
@@ -117,8 +132,6 @@ def build_advanced_url(params):
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
     arg, params, copyright, languages, start_date, end_date = build_arg(params)
     keyword_list = params["query_list"]
-    print "keyword_list in gallica"
-    print keyword_list
     arg_list = build_arg_list(keyword_list)
     arg.update({"field":arg_list})
     i = 1
@@ -150,10 +163,9 @@ def build_advanced_url(params):
 TOOLS
 =============
 """
-"""
-calculate the optimal number of items to display per page,
-to minimise the number of html pages to read """
 def __items_per_page(num_wanted) :
+    """ calculate the optimal number of items to display per page,
+    to minimise the number of html pages to read """
     # based on the options the site itself offers
     return 50
 
@@ -173,7 +185,9 @@ def __create_image(soup, id_div) :
         thumb = BASE_URL + regex_result.group('url') + regex_result.group('extension')
         url = BASE_URL + regex_result.group('url') + '.highres'
     # case 2 : tools.yoolib images
-    # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles%2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);background-position:center center;background-repeat:no-repeat"
+    # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles% +
+        #2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);
+        #background-position:center center;background-repeat:no-repeat"
     elif regex_result.group('url').startswith("/resize") :
         # replace special char values with the actual characters, then strip off the resize part at the start.
         thumb = regex_result.group('url').replace("%3A", ":").replace("%2F", "/").split("url=",1)[1] + regex_result.group('extension')

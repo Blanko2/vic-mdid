@@ -1,3 +1,5 @@
+""" Union search is an implementation that interleaves search results from selected searchers - 
+    Vic-Mdid currently does not use this"""
 import json
 from itertools import *
 from rooibos.unitedsearch import *
