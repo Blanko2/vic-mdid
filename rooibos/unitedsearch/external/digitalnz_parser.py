@@ -1,7 +1,6 @@
 def parse_parameters(parameters):
     """ receives a dict. """
     print 'DIGITALNZ PARSER '
-    print parameters
     params = {}
     for p in parameters:
         params[str(p)] = str(parameters[p])
