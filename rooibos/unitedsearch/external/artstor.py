@@ -1,24 +1,26 @@
 # TODO remove unused imports
-import urllib, urllib2, time, cookielib, math
-from django.utils import simplejson
-from os import makedirs
-from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
-from rooibos.storage import Storage, Media
-from rooibos.solr.models import SolrIndexUpdates
-from rooibos.solr import SolrIndex
-from rooibos.access.models import AccessControl
+#import urllib, urllib2, time, cookielib, math
+import urllib2
+#from django.utils import simplejson
+#from os import makedirs
+#from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
+#from rooibos.storage import Storage, Media
+#from rooibos.solr.models import SolrIndexUpdates
+#from rooibos.solr import SolrIndex
+#from rooibos.access.models import AccessControl
 from xml.etree.ElementTree import ElementTree
 from xml.parsers.expat import ExpatError
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from rooibos.federatedsearch.models import FederatedSearch, HitCount
+#from django.core.urlresolvers import reverse
+#from rooibos.federatedsearch.models import FederatedSearch, HitCount
 from rooibos.unitedsearch import *
 from rooibos.unitedsearch.common import *
 from BeautifulSoup import BeautifulSoup
-import cookielib
-import datetime
-import socket
+#import cookielib
+#import datetime
+#import socket
 from rooibos.unitedsearch.external.translator.query_language import Query_Language
+#from rooibos.unitedsearch.external.artstor_parser import parse_parameters
 
 name = "Artstor US"
 identifier = "artstor"
@@ -26,10 +28,11 @@ identifier = "artstor"
 """ UNITEDSEARCH VERSION OF ARTSTOR
 Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are under common interface
 """
-# TODO support parameters, parameterised query
+# TODO support parameters
 def search(query, params, off, num_results_wanted):
     off = int(off)
     
+    print "artstor 34 \n\tquery %s\n\tparams %s" %(query, params)
     # query and params both come from sidebar, so should have exactly one.
     if not query and not params:
 	return Result(0, off), get_empty_parameters()
@@ -39,7 +42,7 @@ def search(query, params, off, num_results_wanted):
     elif query:
 	query_terms = Query_Language(identifier).searcher_translator(query)
     else:
-	query_terms = _parse_parameters(params)
+	query_terms = Query_Language(identifier).translate_parameters(params)
     """
     Caching of results, uncomment and fix if supported in other searchers TODO
     cached, created = HitCount.current_objects.get_or_create(
@@ -48,14 +51,13 @@ def search(query, params, off, num_results_wanted):
     if not created and cached.results:
 	return simplejson.loads(cached.results)
     """
-    pagesize = 50
-    """keywords, para_map = break_query_string(query)
-    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    add_to_dict(params, "all words", keywords)"""
+    pagesize = num_results_wanted
     url = _get_url(query_terms, pagesize, off)
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
+	print BeautifulSoup(html_page)
+	print "artstor 60"
 	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
     except ExpatError:		# XML parsing error
 	num_results = 0
@@ -65,19 +67,11 @@ def search(query, params, off, num_results_wanted):
     #pages = int(math.ceil(float(total) / pagesize))
 
     result = Result(num_results, num_results+off)
-    #result = dict(records=[], hits=total)
-    for image in results.findall('//{info:srw/schema/1/dc-v1.1}dc'):
-	for ids in image.findall('{http://purl.org/dc/elements/1.1/}identifier'):
-	    if ids.text.startswith('URL'):
-		url = ids.text[len('URL:'):]
-	    elif ids.text.startswith('THUMBNAIL'):
-		tn = ids.text[len('THUMBNAIL:'):]
-	    else:
-		id = ids.text
-	title = image.findtext('{http://purl.org/dc/elements/1.1/}title')
-	#print "artstor 79 add image:\n\turl %s\n\tthumb %s\n\ttitle %s" %(url, tn, title)
-	result.addImage(ResultImage(url, tn, title, {}))
-	# TODO make sure url, thumb_url are accurate and always exist, make actual image identifier, rather than {}
+    image_divs = results.findall('.//{info:srw/schema/1/dc-v1.1}dc')
+    for div in image_divs:
+	(url, thumb, image_identifier, title) = _get_image(div)
+	result.addImage(ResultImage(url, thumb, title, image_identifier))
+	# TODO cope with full image not actually giving result (timeout error)
     return result, get_empty_parameters()	# TODO parameters!!!
 
     
@@ -86,11 +80,21 @@ def count(query):
     return results.total or 0
 
 
-# TODO
-def getImage(image_identifier):
-  return None
 
-# TODO
+def getImage(image_identifier):
+  
+  url = '%s?query=dc.identifier="%s"&operation=searchRetrieve&version=1.1&maximumRecords=1&startRecord=1' %(settings.ARTSTOR_GATEWAY, image_identifier)
+  
+  page = _get_html_page(url)
+  info_div = ElementTree(file=page).find('.//{info:srw/schema/1/dc-v1.1}dc')
+  (url, thumb, identifier, title) = _get_image(info_div)
+  
+  meta = {}	# TODO
+  
+  return RecordImage(url, thumb, title, meta, identifier)
+
+  
+# TODO support date once we understand how date ranges are done in Artstor (note, can use dc.date=1894 to find images which were done in exactly 1894, or date range starts or ends with 1894, but not which include 1894 within their range)
 parameters = MapParameter({
     "keywords": OptionalParameter(ScalarParameter(str), "Keywords"),
     "creator": OptionalParameter(ScalarParameter(str), "Creator"),
@@ -153,26 +157,38 @@ def _build_query_string(query_dict):
     # then add all other params
     for key in query_dict:
 	# append each key value to the string as key="value"
-	qs += key + "=\"" + query_dict[key] + "\"+"
+	qs += key + "=\"" + query_dict[key] + "\"+and+"
 
-    qs = qs[:len(qs)-1] if not len(qs) is 0 else qs	# remove trailing + or &
+    #remove trailing characters (added in expectation of more parameters)
+    if qs.endswith('&'):
+	qs = qs.rstrip('&')
+    else:
+	qs = qs.rstrip('+and+')
     return qs
     
     
 def _get_html_page(url):
-    """
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()),
-				  urllib2.ProxyHandler({"http": "http://localhost:3128"}))
-				  # TODO, use SmartRedirectHandler() from FedaratedSearch/Artstor/__init__.py ?
-    
-    #socket.setdefaulttimeout(self.timeout)
-    html_page = opener.open(url)
-    print "artstor us l111 page %s" %(BeautifulSoup(html_page))
-    return html_page
-    """
+    print "artstor 171 url %s" %url
     opener = proxy_opener()
     try:
+	print "artstor 174"
 	html_page = opener.open(urllib2.Request(url))
+	print "artstor 176 html %s" %BeautifulSoup(html_page)
 	return html_page
     except urllib2.URLError:
 	return None
+
+
+def _get_image(div):
+    
+    fields = div.findall('{http://purl.org/dc/elements/1.1/}identifier')
+    for field in fields:
+	if field.text.startswith('URL'):
+	    url = field.text[len('URL:'):]
+	elif field.text.startswith('THUMBNAIL'):
+	    thumb = field.text[len('THUMBNAIL:'):]
+	else:
+	    id = field.text
+    title = div.findtext('{http://purl.org/dc/elements/1.1/}title')
+    
+    return url, thumb, id, title
