@@ -62,20 +62,23 @@ class ScalarParameter:
 		self.label = label
 
 class OptionalParameter:
+    """ A parameter that can be selected or disabled in the sidebar """ 
+
 	def __init__(self, subparam, label=None):
 		self.subparam = subparam
 		self.label = label
 
 class DefinedListParameter:
 	""" A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, multipleAllowed not supported yet"""
+
 	def __init__(self, options, multipleAllowed=False, label=None):
 		self.multipleAllowed = multipleAllowed
 		self.options = options
 		self.label = label
 		
 class UserDefinedTypeParameter :
-	""" Parameter where user picks which field they are
-	searching by """
+	""" Parameter where user picks which field they are searching by """
+
 	def __init__(self, type_options, label=None) :
 	      self.type_options = type_options
 	      self.label = label
@@ -91,8 +94,10 @@ publisher
 
 Note, parameter names should be lowercase, labels (what user should actually see) capitalised
 """
+
 class MapParameter:
 	""" MapParameter({ "category": ScalarParameter(str), "year": OptionalParameter(ScalarParameter("year")) }) """
+
 	def __init__(self, parammap, label=None):
 		self.parammap = parammap
 		self.label = label
@@ -103,12 +108,16 @@ class ListParameter:
         self.label = label
 
 class OptionalDoubleParameter:
+    """ Two parameters which the user can choose from"""
+
     def __init__(self, subparam1, subparam2, label=None):
         self.subparam1 = subparam1
         self.subparam2 = subparam2
         self.label = label
 
 class OptionalTripleParameter:
+    """ Three parameters which the user can choose from"""
+
     def __init__(self, subparam1, subparam2, subparam3, label=None):
         self.subparam1 = subparam1
         self.subparam2 = subparam2
@@ -116,6 +125,8 @@ class OptionalTripleParameter:
         self.label = label
 
 class DoubleParameter:
+    """ A compound parameter """
+
     def __init__(self, subparam1, subparam2, label=None):
         self.subparam1 = subparam1
         self.subparam2 = subparam2
