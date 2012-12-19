@@ -18,6 +18,7 @@ CATEGORY_VALUE="&and[category][]=Images"
 RIGHTS_VALUE="&and[rights][]="
 
 LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
+SEARCHER_URL="http://digitalnz.org/"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 END_METADATA_LOCATION_URL=".json?api_key="+API_KEY
@@ -85,7 +86,7 @@ def _build_simple_URL(query_terms, per_page, page):
         q_split = q.split('_')
         if len(q_split)>1:   
             query_mod = q_split[0]
-            facet = q_split[1] 
+            facet = q[len(query_mod)+1:]
         else:   
             query_mod = 'and'
             facet = q
@@ -139,6 +140,9 @@ def _modulate_offset(offset, per_page):
 
 # ====== GETTERS ========
 # =======================
+
+def get_searcher_page():
+    return SEARCHER_URL
 
 def get_logo():
     return LOGO_URL
