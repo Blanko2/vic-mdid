@@ -14,10 +14,12 @@ BASE_ADVANCED_SEARCH_URL = "https://images.nga.gov/en/search/show_advanced_searc
 BASE_IMAGE_PROPERTIES_URL = "https://images.nga.gov/en/asset/show_zoom_window_popup.html"
 BASE_IMAGE_LOCATION_URL = "https://images.nga.gov/?service=asset&action=show_preview&asset"
 BASE_THUMBNAIL_LOCATION_URL = "https://images.nga.gov/"
-
+LOGO_URL = ""
+HOMEPAGE_URL = "https://images.nga.gov"
 # These variable names are fixed by the software requirements
 name = "National Gallery of Art"    # database name that user will recognise
 identifier = "nga"            # searcher identifier 
+LOGO_URL = "http://www.nga.gov/images/eagle.gif"
 
 def build_parameters(query, params):
     """ builds parameters """
@@ -216,6 +218,11 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     proxy_url = proxy_opener()
     html = proxy_url.open(url)
     return html, howFarDownThePage
+
+def get_logo():
+    return  LOGO_URL
+def get_searcher_page():
+    return HOMEPAGE_URL
 """
 =============
 PARAMMAP

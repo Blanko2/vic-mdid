@@ -22,6 +22,8 @@ from rooibos.unitedsearch.external.translator.query_language import Query_Langua
 
 name = "Artstor US"
 identifier = "artstor"
+HOMEPAGE_URL = ""
+LOGO_URL = ""
 
 """ UNITEDSEARCH VERSION OF ARTSTOR
 Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are under common interface
@@ -176,3 +178,9 @@ def _get_html_page(url):
 	return html_page
     except urllib2.URLError:
 	return None
+
+def get_logo():
+    return LOGO_URL
+
+def get_searcher_page():
+    return HOMEPAGE_URL
