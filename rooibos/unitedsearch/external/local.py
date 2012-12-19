@@ -7,6 +7,7 @@ from rooibos.settings_local import *
 
 name = "Local"
 identifier = "local"
+LOGO_URL = ""
 
 def search(term, params, off, len):
     url = build_url(term, params, off, len)
@@ -82,4 +83,6 @@ def getImage(identifier):
     print "made image"
     return img
 
+def get_logo():
+    return LOGO_URL
 parameters = MapParameter({})
