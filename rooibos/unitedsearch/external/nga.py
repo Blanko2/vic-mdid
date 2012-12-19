@@ -118,6 +118,8 @@ def search(query, params, off, num_results_wanted) :
     off -- offset - number of images to offset the result by
     num_results_wanted -- images per page
     """
+    if not query and params == {}:
+        return Result(0, off), get_empty_params()
     arg = get_empty_params()
     off = (int)(off)    
     params,  url_base = build_parameters(query, params)

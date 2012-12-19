@@ -38,7 +38,31 @@ class usViewer():
     def __url_search_(self, params={}):
         u = self.url_search()
         return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
-
+    
+    def sort_keys(self,reversed_keys):
+                if "field" in reversed_keys:
+                    reversed_keys.remove("field")
+                    reversed_keys.insert(0,"field")
+                if "keywords" in reversed_keys:
+                    reversed_keys.remove("keywords")
+                    reversed_keys.insert(0,"keywords")
+                if "all words" in reversed_keys:
+                    reversed_keys.remove("all words")
+                    reversed_keys.insert(0,"all words")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("start year")
+                    reversed_keys.append("start year")
+                if "end year" in reversed_keys:
+                    reversed_keys.remove("end year")
+                    reversed_keys.append("end year")
+                if "start date" in reversed_keys:
+                    reversed_keys.remove("start date")
+                    reversed_keys.append("start date")
+                if "end date" in reversed_keys:
+                    reversed_keys.remove("end date")
+                    reversed_keys.append("end date")
+                return reversed_keys
+    
     def htmlparams(self, defaults):    
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
@@ -65,27 +89,12 @@ class usViewer():
             elif isinstance(params, MapParameter):
                 r = ["  "*indent + "<div>"]
                 reversed_keys = params.parammap.keys()
-                if "field" in reversed_keys:
-                    reversed_keys.remove("field")
-                    reversed_keys.insert(0,"field")
-                if "keywords" in reversed_keys:
-                    reversed_keys.remove("keywords")
-                    reversed_keys.insert(0,"keywords")
-                if "start year" in reversed_keys:
-                    reversed_keys.remove("start year")
-                    reversed_keys.append("start year")
-                if "end year" in reversed_keys:
-                    reversed_keys.remove("end year")
-                    reversed_keys.append("end year")
-                if "start year" in reversed_keys:
-                    reversed_keys.remove("start date")
-                    reversed_keys.append("start date")
-                if "end year" in reversed_keys:
-                    reversed_keys.remove("end date")
-                    reversed_keys.append("end date")
+                reversed_keys = self.sort_keys(reversed_keys)
                 keys=[]
+                print reversed_keys
                 while len(reversed_keys)>0:
                     keys.append(reversed_keys.pop())
+                
                 for index in range(len(params.parammap)-1, -1, -1) :
                 #for k in params.parammap:
                     k = keys[index]

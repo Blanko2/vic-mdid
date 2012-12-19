@@ -52,8 +52,12 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
+
     off = int(off) #just in case
+    
     url, arg = build_URL(query, params)
+    if url.endswith("&q=&s=OFFSET"):
+        return Result(0, off), arg
     search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
     total = _count(search_result_parser)
     num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
