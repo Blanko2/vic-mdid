@@ -45,6 +45,7 @@ def search(query, params, off, num_results_wanted):
     else:
 	query_terms = parse_parameters(params)
 
+    print "artstor 48 query_terms %s" %query_terms
     # return empty result if no search terms (submitting an empty query breaks artstor)
     if len(query_terms) is 0:
 	return Result(0, 0), get_empty_parameters()
@@ -73,6 +74,7 @@ def search(query, params, off, num_results_wanted):
 
     result = Result(num_results, num_results+off)
     image_divs = results.findall('.//{info:srw/schema/1/dc-v1.1}dc')
+    print "artstor 77 query_terms %s" %query_terms
     for div in image_divs:
 	(url, thumb, image_identifier, title) = _get_image(div)
 	result.addImage(ResultImage(url, thumb, title, image_identifier))
