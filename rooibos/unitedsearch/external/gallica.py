@@ -14,6 +14,7 @@ Things to note:
         this is the same as in all searchers, but Gallica's is quite 
         persnicketty
 
+    
 """ 
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
@@ -22,7 +23,7 @@ from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from gallica_parser import * 
-from rooibos.unitedsearch.external.translator.query_language import *
+from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise
@@ -130,9 +131,9 @@ def build_simple_url(keywords):
 def build_advanced_url(params):
     arg = {} #dict contains params with fixed structures for result interface to desplay the query
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
-    arg, params, copyright, languages, start_date, end_date = build_arg(params)
+    arg, params, copyright, languages, start_date, end_date = _build_arg(params)
     keyword_list = params["query_list"]
-    arg_list = build_arg_list(keyword_list)
+    arg_list = _build_arg_list(keyword_list)
     arg.update({"field":arg_list})
     i = 1
     optionals_string=""
@@ -208,6 +209,9 @@ def __create_image(soup, id_div) :
     return ResultImage(url, thumb, title, image_identifier)
 
 def __count(soup) :
+    """if it has received an html soup it looks for where the number of results is written out
+    if it cannot find it - ie: Gallica has thrown an error due to not finding hits - it will
+    return 0 hits"""
     if not soup:
         return 0
     div = soup.find('head').find('title')#.find('meta','title')
@@ -225,7 +229,7 @@ def __scrub_html_for_property(property_name, html) :
                 return contents[0]
     return "None"
 
-#Uses by unitedsearch/views.py to select images
+#Used by unitedsearch/views.py to select images
 def getImage(json_image_identifier) :
     image_identifier = json.loads(json_image_identifier)
     descriptive_parser = BeautifulSoup(image_identifier['descriptive_html'])
@@ -252,14 +256,13 @@ def getImage(json_image_identifier) :
                  meta,
                  json_image_identifier))
 
-
-#TODO replace with _
-def build_arg(params):
+def _build_arg(params):
+    """ Builds the argument dictionary for the sidebar parameters""" 
     arg={}
-    copyright   = ""
-    languages     = ""
-    start_date    = ""
-    end_date  = ""
+    copyright  = ""
+    languages  = ""
+    start_date = ""
+    end_date   = ""
     if "copyright" in params:
         copyright = getcopyright(params)
         arg.update({"copyright":params["copyright"]})
@@ -282,10 +285,10 @@ def build_arg(params):
         arg.update({"end date":[]})
     return arg, params , copyright, languages, start_date, end_date
 
-"""
-return a list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
-"""
-def build_arg_list(keyword_list):
+def _build_arg_list(keyword_list):
+    """ return a list contains values for 
+    DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
+    """
     arg_list = []
     for keyword in keyword_list:
         if arg_list == []:
@@ -302,6 +305,7 @@ def build_arg_list(keyword_list):
 ==============
 """
 def getlanguages(params) :
+    """ Unintuitively gets languages that may be in params """
     if not params['languages'] or len(params['languages']) == 0 :
         return ""
     # if reach here, have languages to read, read them  
@@ -315,7 +319,6 @@ def getlanguages(params) :
         "Greek": "grc",
         "Latin": "lat"
         }
-    
     if params['languages'] == 'All' :
         lang_string = ""
     else :
@@ -323,6 +326,7 @@ def getlanguages(params) :
     return lang_string
 
 def getcopyright(params) :
+    """ Checks if copyright is in params and if so, returns it"""
     if (not params['copyright']) or (len(params['copyright']) == 0) :
         return ""
     # if reach here, have copyright  
@@ -340,11 +344,14 @@ def getcopyright(params) :
     return copy_string    
 
 def get_logo():
+    """ returns the searcher logo - to be placed in the search page"""
     return LOGO_URL
 def get_searcher_page():
+    """ returns the searcher homepage - to make the logo be a link"""
     return BASE_URL
 
 def getDate(date):
+    """OBSOLETE"""
     return date
 
 def get_empty_params():
