@@ -1,3 +1,21 @@
+"""
+Gallica searcher -- voted most likely to break
+
+Because Gallica has several idiosyncracies and works on an HTML scraper,
+this searcher is the most likely to break at some point.
+Things to note:
+    Gallica accepts a maximum of 5 advanced parameters and one of them is
+     (in our implementation) always keywords 
+     so really it accepts 4 + keywords
+    
+    Anything to do with BeautifulSoup is HTML scraping/parsing
+    
+    Searcher coming in from the sidebar are parsed in gallica_parser.py 
+        this is the same as in all searchers, but Gallica's is quite 
+        persnicketty
+
+    
+""" 
 import re                                       # regular expressions
 from BeautifulSoup import BeautifulSoup         # html parser
 from rooibos.unitedsearch import *              # other search tools
@@ -5,7 +23,7 @@ from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from gallica_parser import * 
-from rooibos.unitedsearch.external.translator.query_language import *
+from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise
@@ -45,7 +63,7 @@ def search(query, params, off, num_wanted) :
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     search_results_parser = get_search_result_parser(url, page_idx)
     if not search_results_parser:
-        print "Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
+        print "GALLICA.ERROR: Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
         return Result(0, off), arg
     num_results = __count(search_results_parser)
     num_pages = num_results/per_page + 1
@@ -94,14 +112,12 @@ URL BUILDERS
 ======================
 """
 def build_URL(query, params):
+    """ determines if the url should be simple or advanced and launches
+    corresponding method"""
     if query and not params:
         ql = Query_Language(identifier)
         params = ql.searcher_translator(query)
-
-
     query, params = parse_gallica(params)
-    
-    print params
     if query :
         return build_simple_url(query)
     return build_advanced_url(params)
@@ -115,11 +131,9 @@ def build_simple_url(keywords):
 def build_advanced_url(params):
     arg = {} #dict contains params with fixed structures for result interface to desplay the query
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
-    arg, params, copyright, languages, start_date, end_date = build_arg(params)
+    arg, params, copyright, languages, start_date, end_date = _build_arg(params)
     keyword_list = params["query_list"]
-    print "keyword_list in gallica"
-    print keyword_list
-    arg_list = build_arg_list(keyword_list)
+    arg_list = _build_arg_list(keyword_list)
     arg.update({"field":arg_list})
     i = 1
     optionals_string=""
@@ -150,10 +164,9 @@ def build_advanced_url(params):
 TOOLS
 =============
 """
-"""
-calculate the optimal number of items to display per page,
-to minimise the number of html pages to read """
 def __items_per_page(num_wanted) :
+    """ calculate the optimal number of items to display per page,
+    to minimise the number of html pages to read """
     # based on the options the site itself offers
     return 50
 
@@ -173,7 +186,9 @@ def __create_image(soup, id_div) :
         thumb = BASE_URL + regex_result.group('url') + regex_result.group('extension')
         url = BASE_URL + regex_result.group('url') + '.highres'
     # case 2 : tools.yoolib images
-    # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles%2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);background-position:center center;background-repeat:no-repeat"
+    # example : background-image:url(/resize?w=128&amp;url=http%3A%2F%2Ftools.yoolib.net%2Fi%2Fs1%2Finha%2Ffiles% +
+        #2F9001-10000%2F9518%2Fmedia%2F9520%2F0944_bensba_est006118_2%2FWID200%2FHEI200.jpg);
+        #background-position:center center;background-repeat:no-repeat"
     elif regex_result.group('url').startswith("/resize") :
         # replace special char values with the actual characters, then strip off the resize part at the start.
         thumb = regex_result.group('url').replace("%3A", ":").replace("%2F", "/").split("url=",1)[1] + regex_result.group('extension')
@@ -194,6 +209,9 @@ def __create_image(soup, id_div) :
     return ResultImage(url, thumb, title, image_identifier)
 
 def __count(soup) :
+    """if it has received an html soup it looks for where the number of results is written out
+    if it cannot find it - ie: Gallica has thrown an error due to not finding hits - it will
+    return 0 hits"""
     if not soup:
         return 0
     div = soup.find('head').find('title')#.find('meta','title')
@@ -211,7 +229,7 @@ def __scrub_html_for_property(property_name, html) :
                 return contents[0]
     return "None"
 
-#Uses by unitedsearch/views.py to select images
+#Used by unitedsearch/views.py to select images
 def getImage(json_image_identifier) :
     image_identifier = json.loads(json_image_identifier)
     descriptive_parser = BeautifulSoup(image_identifier['descriptive_html'])
@@ -238,14 +256,13 @@ def getImage(json_image_identifier) :
                  meta,
                  json_image_identifier))
 
-
-#TODO replace with _
-def build_arg(params):
+def _build_arg(params):
+    """ Builds the argument dictionary for the sidebar parameters""" 
     arg={}
-    copyright   = ""
-    languages     = ""
-    start_date    = ""
-    end_date  = ""
+    copyright  = ""
+    languages  = ""
+    start_date = ""
+    end_date   = ""
     if "copyright" in params:
         copyright = getcopyright(params)
         arg.update({"copyright":params["copyright"]})
@@ -268,10 +285,10 @@ def build_arg(params):
         arg.update({"end date":[]})
     return arg, params , copyright, languages, start_date, end_date
 
-"""
-return a list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
-"""
-def build_arg_list(keyword_list):
+def _build_arg_list(keyword_list):
+    """ return a list contains values for 
+    DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
+    """
     arg_list = []
     for keyword in keyword_list:
         if arg_list == []:
@@ -288,6 +305,7 @@ def build_arg_list(keyword_list):
 ==============
 """
 def getlanguages(params) :
+    """ Unintuitively gets languages that may be in params """
     if not params['languages'] or len(params['languages']) == 0 :
         return ""
     # if reach here, have languages to read, read them  
@@ -301,7 +319,6 @@ def getlanguages(params) :
         "Greek": "grc",
         "Latin": "lat"
         }
-    
     if params['languages'] == 'All' :
         lang_string = ""
     else :
@@ -309,6 +326,7 @@ def getlanguages(params) :
     return lang_string
 
 def getcopyright(params) :
+    """ Checks if copyright is in params and if so, returns it"""
     if (not params['copyright']) or (len(params['copyright']) == 0) :
         return ""
     # if reach here, have copyright  
@@ -326,11 +344,14 @@ def getcopyright(params) :
     return copy_string    
 
 def get_logo():
+    """ returns the searcher logo - to be placed in the search page"""
     return LOGO_URL
 def get_searcher_page():
+    """ returns the searcher homepage - to make the logo be a link"""
     return BASE_URL
 
 def getDate(date):
+    """OBSOLETE"""
     return date
 
 def get_empty_params():

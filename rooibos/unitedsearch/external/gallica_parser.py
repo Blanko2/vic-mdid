@@ -1,3 +1,12 @@
+"""
+Parses parameters received from sidebar search for gallica 
+
+Built separately as Gallica has idiosyncracies with its advanced
+search - Gallica only accepts 5 advanced terms total and we use 
+one of them as keywords always
+Because of this and the way Gallica deals with operators, the 
+parser deserved its own module
+"""
 from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
