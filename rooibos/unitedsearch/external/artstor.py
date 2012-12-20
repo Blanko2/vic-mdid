@@ -136,10 +136,6 @@ def _build_returnable_parameters(params):
 TOOLS
 =============
 """
-
-def _parse_parameters(params_dict):
-    # TODO
-    return {'': "hat"}
     
 def _get_url(query_dict, pagesize, offset):
     offset = str(int(offset)+1)
@@ -204,9 +200,14 @@ def get_searcher_page():
 def _get_image(div):
     
     fields = div.findall('{http://purl.org/dc/elements/1.1/}identifier')
+    url_regex = re.compile("\?id=(?P<id>.*?)&source")	# get everything between '?id=' and '&source'
     for field in fields:
 	if field.text.startswith('URL'):
-	    url = field.text[len('URL:'):]
+	    #url = field.text[len('URL:'):].replace('preview.', '')
+	    url_id = re.findall(url_regex, field.text)[0]
+	    url = "http://library.artstor.org/library/ExternalIV.jsp?objectId="+url_id
+	    
+	    # TODO, work out why first (commented-out) method gives timeout errors and use instead if possible
 	elif field.text.startswith('THUMBNAIL'):
 	    thumb = field.text[len('THUMBNAIL:'):]
 	else:
