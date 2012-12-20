@@ -58,7 +58,7 @@ class Query_Language:
         ]
     
     def __init__(self, searcher_id):
-        """ requires the searcher identifier to select the correct dict"""
+	""" requires the searcher identifier to select the correct dict"""
         self.searcher_identity = searcher_id
 
     def searcher_translator(self, query):

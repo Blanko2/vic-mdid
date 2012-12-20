@@ -12,6 +12,8 @@ BASE_URL = "http://barretts.ecs.vuw.ac.nz:8585/providence/app/lib/ca/Search/Mdid
 HOMEPAGE_URL = "barretts.ecs.vuw.ac.nz:8585/pawtucket"
 
 def search(term, params, off, len):
+    if not term and not params:
+        return Result(0, 1), {}
     url = build_url(term, params, off, len)
     raw_data = get_data(url)
     data, count, num_results = parse_data(raw_data)

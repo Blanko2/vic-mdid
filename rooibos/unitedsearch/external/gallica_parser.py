@@ -25,9 +25,9 @@ def parse_gallica_sidebar(params):
         query_list=[]
         while i<5 :
             if i>0:
-                type_key = "field"+str(i)+"_opt_type"
-                value_key = "field"+str(i)+"_opt_value"
-                opt_key = "field"+str(i)+"_opt"
+                type_key = "field"+str(i)+"_type"
+                value_key = "field"+str(i)+"_value"
+                opt_key = "field"+str(i)
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = params[value_key]
@@ -78,13 +78,13 @@ def add_entry(query_list,entry):
 
 def parse_gallica(params):
     if not params:
-        return "cat",{}
+        return None, None
 
     if "all" in params and len(params)==1:
         return params['all'],None
     else:
         return parse_gallica_adv_search(params)
-    return "cat",{}
+
         
 
 

@@ -65,8 +65,8 @@ class OptionalParameter:
     """ A parameter that can be selected or disabled in the sidebar """ 
 
     def __init__(self, subparam, label=None):
-        self.subparam = subparam
-        self.label = label
+	    self.subparam = subparam
+	    self.label = label
 
 class DefinedListParameter:
     """ A parameter with a defined list of possible values, eg ["Open-access", "All"].  Note, multipleAllowed not supported yet"""

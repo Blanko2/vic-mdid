@@ -38,7 +38,11 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGE
                                     "firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
+    if not keyword or keyword in "keywords=, params={}":
+        return 0
     url, arg = build_URL(keyword,{})
+    if not url:
+        return 0
     soup = get_search_result_parser(url, 1)
     return __count(soup)
 
@@ -60,6 +64,8 @@ def search(query, params, off, num_wanted) :
     
     images = []
     url, arg = build_URL(query, params) 
+    if not url:
+        return Result(0, off), arg
     first_round = True      # optimisation to say we don't need to replace the first search_results_parser
     search_results_parser = get_search_result_parser(url, page_idx)
     if not search_results_parser:
@@ -118,12 +124,16 @@ def build_URL(query, params):
         ql = Query_Language(identifier)
         params = ql.searcher_translator(query)
     query, params = parse_gallica(params)
+    if not query and not params:
+        return None, get_empty_params()
     if query :
         return build_simple_url(query)
     return build_advanced_url(params)
     
 def build_simple_url(keywords):
     arg = get_empty_params()
+    if keywords=="":
+        return None, arg
     arg.update({"simple_keywords":keywords})
     keywords = re.sub(" ", "+", keywords)
     return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
