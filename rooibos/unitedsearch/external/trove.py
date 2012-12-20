@@ -68,10 +68,8 @@ def search(query, params, off, num_wanted) :
     result = [];
     #TODO: api or html
     while num_wanted>0:
-        if api:
-            images = parse_api_results(search_result_parser)
-        else:
-            images = parse_results(search_result_parser)
+        images = parse_api_results(search_result_parser)
+
         #now images is all images found on page
         num_got = len(images)
         for i in images:
@@ -85,7 +83,9 @@ def search(query, params, off, num_wanted) :
             search_result_parser = get_search_result_parser(url, off, 100)#get next page, remember off is modified in loop above
     
     img_list = Result(total, off)
+    print result[0]
     for image in result:
+       
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
     #res = dict(empty_params)
     #res["all words"] = kw
@@ -96,12 +96,25 @@ def search(query, params, off, num_wanted) :
 def parse_api_results(soup):
     images = []
     works = soup.findAll("work")
+
     for work in works:
         id = work["id"]
-        thumbId = work.find("identifier", attrs={'linktype':'thumbnail'})
-        thumb= None
-        if thumbId:
-            thumb = thumbId.text.replace("&amp;", "&")
+        thumbTag = work.find("identifier", attrs={'linktype':'thumbnail'})
+        imageTag = work.find("identifier", attrs={'linktype':'fulltext'})
+        troveTag = work.find("troveurl")
+        if not thumbTag or thumbTag=="":
+            thumbTag = imageTag
+        if thumbTag:
+            thumb = str(thumbTag.string).replace("&amp;", "&")
+        else:
+            thumb= "../../../../static/images/thumbnail_unavailable.png"
+        
+        if imageTag:
+            image = str(imageTag.string).replace("&amp;", "&")
+        else:
+            image = troveTag.string
+        #if thumbTag:
+        #    thumb = thumbTag.text.replace("&amp;", "&")
         """
         if not thumb:
             text = work.find("identifier", attrs={'linktype':'fulltext'})
@@ -110,9 +123,10 @@ def parse_api_results(soup):
             trove = work.find("troveUrl")
             thumb = trove.text.replace("&amp;", "&") if trove else None
         """
-        if thumb and thumb not in "":
+        """
+        if thumb and not thumb == "":
             image = thumb
-            thumb = get_image_from_thumb(thumb)
+            #thumb = get_image_from_thumb(thumb)
             #thumbnail is full image as attempted by get_image_from_thumb
             #link is to the original thumbnail so we can see what went wrong
             if not thumb:
@@ -131,6 +145,7 @@ def parse_api_results(soup):
                 if not image:
                     print "\n\n\n\n\n\n\n\nSomething went horribly wrong in trove.py, no troveUrl in record:"
                     print "work:\n"+str(work)
+        """
         desc = ""
         descId = work.find("title")
         if descId:
@@ -146,47 +161,7 @@ def parse_api_results(soup):
         images.append([image, thumb, desc, json.dumps(data)])
     return images
 
-    #TODO: api or html
-def parse_results(soup):
-    results = soup.findAll("li", attrs={'class':re.compile("draggableResult")}, limit=20) #results double up after 20 TODO: what if less than 20 results found?
-    images = []
-    num_loaded = 0
-    debug = False
-    for result in results:
-        #print result.prettify()
-        
-        #"""
-        title_block = result.find("dt")
-        if title_block:
-            title = title_block.text
-        else:
-            title=""#where else can we find the title?
-        description = title_block.find("a")['href']
-        id = int(re.findall("[0-9]+", description)[0]) if description else 0
-        if debug : print "Image id = "+str(id)
-        creator = result.find("dd", attrs={'class' : "creator"})
-        kw = result.find("dd", attrs={'class' : "keywords"})
-        online = result.find("dd", attrs={'class' : "online singleholding"})
-        thumbdd = result.find("dd", attrs={'class' : "thumbnail"})
-        thumba = thumbdd.find("a") if thumbdd else None
-        thumbimg = thumba.find("img") if thumba else None
-        thumb = thumbimg['src'] if thumbimg else ""
-        #"""
-        desc = title if title else kw.text
-        image = get_image_from_thumb(thumb)
-        if not image:
-            image = thumb
-            thumb = ""
-        data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
-        if thumb:
-            #images.append([TROVE_URL+description if description else get_image_from_thumb(thumb), thumb, kw.text if kw else title, str(id)])
-            images.append([image, thumb, desc, json.dumps(data)])
-            num_loaded += 1
-        else:
-            images.append([image, "", desc, json.dumps(data)])
-            num_loaded += 1
-    print "trove.py, search, found a page with "+str(len(images))+" results"
-    return images
+
 
 def get_image_from_thumb(url):
     if "static.flickr.com" in url:
