@@ -45,6 +45,7 @@ def search(query, params, off, num_results_wanted):
     else:
 	query_terms = parse_parameters(params)
 
+    print "artstor 48 query_terms %s" %query_terms
     # return empty result if no search terms (submitting an empty query breaks artstor)
     if len(query_terms) is 0:
 	return Result(0, 0), get_empty_parameters()
@@ -59,7 +60,7 @@ def search(query, params, off, num_results_wanted):
     """
     pagesize = num_results_wanted
     url = _get_url(query_terms, pagesize, off)
-    print "artstor 58 url \n%s\n" %url
+    print "artstor 63 url \n%s\nquery_terms %s" %(url, query_terms)
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
@@ -74,10 +75,13 @@ def search(query, params, off, num_results_wanted):
 
     result = Result(num_results, num_results+off)
     image_divs = results.findall('.//{info:srw/schema/1/dc-v1.1}dc')
+    print "artstor 77 query_terms %s" %query_terms
     for div in image_divs:
 	(url, thumb, image_identifier, title) = _get_image(div)
 	result.addImage(ResultImage(url, thumb, title, image_identifier))
 	# TODO cope with full image not actually giving result (timeout error)
+	
+    print "artstor 82 \n\tparams %s\n\tquery %s\n\tquery_terms %s\n\t returnable_params%s" %(params, query, query_terms, _build_returnable_parameters(query_terms))
     return result, _build_returnable_parameters(query_terms)
 
     
@@ -166,11 +170,12 @@ def _build_query_string(query_dict):
     # deal with keywords, as they must go first
     if '' in query_dict:
 	qs += "\"" + query_dict[''] + "\"&"
-	del query_dict['']
     # then add all other params
     for key in query_dict:
-	# append each key value to the string as key="value"
-	qs += key + "=\"" + query_dict[key] + "\"+and+"
+	if not key is '':
+	    # append each key value to the string as key="value"
+	    qs += key + "=\"" + query_dict[key] + "\"+and+"
+
 
     #remove trailing characters (added in expectation of more parameters)
     if qs.endswith('&'):
