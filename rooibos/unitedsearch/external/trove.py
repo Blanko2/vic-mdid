@@ -36,6 +36,8 @@ def count(query) :
     if not query or query in "keywords=, params={}":
         return 0
     url,arg = build_URL(query, {})
+    if url.endswith("&q=&s=OFFSET"):
+        return 0
     search_result_parser = get_search_result_parser(url, 1, 0)
     return _count(search_result_parser)
 
