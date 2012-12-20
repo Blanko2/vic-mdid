@@ -59,7 +59,6 @@ def search(query, params, off, num_results_wanted):
     """
     pagesize = num_results_wanted
     url = _get_url(query_terms, pagesize, off)
-    print "artstor 58 url \n%s\n" %url
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
@@ -78,6 +77,8 @@ def search(query, params, off, num_results_wanted):
 	(url, thumb, image_identifier, title) = _get_image(div)
 	result.addImage(ResultImage(url, thumb, title, image_identifier))
 	# TODO cope with full image not actually giving result (timeout error)
+	
+
     return result, _build_returnable_parameters(query_terms)
 
     
@@ -166,11 +167,12 @@ def _build_query_string(query_dict):
     # deal with keywords, as they must go first
     if '' in query_dict:
 	qs += "\"" + query_dict[''] + "\"&"
-	del query_dict['']
     # then add all other params
     for key in query_dict:
-	# append each key value to the string as key="value"
-	qs += key + "=\"" + query_dict[key] + "\"+and+"
+	if not key is '':
+	    # append each key value to the string as key="value"
+	    qs += key + "=\"" + query_dict[key] + "\"+and+"
+
 
     #remove trailing characters (added in expectation of more parameters)
     if qs.endswith('&'):
