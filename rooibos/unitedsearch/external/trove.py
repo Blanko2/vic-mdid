@@ -34,6 +34,8 @@ http://trove.nla.gov.au/general/api-technical
 """
 def count(query) :
     url,arg = build_URL(query, {})
+    if url.endswith("&q=&s=OFFSET"):
+        return 0
     search_result_parser = get_search_result_parser(url, 1, 0)
     return _count(search_result_parser)
 
