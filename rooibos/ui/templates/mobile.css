@@ -203,12 +203,17 @@ html.js-enabled #header-bar {
     margin:0px;
     padding:0px;
     vertical-align: top;
+    font-size: 1.2em;
 }
 
 /* Search go image button */
 #search-go {
 	width: 35px;
     height: 35px;
+}
+
+#search-check-boxes {
+	font-size: 1.3em;
 }
 
 /* Presentation browse button */
@@ -403,15 +408,42 @@ tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
 }
 
 #view-button{
-	background: {{ PRIMARY_COLOR }};
-	border-radius: 8px;
-	width: 40px;
-	height: 30px;
-	text-align: center;
-	line-height: 30px;
+    background: {{ PRIMARY_COLOR }};
+    border-radius: 8px;
+    width: 40px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
 }
 #view-button a {
 	color: white;
+}
+
+#databaseSearchLinks{
+    width:100%;
+    height20pt;
+}
+
+.mobileDBBut{
+    float:left;
+    height:20pt;
+    width:25%;
+    background-color:#2288BB;
+    text-align:center;
+}
+
+.mobileDBBut:hover{
+    background-color:#44BBFF;
+    cursor:normal;
+
+}
+
+.mobileDBButSel{
+    float:left;
+    height:20pt;
+    width:25%;
+    background-color:#44BBFF;
+    text-align:center;
 }
 
 /*****************************************************************************/

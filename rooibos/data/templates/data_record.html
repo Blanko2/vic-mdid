@@ -9,6 +9,31 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+	
+	var unsaved_metadata = false;
+	$("#metadata_form").keypress(function() {
+	    unsaved_metadata = true;
+	    $(".metadata_submit_button").css("font-weight", "bolder");
+	});
+	$("#metadata_form").submit(function() {
+	    unsaved_metadata = false;
+	});
+	$("#cancel_edit_button").click(function() {
+	    unsaved_metadata = false;
+	});
+	$(window).bind("beforeunload", function() {
+	    if (unsaved_metadata) {
+		if(confirm("You have unsaved data. Press ok to save it, cancel to discard")) {
+		    $.ajax({
+			data: $("#metadata_form").serialize(),
+			type: $("#metadata_form").attr('method'),
+			url: $("#metadata_form").attr('action'),
+		    });
+		    //$("#metadata_form").submit();
+		}
+	    }
+	});
+
         $(".submit-on-select-change select").change(function () { this.form.submit(); });
         $(".submit-on-select-change :submit").remove();
 
@@ -102,7 +127,7 @@ $(document).ready(function() {
         <a href="{% url data-record-edit-customize record.id record.name %}">Customize Record</a><br />
 {% endif %}
 {% if fv_formset and record.id %}
-        <a href="{% if next %}{{ next }}{% else %}{% url data-record record.id record.name %}{% endif %}">Cancel Editing</a><br />
+        <a href="{% if next %}{{ next }}{% else %}{% url data-record record.id record.name %}{% endif %}" id="cancel_edit_button">Cancel Editing</a><br />
 {% endif %}
 {% if record.owner %}{% ifequal record.owner request.user %}
   {% add_tags_form record "suggested" "Suggest" %}
@@ -304,7 +329,7 @@ Display metadata as: {{ fieldsetform.fieldset }}
 </form>
 
 
-<form method="POST" action="">{% csrf_token %}
+<form method="POST" action="" id="metadata_form">{% csrf_token %}
 
 {% if c_formset %}
     {{ c_formset.management_form }}
@@ -333,8 +358,8 @@ Display metadata as: {{ fieldsetform.fieldset }}
 {% endif %}
 
 <div style="clear: left; padding: 20px 0;">
-<input type="submit" value="Save" />
-<input type="submit" name="save_and_continue" value="Save and Continue Editing" />
+<input type="submit" value="Save" class="metadata_submit_button"/>
+<input type="submit" name="save_and_continue" value="Save and Continue Editing" class="metadata_submit_button" />
 </div>
 
 
@@ -377,8 +402,8 @@ Display metadata as: {{ fieldsetform.fieldset }}
 
 
 <div style="clear: left; padding: 20px 0;">
-<input type="submit" value="Save" />
-<input type="submit" name="save_and_continue" value="Save and Continue Editing" />
+<input type="submit" value="Save" class="metadata_submit_button" id="submit_button"/>
+<input type="submit" name="save_and_continue" value="Save and Continue Editing" class="metadata_submit_button"/>
 </div>
 
     </div>

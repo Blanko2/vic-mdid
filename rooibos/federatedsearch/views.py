@@ -15,6 +15,8 @@ from dummy import Dummy
 from rooibos.unitedsearch import aggregate
 
 import logging
+import re
+import json
 
 
 #sources = {
@@ -24,13 +26,15 @@ import logging
 #}
 
 source_classes = [
-    NasaImageExchange,
+    #NasaImageExchange, TODO: ignoring completely
     ArtstorSearch,
-    FlickrSearch,
+    #FlickrSearch, TODO: Maybe implement later
 ] + aggregate.federatedSearchSources()
 
 
 def sidebar_api_raw(request, query, cached_only=False):
+    print "sidebar_api_raw-----------"
+    print query
 
     sources = dict(
         (lambda s: (s.get_source_id(), s))(c()) for c in source_classes
@@ -53,7 +57,8 @@ def sidebar_api_raw(request, query, cached_only=False):
             self.cache_hit = False
         def run(self):
             self.instance = sources[self.source]
-            if cache.has_key(self.source):
+            # if we've done this search before, simply use the cached result, don't bother re-searching
+            if False:#cache.has_key(self.source): #TODO: this is debug only, re-enable caching for better repeat performance
                 self.cache_hit = True
                 if cache[self.source]:
                     self.hits = cache[self.source]
@@ -86,7 +91,10 @@ def sidebar_api_raw(request, query, cached_only=False):
             if thread.hits > 0:
                 total_hits += thread.hits
             results.append((thread.instance, thread.hits))
-
+    """
+    print "*******Fed.views***********"
+    print results
+    """
     return dict(html=render_to_string('federatedsearch_results.html',
                             dict(results=sorted(results),
                                  query=query),
@@ -97,4 +105,20 @@ def sidebar_api_raw(request, query, cached_only=False):
 @json_view
 def sidebar_api(request):
     query = ' '.join(request.GET.get('q', '').strip().lower().split())
+ 
+    # build params from query if possible (if query contains type=value parameters)
+    subquery = query.split('keywords=')[1]
+    params={}
+    keywords=""
+    # trim 'search=search_type, keywords='
+    clauses = subquery.split(',')
+
+    for clause in clauses:
+	    type_value = clause.strip().split("=", 1)
+	    if len(type_value) == 1:
+		    keywords += type_value[0] + " "
+	    elif len(type_value) > 1:
+                params[type_value[0]]= type_value[1]
+    
+    query = re.sub("(?<=keywords=).*", keywords.strip(), query) + ", params=" + json.dumps(params)
     return sidebar_api_raw(request, query)

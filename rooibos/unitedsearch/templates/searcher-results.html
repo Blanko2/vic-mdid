@@ -48,15 +48,21 @@
 {% block sidebar %}
 
 {% var as related_pages %}
-{"pages": [
-    {"url": "{% url solr-search %}?kw={{ query|urlencode }}", "title": "Back to Explore"}
-]}
+{% if browse %}
+    {"pages": [
+	{"url": "{% url solr-browse %}", "title": "Back to Browse"}
+    ]}
+{% else %}
+    {"pages": [
+	{"url": "{% url solr-search %}?kw={{ query|urlencode }}", "title": "Back to Explore"}
+    ]}
+{% endif %}
 {% endvar %}
 
 {{ block.super }}
 
   <div class="facet active-facet" id="results_sidebar_keywords">
-    <div class="facet-header">Keywords</div>
+    <div class="facet-header">Keywords </div>
     <div class="facet-body">
         <form method="GET" action=".">
         <input type="text" id="keywords" name="q" value="{{ query }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
@@ -65,6 +71,7 @@
   </div>
   {% if html_parameters %}
   <div class="facet active-facet" id="results_sidebar_parameters">
+    <div class="facet-header">Advanced Search</div>
     <form method="GET" action=".">
       {{ html_parameters|safe }}
       <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
@@ -79,6 +86,7 @@
 
 {% block content-top %}
 <h1>{{ searcher_name }}</h1>
+<a href="{{ searcher_url }}"><img src="{{ searcher_logo }}"></a>
 {% endblock %}
 
 
@@ -90,15 +98,25 @@
     <input id="submit_record_selections" type="submit" name="action" value="Select" />
 </div>
 
-{% if next_page or previous_page %}
+
+
+{% if first_page or next_page or previous_page %}
 <div style="text-align: center;">
+  {% if first_page %}
+    <a href="{{ first_page }}">First</a>
+  {% endif %}
   {% if previous_page %}
     <a href="{{ previous_page }}">Previous</a>
   {% endif %}
   {% if next_page %}
     <a href="{{ next_page }}">Next</a>
   {% endif %}
+  {% if last_page %}
+    <a href="{{ last_page }}">Last</a>
+  {% endif %}
 </div>
+
+
 {% endif %}
 
 {% if results %}
@@ -115,8 +133,13 @@
 
 
 {% endfor %}
+
+
+
 </div>
 {% endif %}
+
+
 
 </form>
 

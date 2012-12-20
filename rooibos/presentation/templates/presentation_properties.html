@@ -13,14 +13,50 @@
     $(document).ready(function() {
 
 		var unsaved_changes = false;
+		var unsaved_form_changes = false;
 		$(window).bind('beforeunload', function() {
+			if (unsaved_form_changes) {
+			    if(confirm("You have unsaved changes to properties. Press ok to save them, cancel to discard")) {
+				selectionChanged();
+				$.ajax({	// do manual submission
+				    data: $("#properties_form").serialize()+"&update-properties=Save",
+				    type: $("#properties_form").attr('method'),
+				    url: $("#properties_form").attr('action'),
+				});
+			    }
+			}
+
+			if (unsaved_changes) {
+			    if (confirm("You have unsaved changes to your presentation slides. Press 'ok' to save them, 'cancel' to discard")) {
+				selectionChanged();
+				$.ajax({
+				    data: $("#items-form").serialize()+"&update-items=Save",
+				    type: $("#items-form").attr('method'),
+				    url: $("#items-form").attr('action'), 
+				});
+			    }
+			}
+/*	Version which merely prompts user to save, as opposed to letting them save. Maybe return to if using confirm as above is too clumsy
 			if (unsaved_changes)
 				return 'You made changes to your presentation slides that will be lost if you continue.';
+			if (unsaved_form_changes)
+				return 'You made changes to your presentation properties that will be lost if you continue.';
+*/
 		});
 		function mark_unsaved_changes(saved) {
 			unsaved_changes = (saved != 'saved');
 			$('#update-items').css('font-weight', unsaved_changes ? 'bolder' : '');
 		}
+	
+	// make properties form changes ask to be saved unless form is being submitted
+	$('#properties_form').submit(function() {
+	    unsaved_form_changes = false;
+	});
+	$('#properties_form').keypress(function() {
+	    unsaved_form_changes = true;
+	    $('#properties_submit').css('font-weight', 'bolder');
+	    $('#update-items').css('font-weight', 'bolder');
+	});
 
         $("#items tbody tr").each(function(i, e) {
             var inputs = $(".thumbnail-col", e).children().not('a');
@@ -92,7 +128,7 @@
         $("#show-button").click(function(e) { showHide(false); e.preventDefault(); });
         $("#hide-button").click(function(e) { showHide(true); e.preventDefault(); });
 
-		$("#lighttable-annotation textarea").change(function() {
+		$("#lighttable-annotation textarea").keypress(function() {
 			mark_unsaved_changes();
 		})
 
@@ -355,9 +391,9 @@
 <h2 id="properties" style="padding-top: 60px;">Properties</h2>
 
 
-<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST">{% csrf_token %}
+<form action="{% url presentation-edit presentation.id, presentation.name %}" method="POST" id="properties_form">{% csrf_token %}
 
-<div class="vertical" style="margin-top: 20px;">
+<div class="vertical" style="margin-top: 20px;" id="properties_div">
 
 <div style="float: left; clear: left;">
 {{ form.title.label_tag }}
@@ -398,7 +434,7 @@
 </div>
 
 <div class="row">
-<input type="submit" name="update-properties" value="Update" />
+<input type="submit" name="update-properties" value="Update" id="properties_submit" />
 <a href="{% url presentation-manage %}">Cancel</a>
 </div>
 

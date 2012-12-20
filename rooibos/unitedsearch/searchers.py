@@ -1,10 +1,12 @@
-from external import digitalnz, nga, flickr, gallica, local
+from external import digitalnz, nga, flickr, gallica, local, artstor, trove
 
 """ UnitedSearchers to search. Must have name and identifier attributes defined"""
 all = [
 	nga,
 	digitalnz,
-	flickr,
+	#flickr, TODO: maybe implement later
 	gallica,
 	local,
+	artstor,
+	trove,
 ]
