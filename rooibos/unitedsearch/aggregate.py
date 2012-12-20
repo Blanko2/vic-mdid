@@ -1,3 +1,7 @@
+"""Wrapper for searchers in UniterSearch
+    makes system treat each as a FederatedSearch allowing them
+    to be searcheable
+"""
 from django.core.urlresolvers import reverse
 from rooibos.federatedsearch.models import FederatedSearch
 
@@ -16,8 +20,6 @@ def federatedSearchSource(searcher):
 			"""
 			#once the count method is implemented in each database, 
 			# switch to this:
-			print "keyword"
-			print keyword
 			return searcher.count(keyword)
 
 		def get_label(self):
@@ -32,5 +34,5 @@ def federatedSearchSource(searcher):
 
 def federatedSearchSources():
 	""" Wraps the UnitedSearch searchers from searchers.py
-	into FedaratedSearch, so they can be displayed etc """
+	into FederatedSearch, so they can be displayed etc """
 	return map(federatedSearchSource, searchers.all)

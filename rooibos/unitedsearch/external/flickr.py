@@ -1,3 +1,5 @@
+""" FLICKR IS NOT IMPLEMENTED FULLY IN THE CURRENT VIC-MDID VERSION"""
+
 import json
 import urllib2
 from rooibos.unitedsearch import *
