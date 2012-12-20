@@ -20,7 +20,7 @@ from BeautifulSoup import BeautifulSoup
 #import datetime
 #import socket
 from rooibos.unitedsearch.external.translator.query_language import Query_Language
-#from rooibos.unitedsearch.external.artstor_parser import parse_parameters
+from rooibos.unitedsearch.external.artstor_parser import parse_parameters
 
 name = "Artstor US"
 identifier = "artstor"
@@ -30,11 +30,10 @@ LOGO_URL = "http://www.artstor.org/images/global/g-artstor-logo.gif"
 """ UNITEDSEARCH VERSION OF ARTSTOR
 Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are under common interface
 """
-# TODO support parameters
+
 def search(query, params, off, num_results_wanted):
     off = int(off)
     
-    print "artstor 34 \n\tquery %s\n\tparams %s" %(query, params)
     # query and params both come from sidebar, so should have exactly one.
     if not query and not params:
 	return Result(0, off), get_empty_parameters()
@@ -44,7 +43,8 @@ def search(query, params, off, num_results_wanted):
     elif query:
 	query_terms = Query_Language(identifier).searcher_translator(query)
     else:
-	query_terms = Query_Language(identifier).translate_parameters(params)
+	query_terms = parse_parameters(params)
+
     """
     Caching of results, uncomment and fix if supported in other searchers TODO
     cached, created = HitCount.current_objects.get_or_create(
@@ -58,13 +58,11 @@ def search(query, params, off, num_results_wanted):
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
-	print BeautifulSoup(html_page)
-	print "artstor 60"
 	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
     except ExpatError:		# XML parsing error
 	num_results = 0
     if not num_results:		# other type of error or no results found
-	return Result(0, off), get_empty_parameters()	# return None?
+	return Result(0, off), _build_returnable_parameters(query_terms)
 
     #pages = int(math.ceil(float(total) / pagesize))
 
@@ -74,7 +72,7 @@ def search(query, params, off, num_results_wanted):
 	(url, thumb, image_identifier, title) = _get_image(div)
 	result.addImage(ResultImage(url, thumb, title, image_identifier))
 	# TODO cope with full image not actually giving result (timeout error)
-    return result, get_empty_parameters()	# TODO parameters!!!
+    return result, _build_returnable_parameters(query_terms)
 
     
 def count(query):
@@ -98,22 +96,35 @@ def getImage(image_identifier):
   
 # TODO support date once we understand how date ranges are done in Artstor (note, can use dc.date=1894 to find images which were done in exactly 1894, or date range starts or ends with 1894, but not which include 1894 within their range)
 parameters = MapParameter({
-    "keywords": OptionalParameter(ScalarParameter(str), "Keywords"),
-    "creator": OptionalParameter(ScalarParameter(str), "Creator"),
-    "title": OptionalParameter(ScalarParameter(str), "Title"),
-    "subject": OptionalParameter(ScalarParameter(str), "Subject")
+    "": OptionalParameter(ScalarParameter(str), "Keywords"),
+    "dc.creator": OptionalParameter(ScalarParameter(str), "Creator"),
+    "dc.title": OptionalParameter(ScalarParameter(str), "Title"),
+    "dc.subject": OptionalParameter(ScalarParameter(str), "Subject")
     })
     
     
 def get_empty_parameters() :
     return {
-	"keywords": [],
-	"creator": [],
-	"title": [],
-	"subject": []
+	"": [],
+	"dc.creator": [],
+	"dc.title": [],
+	"dc.subject": []
     }
     
 
+def _build_returnable_parameters(params):
+    returnables = {}
+    for key in params:
+	if isinstance(params[key], list):
+	    returnables[key] = params[key]
+	else:
+	    returnables[key] = [params[key]]
+    
+    for unused_key in (set(parameters.parammap)-set(params)):
+	returnables[unused_key] = []
+	
+    return returnables
+	
 """
 ==============
 TOOLS
@@ -145,11 +156,9 @@ def _get_url(query_dict, pagesize, offset):
                               ('maximumRecords', '50')])
         )
         """
-    print "artstor 125 url \n%s\n" %url
     return url
 
 def _build_query_string(query_dict):
-    print "artstor 128 query_dict %s" %query_dict
     qs = ""
     
     # deal with keywords, as they must go first
@@ -166,16 +175,16 @@ def _build_query_string(query_dict):
 	qs = qs.rstrip('&')
     else:
 	qs = qs.rstrip('+and+')
+	
+    # replace all whitespace (this is a url, afterall)
+    qs = qs.replace(' ', '+')
     return qs
     
     
 def _get_html_page(url):
-    print "artstor 171 url %s" %url
     opener = proxy_opener()
     try:
-	print "artstor 174"
 	html_page = opener.open(urllib2.Request(url))
-	print "artstor 176 html %s" %BeautifulSoup(html_page)
 	return html_page
     except urllib2.URLError:
 	return None
