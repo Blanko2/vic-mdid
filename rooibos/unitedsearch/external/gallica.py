@@ -38,7 +38,7 @@ ADVANCED_SEARCH_URL_STRUCTURE = "http://gallica.bnf.fr/Search?idArk=&n=50&p=PAGE
                                     "firstIndexationDateDebut=&firstIndexationDateFin=COPYRIGHT&tri=&submit2=Start+search"
 
 def count(keyword) :
-    if not query or query in "keywords=, params={}":
+    if not keyword or keyword in "keywords=, params={}":
         return 0
     url, arg = build_URL(keyword,{})
     soup = get_search_result_parser(url, 1)
