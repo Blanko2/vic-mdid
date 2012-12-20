@@ -58,7 +58,8 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
-
+    if (not query or query in "keywords=, params={}") and (not params or params=={}):
+        return Result(0, off), empty_params
     off = int(off) #just in case
     
     url, arg = build_URL(query, params)
