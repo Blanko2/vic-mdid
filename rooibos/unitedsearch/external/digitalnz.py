@@ -1,3 +1,12 @@
+"""DigitalNZ searcher - Uses the DigitalNZ API v3 for all calls
+
+documentation for the digitalNZ API can be found at http://www.digitalnz.org/developers/api-docs-v3/search-records-api-v3
+you can also find the getMetaData API at http://www.digitalnz.org/developers/api-docs-v3/get-metadata-api-v3
+Calls to the digitalnz API can return a json, rss or xml - this system uses json and then loads it to a python object
+DigitalNZ can handle modifiers and an empty keywords field, as long as there are other parameters to search by.
+You will need to get your own API key and place it in settings_local.py as DNZ_API_KEY the URL builder here will 
+    load it up
+"""
 import json
 import urllib2
 from urllib import urlencode
@@ -28,6 +37,7 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
+    """performs the search and returns a results page and the used parameters"""
     # build the URL 
     if not query and params=={}:
         return unitedsearch.Result(0, offset), get_empty_params()
