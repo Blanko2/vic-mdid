@@ -3,10 +3,14 @@ from rooibos.unitedsearch import *		# other search tools, such as parameter type
 from rooibos.unitedsearch.common import *	# methods common to all external searchers
 import urllib2					# to get page from url address
 from BeautifulSoup import BeautifulSoup		# html scraper
+from rooibos.unitedsearch.external.translator.query_language import Query_Language					# reads query into usable form
+from rooibos.unitedsearch.external.ngaust_parser import parse_parameters				# reads params from sidebar
 
 
 name="National Gallery of Australia"
 identifier = "ngaust"
+LOGO_URL = "http://nga.gov.au/common/graphics/NGA-INLINE-SPLICE-LTGREY.png"
+HOMEPAGE_URL = "http://nga.gov.au/Home/Default.cfm"
 
 # use simple search for search by keyword
 # note, VIEW_SELECT=2 means show images and captions, order_select is whether to order by title, author, date, etc
@@ -21,9 +25,20 @@ url_replacement_types = {"artist": "aname", "start": "yeara", "end": "yearb", "p
 def search(query, params, offset, num_wanted):
 
     offset = int(offset)    
+    # get query terms in usable form (expect one of query or params
+    if query and not params:
+	query_terms = Query_Language(identifier).searcher_translator(query)
+    elif params and not query:
+	query_terms = parse_parameters(params)
+    elif not params and not query:
+	print "shouldn't ever end up here...Ngaust has both query (%s) and params (%s)" %(query, params)
+	raise NotImplementedError
+    else:
+	return Result(0, off), build_empty_params()
+	
     
     # get 1st page
-    url_base = _get_url(query, params)
+    url_base = _get_url(query_terms)
     html_page = _get_html(url_base, offset, num_wanted)
     scraper = BeautifulSoup(html_page)
     total = _count(scraper)
@@ -56,17 +71,21 @@ def search(query, params, offset, num_wanted):
     images = _get_images(scraper, num_wanted)
     for image in images:
 	result.addImage(image)
-    # return
+    
+    """
     empty_params = build_empty_params(parameters)
     params = merge_dictionaries(empty_params, params, parameters.parammap.keys())[0]
+    """
+    returning_params = _build_returnable_parameters(query_terms)
 
-    return result, empty_params
+    return result, returning_params
     
     #print "NGaust search"
     #return Result(0, 0), build_empty_params(parameters)
     
 def count(query):
-    url_base = _get_url(query, {})
+    query_dict = Query_Language(identifier).searcher_translator(query)
+    url_base = _get_url(query_dict)
     scraper = BeautifulSoup(_get_html(url_base, 0, 1))
     
     return _count(scraper)
@@ -83,7 +102,50 @@ def getImage(json_image_identifier):
     return Image(url, thumb, title, image_identifier, json_image_identifier)
 
 
-def _get_url(query, params):
+def _get_url(query_dict):
+    
+    if 'All Words' in query_dict:
+	# simple search (can't do both at once, so have to shove advanced parameters into keywords)
+	
+	keyword_string = ""
+	for para in query_dict:
+	    if not para is 'display_order':	# special case, as this parameter is still available in simple search
+		keyword_string += query_dict[para] + " "
+	url_base = SIMPLE_SEARCH_URL_STRUCTURE.replace('VALUE', keyword_string)
+	query_dict = {
+	    "All Words": keyword_string,
+	    "display_order": query_dict.get('display_order' or 'Artist')
+	}
+			
+    else:
+	# advanced search
+	params_string = ""
+	for para in query_dict:
+	    if not para is 'display_order':
+		url_term = url_replacement_types[para] if para in url_replacement_types else para
+		if not len(query_dict[para]) is 0:
+		    params_string += "&" + url_term + "=" + query_dict[para]
+		
+	# remove leading '&'
+	params_string = params_string.rstrip('&')
+	
+	url_base = ADVANCED_SEARCH_BASE_URL.replace('PARAMETERS', params_string)
+
+    # set display order
+    if 'display_order' in query_dict and not query_dict['display_order'] is None:
+	order_choice = query_dict["display_order"].title()
+    else:
+	order_choice = 'Artist'
+
+    if order_choice in order_values:	# valid choice
+	order_int = str(order_values.index(order_choice)+1)	# +1 because ngaust counts from 1, not 0
+    else:
+	order_int = "1"
+    url_base = url_base.replace('ORDER_TYPE_INT', order_int)
+    
+    return url_base
+		
+    """ Old version from pre query language
     keywords, para_map = break_query_string(query)
     params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
     if not keywords is u'':	# have keywords to add
@@ -133,16 +195,19 @@ def _get_url(query, params):
 	url_base = url_base.replace("ORDER_TYPE_INT", "1")	# default
 	
     return url_base
-    
+    """
     
 def _get_html(url_base, offset, num_wanted):
     
     url = url_base.replace("OFFSET", str(offset+1)).replace("NUM_IMAGES", str(num_wanted))	# image to start at. NGaust is 1-indexed
     print "NGaust url: %s" %url
-    proxyHandler = urllib2.ProxyHandler({"http": "http://localhost:3128"})
-    opener = urllib2.build_opener(proxyHandler)
-    html = opener.open(url)
-    return html
+    opener = proxy_opener()
+    try:
+	html = opener.open(urllib2.Request(url))
+	return html
+    except urllib2.URLError:
+	return None
+    
     
 def _count(scraper):
     
@@ -204,6 +269,20 @@ def build_empty_params(mapParameter):
 	empty[param] = []
     return empty
 
+
+def _build_returnable_parameters(params):
+    returnables = {}
+    for key in params:
+	if isinstance(params[key], list):
+	    returnables[key] = params[key]
+	else:
+	    returnables[key] = [params[key]]
+    
+    for unused_key in (set(parameters.parammap)-set(params)):
+	returnables[unused_key] = []
+	
+    return returnables
+    
     
 parameters = MapParameter({
     "artist": OptionalParameter(ScalarParameter(str), "Artist"),
@@ -219,4 +298,9 @@ parameters = MapParameter({
     "technique": OptionalParameter(ScalarParameter(str), "Technique"),
     "accno": OptionalParameter(ScalarParameter(str), "Accn Number")
     })
+
+def get_logo():
+    return LOGO_URL
     
+def get_searcher_page():
+    return HOMEPAGE_URL
