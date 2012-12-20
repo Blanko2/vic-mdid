@@ -33,7 +33,11 @@ TROVE_DEBUG = False
 http://trove.nla.gov.au/general/api-technical
 """
 def count(query) :
+    if not query or query in "keywords=, params={}":
+        return 0
     url,arg = build_URL(query, {})
+    if url.endswith("&q=&s=OFFSET"):
+        return 0
     search_result_parser = get_search_result_parser(url, 1, 0)
     return _count(search_result_parser)
 
@@ -54,7 +58,8 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
-
+    if (not query or query in "keywords=, params={}") and (not params or params=={}):
+        return Result(0, off), empty_params
     off = int(off) #just in case
     
     url, arg = build_URL(query, params)
