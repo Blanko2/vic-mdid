@@ -151,10 +151,9 @@ def get_params(request):
         params = {}
         for key in request.GET:
             if key.startswith('i_') and not key.endswith("_opt"):
-                params.update({key[2:]:request.GET[key]})
-
+                params.update({str(key[2:]):str(request.GET[key])})
+        print params
         return params    
-        
 
 all_words_map = {
     'gallica' : 'all',

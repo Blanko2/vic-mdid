@@ -11,5 +11,5 @@ dictionary={
         'decade'    : 'decade',
         'rights'    : 'rights',
         'century'   : 'century',
-        'keywords'  : 'text'
+        'keywords'  : 'keywords'
 } 
