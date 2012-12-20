@@ -4,6 +4,7 @@ import re
 from rooibos.unitedsearch import RecordImage, MapParameter, Result, ResultImage
 from rooibos.unitedsearch.common import *
 from rooibos.settings_local import *
+from rooibos.unitedsearch.external.translator.query_language import Query_Language
 
 name = "Local"
 identifier = "local"
@@ -12,9 +13,17 @@ BASE_URL = "http://barretts.ecs.vuw.ac.nz:8585/providence/app/lib/ca/Search/Mdid
 HOMEPAGE_URL = "barretts.ecs.vuw.ac.nz:8585/pawtucket"
 
 def search(term, params, off, len):
+    print "Local search: "
+    print "Term = "+term
+    print "Params = "+str(params)
     if not term and not params:
         return Result(0, 1), {}
-    url = build_url(term, params, off, len)
+    if not params:
+        query_language = Query_Language(identifier)
+        query_terms = query_language.searcher_translator(term)
+        print "Query_terms = "+str(query_terms)
+        params = query_terms
+    url = build_url(params, off, len)
     raw_data = get_data(url)
     data, count, num_results = parse_data(raw_data)
     nextOff = int(off)+int(num_results)
@@ -38,14 +47,31 @@ def search(term, params, off, len):
 	return result
 """
 
-def build_url(query, params, off, len):
-    keywords, para_map = break_query_string(query)
+def build_url(params, off, len):
+    if 'keywords' in params:
+        keywords = params['keywords']+" "
+        del params['keywords']
+    else:
+        keywords = ""
     url = BASE_URL+"q="
-    url += keywords.replace(" ", "+")
+    url += keywords#.replace(" ", "+")
+    pref = ""
+    for key in params:
+        url += pref+build_param(key.strip(" "), params[key].strip(" "))
+        pref = " "
     url += "&start="+str(off)
     url += "&end="+str(int(off)+int(len))
-    return url
+    return url.replace(" ", "%20")
 
+def build_param(param, value):
+    mod = ""
+    if param.startswith("+") or param.startswith("-"):
+        mod, param = param.split("_", 1)
+    if " " in value:
+        value = "("+value+")"
+    ans = mod +("" if param in "keywords" else param+":")+value
+    return ans
+    
 def parse_data(raw_data):
     #print "raw_data type:"+str(raw_data.__class__)
     if not raw_data:
@@ -75,7 +101,9 @@ def previousOffset(off, len):
 	return off > 0 and str(off - len)
 	
 def count(keyword):
-    url = build_url(keyword, None, 0, 1)
+    query_language = Query_Language(identifier)
+	query_terms = query_language.searcher_translator(keyword)
+	url = build_url(query_terms, 0, 1)
     raw_data = get_data(url)
     data, count, num_results = parse_data(raw_data)
     return count
