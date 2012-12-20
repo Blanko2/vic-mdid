@@ -45,7 +45,6 @@ def search(query, params, off, num_results_wanted):
     else:
 	query_terms = parse_parameters(params)
 
-    print "artstor 48 query_terms %s" %query_terms
     # return empty result if no search terms (submitting an empty query breaks artstor)
     if len(query_terms) is 0:
 	return Result(0, 0), get_empty_parameters()
@@ -60,10 +59,10 @@ def search(query, params, off, num_results_wanted):
     """
     pagesize = num_results_wanted
     url = _get_url(query_terms, pagesize, off)
+    print "artstor 62 url\n%s" %url
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
-	print "artstor 61 \n\tfile %s\n\tresults %s\n" %(html_page, results)
 	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
     except ExpatError:		# XML parsing error
 	num_results = 0
@@ -163,9 +162,10 @@ def _get_url(query_dict, pagesize, offset):
         """
     return url
 
+# TODO - support modifiers
 def _build_query_string(query_dict):
-    qs = ""
     
+    qs = ""
     # deal with keywords, as they must go first
     if '' in query_dict:
 	qs += "\"" + query_dict[''] + "\"&"
@@ -173,6 +173,7 @@ def _build_query_string(query_dict):
     for key in query_dict:
 	if not key is '':
 	    # append each key value to the string as key="value"
+	    key, operator = _break_modified_key(key)
 	    qs += key + "=\"" + query_dict[key] + "\"+and+"
 
 
@@ -185,7 +186,10 @@ def _build_query_string(query_dict):
     # replace all whitespace (this is a url, afterall)
     qs = qs.replace(' ', '+')
     return qs
-    
+
+def _break_modified_key(modified_key):
+    modifier, key = modified_key.split('_')
+    return modifier, key
     
 def _get_html_page(url):
     opener = proxy_opener()
