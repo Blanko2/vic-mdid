@@ -29,7 +29,7 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
 def search(query, params, offset, per_page=20):
     # build the URL 
-    if not query and params=={}:
+    if (not query or query in "keywords=, params={}") and (not params or params=={}):
         return unitedsearch.Result(0, offset), get_empty_params()
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page
@@ -53,6 +53,8 @@ def previousOffset(offset, per_page):
     return offset > 0 and str(offset - per_page)
 
 def count(query, parameters={}):
+    if not query or query in "keywords=, params={}":
+        return 0
     """ returns the number of hits"""
     search_object = _load(query, parameters) 
     hits = int(search_object["search"]["result_count"]) 
