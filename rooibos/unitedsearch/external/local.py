@@ -102,8 +102,8 @@ def previousOffset(off, len):
 	
 def count(keyword):
     query_language = Query_Language(identifier)
-	query_terms = query_language.searcher_translator(keyword)
-	url = build_url(query_terms, 0, 1)
+    query_terms = query_language.searcher_translator(keyword)
+    url = build_url(query_terms, 0, 1)
     raw_data = get_data(url)
     data, count, num_results = parse_data(raw_data)
     return count
