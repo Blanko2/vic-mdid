@@ -1,0 +1,70 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+	<title>MDID Victoria</title> 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" data-wrapperels="span" title="home"/>
+	
+	
+	
+	
+	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+	
+	<script type="text/javascript">
+	  $(document).bind("mobileinit", function(){
+			//$.mobile.addBackBtn = true;
+			$.mobile.ajaxLinksEnabled = false;
+			$.mobile.ajaxFormsEnabled = false;
+			//$('#background1').css('height', ''+($(window).height()/3.0));
+			//$('#background2').css('height', ''+(2* ($(window).height()/3.0)));
+		});
+	</script>
+	
+	<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+	<link rel="stylesheet" href="{% url static 'css/jquery_mobile_themes/Vic-theme.css' %}" data-wrapperels="span" title="home"/>
+
+	<script type="text/javascript"> 
+		
+		
+		 function setFormJson(db, id){
+		    var jsonData = document.getElementById(id).getAttribute("value");
+		    document.getElementById(db+'-imageUrlDataSender').setAttribute("value", jsonData);
+		    document.getElementById(db+'-imageForm').submit();
+		 }
+		 
+		 function setDatabase(db){
+		      document.getElementById("databaseSelector").setAttribute("value", db);
+		      document.getElementById('dbform').submit();
+		 }
+		 
+	</script>
+</head> 
+<body> 
+
+{% block javascript%}
+{% endblock javascript%}
+
+{% block raw-content %}
+<div data-role="page" data-add-back-button="true">
+
+	<div data-role="header" data-position="fixed" data-tap-toggle="true" data-theme="a">
+		<a data-role="none" href='{% url mobile-main %}'><img src='{% url static 'images/mdid_logo.png' %}' style='position:relative; top:3px; margin-left:20pt; margin-bottom:0;'></img>
+		</a>
+		
+		<h1></h1>
+	</div><!-- /header -->
+
+	{% block content %}
+    {% endblock content %}
+
+	<div data-role="footer" data-position="fixed" data-tap-toggle="true">
+		<p style="margin-left:5%; font-weight:normal; font-size:8pt;">&copy 1997-2011 James Madison University</br>&copy 2012 Victoria University</p>
+	</div><!-- /header -->
+
+</div><!-- /page -->
+{% endblock raw-content %}
+
+
+</body>
+</html>
+
