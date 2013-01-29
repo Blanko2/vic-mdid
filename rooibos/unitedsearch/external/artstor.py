@@ -1,35 +1,55 @@
 # TODO remove unused imports
-import urllib, urllib2, time, cookielib, math
-from django.utils import simplejson
-from os import makedirs
-from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
-from rooibos.storage import Storage, Media
-from rooibos.solr.models import SolrIndexUpdates
-from rooibos.solr import SolrIndex
-from rooibos.access.models import AccessControl
+#import urllib, urllib2, time, cookielib, math
+import urllib2
+#from django.utils import simplejson
+#from os import makedirs
+#from rooibos.data.models import Collection, CollectionItem, Record, FieldSet, Field
+#from rooibos.storage import Storage, Media
+#from rooibos.solr.models import SolrIndexUpdates
+#from rooibos.solr import SolrIndex
+#from rooibos.access.models import AccessControl
 from xml.etree.ElementTree import ElementTree
 from xml.parsers.expat import ExpatError
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from rooibos.federatedsearch.models import FederatedSearch, HitCount
+#from django.core.urlresolvers import reverse
+#from rooibos.federatedsearch.models import FederatedSearch, HitCount
 from rooibos.unitedsearch import *
 from rooibos.unitedsearch.common import *
 from BeautifulSoup import BeautifulSoup
-import cookielib
-import datetime
-import socket
+#import cookielib
+#import datetime
+#import socket
+from rooibos.unitedsearch.external.translator.query_language import Query_Language
+from rooibos.unitedsearch.external.artstor_parser import parse_parameters
 
 name = "Artstor US"
 identifier = "artstor"
+HOMEPAGE_URL = "http://www.artstor.org/index.shtml"
+LOGO_URL = "http://www.artstor.org/images/global/g-artstor-logo.gif"
 
 """ UNITEDSEARCH VERSION OF ARTSTOR
 Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are under common interface
 """
-# TODO support parameters, parameterised query
+
 def search(query, params, off, num_results_wanted):
     off = int(off)
-    if not query:
-            return None
+    
+    # query and params both come from sidebar, so should have exactly one.
+    if not query and not params:
+	return Result(0, off), get_empty_parameters()
+    elif query and params:
+	print "artstor 34, shouldn't have reached here... Have both query (%s) and params (%s)" %(query, params)
+	raise NotImplementedError
+    elif query:
+	query_terms = Query_Language(identifier).searcher_translator(query)
+    else:
+	query_terms = parse_parameters(params)
+
+    print "artstor 48 query_terms %s" %query_terms
+    # return empty result if no search terms (submitting an empty query breaks artstor)
+    if len(query_terms) is 0:
+	return Result(0, 0), get_empty_parameters()
+
     """
     Caching of results, uncomment and fix if supported in other searchers TODO
     cached, created = HitCount.current_objects.get_or_create(
@@ -38,61 +58,96 @@ def search(query, params, off, num_results_wanted):
     if not created and cached.results:
 	return simplejson.loads(cached.results)
     """
-    pagesize = 50
-    keywords, para_map = break_query_string(query)
-    params, unsupported_parameters = merge_dictionaries(para_map, params, parameters.parammap.keys())
-    add_to_dict(params, "all words", keywords)
-    url = _get_url(keywords, params, pagesize, off)
+    pagesize = num_results_wanted
+    url = _get_url(query_terms, pagesize, off)
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
-	num_results = results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords') or 0
+	print "artstor 61 \n\tfile %s\n\tresults %s\n" %(html_page, results)
+	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
     except ExpatError:		# XML parsing error
 	num_results = 0
     if not num_results:		# other type of error or no results found
-	return Result(0, off), {}	# return None?
+	return Result(0, off), _build_returnable_parameters(query_terms)
 
     #pages = int(math.ceil(float(total) / pagesize))
 
     result = Result(num_results, num_results+off)
-    #result = dict(records=[], hits=total)
-    for image in results.findall('//{info:srw/schema/1/dc-v1.1}dc'):
-	for ids in image.findall('{http://purl.org/dc/elements/1.1/}identifier'):
-	    if ids.text.startswith('URL'):
-		url = ids.text[len('URL:'):]
-	    elif ids.text.startswith('THUMBNAIL'):
-		tn = ids.text[len('THUMBNAIL:'):]
-	    else:
-		id = ids.text
-	title = image.findtext('{http://purl.org/dc/elements/1.1/}title')
-	result.addImage(url, thumb_url, title, {})
-	# TODO make sure url, thumb_url are accurate and always exist, make actual image identifier, rather than {}
-    return result, {}	# TODO parameters!!!
+    image_divs = results.findall('.//{info:srw/schema/1/dc-v1.1}dc')
+    print "artstor 77 query_terms %s" %query_terms
+    for div in image_divs:
+	(url, thumb, image_identifier, title) = _get_image(div)
+	result.addImage(ResultImage(url, thumb, title, image_identifier))
+	# TODO cope with full image not actually giving result (timeout error)
+	
 
-# TODO - make this always return count - returning 12345 is to make artstor enterable from search page in ui
+    return result, _build_returnable_parameters(query_terms)
+
+    
 def count(query):
-    #count = search(query, {}, "0", 1)[0].total 
-    return 12345
+    results = search(query, {}, "0", 1)[0]
+    return results.total or 0
 
-# TODO
+
+
 def getImage(image_identifier):
-  return None
+  
+  url = '%s?query=dc.identifier="%s"&operation=searchRetrieve&version=1.1&maximumRecords=1&startRecord=1' %(settings.ARTSTOR_GATEWAY, image_identifier)
+  
+  page = _get_html_page(url)
+  info_div = ElementTree(file=page).find('.//{info:srw/schema/1/dc-v1.1}dc')
+  (url, thumb, identifier, title) = _get_image(info_div)
+  
+  meta = {}	# TODO
+  
+  return RecordImage(url, thumb, title, meta, identifier)
 
-# TODO
-parameters = MapParameter({})
+  
+# TODO support date once we understand how date ranges are done in Artstor (note, can use dc.date=1894 to find images which were done in exactly 1894, or date range starts or ends with 1894, but not which include 1894 within their range)
+parameters = MapParameter({
+    "": OptionalParameter(ScalarParameter(str), "Keywords"),
+    "dc.creator": OptionalParameter(ScalarParameter(str), "Creator"),
+    "dc.title": OptionalParameter(ScalarParameter(str), "Title"),
+    "dc.subject": OptionalParameter(ScalarParameter(str), "Subject")
+    })
+    
+    
+def get_empty_parameters() :
+    return {
+	"": [],
+	"dc.creator": [],
+	"dc.title": [],
+	"dc.subject": []
+    }
+    
 
+def _build_returnable_parameters(params):
+    returnables = {}
+    for key in params:
+	if isinstance(params[key], list):
+	    returnables[key] = params[key]
+	else:
+	    returnables[key] = [params[key]]
+    
+    for unused_key in (set(parameters.parammap)-set(params)):
+	returnables[unused_key] = []
+	
+    return returnables
+	
 """
 ==============
 TOOLS
 =============
 """
-def _get_url(query, params, pagesize, offset):
-    query = "cat"
+    
+def _get_url(query_dict, pagesize, offset):
     offset = str(int(offset)+1)
+    query_string = _build_query_string(query_dict)
     # version from fedaratedsearch/Artstor/search
-    url = '%s?query="%s"&operation=searchRetrieve&version=1.1&maximumRecords=%s&startRecord=%s' % (
+    url = '%s?query=%s&operation=searchRetrieve&version=1.1&maximumRecords=%s&startRecord=%s' % (
 	settings.ARTSTOR_GATEWAY,
-	urllib.quote(query),
+	#urllib.quote(query_string),
+	query_string,
 	pagesize,
 	offset,	# because ARTSTOR counts from 1, not 0
     )
@@ -108,19 +163,59 @@ def _get_url(query, params, pagesize, offset):
         """
     return url
 
-def _get_html_page(url):
+def _build_query_string(query_dict):
+    qs = ""
     
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()),
-				  urllib2.ProxyHandler({"http": "http://localhost:3128"}))
-				  # TODO, use SmartRedirectHandler() from FedaratedSearch/Artstor/__init__.py ?
-    """
-    #socket.setdefaulttimeout(self.timeout)
-    html_page = opener.open(url)
-    print "artstor us l111 page %s" %(BeautifulSoup(html_page))
-    return html_page
-    """
+    # deal with keywords, as they must go first
+    if '' in query_dict:
+	qs += "\"" + query_dict[''] + "\"&"
+    # then add all other params
+    for key in query_dict:
+	if not key is '':
+	    # append each key value to the string as key="value"
+	    qs += key + "=\"" + query_dict[key] + "\"+and+"
+
+
+    #remove trailing characters (added in expectation of more parameters)
+    if qs.endswith('&'):
+	qs = qs.rstrip('&')
+    else:
+	qs = qs.rstrip('+and+')
+	
+    # replace all whitespace (this is a url, afterall)
+    qs = qs.replace(' ', '+')
+    return qs
+    
+    
+def _get_html_page(url):
+    opener = proxy_opener()
     try:
 	html_page = opener.open(urllib2.Request(url))
 	return html_page
     except urllib2.URLError:
 	return None
+
+def get_logo():
+    return LOGO_URL
+
+def get_searcher_page():
+    return HOMEPAGE_URL
+
+def _get_image(div):
+    
+    fields = div.findall('{http://purl.org/dc/elements/1.1/}identifier')
+    url_regex = re.compile("\?id=(?P<id>.*?)&source")	# get everything between '?id=' and '&source'
+    for field in fields:
+	if field.text.startswith('URL'):
+	    #url = field.text[len('URL:'):].replace('preview.', '')
+	    url_id = re.findall(url_regex, field.text)[0]
+	    url = "http://library.artstor.org/library/ExternalIV.jsp?objectId="+url_id
+	    
+	    # TODO, work out why first (commented-out) method gives timeout errors and use instead if possible
+	elif field.text.startswith('THUMBNAIL'):
+	    thumb = field.text[len('THUMBNAIL:'):]
+	else:
+	    id = field.text
+    title = div.findtext('{http://purl.org/dc/elements/1.1/}title')
+    
+    return url, thumb, id, title

@@ -5,9 +5,9 @@ from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, 
 from django.conf import settings
 from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
-from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter
+from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter, UserDefinedTypeParameter, DefinedListParameter,DoubleParameter, ListParameter
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
-from digitalnz_parser import parse_parameters
+
 
 name = "DigitalNZ"
 identifier = "digitalnz"
@@ -18,6 +18,7 @@ CATEGORY_VALUE="&and[category][]=Images"
 RIGHTS_VALUE="&and[rights][]="
 
 LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
+SEARCHER_URL="http://digitalnz.org/"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
 END_METADATA_LOCATION_URL=".json?api_key="+API_KEY
@@ -28,19 +29,23 @@ BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
 def search(query, params, offset, per_page=20):
     # build the URL 
+    if (not query or query in "keywords=, params={}") and (not params or params=={}):
+        return unitedsearch.Result(0, offset), get_empty_params()
     offset = _modulate_offset(int(offset), per_page)
     next_offset = offset+per_page
     page = offset/per_page +1 
-    url = _build_URL(query, params, per_page, page)
+    url ,arg = _build_URL(query, params, per_page, page)
     result_object = _load_url(url) 
-    hits = count(query, parameters = params) 
+    hits = _count(url)
     result = unitedsearch.Result(hits, next_offset) 
     # add images
     for object in result_object['search']["results"]:
-        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or None 
+        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or object["thumbnail_url"] or None 
+        #TODO - when there is no thumbnail_url use the getMetadata API to grab the thumbnail
+        # should only be done after fixing getImage()
         image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
         result.addImage(image)
-    return result, get_empty_params() 
+    return result, arg 
 
 def previousOffset(offset, per_page):
     """ the image offset for the previous page """
@@ -48,11 +53,19 @@ def previousOffset(offset, per_page):
     return offset > 0 and str(offset - per_page)
 
 def count(query, parameters={}):
+    if not query or query in "keywords=, params={}":
+        return 0
     """ returns the number of hits"""
     search_object = _load(query, parameters) 
     hits = int(search_object["search"]["result_count"]) 
     return hits 
 
+def _count(url):
+    result_json = _get_url(url)    
+    search_object = json.load(result_json)
+    hits = int(search_object["search"]["result_count"]) 
+    return hits 
+    
 """
 =======================
 URL BUILDERS###########
@@ -68,29 +81,39 @@ def _build_URL(query, params, per_page, page):
     """
     # keywords, para_map = break_query_string(query) 
     url = ""
-    query_terms = _translate_query(query) if not params else parse_parameters(params)
-    url =  _build_simple_URL(query_terms, per_page, page)
-    return url 
+    query_terms = params.copy() if params else _translate_query(query) #if not params else parse_parameters(params)
+    return  _build_simple_URL(query_terms, per_page, page)
+
 
 def _build_simple_URL(query_terms, per_page, page):
     """ returns a search url with all the given keywords, at the given page and with the number or specified results per page """
+    
     facets=""
     keywords=""
-    if 'text' in query_terms:
-        keywords=query_terms['text']   
-        del query_terms['text']
+    arg = get_empty_params()
+    facet_arg = []
+    if 'keywords' in query_terms:
+        keywords=query_terms['keywords']   
+        arg.update({"keywords":keywords})
+        del query_terms['keywords']
+    
     for q in query_terms:
-        q_split = q.split()
+        q_split = q.split('_')
         if len(q_split)>1:   
             query_mod = q_split[0]
-            facet = q_split[1] 
+            facet = q[len(query_mod)+1:]
         else:   
-            qpi_keuery_mod = 'and'
+            query_mod = 'and'
             facet = q
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
+        facet_arg.append([query_mod,[facet,query_terms[q]]])
     keywords = keywords.replace(" ","+")
     url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
-    return url 
+    while len(facet_arg)<5:
+        facet_arg.append([])
+    arg.update({"field":facet_arg})
+    print url
+    return url, arg 
 """
 ================
 #TOOLS
@@ -105,8 +128,6 @@ def _translate_query(query):
 def _get_url(url):
     """ retrieves the created url """
     proxy_url = proxy_opener()
-    print 'dnz ===108'
-    print url
     html = proxy_url.open(url)
     return html 
 
@@ -117,7 +138,7 @@ def _load_url(url):
 def _load(query, params):
     """ creates a url from a given query and loads the resulting json string into a python object """
     # should build a url and return the json string that it returns
-    url = _build_URL(query, params, 20, 1)
+    url,arg  = _build_URL(query, params, 20, 1)
     result_json = _get_url(url)    
     return json.load(result_json)
 
@@ -140,16 +161,21 @@ def _modulate_offset(offset, per_page):
 # ====== GETTERS ========
 # =======================
 
+def get_searcher_page():
+    return SEARCHER_URL
+
 def get_logo():
     return LOGO_URL
 
 def getImage(identifier):
+    #TODO parse html when cannot find a location_url 
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
     image_object = _load_url(url)['record'] 
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
-    return RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    img = unitedsearch.RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    return img 
 
 def get_empty_params():
     return {
@@ -157,7 +183,8 @@ def get_empty_params():
     "creator":[],
     "century":[],
     "decade":[],
-    "year":[]
+    "year":[],
+    "field":[]
     }
 
 """
@@ -165,10 +192,26 @@ def get_empty_params():
 PARAMETERS
 =============
 """
+
+field_types = ['creator','display_collection',  'placename', 'year', 'decade', 'century', 'language', 'content_partner', 'rights', 'collection']
+modifier_types = ['and','or','without']
+
 parameters = MapParameter({
-    "keywords":OptionalParameter(ScalarParameter(str)),
-    "creator":OptionalParameter(ScalarParameter(str)),
-    "century":OptionalParameter(ScalarParameter(str)),
-    "decade":OptionalParameter(ScalarParameter(str)),
-    "year":OptionalParameter(ScalarParameter(str))
+    "keywords":ScalarParameter(str,label="keywords"),
+    "field" : ListParameter([
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        ),
+        DoubleParameter(DefinedListParameter(modifier_types,  multipleAllowed=False, label=""),
+        UserDefinedTypeParameter(field_types)
+        )
+        ],label="Facets")
     })
+
+

@@ -525,6 +525,7 @@ def search(request, id=None, name=None, selected=False, json=False):
     
     crit_pattern = re.compile("(?P<type>.*?(\_t)?):\"?(?P<value>.*?)\"?$")
     #crit_pattern = re.compile("(?P<type>.*?\_t):(?P<value>.*?)")
+
     for c in criteria :
       m = crit_pattern.match(c)
       if query_list.has_key(str(m.group('type'))) :
@@ -537,25 +538,30 @@ def search(request, id=None, name=None, selected=False, json=False):
     #print "keywords is"
     #print keywords
     """
-    kws_list = (str(keywords)).split(' ')
+    kws_list = (str(keywords)).split(',')
     kws=""
     kws_not = ""
-    
+    query_terms=""
     
     for kw in kws_list:
-     if kw:
-      if kw[0]=='-' :
-	kw = kw.replace('\"','')
-	if kws_not is "":
-	  kws_not += kw.replace('-','')
-	else :
-	  kws_not += "+"+kw.replace('-','')
-      else:
-	kw = kw.replace('\"','')
-	if kws is "":
-	  kws += kw
-	else:
-	  kws += "+"+kw 
+	if kw is '':	# empty search
+	    pass	# nothing to do
+        elif "=" in kw:
+            if not query_terms == "":
+                query_terms += ", "
+            query_terms += kw
+        elif kw[0]=='-':
+            kw = kw.replace('\"','')
+            if kws_not is "":
+                kws_not += kw.replace('-','')
+            else :
+                kws_not += "+"+kw.replace('-','')
+        else:
+            kw = kw.replace('\"','')
+            if kws is "":
+                kws += kw
+            else:
+                kws += "+"+kw 
 	
     #print "kws = "
     #print kws
@@ -581,13 +587,13 @@ def search(request, id=None, name=None, selected=False, json=False):
       q = key+"="+value
       query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
-    
+    if not query_terms is '':
+        query_string += ', '+query_terms
     if not kws_not is '':
       query_string += ', '+"-="+kws_not
     
-
-    #print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
-    #print query_string+"\n\n\n\n\n"
+    print "\n\n\n\n\n--------------------------Query String is:----s----------------------------"
+    print query_string+"\n\n\n\n\n"
  
 
     return render_to_response('results.html',

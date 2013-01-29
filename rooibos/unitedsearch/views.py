@@ -38,7 +38,31 @@ class usViewer():
     def __url_search_(self, params={}):
         u = self.url_search()
         return u + (("&" if "?" in u else "?") + urlencode(params) if params else "")
-
+    
+    def sort_keys(self,reversed_keys):
+                if "field" in reversed_keys:
+                    reversed_keys.remove("field")
+                    reversed_keys.insert(0,"field")
+                if "keywords" in reversed_keys:
+                    reversed_keys.remove("keywords")
+                    reversed_keys.insert(0,"keywords")
+                if "all words" in reversed_keys:
+                    reversed_keys.remove("all words")
+                    reversed_keys.insert(0,"all words")
+                if "start year" in reversed_keys:
+                    reversed_keys.remove("start year")
+                    reversed_keys.append("start year")
+                if "end year" in reversed_keys:
+                    reversed_keys.remove("end year")
+                    reversed_keys.append("end year")
+                if "start date" in reversed_keys:
+                    reversed_keys.remove("start date")
+                    reversed_keys.append("start date")
+                if "end date" in reversed_keys:
+                    reversed_keys.remove("end date")
+                    reversed_keys.append("end date")
+                return reversed_keys
+    
     def htmlparams(self, defaults):    
         def out(params, indent, prefix, default):
             label = params.label if params.label else " ".join(prefix)
@@ -55,9 +79,9 @@ class usViewer():
                   
                 for option in options :
                     if option == selected:
-                        r_content += "<option selected=\"selected\" value=" + option
+                        r_content += "<option selected=\"selected\" value=" + '\"'+option+'\"'
                     else: 
-                        r_content += "<option value=" + option
+                        r_content += "<option value=" + '\"'+option+'\"'
                     r_content += ">" + option + "</option>"
                 r_content += "</select><br>"
                 return [r_content]
@@ -65,26 +89,21 @@ class usViewer():
             elif isinstance(params, MapParameter):
                 r = ["  "*indent + "<div>"]
                 reversed_keys = params.parammap.keys()
-                if "field" in reversed_keys:
-                    reversed_keys.remove("field")
-                    reversed_keys.insert(0,"field")
-                if "start year" in reversed_keys:
-                    reversed_keys.remove("start year")
-                    reversed_keys.append("start year")
-                if "end year" in reversed_keys:
-                    reversed_keys.remove("end year")
-                    reversed_keys.append("end year")
+                reversed_keys = self.sort_keys(reversed_keys)
                 keys=[]
+                print reversed_keys
                 while len(reversed_keys)>0:
                     keys.append(reversed_keys.pop())
+                
                 for index in range(len(params.parammap)-1, -1, -1) :
                 #for k in params.parammap:
                     k = keys[index]
-                    r += out(params.parammap[k], indent + 1, prefix + [k], default != None and default[k] != None and default[k])
+                    r += out(params.parammap[k], indent + 1, prefix + [k],
+			default != None and default[k] != None and default[k])
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ListParameter):
-                r = ["  "*indent + "<div>"]
+                r = ["  "*indent + (label + ": " if params.label else "")+"<div>"]
                 index =0
                 i = 0
                 for v in params.paramlist :
@@ -94,14 +113,15 @@ class usViewer():
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, DoubleParameter):
-                r = ["  "*indent + "<div>"]
-                r += out(params.subparam1, indent + 1, prefix + ["opt"], default and default[0] or None)
-                r += out(params.subparam2, indent + 1, prefix + ["opt"], default and default[1] or None)
+                r = ["  "*indent + "<div>"]                
+                r += out(params.subparam1, indent + 1, prefix , default and default[0] or None)
+                r += out(params.subparam2, indent + 1, prefix , default and default[1] or None)
 
                 r += ["  "*indent + "</div>"]
                 return r
             elif isinstance(params, ScalarParameter):
                 return ["  "*indent + (label + ": " if params.label else "") + "<input type=\"text\" name=\"i_" + "_".join(prefix) + "\" value=\"" + (default or "") + "\" />"]
+         
             elif isinstance(params, OptionalParameter):
                 r = ["  "*indent + "<div>"]
                 indent += 1
@@ -262,6 +282,8 @@ class usViewer():
                 'last_page' :lastPage,
                 'hits': result.total,
                 'searcher_name': self.searcher.name,
+                'searcher_logo': self.searcher.get_logo(),
+                'searcher_url': self.searcher.get_searcher_page(),
                 'html_parameters': self.htmlparams(args),
                 'query': query_language
             }
@@ -320,8 +342,7 @@ class usViewer():
         return record
 
     def select(self, request):
-        #print request.POST
-        #print request.method
+        print request.method
         if not request.user.is_authenticated():
             raise Http404()
 
@@ -329,34 +350,24 @@ class usViewer():
             # TODO: maybe drop the unused given-records portion of this
             postid = request.POST.get('id', '[]')
             imagesjs = json.loads(postid.strip("[]"))
-            #print "Json:"+imagesjs
-            #print self.searcher.getImage(imagesjs)
-            #images = map(self.searcher.getImage, imagesjs)
             images = [self.searcher.getImage(imagesjs)]
-            #print "images = "+str(images)
             urlmap = {}
             for i in images:
                 urlmap[i.record.get_absolute_url() if isinstance(i, ResultRecord) else i.url]=i
-            #print "urlmap = "+str(urlmap)
             urls = urlmap.keys()
-            #print "urls = "+str(urls)
-            # map of relevant source URLs to record IDs that already exist
             ids = dict(Record.objects.filter(source__in=urls, manager='unitedsearch').values_list('source', 'id'))
-            #print "ids = "+str(ids)
             result = []
             for url in urls:
                 id = ids.get(url)
                 if id:
-                    print "got id"
+                    #print "got id"
                     result.append(id)
                 else:
-                    print "got record"
+                    #print "got record"
                     i = urlmap[url].identifier
-                    #print i
                     record = self.record(i)
-                    #print record
                     result.append(record.id)
-            print result
+            #print result
             r = request.POST.copy()
             r['id'] = simplejson.dumps(result)
             request.POST = r

@@ -7,8 +7,13 @@ from rooibos.settings_local import *
 
 name = "Local"
 identifier = "local"
+LOGO_URL = "http://collectiveaccess.org/graphics/CAlogo.gif"
+BASE_URL = "http://barretts.ecs.vuw.ac.nz:8585/providence/app/lib/ca/Search/MdidSearcher.php?"
+HOMEPAGE_URL = "barretts.ecs.vuw.ac.nz:8585/pawtucket"
 
 def search(term, params, off, len):
+    if not term and not params:
+        return Result(0, 1), {}
     url = build_url(term, params, off, len)
     raw_data = get_data(url)
     data, count, num_results = parse_data(raw_data)
@@ -35,7 +40,7 @@ def search(term, params, off, len):
 
 def build_url(query, params, off, len):
     keywords, para_map = break_query_string(query)
-    url = "http://barretts.ecs.vuw.ac.nz:8585/providence/app/lib/ca/Search/MdidSearcher.php?q="
+    url = BASE_URL+"q="
     url += keywords.replace(" ", "+")
     url += "&start="+str(off)
     url += "&end="+str(int(off)+int(len))
@@ -57,7 +62,7 @@ def parse_data(raw_data):
 
     
 def get_data(url):
-    #print "lacal.py getting data from url: "+str(url)
+    print "lacal.py getting data from url: "+str(url)
     opener = proxy_opener()
     data = opener.open(url)
     html = ""
@@ -78,8 +83,18 @@ def count(keyword):
 def getImage(identifier):
     print "in local.py getImage, identifier = "+identifier
     data = json.loads(identifier)
-    img = RecordImage(data['url'], data['thumb'], data['name'], {'idno':data['idno'], 'name':data['name']}, json.dumps(data))
+    url = BASE_URL + "?get="+data['id']
+    meta = get_data(url).strip("0123456789")
+    meta = json.loads(meta)
+    #img = RecordImage(data['url'], data['thumb'], data['name'], {'idno':data['idno'], 'name':data['name'], 'Artist':data['artist']}, json.dumps(data))
+    img = RecordImage(data['url'], data['thumb'], data['name'], meta, json.dumps(data))
     print "made image"
     return img
 
+def get_logo():
+    return LOGO_URL
+
+def get_searcher_page():
+    return HOMEPAGE_URL
+    
 parameters = MapParameter({})

@@ -1,3 +1,12 @@
+"""
+Parses parameters received from sidebar search for gallica 
+
+Built separately as Gallica has idiosyncracies with its advanced
+search - Gallica only accepts 5 advanced terms total and we use 
+one of them as keywords always
+Because of this and the way Gallica deals with operators, the 
+parser deserved its own module
+"""
 from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
@@ -7,8 +16,6 @@ import json
 
 
 def parse_gallica_sidebar(params):
-        print "original params"
-        print params
         header = "field"
         tail = "_opt"
         i = 0
@@ -18,9 +25,9 @@ def parse_gallica_sidebar(params):
         query_list=[]
         while i<5 :
             if i>0:
-                type_key = "field"+str(i)+"_opt_type"
-                value_key = "field"+str(i)+"_opt_value"
-                opt_key = "field"+str(i)+"_opt"
+                type_key = "field"+str(i)+"_type"
+                value_key = "field"+str(i)+"_value"
+                opt_key = "field"+str(i)
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = params[value_key]
@@ -40,8 +47,6 @@ def parse_gallica_sidebar(params):
             i += 1
         
         params.update({"query_list":query_list})
-        print "params in parser"
-        print params
         return None,params
 
 def parse_gallica_adv_search(params):
@@ -58,48 +63,10 @@ def parse_gallica_adv_search(params):
             entry = [fixed_key, params[key], opt]
             query_list = add_entry(query_list, entry)
             del temp_params[key]
-    print "final query_list"
-    print query_list
     temp_params.update({"query_list":query_list})
     params = temp_params
     return None, params
-                
-        
-"""        
-def parse_gallica_adv_search(params):
-    query_list = []
-    temp_params = params.copy()
-    for key in params:
-        print "params"
-        print params
-        fixed_key = key
-        opt = "and"
-        value = params[key]
-        if isinstance(value, list):
-            value = value[0]
-    if key in params        :
-        temp_params.update({key:value})
-    else:
-        value = para_map[key]+"+"+value
-        temp_params.update({key:value})
 
-        value = list_to_str(value)
-        if key.startswith('-'):
-            opt = "except"
-            fixed_key = key[1:]
-        if key in field_types:
-            entry = [fixed_key, value, opt]
-            query_list = add_entry(query_list,entry)
-            del temp_params[key]
-        elif not opt=="and":
-            del temp_params[key]
-            
-    params = temp_params
-    if len(query_list)>5:
-       query_list = merge_query_list(query_list)
-    params.update({"query_list":query_list})
-    return None, params
-"""
 
 def add_entry(query_list,entry):
     ql = query_list
@@ -111,29 +78,17 @@ def add_entry(query_list,entry):
 
 def parse_gallica(params):
     if not params:
-        return "cat",{}
-    print "-----------gallica parser---------"
-    print params
+        return None, None
+
     if "all" in params and len(params)==1:
         return params['all'],None
     else:
         return parse_gallica_adv_search(params)
-    return "cat",{}
+
         
 
 
-"""
-def remove_all_words(keywords,params):
-    if "All Words" in params:
-        if not keywords=="":
-            keywords += "+"
-        kw = params["All Words"]
-        if isinstance(kw,list):
-            kw = kw[0]
-        keywords += kw
-        del params["All Words"]
-    return keywords,params
-"""
+
 def add_keyword_to_params(keywords,params):
     if not "all" in params:
         if keywords and not keywords =="":
