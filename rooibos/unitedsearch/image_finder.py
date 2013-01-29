@@ -10,6 +10,62 @@ def get_thumble(url):
         return url
 
 def get_image_url(url,thumble_url):
+    try:
+        return find_url(url,thumble_url)
+    except:
+        return url
+        
+        
+def find_url(url,thumble_url):
+    
+    if "elibcat.library.brisbane.qld.gov.au" in url:
+        return thumble_url
+    
+    if "indianahistory.org" in url  :
+        url_id = (url.split('/').pop()).split(',')
+        id1 = url_id[0]
+        id2 = url_id[1]
+        return "http://images.indianahistory.org/cgi-bin/getimage.exe?CISOROOT=/"+id1+"&CISOPTR="+id2+"&DMSCALE=100&DMWIDTH=70000&DMHEIGHT=70000"
+    
+    if "contentdm.lib.byu.edu/" in url:
+        img_id = (url.split('/').pop()).split(',')
+        id1 = img_id[0]
+        id2 = img_id[1]
+        return "http://contentdm.lib.byu.edu/utils/ajaxhelper/?CISOROdef get_image_url(url,thumble_url):OT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    if "louislibraries.org" in url:
+        img_id = (url.split('/').pop()).split(',')
+        id1 = img_id[0]
+        id2 = img_id[1]
+        return "http://louisdl.louislibraries.org/utils/ajaxhelper/?CISOROOT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    if "lib.washington.edu" in url:
+        img_id = (url.split('/').pop()).split(',')
+        id1 = img_id[0]
+        id2 = img_id[1]
+        return "http://content.lib.washington.edu/cgi-bin/getimage.exe?CISOROOT=/"+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    if "lib.uconn.edu" in url:
+        img_id = (url.split('/').pop()).split(',')
+        id1 = img_id[0]
+        id2 = img_id[1]
+        return "http://images.lib.uconn.edu/utils/ajaxhelper/?CISOROOT=/"+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    if "contentdm.unl.edu" in url :
+        url_id = (url.split('/').pop()).split(',')
+        id1 = url_id[0]
+        id2 = url_id[1]
+        return "http://contentdm.unl.edu/utils/ajaxhelper/?CISOROOT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    if "slv.vic.gov.au" in thumble_url:
+        return thumble_url.replace("tn","im")
+    
+    if "slsa.sa.gov.au" in url:
+        return thumble_url.replace("searcyt","searcy").replace("pcimgt","pcimg")
+
+    if "ark.cdlib.org/ark:/" in url:
+        return thumble_url.replace("ark.cdlib.org/ark:/","content.cdlib.org/ark:/").replace("thumbnail","hi-res.jpg")
+    
     if "artsearch.nga.gov.au" in url:
         return thumble_url.replace("/SML/", "/LRG/")
     if "static.flickr.com" in url:
@@ -24,6 +80,14 @@ def get_image_url(url,thumble_url):
             return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?c="+col+"&cc="+col+"&entryid=" +arts[0]+ "&viewid=" +arts[0]+ "&width=10000&height=10000&res=3"
         else:
             return url
+    
+    if "azmemory.lib.az.us/" in url:
+        img_id = (url.split('/').pop()).split(',')
+        id1 = img_id[0]
+        id2 = img_id[1]
+        return "http://azmemory.lib.az.us/utils/ajaxhelper/?CISOROOT=/"+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+    
+    
     if "artsearch.nga.gov.au" in url:
         #Assuming they comply with aus copyright act 1968
         return thumble_url.replace("/SML/", "/LRG/")
