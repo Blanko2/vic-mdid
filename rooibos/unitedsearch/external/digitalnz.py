@@ -26,7 +26,8 @@ CATEGORY_VALUE="&and[category][]=Images"
 #rights exist but I can't find out where the parameters for them lie
 RIGHTS_VALUE="&and[rights][]="
 
-LOGO_URL="http://www.digitalnz.org/system/resources/BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
+LOGO_URL="http://www.digitalnz.org/system/resources/\
+BAhbBlsHOgZmSSIsMjAxMi8wNy8yMC8xNF80NF8yNF80ODVfZG56X3Bvd2VyZWQuZ2lmBjoGRVQ/dnz_powered.gif"
 SEARCHER_URL="http://digitalnz.org/"
 BASE_IMAGE_LOCATION_URL="http://www.digitalnz.org/records?"
 BASE_METADATA_LOCATION_URL="http://api.digitalnz.org/v3/records/"
@@ -34,6 +35,9 @@ END_METADATA_LOCATION_URL=".json?api_key="+API_KEY
 
 BASE_SEARCH_API_URL="http://api.digitalnz.org/v3/records.json?api_key="+API_KEY
 
+#This is meant to block the API from searching any partners that do not allow their images
+# to be collected ie: no way to access the original image file
+BLOCKED_CONTENT_PARTNERS="&without[content_partner][]=The%20University%20of%20Auckland%20Library"
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
@@ -47,13 +51,14 @@ def search(query, params, offset, per_page=20):
     url ,arg = _build_URL(query, params, per_page, page)
     result_object = _load_url(url) 
     hits = _count(url)
+    print url
     result = unitedsearch.Result(hits, next_offset) 
     # add images
-    for object in result_object['search']["results"]:
-        thumbnail_url = object["object_url"] or object["large_thumbnail_url"] or object["thumbnail_url"] or None 
-        #TODO - when there is no thumbnail_url use the getMetadata API to grab the thumbnail
+    for iobject in result_object["search"]["results"]:
+        thumbnail_url = iobject["thumbnail_url"] or iobject["large_thumbnail_url"] or iobject["object_url"] or None 
         # should only be done after fixing getImage()
-        image = unitedsearch.ResultImage(object["source_url"], thumbnail_url, object["title"], object["id"])
+        provider = iobject["content_partner"][0] or iobject["display_content_partner"][0]
+        image = unitedsearch.ResultImage(iobject["source_url"], thumbnail_url, iobject["title"], iobject["id"], content_provider=provider)
         result.addImage(image)
     return result, arg 
 
@@ -118,10 +123,11 @@ def _build_simple_URL(query_terms, per_page, page):
         facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
         facet_arg.append([query_mod,[facet,query_terms[q]]])
     keywords = keywords.replace(" ","+")
-    url = BASE_SEARCH_API_URL+"&text="+keywords+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
+    url = BASE_SEARCH_API_URL+"&text="+keywords+BLOCKED_CONTENT_PARTNERS+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
     while len(facet_arg)<5:
         facet_arg.append([])
     arg.update({"field":facet_arg})
+    
     print url
     return url, arg 
 """
@@ -130,7 +136,7 @@ def _build_simple_URL(query_terms, per_page, page):
 ================
 """
 def _translate_query(query):
-    """ checks if the query comes from the sidebar - if not, it needs translating"""
+    """ translates from universal query language to dnz query language """
     translator = Query_Language(identifier) 
     query_terms = translator.searcher_translator(query)
     return query_terms
@@ -179,12 +185,19 @@ def get_logo():
 
 def getImage(identifier):
     #TODO parse html when cannot find a location_url 
+    identifier = str(identifier)
     url = BASE_METADATA_LOCATION_URL+identifier+END_METADATA_LOCATION_URL
     image_object = _load_url(url)['record'] 
+    #print image_object
     location_url = image_object["object_url"] or image_object["large_thumbnail_url"]
     thumbnail_url = image_object["thumbnail_url"]
     title = image_object["title"]
-    img = unitedsearch.RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
+    if not location_url or location_url == "":
+        source_url = image_object["source_url"]
+        empty = "/static/images/thumbnail_unavailable.png"
+        img = unitedsearch.RecordImage(source_url, empty, title, image_object, identifier) 
+    else:
+        img = unitedsearch.RecordImage(location_url, thumbnail_url, title, image_object, identifier) 
     return img 
 
 def get_empty_params():
@@ -203,7 +216,17 @@ PARAMETERS
 =============
 """
 
-field_types = ['creator','display_collection',  'placename', 'year', 'decade', 'century', 'language', 'content_partner', 'rights', 'collection']
+field_types = ['creator',
+    'display_collection',
+    'placename',
+    'year',
+    'decade',
+    'century',
+    'language',
+    'content_partner',
+    'rights',
+    'collection']
+
 modifier_types = ['and','or','without']
 
 parameters = MapParameter({

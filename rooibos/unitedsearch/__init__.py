@@ -12,7 +12,7 @@ class Result:
         self.images += [image]
 
 class ResultImage:
-    def __init__(self, infourl, thumb, name, identifier):
+    def __init__(self, infourl, thumb, name, identifier, content_provider=""):
         """ infourl is the url gone to when the result is clicked
         thumb is the thumbnail url
         identifier is passed to the seracher's .getImage to get the corresponding Image object """
@@ -20,6 +20,7 @@ class ResultImage:
         self.thumb = thumb
         self.name = name
         self.identifier = identifier
+	self.content_provider = content_provider
     
     def withIdentifier(self, newIdent):
         return ResultImage(self.infourl, self.thumb, self.name, self.identifier and newIdent)
