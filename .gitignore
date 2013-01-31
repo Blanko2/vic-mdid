@@ -17,4 +17,4 @@ rooibos/static/cache/*
 .project
 *~
 *.swp
-var/mdid-scratch/*
+var/*
