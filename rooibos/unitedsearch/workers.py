@@ -24,25 +24,20 @@ def unitedsearch_download_media(job):
 		except Exception, ex:
 			print ex
 
+	arg = simplejson.loads(jobinfo.arg)
+	record = Record.objects.get(id=arg['record'], manager='unitedsearch')
 	try:
 		if jobinfo.status.startswith == 'Complete':
 			print "JobInfo = Complete"
 			return
-		arg = simplejson.loads(jobinfo.arg)
-		record = Record.objects.get(id=arg['record'], manager='unitedsearch')
 		url = arg['url']
 		storage = get_storage()
 		proxy = proxy_opener()
+		# where you get a url error
 		file = proxy.open(url)
 		image_data = file.read()
 		size = len(image_data)
-		#localFile = open("/am/state-opera/home1/novikovech/mdid-test/"+record.name, 'w')
-		#localFile.write(image_data)
-		#localFile.close()
 
-		#print "\n\n\n\n\nunitedsearch_download_media, opened file: "+file.geturl()
-		#print "file size is "+str(size)
-		#print "file.info()"+str(file.info())
 		image_file=StringIO.StringIO(image_data)
 		#size = file.info().get('content-length')
 		#setattr(file, 'size', int(size if size else 0))
@@ -65,4 +60,4 @@ def unitedsearch_download_media(job):
 	
 	except Exception, ex:
 		logging.info('unitedsearch download media failed for %s (%s)' % (job, ex))
-		jobinfo.update_status('Failed: %s' % ex)
+		jobinfo.update_status('Failed: %s' % ex)				

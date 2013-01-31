@@ -18,7 +18,7 @@ import searchers
 import sys
 import traceback
 from rooibos.unitedsearch.external.gallica_parser import *
-
+import common
 
 class usViewer():
 
@@ -71,11 +71,11 @@ class usViewer():
                 r_content = "  "*indent + (label + ": " if params.label else "") 
                 r_content += "<select name=\"i_" + "_".join(prefix) + "\""
                 if params.multipleAllowed :
-                  r_content += " multiple = \"multiple\""
+                    r_content += " multiple = \"multiple\""
                 r_content += ">"
                 selected = options[0]
                 if default:
-                      selected = default
+                    selected = default
                   
                 for option in options :
                     if option == selected:
@@ -241,7 +241,8 @@ class usViewer():
                     "thumb_url": image.thumb,
                     "title": image.name,
                     "record_url": image.infourl,
-                    "identifier": image.identifier
+                    "identifier": image.identifier,
+                    "content_provider" : image.content_provider
                 }
 
         prev_off = hasattr(self.searcher, "previousOffset") and self.searcher.previousOffset(offset, resultcount)
@@ -293,15 +294,31 @@ class usViewer():
         return render_to_response('searcher-results.html', a, context_instance=RequestContext(request))
 
     def record(self, identifier):
-        #print "in record, identifier = "+str(identifier)
         image = self.searcher.getImage(identifier)
         if isinstance(image, ResultRecord):
             return image.record
+        #checking if image is accessible -- if not, then replace
+        # thumbnail with 'thumb. unav.'
+        try:
+            print 'HTTP TEST'
+            print image.url
+            print 'image url located'
+            request = urllib2.Request(image.url)
+            request.get_method = lambda : 'HEAD'
+            proxy_opener = common.proxy_opener()
+            response = proxy_opener.open(request)
+            if response:
+                print "external/views.py --------- 308"
+                print "got response Head"
+                print response
+        except urllib2.URLError, ex:
+            print 'error %s' % ex
+            image.thumb = "/static/images/thumbnail_unavailable.png"
+            # need to change the image thumbnail url to 'thumbnail unav.' here
         record = Record.objects.create(name=image.name,
                         source=image.url,
                         tmp_extthumb=image.thumb,
                         manager='unitedsearch')
-        #print"add_field"
         def add_field(f, v, o):
             if type(v) == list:
                 for w in v:
@@ -316,13 +333,11 @@ class usViewer():
                         value=v)
                 except:
                     pass
-        #print"fields added"
         n = 0
         # go through the metadata given by the searcher; just add whatever can be added---what are not standard fields are simply skipped.
         for field, value in dict(image.meta, title=image.name).iteritems():
             add_field(field, value, n)
             n += 1
-        #print"done the for"
         collection = get_collection()
         CollectionItem.objects.create(collection=collection, record=record)
         """
@@ -335,9 +350,6 @@ class usViewer():
         print "job "+job.arg
         job.run()
         print "job.run()"
-        #print str(job.status)
-        #import time
-        #time.wait(0)
         print "now returning from record"
         return record
 
