@@ -1,0 +1,53 @@
+{% extends "mobileMain.html" %}
+
+
+{% block content %}
+	
+
+	
+	<script type="text/javascript"> 
+		
+		
+/*		$( document ).delegate("#mainContent", "pageinit", function() {
+		    alert('A page with an id of "aboutPage" was just created by jQuery Mobile!');
+		});
+		
+		
+		$(document).bind("mobileinit", function(){
+		  alert("BANG");
+			$('#searchDiv').css('top', ''+($(window).height()/3.0));
+			$('#searchDiv').css('height', ''+$(window).height());
+			$('#searchDiv').css('height', ''+$(window).height());
+
+		});*/
+		
+	</script>
+
+
+	<div id="mainContent" data-role="content" style="padding:0;">	
+
+	
+		<div id="presentationBox">
+		  <a href='{% url mobile-presentation-list %}' data-role="button" data-iconpos="right" data-icon='arrow-r' data-theme="c" > View Presentations </a>
+		</div>
+		
+		<div id="searchBox">
+		  <h2 style="margin:0 auto; padding:0;">image search</h2>
+		  
+		  <form action="/mobile/search/{{defaultDatabase}}/results" method="get">
+			  <div style="float:left; width:82.5%; margin-right:2.5%;">
+			  <input data-inline="true" type="search" id="searchImages" name="q" value=""></input>
+			  <input type="text" style="display:none" name="from" value="0"></input>
+			  </div>
+			  
+			  <div style="float:left; width:15%; padding-top:3pt;">
+			  <button type="submit" data-mini="true">Go</button>
+			  </div>
+			  
+		  </form>
+		
+		</div>
+
+	</div><!-- /content -->
+
+{% endblock content %}

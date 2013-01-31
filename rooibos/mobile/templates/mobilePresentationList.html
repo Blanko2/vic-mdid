@@ -1,0 +1,33 @@
+{% extends "mobileMain.html" %}
+
+
+{% block content %}
+
+	<style>
+	 .ui-page{
+	      background:#F4F4F4;
+	  }
+	</style>
+
+	<div data-role="content">	
+
+		<div data-role="collapsible-set">
+
+			{% for l in courses %}
+				<div data-role="collapsible" data-collapsed="false">
+				<h3>{{l.courseName}}</h3>
+				{% for c in l.contents %}
+				
+				    {% if not c.password or c.unlocked or c.owner == request.user %}
+				      <a href="{% url viewers-viewer-shell viewer='htmlpresentation' objid=c.id %}?next={{ request.get_full_path|urlencode }}" data-role="button" data-iconpos="right" data-icon='arrow-r' data-theme="c" data-inset="false" data-mini="true" data-ajax="false" > {{c.title}} </a>
+				    {% endif %}
+
+				{% endfor %}
+				</div>
+			{% endfor %}
+			
+		</div>
+
+	</div><!-- /content -->
+
+{% endblock content %}

@@ -8,6 +8,7 @@ import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 from rooibos.unitedsearch.external.trove_parser import parse_trove_query
+from rooibos.unitedsearch.image_finder import get_image_url, get_thumble
 
 name = "Trove"
 identifier = "trove"
@@ -86,9 +87,9 @@ def search(query, params, off, num_wanted) :
             search_result_parser = get_search_result_parser(url, off, 100)#get next page, remember off is modified in loop above
     
     img_list = Result(total, off)
-    print result[0]
+    #print result[0]
     for image in result:
-       
+        
         img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
     #res = dict(empty_params)
     #res["all words"] = kw
@@ -109,6 +110,7 @@ def parse_api_results(soup):
             thumbTag = imageTag
         if thumbTag:
             thumb = str(thumbTag.string).replace("&amp;", "&")
+            thumb = get_thumble(thumb)
         else:
             thumb= "../../../../static/images/thumbnail_unavailable.png"
         
@@ -161,73 +163,12 @@ def parse_api_results(soup):
             desc += "\n"+descId.text
         data={'image':image, 'thumb':thumb, 'desc':desc, 'troveid':str(id)}
         #if thumb is not "":
+        image = get_image_url(image, thumb)
         images.append([image, thumb, desc, json.dumps(data)])
     return images
 
 
 
-def get_image_from_thumb(url):
-    if "static.flickr.com" in url:
-        return url.replace("_t.", ".")
-    if "quod.lib.umich.edu" in url:
-        #if it's part of a smaller collection, i think, entryid will change to x-<something>, can't guess what
-        arts = re.findall("[^_]+", re.findall("[^jpg]+", re.findall("[^/]*.jpg", url)[0])[0].strip('.'))
-        col = re.findall("[^/]+/thumb", url)[0].split("/")[0]
-        if len(arts) is 2:
-            return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?c="+col+"&cc="+col+"&entryid=" +arts[0]+"-"+arts[1]+ "&viewid=" +arts[0]+"_"+arts[1]+ "&width=10000&height=10000&res=3"
-        elif len(arts) is 1:
-            return "http://quod.lib.umich.edu/cgi/i/image/getimage-idx?c="+col+"&cc="+col+"&entryid=" +arts[0]+ "&viewid=" +arts[0]+ "&width=10000&height=10000&res=3"
-            #&res=quality divider, set to 3 by default, higher numbers shrink picture
-        return url #or fail
-    if "artsearch.nga.gov.au" in url:
-        return url.replace("/SML/", "/LRG/")
-    if "http://acms.sl.nsw.gov.au" in url:
-        return url.replace("_DAMt", "_DAMl").replace("t.jpg", "r.jpg")
-    if "territorystories" in url:
-        return url.replace(".JPG.jpg", ".JPG")
-    url = url.replace("/thum/", "/full/").replace("s.jpg", ".jpg")
-    if "images.slsa.sa.gov.au" in url:
-        return url.replace("/mpcimgt/", "/mpcimg/")
-    if "recordsearch.naa.gov.au" in url:
-        num = re.findall("Number=([0-9]*)", url)[0]
-        return "http://recordsearch.naa.gov.au/NAAMedia/ShowImage.asp?T=P&S=1&B="+num
-    if "lib.uwm.edu" in url:
-        return url.replace("thumbnail.exe", "getimage.exe") + "&DMSCALE=0&DMWIDTH=0"
-    #url = url.replace("/thumbnail/", "/reference/")
-    if "nla.gov.au" in url:
-        return url.replace("-t", "-v")
-    if "www.leodis.net" in url:
-        return url
-    if "slv.vic.gov.au" in url: #sometimes digital.slv, sometimes www.slv
-        #don't know how to get full size image, sorry
-        return None
-    if "digitallibrary.usc.edu" in url: #don't know how to get full image
-        return None
-    if "slwa.wa.gov.au" in url:
-        return url.replace(".png", ".jpg")
-    if "salemhistory.net" in url:
-        col = re.findall("CISOROOT=/[^&]+", url)[0].split("=/")[1]
-        image = re.findall("CISOPTR=[^&]+", url)[0].split("=")[1]
-        return "http://photos.salemhistory.net/utils/getprintimage/collection/"+col+"/id/"+image+"/scale/100/width/10000/height/10000"
-        return url.replace("", "")
-    if "" in url:
-        return url.replace("", "")
-    if "" in url:
-        return url.replace("", "")
-    if "" in url:
-        return url.replace("", "")
-    if "" in url:
-        return url.replace("", "")
-    """
-    http://quod.lib.umich.edu/m/musart/thumb/1/2/5/1958_1.125.jpg
-    turns to
-    http://quod.lib.umich.edu/cgi/i/image/getimage-idx?viewid=1958_1.125.JPG;cc=musart;entryid=x-1958-SL-1.125;quality=m800;view=image
-    important bit is 1958_1.125
-    http://content.cdlib.org/ark:/13030/kt3v19r78d/thumbnail
-    no idea what to turn it into, main page:
-    http://content.cdlib.org/ark:/13030/kt3v19r78d/
-    """
-    return None#url
 
 def build_URL(query, query_terms):
     if not query_terms:
@@ -318,7 +259,7 @@ PARAMMAP
 parameters = MapParameter({
     "start year": OptionalParameter(ScalarParameter(str)),
     "end year": OptionalParameter(ScalarParameter(str)),
-    "availability": DefinedListParameter(["All", "Online", "Access conditions", "Freely available"],  multipleAllowed=False, label="Availability"),
+    "availability": DefinedListParameter(["Online", "Access conditions", "Freely available"],  multipleAllowed=False, label="Availability"),
     "field" : ListParameter([
         DoubleParameter(DefinedListParameter(option_types,  multipleAllowed=False, label=""),
         UserDefinedTypeParameter(field_types)

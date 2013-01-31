@@ -342,7 +342,7 @@ def getcopyright(params) :
     # if reach here, have copyright  
     copyright_codes = {
         "Free": "fayes",
-        "Subject to conditions": "fano"
+        "subject to conditions": "fano"
     }
     if params['copyright'] == 'All' :
         copy_string = ""
