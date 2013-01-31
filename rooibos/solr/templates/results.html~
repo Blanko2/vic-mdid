@@ -99,7 +99,7 @@
             url: '{% url federatedsearch-sidebar-api %}?q={{ federated_search_query|urlencode }}',
             dataType: 'json',
             success: function(r) {
-                //$("#external-results").html(r.html);
+                $("#external-results").html(r.html);
                 if (r.hits == 0)
                     setTimeout(function() { $("#results_sidebar_external").hide(500); }, 3000);
             }

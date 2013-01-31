@@ -273,6 +273,10 @@ class usViewer():
         query_language = ""
         if "simple_keywords" in args:
             query_language = args["simple_keywords"]
+        if "query_string" in args:
+            query_language = args["query_string"]
+        print "args in view"
+        print args
         return {
                 'results': map(resultpart, results),
                 'select_url': self.url_select(),

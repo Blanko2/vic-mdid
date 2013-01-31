@@ -44,6 +44,7 @@ def build_url(query, params, off, len):
     url += keywords.replace(" ", "+")
     url += "&start="+str(off)
     url += "&end="+str(int(off)+int(len))
+    print url
     return url
 
 def parse_data(raw_data):

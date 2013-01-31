@@ -67,14 +67,21 @@ class Query_Language:
         """ 
         self.searcher_dictionary = self.searcher_to_dict(self.searcher_identity)
         keywords, params = break_query_string(query) 
+        print "keywords after breaking "+ keywords
         print "params after breaking"+str(params)
         #need to check if params contains values such as '+/?/-creator'
         keywords += self._check_valid(params)
+        query_string = keywords
+        for key in params:
+            if len(query_string)>0:
+                query_string += ","
+            query_string += key+"="+params[key]
         translated_dictionary = self._translate_words(params)
         k = self._translate('keywords')
         if not keywords=="" :
             keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
             translated_dictionary[k] = str(keywords)
+        translated_dictionary["query_string"]=query_string
         return translated_dictionary 
 
     def searcher_to_dict(self, searcher_identity):

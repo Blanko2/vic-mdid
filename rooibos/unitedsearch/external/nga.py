@@ -2,6 +2,7 @@ from BeautifulSoup import BeautifulSoup      # html parser
 from rooibos.unitedsearch import *       # other website search parts
 from rooibos.unitedsearch.common import merge_dictionaries, proxy_opener, break_query_string, add_to_dict, getValue 
 from rooibos.unitedsearch.external.translator.query_language import Query_Language
+from rooibos.unitedsearch.external.translator.nga_dict import query_dict
 import json                                 # tool for encoding and decoding complex structures to/from string
 import re                                   # regular expressions
 import urllib2                               # fetch html
@@ -126,6 +127,21 @@ def search(query, params, off, num_results_wanted) :
     off = (int)(off)    
     params,  url_base = build_parameters(query, params)
     no_query = True;
+    if "query_string" in params:
+        arg["query_string"] = params["query_string"]
+        del params["query_string"]
+    else:
+        query_string = ""
+        if "all words" in params:
+            query_string = params["all words"]
+        for key in params:
+            if not key == "all words":
+                if not query_string == "":
+                    query_string += ","
+                query_string += query_dict[key] + "=" + params[key]
+        arg["query_string"] = query_string
+        
+    
     for key in params:
         value = params[key]
         if isinstance(value,list):

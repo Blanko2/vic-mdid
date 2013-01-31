@@ -31,7 +31,7 @@ def find_url(url,thumble_url):
         img_id = (url.split('/').pop()).split(',')
         id1 = img_id[0]
         id2 = img_id[1]
-        return "http://contentdm.lib.byu.edu/utils/ajaxhelper/?CISOROdef get_image_url(url,thumble_url):OT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
+        return "http://contentdm.lib.byu.edu/utils/ajaxhelper/?CISOROOT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=51200&DMHEIGHT=48300&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
     
     if "louislibraries.org" in url:
         img_id = (url.split('/').pop()).split(',')
@@ -57,6 +57,10 @@ def find_url(url,thumble_url):
         id2 = url_id[1]
         return "http://contentdm.unl.edu/utils/ajaxhelper/?CISOROOT="+id1+"&CISOPTR="+id2+"&action=2&DMSCALE=100&DMWIDTH=10000&DMHEIGHT=10000&DMX=0&DMY=0&DMTEXT=&DMROTATE=0"
     
+    if "awm.gov.au" in url :
+        return thumble_url.replace("cas.awm.gov.au/thumb_img/","www.awm.gov.au/collection/images/screen/")+".jpg"
+
+        
     if "slv.vic.gov.au" in thumble_url:
         return thumble_url.replace("tn","im")
     

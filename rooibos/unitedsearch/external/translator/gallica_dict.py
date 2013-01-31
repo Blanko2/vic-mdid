@@ -15,7 +15,26 @@ dictionary={
     'source':'source',
     'table':'table',
     'subject':'subject',
+    'language':'languages',
     '-':'except',
     '?':'or',
     '': 'all'
+}
+
+
+query_dict={
+    'f_allcontent' :'',
+    'f_artist':'creator',
+    'f_title':'title',
+    'start date':'start date',
+    'end date':'end date',
+    'copyright':'rights',
+    'f_allmetadata':'isbn',
+    'source':'source',
+    'table':'table',
+    'subject':'subject',
+    'languages':'language',
+    'MUST_NOT':'-',
+    'SHOULD':'?',
+    'MUST':''
 }

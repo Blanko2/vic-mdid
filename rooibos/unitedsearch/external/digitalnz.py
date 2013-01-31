@@ -92,6 +92,10 @@ def _build_simple_URL(query_terms, per_page, page):
     keywords=""
     arg = get_empty_params()
     facet_arg = []
+    if 'query_string' in query_terms:
+        query_string=query_terms['query_string']   
+        arg.update({"query_string":query_string})
+        del query_terms['query_string']
     if 'keywords' in query_terms:
         keywords=query_terms['keywords']   
         arg.update({"keywords":keywords})

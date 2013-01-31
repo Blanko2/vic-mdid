@@ -19,3 +19,19 @@ dictionary={
     'exact phrase':'exact phrase'
 }
 
+query_dict = {
+    
+    'all words':'keywords' ,
+    'artist':'creator' ,
+    'title':'title',
+    'start date':'start date',
+    'end date':'end date',
+    'access':'rights',
+    'exclude words':'-',
+    'exact phrase':'+',
+    'accession number':'accession number',
+    'classification':'classification',
+    'school':'school',
+    'medium':'medium'    
+    }
+

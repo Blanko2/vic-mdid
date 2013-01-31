@@ -24,7 +24,7 @@ import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
 from gallica_parser import * 
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
-
+from rooibos.unitedsearch.external.translator.gallica_dict import query_dict
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise
 identifier = "gallica"  # identifier for view, urls
@@ -139,7 +139,9 @@ def build_simple_url(keywords):
     return re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL), arg#, re.sub("QUERY", keywords, BASE_SIMPLE_SEARCH_URL)
  
 def build_advanced_url(params):
+    print params
     arg = {} #dict contains params with fixed structures for result interface to desplay the query
+    
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
     arg, params, copyright, languages, start_date, end_date = _build_arg(params)
     keyword_list = params["query_list"]
@@ -166,6 +168,8 @@ def build_advanced_url(params):
     url = replacer.sub(lambda m: replacements[m.group(0)], ADVANCED_SEARCH_URL_STRUCTURE)
     url = url.replace(' ','+')
     print url
+    print "final arg ="
+    print arg
     return url, arg 
 
 
@@ -273,6 +277,60 @@ def _build_arg(params):
     languages  = ""
     start_date = ""
     end_date   = ""
+    if "query_string" in params:
+        arg.update({"query_string":str(params["query_string"])})
+        print "new args"
+        print arg
+        del params["query_string"]
+    else:
+        keywords = ""
+        mod_keywords = ""
+        queries = ""
+        mod_quries = ""
+        if "copyright" in params:
+            if not queries=="":
+                queries += ","
+            queries += query_dict["copyright"]+"="+params["copyright"]
+   
+        if "languages" in params:
+            if not queries=="":
+                queries += ","
+            queries += query_dict["languages"]+"="+params["languages"]
+
+        if "start date" in params:
+            if not queries=="":
+                queries += ","
+            queries += query_dict["start date"]+"="+params["start date"]
+
+        if "end date" in params:  
+            if not queries=="":
+                queries += ","
+            queries += query_dict["end date"]+"="+params["end date"]
+  
+        if "query_list" in params:
+            keyword_list = params["query_list"]
+            for sub_query in keyword_list:
+                filter_type = filter_type_map[sub_query[0]]
+                value = sub_query[1]
+                opt = opt_type_map[sub_query[2]]
+                if filter_type=="f_allcontent":
+                    if opt == "MUST":
+                        if keywords != "":
+                            keywords += " "
+                        keywords += value
+                    else:
+                        if mod_keywords != "":
+                            mod_keywords += ","
+                        mod_keywords += query_dict[opt]+value
+                else:
+                    if mod_quries != "":
+                        mod_quries += ","
+                    mod_quries += query_dict[opt]+query_dict[filter_type]+"="+value
+        query_string = keywords+","+mod_keywords+","+mod_quries+","+queries
+        query_string = query_string.replace(",,",",")
+        arg["query_string"] = query_string
+        
+    
     if "copyright" in params:
         copyright = getcopyright(params)
         arg.update({"copyright":params["copyright"]})
