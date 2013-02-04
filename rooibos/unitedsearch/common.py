@@ -11,36 +11,35 @@ import urllib2
 import datetime
 
 PROXY_URL="www-cache2.ecs.vuw.ac.nz:8080"
-API_KEY="sfypBYD5Jpu1XqYBipX8"
 
 def get_collection():
-	collection, created = Collection.objects.get_or_create(
-		name='unitedsearch',
-		defaults={
-			'title': 'United Search collection',
-			'hidden': True,
-			'description': 'Collection for images retrieved through the United Search'
-		})
-	if created:
-		authenticated_users, created = ExtendedGroup.objects.get_or_create(type=AUTHENTICATED_GROUP)
-		AccessControl.objects.create(content_object=collection, usergroup=authenticated_users, read=True)
-	return collection
+    collection, created = Collection.objects.get_or_create(
+        name='unitedsearch',
+        defaults={
+            'title': 'United Search collection',
+            'hidden': True,
+            'description': 'Collection for images retrieved through the United Search'
+            })
+    if created:
+        authenticated_users, created = ExtendedGroup.objects.get_or_create(type=AUTHENTICATED_GROUP)
+        AccessControl.objects.create(content_object=collection, usergroup=authenticated_users, read=True)
+    return collection
 
 
 def get_storage():
-	storage, created = Storage.objects.get_or_create(
-		name='unitedsearch',
-		defaults={
-			'title': 'United Search collection',
-			'system': 'local',
-			'base': os.path.join(settings.AUTO_STORAGE_DIR, 'unitedsearch')
-		})
-	if created:
-		authenticated_users, created = ExtendedGroup.objects.get_or_create(type=AUTHENTICATED_GROUP)
-		AccessControl.objects.create(content_object=storage, usergroup=authenticated_users, read=True)
-	return storage
-	
-	
+    storage, created = Storage.objects.get_or_create(
+        name='unitedsearch',
+        defaults={
+            'title': 'United Search collection',
+                        'system': 'local',
+                        'base': os.path.join(settings.AUTO_STORAGE_DIR, 'unitedsearch')
+                })
+    if created:
+        authenticated_users, created = ExtendedGroup.objects.get_or_create(type=AUTHENTICATED_GROUP)
+        AccessControl.objects.create(content_object=storage, usergroup=authenticated_users, read=True)
+        return storage
+
+
 #METHODS FOR EXTERNAL DATABASES =====================
 
 def break_query_string(query):

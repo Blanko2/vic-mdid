@@ -1,3 +1,14 @@
+"""
+Searcher for the National Gallery of Art website - also uses HTML parsing
+  
+Because NGA also uses HTML parsing it is likely to break in the future 
+    the setup for NGA is a lot simpler than gallica and thus will be 
+    easier to deal with.
+Notes:
+    NGA does not currently support the 'or' operator and it has     
+        sepparate keywords for the '-' and '+' ops - 
+        '-' is 'exclude words' and '+' is exact phrase
+"""
 from BeautifulSoup import BeautifulSoup      # html parser
 from rooibos.unitedsearch import *       # other website search parts
 from rooibos.unitedsearch.common import merge_dictionaries, proxy_opener, break_query_string, add_to_dict, getValue 
@@ -6,9 +17,6 @@ from rooibos.unitedsearch.external.translator.nga_dict import query_dict
 import json                                 # tool for encoding and decoding complex structures to/from string
 import re                                   # regular expressions
 import urllib2                               # fetch html
-"""
-Searcher for the National Gallery of Art website
-"""
 
 BASE_SIMPLE_SEARCH_URL = "https://images.nga.gov/?service=search&action=do_quick_search"
 BASE_ADVANCED_SEARCH_URL = "https://images.nga.gov/en/search/show_advanced_search_page/?service=search&action=do_advanced_search&language=en&form_name=default"
@@ -23,8 +31,7 @@ identifier = "nga"            # searcher identifier
 LOGO_URL = "http://www.nga.gov/images/eagle.gif"
 
 def build_parameters(query, params):
-    """ builds parameters """
-    # build parameters dictionary to search by
+    """ builds parameters dictionary to search by"""
     if not params:
         translator = Query_Language(identifier)
         params = translator.searcher_translator(query)
@@ -57,6 +64,7 @@ def build_parameters(query, params):
     return params,  url_base
 
 def any_results(html_parser) :
+    """for checking if any results have been received"""
     return __count(html_parser) != 0 
 
 def __create_imageId_array_from_html_page(website_search_results_parser, maxWanted, firstIdIndex) :

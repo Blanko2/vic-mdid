@@ -17,12 +17,12 @@ Things to note:
     
 """ 
 import re                                       # regular expressions
-from BeautifulSoup import BeautifulSoup         # html parser
-from rooibos.unitedsearch import *              # other search tools
-from rooibos.unitedsearch.common import *   # methods common to all databases
 import urllib2                                  # html fetcher
 import json                                     # serialiser for data structures
-from gallica_parser import * 
+from BeautifulSoup import BeautifulSoup         # html parser
+from rooibos.unitedsearch import *              # other search tools
+from rooibos.unitedsearch.common import proxy_opener   # methods common to all databases
+from gallica_parser import parse_gallica
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
 from rooibos.unitedsearch.external.translator.gallica_dict import query_dict
 # these field names are set by software requirement

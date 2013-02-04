@@ -33,6 +33,7 @@ def m_search_redirect(request):
   db = request.GET.get("database")
   searchTerm = request.GET.get("q")
   offset = request.GET.get("from")
+  print "REDIRECTING YO"
   return HttpResponseRedirect(reverse('mobile-search', kwargs={'database':db})+"?"+urlencode({'q':searchTerm})+"&from="+offset)
     
     
@@ -63,7 +64,7 @@ def m_search(request, database):
 	
 	indices = [i for i in range(len(results))]
 	resultsObjects = map(grid_classify_3, results['results'], indices)
-
+	resultsObjects = resultsObjects[:6]
 	return render_to_response('mobileSearch.html', {'searchDatabase':database, 'databases':searcherNodes, 'searchTerm':searchTerm, 'results':resultsObjects, 'offset':str(offset), 'nextPage':str(offset+6), 'lastPage':str((offset-6) if (offset-6) >= 0 else 0)})   
 
 def m_showImage(request, database):
@@ -74,9 +75,9 @@ def m_showImage(request, database):
 	    searcher = s
 	
 	#ident = urlencode(ident)
-	
+	print "IDENTIFIER---------> "+ident
 	imgMeta = searcher.getImage(ident)
-	print imgMeta.meta
+	
 	return render_to_response('imageViewer.html', {'imageData':imgMeta})
 
 def m_presentationList(request):
