@@ -16,7 +16,7 @@ from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
 from rooibos.unitedsearch import MapParameter, ScalarParameter, OptionalParameter, UserDefinedTypeParameter, DefinedListParameter,DoubleParameter, ListParameter
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
-
+from rooibos.unitedsearch.external.translator.digitalnz_dict import query_dict 
 
 name = "DigitalNZ"
 identifier = "digitalnz"
@@ -87,6 +87,7 @@ URL BUILDERS###########
 =======================
 """
 def _build_URL(query, params, per_page, page):
+
     """
     Builds the URL:
         query -- the query received by the searcher
@@ -102,18 +103,23 @@ def _build_URL(query, params, per_page, page):
 
 def _build_simple_URL(query_terms, per_page, page):
     """ returns a search url with all the given keywords, at the given page and with the number or specified results per page """
-    
+    print query_terms
     facets=""
     keywords=""
     arg = get_empty_params()
     facet_arg = []
+    query_string = ""
+    sidebar = True
     if 'query_string' in query_terms:
         query_string=query_terms['query_string']   
         arg.update({"query_string":query_string})
+        sidebar = False
         del query_terms['query_string']
     if 'keywords' in query_terms:
         keywords=query_terms['keywords']   
         arg.update({"keywords":keywords})
+        if sidebar:
+            query_string = query_terms['keywords']
         del query_terms['keywords']
     
     for q in query_terms:
@@ -124,9 +130,26 @@ def _build_simple_URL(query_terms, per_page, page):
         else:   
             query_mod = 'and'
             facet = q
-        facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
-        facet_arg.append([query_mod,[facet,query_terms[q]]])
+        
+        if facet == "keywords":
+            keywords += " "+query_terms[q]
+        else:
+            facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
+        
+        if sidebar and not facet=="keywords":
+            query_string += ","+query_dict[query_mod]+query_dict[facet]+"="+query_terms[q]
+
+        if facet!= "keywords":
+            facet_arg.append([query_mod,[facet,query_terms[q]]])
     keywords = keywords.replace(" ","+")
+    if not "query_string" in arg:
+        while "''" in query_string:
+            query_string = query_string.replace(",,",",")
+        if query_string.startswith(","):
+            query_string = query_string[1:]
+        while query_string.endswith(","):
+            query_string.pop()
+        arg['query_string'] = query_string
     url = BASE_SEARCH_API_URL+"&text="+keywords+BLOCKED_CONTENT_PARTNERS+facets+CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page)
     while len(facet_arg)<5:
         facet_arg.append([])

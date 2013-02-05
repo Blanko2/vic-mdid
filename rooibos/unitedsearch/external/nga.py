@@ -146,7 +146,10 @@ def search(query, params, off, num_results_wanted) :
             if not key == "all words":
                 if not query_string == "":
                     query_string += ","
-                query_string += query_dict[key] + "=" + params[key]
+                value = params[key]
+                if isinstance(value,list):
+                    value = value[0]
+                query_string += query_dict[key] + "=" + value
         arg["query_string"] = query_string
         
     

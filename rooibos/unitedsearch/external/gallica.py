@@ -231,7 +231,12 @@ def __count(soup) :
     div = soup.find('head').find('title')#.find('meta','title')
     fixed_div = str(div.renderContents()).replace(",","").replace('.','')
     try:
-        return (int)(re.findall("\d{1,}", fixed_div)[0])
+        title_counter = re.findall("\d{1,}", fixed_div)
+        count = (int)(title_counter[len(title_counter)-1])
+        if count >=0 :
+            return count
+        else:
+            return 0
     except:
         return 0
 

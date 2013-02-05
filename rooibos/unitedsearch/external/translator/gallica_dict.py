@@ -24,6 +24,7 @@ dictionary={
 
 query_dict={
     'f_allcontent' :'',
+    'f_creator':'creator',
     'f_artist':'creator',
     'f_title':'title',
     'start date':'start date',

@@ -1,87 +1,82 @@
 from rooibos.unitedsearch.external.translator.trove_dict import query_dict
 
 def parse_trove_query(url, query_terms, empty_arg):
+    
+    print "query_terms"
+    print query_terms
+    
     url = url
     year_from = "*"
     year_to = "*"
     arg = empty_arg
     arg_indexes = []
     if "query_string" in query_terms:
-        arg["query_string"] = query_terms["query_string"]
+        query_string = query_terms["query_string"]
+        arg["query_string"] = query_string
+        side_bar = False
+
         del query_terms["query_string"]
     else:
         keywords = ""
         mod_keywords = ""
-        queries = ""
+        query_string = ""
         mod_quries = ""
-        if "availability" in query_terms:
-            if not queries=="":
-                queries += ","
-            queries += query_dict["availability"]+"="+query_terms["availability"]
-   
-
-        if "start year" in query_terms:
-            if not queries=="":
-                queries += ","
-            queries += query_dict["start year"]+"="+query_terms["start year"]
-
-        if "end year" in query_terms:  
-            if not queries=="":
-                queries += ","
-            queries += query_dict["end year"]+"="+query_terms["end year"]
-  
-        if "query_list" in query_terms:
-            keyword_list = query_terms["query_list"]
-            for sub_query in keyword_list:
-                filter_type = filter_type_map[sub_query[0]]
-                value = sub_query[1]
-                opt = opt_type_map[sub_query[2]]
-                if filter_type=="f_allcontent":
-                    if opt == "MUST":
-                        if keywords != "":
-                            keywords += " "
-                        keywords += value
-                    else:
-                        if mod_keywords != "":
-                            mod_keywords += ","
-                        mod_keywords += query_dict[opt]+value
-                else:
-                    if mod_quries != "":
-                        mod_quries += ","
-                    mod_quries += query_dict[opt]+query_dict[filter_type]+"="+value
-        query_string = keywords+","+mod_keywords+","+mod_quries+","+queries
-        query_string = query_string.replace(",,",",")
-        arg["query_string"] = query_string
-    
+        side_bar = True
+            
+            
     
     
     if "start year" in query_terms:
         year_from = str(query_terms["start year"])
         arg["start year"] = query_terms["start year"]
+        if side_bar:
+            if not query_string=="":
+                query_string += ","
+            query_string += query_dict["start year"]+"="+ year_from
         del(query_terms["start year"])
     if "end year" in query_terms:
         year_to = str(query_terms["end year"])
         arg["end year"] = query_terms["end year"]
+        if side_bar:
+            if not query_string=="":
+                query_string += ","
+            query_string += query_dict["end year"]+"="+ year_to
         del(query_terms["end year"])
     if (not year_from == "*") or (not year_to=="*"):
         date_tag = "date:["+year_from+"%20TO%20"+year_to+"]" 
     else:
         date_tag = None
-    if "availability" in query_terms:
-        availability = query_terms["availability"]
+    if "access" in query_terms:
+        availability = query_terms["access"]
         arg["availability"] = availability
-        del query_terms["availability"]
+        if side_bar:
+            if not query_string=="":
+                query_string += ","
+            query_string += query_dict["availability"]+"="+ availability
+        del query_terms["access"]
         availability_tag = "&l-availability="+availability_map[availability]
     else:
         arg["availability"] = "Online"
         availability_tag = "&l-availability="+availability_map["Online"]
+    
+    print "query_terms ======"
+    print query_terms
+    
     for key in query_terms:
         value = query_terms[key]
         url_entry, arg_entry = parse_trove_index(key, value)
         url = add_index(url,url_entry)
         if arg_entry:
+            print "arg_entry ===="
+            print arg_entry
             if arg_entry[0] == "all of the words" or arg_entry[0] == "the phrase" and not arg_entry[1][1]=="":
                 arg_indexes.insert(0,arg_entry)
+                if side_bar and not arg_entry[1][1]=="":
+                    if arg_entry[1][0] == "keywords" or arg_entry[1][0] == "keyword":
+                        query_string = query_dict[arg_entry[0]]+arg_entry[1][1]+","+query_string
+                 
+                    else:
+                        query_string = query_dict[arg_entry[0]]+query_dict[arg_entry[1][0]]+"="+arg_entry[1][1]+","+query_string
             else:
                 arg_indexes.append(arg_entry)
     if  date_tag:
@@ -90,6 +85,19 @@ def parse_trove_query(url, query_terms, empty_arg):
         url += availability_tag
 
     url += "&s=OFFSET"
+    
+    
+    while (",,") in query_string:   
+        query_string = query_string.replace(",,",",")
+    while query_string.startswith(','):
+        query_string = query_string[1:]
+    while query_string.endswith(','):
+        query_string.pop()
+    if not "query_string" in arg:
+        arg["query_string"] = query_string
+    
+    print "arg index=="
+    print arg_indexes
     while len(arg_indexes)<5:
         arg_indexes.append([])
     arg["field"] = arg_indexes

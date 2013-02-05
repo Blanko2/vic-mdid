@@ -49,11 +49,14 @@ class Query_Language:
         'medium',
         'access',
         'start year',
+        'placename',
         'end year',
         "subject",
         "language",
         "isbn",
         "issn",
+        "content_partner",
+        'display_collection',
         "tag"
         ]
     

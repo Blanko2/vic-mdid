@@ -22,8 +22,10 @@ dictionary={
 
 
 query_dict = {
-    'keywords'  : 'keyword',
+    'keywords'  : '',
+    'keyword' :"",
     'creator'   : 'creator',
+    'access' : 'availability',
     'title'     : 'title',
     'start year': 'start year',
     'end year'  : 'end year',
@@ -36,5 +38,6 @@ query_dict = {
     "availability":"rights",
     "none of the words":"-",
     "the phrase":"+",
-    "any of the words":"?"
+    "any of the words":"?",
+    "all of the words":""
 }
