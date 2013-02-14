@@ -56,6 +56,8 @@ class Query_Language:
         if not keywords=="" :
             keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
             translated_dictionary[k] = keywords
+        for mod in query_mods:
+            query_string = query_string.replace((mod+"="),mod).replace((mod+"keywords="),mod)
         translated_dictionary["query_string"]=query_string
         
         print "translated_dictionary-----"

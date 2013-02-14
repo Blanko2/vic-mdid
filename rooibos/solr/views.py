@@ -541,30 +541,37 @@ def search(request, id=None, name=None, selected=False, json=False):
     #print "keywords is"
     #print keywords
     """
-    kws_list = (str(keywords)).split(',')
+
+    kws_list = re.split('(-?\".*?\")',keywords)
+    while "" in kws_list:
+        kws_list.remove("")
+    while " " in kws_list:
+        kws_list.remove(" ")
+
     kws=""
     kws_not = ""
     query_terms=""
     
     for kw in kws_list:
-	if kw is '':	# empty search
-	    pass	# nothing to do
-        elif "=" in kw:
-            if not query_terms == "":
-                query_terms += ", "
-            query_terms += kw
-        elif kw[0]=='-':
-            kw = kw.replace('\"','')
-            if kws_not is "":
-                kws_not += kw.replace('-','')
-            else :
-                kws_not += "+"+kw.replace('-','')
-        else:
-            kw = kw.replace('\"','')
-            if kws is "":
-                kws += kw
+            kw = kw.replace("\"","")
+            if kw is '':	# empty search
+                pass	# nothing to do
+            elif "=" in kw:
+                if not query_terms == "":
+                    query_terms += ", "
+                query_terms += kw
+            elif kw[0]=='-':
+                kw = kw.replace('\"','')
+                if kws_not is "":
+                    kws_not += kw.replace('-','')
+                else :
+                    kws_not += "+"+kw.replace('-','')
             else:
-                kws += "+"+kw 
+                kw = kw.replace('\"','')
+                if kws is "":
+                    kws += kw
+                else:
+                    kws += "+"+kw 
 	
     #print "kws = "
     #print kws

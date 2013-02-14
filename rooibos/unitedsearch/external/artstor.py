@@ -173,7 +173,7 @@ def _build_query_string(query_dict):
     for key in query_dict:
 	if not key is '':
 	    # append each key value to the string as key="value"
-	    qs += key + "=\"" + query_dict[key] + "\"+and+"
+	    qs += key + "=\"" + list_to_str(query_dict[key]) + "\"+and+"
 
 
     #remove trailing characters (added in expectation of more parameters)

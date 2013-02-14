@@ -78,8 +78,14 @@ def parse_trove_query(url, query_terms, empty_arg):
                             query_string = query_dict[arg_entry[0]]+arg_entry[1][1]+","+query_string
                         else:
                             query_string = query_dict[arg_entry[0]]+query_dict[arg_entry[1][0]]+"="+arg_entry[1][1]+","+query_string
+
                 else:
                     arg_indexes.append(arg_entry)
+                    if side_bar and not arg_entry[1][1]=="":
+                        if arg_entry[1][0] == "keywords" or arg_entry[1][0] == "keyword":
+                            query_string = query_dict[arg_entry[0]]+arg_entry[1][1]+","+query_string
+                        else:
+                            query_string = query_dict[arg_entry[0]]+query_dict[arg_entry[1][0]]+"="+arg_entry[1][1]+","+query_string
     if  date_tag:
         url = add_index(url,date_tag)
     if availability_tag:
