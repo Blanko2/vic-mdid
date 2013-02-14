@@ -113,6 +113,7 @@ def parse_api_results(soup):
             thumb = get_thumble(thumb)
         else:
             thumb= "../../../../static/images/thumbnail_unavailable.png"
+            #thumb= settings.STATIC_DIR + "/images/thumbnail_unavailable.png"
         
         if imageTag:
             image = str(imageTag.string).replace("&amp;", "&")
