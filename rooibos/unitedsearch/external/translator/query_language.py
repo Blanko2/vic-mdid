@@ -1,4 +1,4 @@
-from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict 
+from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict, local_dict
 from  rooibos.unitedsearch.common import break_query_string 
 import urllib
 class Query_Language:
@@ -98,7 +98,8 @@ class Query_Language:
             'digitalnz' : digitalnz_dict.dictionary,
             'artstor' : artstor_dict.dictionary,
             'trove' : trove_dict.dictionary,
-            'ngaust' : ngaust_dict.dictionary
+            'ngaust' : ngaust_dict.dictionary,
+            'local' : local_dict.dictionary
         }.get(searcher_identity, empty_dict.dictionary)
        
     def _check_valid(self, parameters):
