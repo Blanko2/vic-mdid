@@ -1,5 +1,7 @@
 from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict 
-from  rooibos.unitedsearch.common import break_query_string 
+from  rooibos.unitedsearch.common import break_query_string , list_to_str
+from rooibos.unitedsearch.external.translator.query_mod import query_mods
+from rooibos.unitedsearch.external.translator.query_lang import query_lang
 import urllib
 class Query_Language:
     """
@@ -22,47 +24,13 @@ class Query_Language:
     searcher_identity='default'
     searcher_dictionary = empty_dict.dictionary
 
-    """ query mods are the modifiers for the passed keys. 
-        '-' = without,
-        '+' = and/exact phrase,
-        '?' = or"""
-    query_mods=[
-        '-',
-        '+',
-        '?',
-    ]
-    """ if a searcher has a key that needs to be included -
-    it does not fit spec with a pre-existing key - then add it 
-    here """
-    query_lang=[
-        'keywords',
-        'creator',
-        'title',
-        'start date',
-        'end date',
-        'year',
-        'decade',
-        'century',
-        'rights',
-        'school',
-        'accession number',
-        'medium',
-        'access',
-        'start year',
-        'placename',
-        'end year',
-        "subject",
-        "language",
-        "isbn",
-        "issn",
-        "content_partner",
-        'display_collection',
-        "tag"
-        ]
+
+
     
     def __init__(self, searcher_id):
 	""" requires the searcher identifier to select the correct dict"""
         self.searcher_identity = searcher_id
+
 
     def searcher_translator(self, query):
         """ Translates the given universal query into parameters accepted by the searchers
@@ -76,15 +44,22 @@ class Query_Language:
         keywords += self._check_valid(params)
         query_string = keywords
         for key in params:
-            if len(query_string)>0:
-                query_string += ","
-            query_string += key+"="+params[key]
+            value_list = params[key]
+            if not isinstance(value_list,list):
+                value_list = [value_list]
+            for v in value_list:
+                if len(query_string)>0:
+                    query_string += ","
+                query_string += key+"="+v
         translated_dictionary = self._translate_words(params)
         k = self._translate('keywords')
         if not keywords=="" :
             keywords = translated_dictionary[k]+keywords if 'keywords' in translated_dictionary else keywords
-            translated_dictionary[k] = str(keywords)
+            translated_dictionary[k] = keywords
         translated_dictionary["query_string"]=query_string
+        
+        print "translated_dictionary-----"
+        print translated_dictionary
         return translated_dictionary 
 
     def searcher_to_dict(self, searcher_identity):
@@ -99,7 +74,7 @@ class Query_Language:
             'artstor' : artstor_dict.dictionary,
             'trove' : trove_dict.dictionary,
             'ngaust' : ngaust_dict.dictionary
-        }.get(searcher_identity, empty_dict.dictionary)
+        }.get(self.searcher_identity, empty_dict.dictionary)
        
     def _check_valid(self, parameters):
         """ 
@@ -112,16 +87,19 @@ class Query_Language:
         del_list = []
         add_list = []
         for p in parameters:
-            if p not in self.query_lang and not p[0] in self.query_mods:
-                keywords += str(parameters[p])
+            if p in query_mods:
+                print "valid:"+str(p)
+            elif p not in query_lang and not p[0] in query_mods:
+                keywords += list_to_str(parameters[p])
                 del_list.append(p)
-            elif p[0] in self.query_mods and len(p)>0:
+            elif p[0] in query_mods and len(p)>0:
                 if self.searcher_identity == "nga":
                     new_key = p[0]
-                    add_list.append([new_key,parameters[p]])
+                    add_list.append([new_key,list_to_str(parameters[p])])
                     del_list.append(p)
-                elif p[1:] not in self.query_lang:
-                    keywords += str(parameters[p])
+                elif p[1:] not in query_lang:
+                    print p
+                    keywords += list_to_str(parameters[p])
                     del_list.append(p)
         for p in del_list:
             if p in parameters:
@@ -132,19 +110,21 @@ class Query_Language:
 
     def _translate_words(self, parameters):
         """ breaks the params and sends them to _translate"""
+        print "parameters in _translate_words"
+        print parameters
         translated_dictionary={}
         for word in parameters:
             print "word = "+word
             translated_word = word
             modifier = None
-            for mod in self.query_mods:
+            for mod in query_mods:
                 if word.startswith(mod):
                     modifier = self._translate(mod)
                     print modifier
                     translated_word = word[len(mod):]
             translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word) 
             print "translated_word ======="+translated_word
-            translated_dictionary[translated_word] = str(parameters[word]) 
+            translated_dictionary[translated_word] = parameters[word]
         return translated_dictionary
 
     def _translate(self, word):

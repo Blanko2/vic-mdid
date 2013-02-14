@@ -21,6 +21,7 @@ from rooibos.data.functions import apply_collection_visibility_preferences, \
 from rooibos.storage.models import Storage
 from rooibos.ui import update_record_selection, clean_record_selection_vars
 from rooibos.federatedsearch.views import sidebar_api_raw
+from  rooibos.unitedsearch.common import *
 import rooibos.unitedsearch
 import re
 import copy
@@ -509,30 +510,32 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     sort = sort.startswith('random') and 'random' or sort.split()[0]
     sort = sort.endswith('_sort') and sort[:-5] or sort
-
+    
     federated_search_query = reduce(reduce_federated_search_query, criteria, keywords)
     federated_search = sidebar_api_raw(
         request, federated_search_query, cached_only=True) if federated_search_query else None
 
-
+    
     query_string = ""
     """if len(criteria)>0 :
       query_string += "search=advance "
     else :
       query_string += "search=simple "
     """
-    query_list = dict()
+    query_list = {}
     
     crit_pattern = re.compile("(?P<type>.*?(\_t)?):\"?(?P<value>.*?)\"?$")
     #crit_pattern = re.compile("(?P<type>.*?\_t):(?P<value>.*?)")
 
     for c in criteria :
       m = crit_pattern.match(c)
+      add_to_dict(query_list,str(m.group('type')),str(m.group('value')).replace(" ",'+').replace("\"",''))
+      """
       if query_list.has_key(str(m.group('type'))) :
-        query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"+\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
+        query_list.update({str(m.group('type')):query_list[str(m.group('type'))]+"%26\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
       else:
         query_list.update({str(m.group('type')):"\""+str(m.group('value')).replace(" ",'+').replace("\"",'')+"\""})
-
+      """
       
     """
     #print "keywords is"
@@ -582,10 +585,11 @@ def search(request, id=None, name=None, selected=False, json=False):
 
     for key in query_list.keys() :
       value = query_list[key]
-      while value.endswith('\\'):
-          value = value[:-1]
-      q = key+"="+value
-      query_string = query_string+','+q.replace("\"", "").replace('_t','')
+      for v in value:
+        while v.endswith('\\'):
+            v = v[:-1]
+        q = key+"="+v
+        query_string = query_string+','+q.replace("\"", "").replace('_t','')
 
     if not query_terms is '':
         query_string += ', '+query_terms
@@ -620,8 +624,7 @@ def search(request, id=None, name=None, selected=False, json=False):
                            'random': random.random(),
                            'viewmode': viewmode,
                            'federated_search': federated_search,
-                           'federated_search_query':
-			   query_string,#federated_search_query,
+                           'federated_search_query':query_string,
                            'pagination_helper': [None] * hits,
                            'has_record_created_criteria': any(f.startswith('created:') for f in criteria),
                            'has_last_modified_criteria': any(f.startswith('modified:') for f in criteria),

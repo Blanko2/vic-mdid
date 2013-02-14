@@ -16,6 +16,7 @@ import json
 
 
 def parse_gallica_sidebar(params):
+        
         header = "field"
         tail = "_opt"
         i = 0
@@ -50,6 +51,8 @@ def parse_gallica_sidebar(params):
         return None,params
 
 def parse_gallica_adv_search(params):
+    print "params gallica parser"
+    print params
     query_list = []
     temp_params = params.copy()
     for key in params:

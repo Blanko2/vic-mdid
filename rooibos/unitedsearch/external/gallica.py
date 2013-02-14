@@ -24,6 +24,7 @@ from rooibos.unitedsearch import *              # other search tools
 from rooibos.unitedsearch.common import proxy_opener   # methods common to all databases
 from gallica_parser import parse_gallica
 from rooibos.unitedsearch.external.translator.query_language import Query_Language 
+from rooibos.unitedsearch.external.translator.query_mod import query_mods
 from rooibos.unitedsearch.external.translator.gallica_dict import query_dict
 # these field names are set by software requirement
 name = "Gallica"        # database name the user will recognise
@@ -122,6 +123,8 @@ def build_URL(query, params):
     corresponding method"""
     if query and not params:
         ql = Query_Language(identifier)
+        
+        
         params = ql.searcher_translator(query)
     query, params = parse_gallica(params)
     if not query and not params:
@@ -145,6 +148,8 @@ def build_advanced_url(params):
     arg_list = [] # list contains values for DefinedListParameter:[[field0,value0],[opt1,[field1,value1]],[opt2,[field2,value2]],...]
     arg, params, copyright, languages, start_date, end_date = _build_arg(params)
     keyword_list = params["query_list"]
+    print "keyword_list======="
+    print keyword_list
     arg_list = _build_arg_list(keyword_list)
     arg.update({"field":arg_list})
     i = 1
@@ -154,8 +159,12 @@ def build_advanced_url(params):
         filter_type = filter_type_map[sub_query[0]]
         value = sub_query[1]
         opt = opt_type_map[sub_query[2]]
-        optionals_string += "&ope"+index+"="+opt+"&catsel"+index+"="+filter_type+"&cat"+index+"="+sub_query[1]
-        i=i+1
+        if not isinstance(value,list):
+            value = [value]
+        for v in value:        
+            optionals_string += "&ope"+index+"="+opt+"&catsel"+index+"="+filter_type+"&cat"+index+"="+v
+            i=i+1
+            index = str(i)
     # shove everything into the url
     replacements = {	
       'START': start_date,
@@ -283,9 +292,7 @@ def _build_arg(params):
     start_date = ""
     end_date   = ""
     if "query_string" in params:
-        arg.update({"query_string":str(params["query_string"])})
-        print "new args"
-        print arg
+        arg.update({"query_string":fix_query_string(str(params["query_string"]))})
         del params["query_string"]
     else:
         keywords = ""
@@ -320,20 +327,37 @@ def _build_arg(params):
                 opt = opt_type_map[sub_query[2]]
                 if filter_type=="f_allcontent":
                     if opt == "MUST":
-                        if keywords != "":
-                            keywords += " "
-                        keywords += value
+                        if isinstance(value,list):
+                            for v in value:
+                                if mod_keywords != "":
+                                    mod_keywords += ","
+                                mod_keywords += query_dict[opt]+v
+                        else:
+                            if keywords != "":
+                                keywords += " "
+                            keywords += value
                     else:
-                        if mod_keywords != "":
-                            mod_keywords += ","
-                        mod_keywords += query_dict[opt]+value
+                        if not isinstance(value,list):
+                            value = [value]
+                        for v in value:
+                            if mod_keywords != "":
+                                mod_keywords += ","
+                            mod_keywords += query_dict[opt]+v
                 else:
                     if mod_quries != "":
                         mod_quries += ","
-                    mod_quries += query_dict[opt]+query_dict[filter_type]+"="+value
+                    if isinstance (value, list):
+                        for v in value:
+                            if mod_quries != "":
+                                    mod_quries += ","
+                            mod_quries += query_dict[opt]+query_dict[filter_type]+"="+v
+                    else:
+                        mod_quries += query_dict[opt]+query_dict[filter_type]+"="+value
         query_string = keywords+","+mod_keywords+","+mod_quries+","+queries
         query_string = query_string.replace(",,",",")
-        arg["query_string"] = query_string
+        while query_string.startswith(","):
+            query_string = query_string[1:]
+        arg["query_string"] = fix_query_string(query_string)
         
     
     if "copyright" in params:
@@ -364,10 +388,14 @@ def _build_arg_list(keyword_list):
     """
     arg_list = []
     for keyword in keyword_list:
-        if arg_list == []:
-            arg_list.append([keyword[0], keyword[1]])
-        else:
-            arg_list.append([keyword[2],[keyword[0], keyword[1]]])
+        value = keyword[1]
+        if not isinstance(value,list):
+            value = [value]
+        for v in value:
+            if arg_list == []:
+                arg_list.append([keyword[0], v])
+            else:
+                arg_list.append([keyword[2],[keyword[0], v]])
     while len(arg_list)<5:
         arg_list.append([])
     return arg_list
@@ -392,13 +420,18 @@ def getlanguages(params) :
         "Greek": "grc",
         "Latin": "lat"
         }
-    if params['languages'] == 'All' :
+    value = params['languages']
+    if isinstance (value,list):
+        value = value[0]
+    if value == 'All' :
         lang_string = ""
     else :
-        lang_string = "&t_languages=" + lang_codes[params['languages']]
+        lang_string = "&t_languages=" + lang_codes[value]
     return lang_string
 
 def getcopyright(params) :
+    print "params in getcopyright"
+    print params
     """ Checks if copyright is in params and if so, returns it"""
     if (not params['copyright']) or (len(params['copyright']) == 0) :
         return ""
@@ -407,10 +440,14 @@ def getcopyright(params) :
         "Free": "fayes",
         "subject to conditions": "fano"
     }
-    if params['copyright'] == 'All' :
+
+    value = params['copyright']
+    if isinstance(value,list):
+        value = value[0]
+    if value == 'All' :
         copy_string = ""
     else :
-        copyright_str = params['copyright']
+        copyright_str = value
         if isinstance(copyright_str,list):
             copyright_str=copyright_str[0]
         copy_string = "&t_free_access=" + copyright_codes[copyright_str]
@@ -435,7 +472,15 @@ def get_empty_params():
     "all": [],
     "field": []
     }
- 
+
+def fix_query_string(query_string):
+    for mod in query_mods:
+        if (mod+"=") in query_string:
+            query_string = query_string.replace((mod+"="),mod)
+        if (mod+"keywords=") in query_string:
+            query_string = query_string.replace((mod+"keywords="),mod)
+    return query_string
+    
 """ 
 =================
 PARAMETERS   ##

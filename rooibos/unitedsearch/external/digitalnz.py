@@ -10,7 +10,7 @@ You will need to get your own API key and place it in settings_local.py as DNZ_A
 import json
 import urllib2
 from urllib import urlencode
-from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, proxy_opener 
+from rooibos.unitedsearch.common import break_query_string, merge_dictionaries, proxy_opener , list_to_str
 from django.conf import settings
 from rooibos import settings_local
 import rooibos.unitedsearch as unitedsearch
@@ -91,7 +91,8 @@ def _build_URL(query, params, per_page, page):
     """
     Builds the URL:
         query -- the query received by the searcher
-        params -- params from the sidebar - if these exist then there shouldn't be a query
+        params -- params from the sidebar - if these exist then there shou    print "keywords =========== "
+    print keywordsldn't be a query
         per_page -- number of images per page
         page -- page to retrieve images from
     """
@@ -116,10 +117,10 @@ def _build_simple_URL(query_terms, per_page, page):
         sidebar = False
         del query_terms['query_string']
     if 'keywords' in query_terms:
-        keywords=query_terms['keywords']   
+        keywords= list_to_str(query_terms['keywords'])
         arg.update({"keywords":keywords})
         if sidebar:
-            query_string = query_terms['keywords']
+            query_string = list_to_str(query_terms['keywords'])
         del query_terms['keywords']
     
     for q in query_terms:
@@ -132,15 +133,24 @@ def _build_simple_URL(query_terms, per_page, page):
             facet = q
         
         if facet == "keywords":
-            keywords += " "+query_terms[q]
+            keywords += " "+list_to_str(query_terms[q])
         else:
-            facets += '&'+query_mod+'['+facet+'][]='+query_terms[q]
+            value_list = query_terms[q]
+            if not isinstance(value_list,list):
+                value_list = [value_list]
+            for value in value_list:
+                facets += '&'+query_mod+'['+facet+'][]='+value
         
-        if sidebar and not facet=="keywords":
-            query_string += ","+query_dict[query_mod]+query_dict[facet]+"="+query_terms[q]
+        value_list = query_terms[q]
+        if not isinstance(value_list,list):
+            value_list = [value_list]
+        for value in value_list:
+            if sidebar and not facet=="keywords":
+                query_string += ","+query_dict[query_mod]+query_dict[facet]+"="+value
 
-        if facet!= "keywords":
-            facet_arg.append([query_mod,[facet,query_terms[q]]])
+            if facet!= "keywords":
+                facet_arg.append([query_mod,[facet,value]])
+
     keywords = keywords.replace(" ","+")
     if not "query_string" in arg:
         while "''" in query_string:

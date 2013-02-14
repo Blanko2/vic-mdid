@@ -5,6 +5,7 @@ from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
 from rooibos import settings_local
+from rooibos.unitedsearch.external.translator.query_mod import query_mods
 import re 
 import json
 import urllib2
@@ -48,9 +49,13 @@ def break_query_string(query):
     query is in form search=search_type, keywords=words (space-separated), params={"type": "value", ...}
     or 'word'
     """
+    print "query in bqs============"
+    print query
     keywords = ""
     para_map = {}
     keywords = re.findall("(?<=keywords=)[^,]*", query) # here keywords contains a list
+    print "keywords in break_query_string ===="
+    print keywords
     if keywords and len(keywords) >= 1:
         keywords = keywords[0] #now keywords is a string from that list.
     else:
@@ -58,13 +63,15 @@ def break_query_string(query):
     para_map = re.findall("(?<=params=).*", query)
     if para_map and len(para_map) >= 1:
         para_map = json.loads(para_map[0])
-        para_map2 = {}
+        #para_map = get_parameters(para_map[0])
     else:
         para_map = {}
     # default, if query didn't follow search=... structure, simply use query itself
     if keywords is "" and len(para_map) is 0 :
         keywords = query or ""
     print 'common - 68 keywords: ' +keywords
+    print "final para_map in break_query_string"
+    print para_map
     return keywords, para_map
     
 #========Dictionary methods ========
@@ -101,6 +108,7 @@ def add_to_dict(dictionary, key, value):
                 dictionary[key] = []
         for v in value:
             add_to_dict(dictionary, key, v)
+            value_string = ""
     else:
         if key in dictionary:
             if value not in dictionary[key]:
@@ -123,6 +131,46 @@ def getValue(dictionary, key):
     else:
         return ""
 
+
+        
+def get_parameters(para_str) :
+    print "start break:"+str(para_str)
+    test = json.loads(para_str)
+    print "test:"+str(test)
+    if isinstance(test,dict):
+        if len(test)>0:
+            para_map = {}
+            try:
+                para_str = str(para_str)
+                para_str = para_str[1:]
+                para_str = para_str[:-1]
+                print "para_str======"+para_str
+                para_list = para_str.split(",")
+                for para in para_list:
+                    pair = para.split(":")
+                    add_to_dict(para_map,pair[0].replace("\"",""),pair[1].replace("\"",""))
+                print "para_map before return"
+                print para_map
+                return para_map
+            except:
+                return {}
+        else:
+            return {}
+    else:
+        return {}
+
+
+def list_to_str(l) :
+    s = ""
+    if not isinstance(l,list):
+        return str(l)
+    else:
+        for v in l:
+            s+="+"+str(v)
+        s = s[1:]
+        return s
+    
+        
 """
 Creates a ProxyHandler for the University Proxy
 """

@@ -104,6 +104,7 @@ def sidebar_api_raw(request, query, cached_only=False):
 
 @json_view
 def sidebar_api(request):
+
     query = ' '.join(request.GET.get('q', '').strip().lower().split())
  
     # build params from query if possible (if query contains type=value parameters)
@@ -115,10 +116,21 @@ def sidebar_api(request):
 
     for clause in clauses:
 	    type_value = clause.strip().split("=", 1)
+        
 	    if len(type_value) == 1:
 		    keywords += type_value[0] + " "
 	    elif len(type_value) > 1:
-                params[type_value[0]]= type_value[1]
-    
+                t = str(type_value[0])
+                v = str(type_value[1])
+                print "v ===== "+v
+                if t in params:
+                    pt = params[t]
+                    pt.append(v)
+                    params[t]= pt
+                else:
+                    params[t]= [v]
+                print "params ================= "
+                print params
     query = re.sub("(?<=keywords=).*", keywords.strip(), query) + ", params=" + json.dumps(params)
+    print "final query in sidebar_api      ==     " + str(query)
     return sidebar_api_raw(request, query)

@@ -164,6 +164,8 @@ class usViewer():
                   value = default[1]
                 else:
                   value = ""
+                print "view value ========"
+                print value
                 r_content += "<input name=\"i_" + "_".join(prefix)+"_value" + "\" type=\"text\" value=\"" + value + "\" />"
                 r_content += "</div>"
                 return [r_content]        

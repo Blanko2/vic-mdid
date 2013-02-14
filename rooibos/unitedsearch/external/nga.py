@@ -11,9 +11,10 @@ Notes:
 """
 from BeautifulSoup import BeautifulSoup      # html parser
 from rooibos.unitedsearch import *       # other website search parts
-from rooibos.unitedsearch.common import merge_dictionaries, proxy_opener, break_query_string, add_to_dict, getValue 
+from rooibos.unitedsearch.common import merge_dictionaries, proxy_opener, break_query_string, add_to_dict, getValue , list_to_str
 from rooibos.unitedsearch.external.translator.query_language import Query_Language
 from rooibos.unitedsearch.external.translator.nga_dict import query_dict
+from rooibos.unitedsearch.external.translator.query_mod import query_mods
 import json                                 # tool for encoding and decoding complex structures to/from string
 import re                                   # regular expressions
 import urllib2                               # fetch html
@@ -31,13 +32,17 @@ identifier = "nga"            # searcher identifier
 LOGO_URL = "http://www.nga.gov/images/eagle.gif"
 
 def build_parameters(query, params):
+    print "params in nga"
+    print query
     """ builds parameters dictionary to search by"""
     if not params:
         translator = Query_Language(identifier)
         params = translator.searcher_translator(query)
     all_words = getValue(params, 'all words')
-    exact_phrase = getValue(params, 'exact phrase')
+    exact_phrase = list_to_str(getValue(params, 'exact phrase'))
     exclude = getValue(params, 'exclude words')
+    print "exclude ========"
+    print exclude
     not_in = getValue(params,'-')
     if exclude and not_in:
         exclude += "+"+not_in
@@ -55,10 +60,10 @@ def build_parameters(query, params):
     year2 = getValue(params, 'end date')
     access = getValue(params, 'access')
     # build up the url
-    url_base = BASE_ADVANCED_SEARCH_URL + "&all_words="+all_words + "&exact_phrase="+exact_phrase+ "&exclude_words="+exclude
+    url_base = BASE_ADVANCED_SEARCH_URL + "&all_words="+list_to_str(all_words) + "&exact_phrase="+list_to_str(exact_phrase)+ "&exclude_words="+list_to_str(exclude)
     url_base += "&artist_last_name="+artist+"&keywords_in_title="+keywords + "&accession_num="+accession_number
-    url_base += "&school="+school + "&classification="+classification + "&medium=" + medium + "&year="+year1 + "&year2="+year2
-    url_base += "&open_access="+access
+    url_base += "&school="+list_to_str(school) + "&classification="+list_to_str(classification) + "&medium=" + list_to_str(medium) + "&year="+list_to_str(year1) + "&year2="+list_to_str(year2)
+    url_base += "&open_access="+list_to_str(access)
     # replace all whitespace from the parameters
     url_base = re.sub(" ", "+", url_base)
     return params,  url_base
@@ -136,7 +141,7 @@ def search(query, params, off, num_results_wanted) :
     params,  url_base = build_parameters(query, params)
     no_query = True;
     if "query_string" in params:
-        arg["query_string"] = params["query_string"]
+        arg["query_string"] = fix_query_string(params["query_string"])
         del params["query_string"]
     else:
         query_string = ""
@@ -146,17 +151,16 @@ def search(query, params, off, num_results_wanted) :
             if not key == "all words":
                 if not query_string == "":
                     query_string += ","
-                value = params[key]
-                if isinstance(value,list):
-                    value = value[0]
+                value = list_to_str(params[key])
+                
                 query_string += query_dict[key] + "=" + value
-        arg["query_string"] = query_string
+        arg["query_string"] = fix_query_string(query_string)
         
     
     for key in params:
         value = params[key]
         if isinstance(value,list):
-            value = value[0]
+            value = list_to_str(value)
         
         no_query=False
         arg.update({key:value})
@@ -247,6 +251,12 @@ def __getHTMLPage_Containing_SearchResult(url_base, index_offset) :
     proxy_url = proxy_opener()
     html = proxy_url.open(url)
     return html, howFarDownThePage
+
+def fix_query_string(query_string):
+    for mod in query_mods:
+        if (mod+"=") in query_string:
+            query_string = query_string.replace((mod+"="),mod)
+    return query_string.replace("exclude words=","-").replace("exact phrase=","+")
 
 def get_logo():
     return  LOGO_URL

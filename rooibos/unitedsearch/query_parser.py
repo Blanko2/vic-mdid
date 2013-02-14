@@ -1,6 +1,8 @@
 from rooibos.storage.models import *
 from rooibos.access.models import AccessControl, ExtendedGroup, AUTHENTICATED_GROUP
 from rooibos.data.models import Collection, Record, standardfield, CollectionItem, Field, FieldValue
+from rooibos.unitedsearch.external.translator.query_mod import query_mods
+from common import *
 import re 
 import json
 import datetime
@@ -24,7 +26,7 @@ def parse(request, identifier):
     
     query = request.GET.get('q', '') or request.POST.get('q', '')
     
-    if query and "=" in query and not "params={" in query:
+    if query and not "params={" in query:
         # Case : User input query language
         query = parse_query_language(query)
         #Todo : pass to translator
@@ -44,6 +46,7 @@ def parse_sidebar(request,identifier):
 
 # Parse query for sidebar contains UserDefinedTypeParameter: gallica, trove
 def parse_complex_sidebar(params,identifier):
+        print "start parse_complex_sidebar   ----------------------------------\n"+str(params)
         para_map = {}
         temp_params = params.copy()
         i = 0
@@ -59,12 +62,15 @@ def parse_complex_sidebar(params,identifier):
             if type_key and value_key in params:
                 field_type = params[type_key]
                 value  = str(params[value_key])
+                print "value = "+ str(value)
                 opt = default_mod[identifier]
                 if opt_key in params:
                     opt = str(params[opt_key])
                 if field_type and value and not value=="":
                     entry_key= str(opt+'_'+field_type)
-                    params[entry_key] = value
+                    add_to_dict(params,entry_key,value)
+                    print "params is now"+str(params)
+                    #params[entry_key] = value
                     #para_map = update_para_map(para_map,entry_key,value)
             if type_key in params:
                 del params[type_key]
@@ -73,12 +79,15 @@ def parse_complex_sidebar(params,identifier):
             if opt_key in params:
                 del params[opt_key]
             i += 1
+        print "params before final loop ------------------------------"
+        print params
         for entry_key in params:
             value = params[entry_key]
-            if isinstance(value,list):
-                value = value[0]
             if not value =='':
                 para_map = update_para_map(para_map,entry_key,value)
+        
+        print "final para_map in parse_complex_sidebar"
+        print para_map
         return None, para_map
 
 #Parse regular sidebar         
@@ -90,11 +99,19 @@ def parse_regular_sidebar(params):
         
 def parse_query_language(query):        
             kw = ""
-            par = ""
-            not_query = ""
+
             query_list = query.split(',')
+            params ={}
             for q in query_list:
-                if "=" in q:
+                if len(q)==0:
+                    pass
+                elif q[0] in query_mods and not "=" in q:
+                    if len(q)>1:
+                        add_to_dict(params,q[0]+"keywords",q[1:])
+                    #if par != "":
+                    #    par += ","
+                    #par += "\""+q[0]+"\":\""+q[1:]+"\""
+                elif "=" in q:
                     key_value = q.split("=")
                     key = key_value[0]
                     value = key_value[1]
@@ -103,24 +120,21 @@ def parse_query_language(query):
                     if len(key_value)>0 :
                         for v in key_value:
                             value += "+"+v
-                    if not par=="":
-                        par +=","
                     if value.startswith("+"):
                         del value[0]
                     while value.endswith('\\'):
                         value = value[:-1]
-                    par += "\""+key+"\":\""+value+"\""
+                    add_to_dict(params,key,value)
+                    #par += "\""+key+"\":\""+value+"\""
                 else:
                     if not kw=="":
                         kw += "+"
                     kw += q
             while kw.endswith('\\'):
                 kw = kw[:-1]
-            if not not_query == "":
-                if not par == "":
-                    par += ","
-                par += not_query
-            query = "keywords="+kw+",params={"+par+"}"
+            query = "keywords="+kw + ", params=" + json.dumps(params)
+            print "final query from search bar:"
+            print query
             return query
 
 

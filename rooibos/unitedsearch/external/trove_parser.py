@@ -1,5 +1,5 @@
 from rooibos.unitedsearch.external.translator.trove_dict import query_dict
-
+from rooibos.unitedsearch.common import *
 def parse_trove_query(url, query_terms, empty_arg):
     
     print "query_terms"
@@ -46,39 +46,40 @@ def parse_trove_query(url, query_terms, empty_arg):
         date_tag = "date:["+year_from+"%20TO%20"+year_to+"]" 
     else:
         date_tag = None
-    if "access" in query_terms:
-        availability = query_terms["access"]
+    if "availability" in query_terms:
+        availability = list_to_str(query_terms["availability"])
         arg["availability"] = availability
         if side_bar:
             if not query_string=="":
                 query_string += ","
             query_string += query_dict["availability"]+"="+ availability
-        del query_terms["access"]
+        del query_terms["availability"]
         availability_tag = "&l-availability="+availability_map[availability]
     else:
         arg["availability"] = "Online"
         availability_tag = "&l-availability="+availability_map["Online"]
     
-    print "query_terms ======"
-    print query_terms
+
     
     for key in query_terms:
-        value = query_terms[key]
-        url_entry, arg_entry = parse_trove_index(key, value)
-        url = add_index(url,url_entry)
-        if arg_entry:
-            print "arg_entry ===="
-            print arg_entry
-            if arg_entry[0] == "all of the words" or arg_entry[0] == "the phrase" and not arg_entry[1][1]=="":
-                arg_indexes.insert(0,arg_entry)
-                if side_bar and not arg_entry[1][1]=="":
-                    if arg_entry[1][0] == "keywords" or arg_entry[1][0] == "keyword":
-                        query_string = query_dict[arg_entry[0]]+arg_entry[1][1]+","+query_string
-                 
-                    else:
-                        query_string = query_dict[arg_entry[0]]+query_dict[arg_entry[1][0]]+"="+arg_entry[1][1]+","+query_string
-            else:
-                arg_indexes.append(arg_entry)
+        value_list = query_terms[key]
+        if not isinstance(value_list,list):
+            value_list = [value_list]
+        for value in value_list:
+            url_entry, arg_entry = parse_trove_index(key, value)
+
+            url = add_index(url,url_entry)
+            if arg_entry:
+
+                if arg_entry[0] == "all of the words" or arg_entry[0] == "the phrase" and not arg_entry[1][1]=="":
+                    arg_indexes.insert(0,arg_entry)
+                    if side_bar and not arg_entry[1][1]=="":
+                        if arg_entry[1][0] == "keywords" or arg_entry[1][0] == "keyword":
+                            query_string = query_dict[arg_entry[0]]+arg_entry[1][1]+","+query_string
+                        else:
+                            query_string = query_dict[arg_entry[0]]+query_dict[arg_entry[1][0]]+"="+arg_entry[1][1]+","+query_string
+                else:
+                    arg_indexes.append(arg_entry)
     if  date_tag:
         url = add_index(url,date_tag)
     if availability_tag:
@@ -92,16 +93,15 @@ def parse_trove_query(url, query_terms, empty_arg):
     while query_string.startswith(','):
         query_string = query_string[1:]
     while query_string.endswith(','):
-        query_string.pop()
+        query_string = query_string[:-1]
     if not "query_string" in arg:
         arg["query_string"] = query_string
     
-    print "arg index=="
-    print arg_indexes
+
     while len(arg_indexes)<5:
         arg_indexes.append([])
     arg["field"] = arg_indexes
-    print "trove url = "+ url
+
     return url , arg
 
 def parse_trove_index(key, value):
@@ -155,14 +155,6 @@ def parse_none_index(index, value):
     return url_entry, arg_entry
 
 def check_value(value):
-    while value.startswith(' '):
-        if len(value)==1:
-            return ""
-        value = value[1:]
-    while value.endswith(' '):
-        if len(value)==1:
-            return ""
-        value = value[-1]
     return value
 
 def index_header(index):
