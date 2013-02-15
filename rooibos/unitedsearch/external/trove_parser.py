@@ -48,13 +48,17 @@ def parse_trove_query(url, query_terms, empty_arg):
         date_tag = None
     if "availability" in query_terms:
         availability = list_to_str(query_terms["availability"])
+        print "availability === "+availability
         arg["availability"] = availability
         if side_bar:
             if not query_string=="":
                 query_string += ","
             query_string += query_dict["availability"]+"="+ availability
         del query_terms["availability"]
-        availability_tag = "&l-availability="+availability_map[availability]
+        if availability in availability_map:
+            availability_tag = "&l-availability="+availability_map[availability]
+        else:
+            availability_tag = "&l-availability="+availability_map["Online"]
     else:
         arg["availability"] = "Online"
         availability_tag = "&l-availability="+availability_map["Online"]

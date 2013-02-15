@@ -59,43 +59,46 @@ def _count(soup):
 
     
 def search(query, params, off, num_wanted) :
-    if (not query or query in "keywords=, params={}") and (not params or params=={}):
-        return Result(0, off), empty_params
-    off = int(off) #just in case
+    try:
+        if (not query or query in "keywords=, params={}") and (not params or params=={}):
+            return Result(0, off), empty_params
+        off = int(off) #just in case
     
-    url, arg = build_URL(query, params)
-    if url.endswith("&q=&s=OFFSET"):
-        return Result(0, off), arg
-    search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
-    total = _count(search_result_parser)
-    num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
-    result = [];
-    #TODO: api or html
-    while num_wanted>0:
-        images = parse_api_results(search_result_parser)
+        url, arg = build_URL(query, params)
+        if url.endswith("&q=&s=OFFSET"):
+            return Result(0, off), arg
+        search_result_parser = get_search_result_parser(url, off, 100)#100 max per page
+        total = _count(search_result_parser)
+        num_wanted = min(num_wanted, total - off)#make sure we're not trying to get too many images
+        result = [];
+        #TODO: api or html
+        while num_wanted>0:
+            images = parse_api_results(search_result_parser)
 
-        #now images is all images found on page
-        num_got = len(images)
-        for i in images:
-            if num_wanted > 0:
-                if i[1] not in "":#has thumbnail
-                    result.append(i)
-                    num_wanted -= 1
-                off+=1#move the offset
-        if len(images) is (100 if api else PER_PAGE) and num_wanted > 0:#not last page of results
-            #maybe wait here to be nice to trove's servers
-            search_result_parser = get_search_result_parser(url, off, 100)#get next page, remember off is modified in loop above
+            #now images is all images found on page
+            num_got = len(images)
+            for i in images:
+                if num_wanted > 0:
+                    if i[1] not in "":#has thumbnail
+                        result.append(i)
+                        num_wanted -= 1
+                    off+=1#move the offset
+            if len(images) is (100 if api else PER_PAGE) and num_wanted > 0:#not last page of results
+                #maybe wait here to be nice to trove's servers
+                search_result_parser = get_search_result_parser(url, off, 100)#get next page, remember off is modified in loop above
     
-    img_list = Result(total, off)
-    #print result[0]
-    for image in result:
+        img_list = Result(total, off)
+        #print result[0]
+        for image in result:
         
-        img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
-    #res = dict(empty_params)
-    #res["all words"] = kw
-    return img_list, arg
-    #return Result(0, off), empty_params
-
+            img_list.addImage(ResultImage(image[0], image[1], image[2], image[3]))
+        #res = dict(empty_params)
+        #res["all words"] = kw
+        return img_list, arg
+        #return Result(0, off), empty_params
+    except:
+        # Trove does not accept query contains empty keywords. In that case it causes HTTP Error 500
+        return Result(0, off), arg()
     
 def parse_api_results(soup):
     images = []

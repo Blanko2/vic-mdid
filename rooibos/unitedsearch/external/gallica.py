@@ -425,9 +425,12 @@ def getlanguages(params) :
         value = value[0]
     if value == 'All' :
         lang_string = ""
-    else :
+    elif  value in lang_codes:
         lang_string = "&t_languages=" + lang_codes[value]
-    return lang_string
+    else:
+        lang_string = ""
+    # Todo: Enable languages
+    return ""
 
 def getcopyright(params) :
     print "params in getcopyright"
@@ -450,7 +453,10 @@ def getcopyright(params) :
         copyright_str = value
         if isinstance(copyright_str,list):
             copyright_str=copyright_str[0]
-        copy_string = "&t_free_access=" + copyright_codes[copyright_str]
+        if copyright_str in copyright_codes:
+            copy_string = "&t_free_access=" + copyright_codes[copyright_str]
+        else:
+            copy_string = ""
     return copy_string    
 
 def get_logo():
@@ -516,8 +522,8 @@ option_types = ["and", "or", "except"]
 parameters = MapParameter({
   "start date": OptionalParameter(ScalarParameter(str, "start date")),
   "end date": OptionalParameter(ScalarParameter(str, "end date")),
-  "languages": 
-  DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
+  #"languages": 
+  #DefinedListParameter(["All", "French", "English", "Italian", "Chinese", "Spanish", "German", "Greek", "Latin"],  multipleAllowed=False, label="Language"),
   "copyright": 
   DefinedListParameter(["All", "Free", "subject to conditions"], label="copyright"),
   "field" : ListParameter([

@@ -20,6 +20,7 @@ from BeautifulSoup import BeautifulSoup
 #import datetime
 #import socket
 from rooibos.unitedsearch.external.translator.query_language import Query_Language
+from rooibos.unitedsearch.external.translator.artstor_dict import query_dict
 from rooibos.unitedsearch.external.artstor_parser import parse_parameters
 
 name = "Artstor US"
@@ -33,7 +34,7 @@ Heavily based on fedaratedsearch/Artstor code - moved here so all searchers are 
 
 def search(query, params, off, num_results_wanted):
     off = int(off)
-    
+
     # query and params both come from sidebar, so should have exactly one.
     if not query and not params:
 	return Result(0, off), get_empty_parameters()
@@ -44,8 +45,28 @@ def search(query, params, off, num_results_wanted):
 	query_terms = Query_Language(identifier).searcher_translator(query)
     else:
 	query_terms = parse_parameters(params)
-
+    for key in query_terms:
+        query_terms[key] = list_to_str(query_terms[key])
+    
+    """
+    Disable modifiers and adv search for now
+    Todo: Work out if artstor can process adv search and modifiers
+          Adding Adv sidebar if possible
+    """
+    
+    del_list = []
+    for key in query_terms:
+        if not key == "":
+            del_list.append(key)
+    for key in del_list:
+        if key in query_terms:
+            del query_terms[key]
+    
+    
+    
     print "artstor 48 query_terms %s" %query_terms
+    if "query_string" in query_terms:
+        del query_terms["query_string"]
     # return empty result if no search terms (submitting an empty query breaks artstor)
     if len(query_terms) is 0:
 	return Result(0, 0), get_empty_parameters()
@@ -60,19 +81,21 @@ def search(query, params, off, num_results_wanted):
     """
     pagesize = num_results_wanted
     url = _get_url(query_terms, pagesize, off)
+    print "url ========"
+    print url
     html_page = _get_html_page(url)
     try:
 	results = ElementTree(file=html_page)
 	print "artstor 61 \n\tfile %s\n\tresults %s\n" %(html_page, results)
 	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
-    except ExpatError:		# XML parsing error
+    except:		# XML parsing error
 	num_results = 0
     if not num_results:		# other type of error or no results found
 	return Result(0, off), _build_returnable_parameters(query_terms)
 
     #pages = int(math.ceil(float(total) / pagesize))
 
-    result = Result(num_results, num_results+off)
+    result = Result(num_results, off+50)
     image_divs = results.findall('.//{info:srw/schema/1/dc-v1.1}dc')
     print "artstor 77 query_terms %s" %query_terms
     for div in image_divs:
@@ -105,11 +128,14 @@ def getImage(image_identifier):
   
 # TODO support date once we understand how date ranges are done in Artstor (note, can use dc.date=1894 to find images which were done in exactly 1894, or date range starts or ends with 1894, but not which include 1894 within their range)
 parameters = MapParameter({
-    "": OptionalParameter(ScalarParameter(str), "Keywords"),
+    "": OptionalParameter(ScalarParameter(str), "Keywords")
+    })
+"""
     "dc.creator": OptionalParameter(ScalarParameter(str), "Creator"),
     "dc.title": OptionalParameter(ScalarParameter(str), "Title"),
     "dc.subject": OptionalParameter(ScalarParameter(str), "Subject")
-    })
+"""
+
     
     
 def get_empty_parameters() :
@@ -123,15 +149,22 @@ def get_empty_parameters() :
 
 def _build_returnable_parameters(params):
     returnables = {}
+    query_string = ""
     for key in params:
-	if isinstance(params[key], list):
-	    returnables[key] = params[key]
-	else:
-	    returnables[key] = [params[key]]
+        returnables[key] = list_to_str([params[key]])
+        if key == "":
+            query_string= query_dict[key]+"="+list_to_str([params[key]])+query_string
+        else:
+            query_string+=","+query_dict[key]+"="+list_to_str([params[key]])
     
     for unused_key in (set(parameters.parammap)-set(params)):
-	returnables[unused_key] = []
-	
+        returnables[unused_key] = []
+    query_string = query_string.replace("keywords=","")
+    while query_string.startswith(","):
+        query_string = query_string[1:]
+    while query_string.endswith(","):
+        query_string = query_string[:-1]
+    returnables["query_string"]=query_string
     return returnables
 	
 """

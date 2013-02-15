@@ -10,3 +10,13 @@ dictionary={
     'title': 'dc.title',
     'subject': 'dc.subject'
 }
+
+query_dict = {
+    'not_':'-',
+    'and_':'+',
+    'or_':'or',
+    '':'keywords',
+    'dc.creator'   : 'creator',
+    'dc.title': 'title',
+    'dc.subject': 'subject'    
+}
