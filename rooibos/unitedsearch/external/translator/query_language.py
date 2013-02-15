@@ -8,7 +8,7 @@ class Query_Language:
     The definition of the Universal Query Language for Vic-Mdid
      
     all dictionaries need a 'keywords' equivalent and the 
-    query language written here can compensate for any added
+    query language in query_lang.py can compensate for any added
     keys that are not present in other dictionaries
     ie: if a key exists in one dict but not another, this class
     will put the values into 'keywords' for the searcher that doesnt
