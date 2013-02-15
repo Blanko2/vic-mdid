@@ -127,84 +127,86 @@ def getImage(json_image_identifier) :
     return RecordImage(image_identifier['image_url'], image_identifier['thumb'], title, meta, json_image_identifier)
 
 def search(query, params, off, num_results_wanted) :
-    """ 
-    Gets search results - method must be called `search`
-    query -- search query
-    params -- parameters received from sidebar - if not sidebar they are empty
-    off -- offset - number of images to offset the result by
-    num_results_wanted -- images per page
-    """
-    if not query and params == {}:
-        return Result(0, off), get_empty_params()
-    arg = get_empty_params()
-    off = (int)(off)    
-    params,  url_base = build_parameters(query, params)
-    no_query = True;
-    if "query_string" in params:
-        arg["query_string"] = fix_query_string(params["query_string"])
-        del params["query_string"]
-    else:
-        query_string = ""
-        if "all words" in params:
-            query_string = params["all words"]
+    try:
+        """ 
+        Gets search results - method must be called `search`
+        query -- search query
+        params -- parameters received from sidebar - if not sidebar they are empty
+        off -- offset - number of images to offset the result by
+        num_results_wanted -- images per page
+        """
+        if not query and params == {}:
+            return Result(0, off), get_empty_params()
+        arg = get_empty_params()
+        off = (int)(off)    
+        params,  url_base = build_parameters(query, params)
+        no_query = True;
+        if "query_string" in params:
+            arg["query_string"] = fix_query_string(params["query_string"])
+            del params["query_string"]
+        else:
+            query_string = ""
+            if "all words" in params:
+                query_string = params["all words"]
+            for key in params:
+                if not key == "all words":
+                    if not query_string == "":
+                        query_string += ","
+                    value = list_to_str(params[key])
+                    
+                    query_string += query_dict[key] + "=" + value
+            arg["query_string"] = fix_query_string(query_string)
+            
+        
         for key in params:
-            if not key == "all words":
-                if not query_string == "":
-                    query_string += ","
-                value = list_to_str(params[key])
-                
-                query_string += query_dict[key] + "=" + value
-        arg["query_string"] = fix_query_string(query_string)
-        
-    
-    for key in params:
-        value = params[key]
-        if isinstance(value,list):
-            value = list_to_str(value)
-        
-        no_query=False
-        arg.update({key:value})
-    if no_query:
-        return Result(0, off), arg
-    # get the image details
-    searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
-    website_search_results_parser = BeautifulSoup(searchhtml)
-    if not any_results(website_search_results_parser) :
-        return Result(0, off), arg
-    list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
-    # ensure the correct number of images found
-    num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
-    count = __count(website_search_results_parser)
-    if off>count:
-        return search(query,params,0,50)
-    else:
-        num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
-    if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
-        tmp = 0
-        while len(list_of_image_ids) < num_results_wanted and tmp<1:
-            searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off+len(list_of_image_ids))
-            website_search_results_parser = BeautifulSoup(searchhtml)
-            results = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
-            if len(results[0])==0:
-                break
-            if len(results[0])<25 :
-                tmp=1
-            for i in range(0, len(results[0])) :
-                list_of_image_ids.append(results[0][i])
-                thumbnail_urls.append(results[1][i])
-                image_descriptions.append(results[2][i])
-    if (len(list_of_image_ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and image_descriptions self-regulate to never be more
-        while (len(list_of_image_ids) > num_results_wanted) :
-            list_of_image_ids.pop()
-    # make Result that the rest of UnitedSearch can deal with
-    resulting_images = Result(__count(website_search_results_parser), off+num_results_wanted)
-    for i in range(len(list_of_image_ids)) :
-        resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
-    if is_simple_search(arg):
-        arg.update({"simple_keywords":str(arg["all words"])})
-        arg.update({"all words":[]})
-    return resulting_images, arg
-
+            value = params[key]
+            if isinstance(value,list):
+                value = list_to_str(value)
+            
+            no_query=False
+            arg.update({key:value})
+        if no_query:
+            return Result(0, off), arg
+        # get the image details
+        searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off)
+        website_search_results_parser = BeautifulSoup(searchhtml)
+        if not any_results(website_search_results_parser) :
+            return Result(0, off), arg
+        list_of_image_ids, thumbnail_urls, image_descriptions = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
+        # ensure the correct number of images found
+        num_results_wanted = min(num_results_wanted, __count(website_search_results_parser))    # adjusted by how many there are to have
+        count = __count(website_search_results_parser)
+        if off>count:
+            return search(query,params,0,50)
+        else:
+            num_results_wanted = min(num_results_wanted, __count(website_search_results_parser)-off)
+        if len(list_of_image_ids) < num_results_wanted:    # need more results and the next page has some
+            tmp = 0
+            while len(list_of_image_ids) < num_results_wanted and tmp<1:
+                searchhtml, firstIdIndex = __getHTMLPage_Containing_SearchResult(url_base, off+len(list_of_image_ids))
+                website_search_results_parser = BeautifulSoup(searchhtml)
+                results = __parse_html_for_image_details(website_search_results_parser, num_results_wanted, firstIdIndex)
+                if len(results[0])==0:
+                    break
+                if len(results[0])<25 :
+                    tmp=1
+                for i in range(0, len(results[0])) :
+                    list_of_image_ids.append(results[0][i])
+                    thumbnail_urls.append(results[1][i])
+                    image_descriptions.append(results[2][i])
+        if (len(list_of_image_ids) > num_results_wanted) :    # we've found too many, so remove some. Note, thumbs and image_descriptions self-regulate to never be more
+            while (len(list_of_image_ids) > num_results_wanted) :
+                list_of_image_ids.pop()
+        # make Result that the rest of UnitedSearch can deal with
+        resulting_images = Result(__count(website_search_results_parser), off+num_results_wanted)
+        for i in range(len(list_of_image_ids)) :
+            resulting_images.addImage(__createImage(list_of_image_ids[i], thumbnail_urls[i], image_descriptions[i]))
+        if is_simple_search(arg):
+            arg.update({"simple_keywords":str(arg["all words"])})
+            arg.update({"all words":[]})
+        return resulting_images, arg
+    except:
+        return Result(0, off), get_empty_params()
 """
 ================
 TOOLS

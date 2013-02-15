@@ -108,7 +108,6 @@ def add_to_dict(dictionary, key, value):
                 dictionary[key] = []
         for v in value:
             add_to_dict(dictionary, key, v)
-            value_string = ""
     else:
         if key in dictionary:
             if value not in dictionary[key]:

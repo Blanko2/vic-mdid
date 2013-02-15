@@ -11,6 +11,7 @@ dictionary={
     'rights':'access',
     '-':'exclude words',
     '+':'exact phrase',
+    '?':'all words',
     'accession number':'accession number',
     'classification':'classification',
     'school':'school',

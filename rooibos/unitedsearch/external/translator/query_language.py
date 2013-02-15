@@ -1,5 +1,5 @@
 from . import empty_dict, artstor_dict, nga_dict, gallica_dict, trove_dict, ngaust_dict, digitalnz_dict
-from  rooibos.unitedsearch.common import break_query_string , list_to_str
+from  rooibos.unitedsearch.common import break_query_string , list_to_str,add_to_dict
 from rooibos.unitedsearch.external.translator.query_mod import query_mods
 from rooibos.unitedsearch.external.translator.query_lang import query_lang
 import urllib
@@ -41,7 +41,9 @@ class Query_Language:
         print "keywords after breaking "+ keywords
         print "params after breaking"+str(params)
         #need to check if params contains values such as '+/?/-creator'
-        keywords += self._check_valid(params)
+        new_keywords,params = self._check_valid(params)
+        keywords+=" "+new_keywords
+        keywords.strip()
         query_string = keywords
         for key in params:
             value_list = params[key]
@@ -89,6 +91,7 @@ class Query_Language:
         keywords=""
         del_list = []
         add_list = []
+        parameters_temp = parameters.copy()
         for p in parameters:
             if p in query_mods:
                 print "valid:"+str(p)
@@ -98,18 +101,21 @@ class Query_Language:
             elif p[0] in query_mods and len(p)>0:
                 if self.searcher_identity == "nga":
                     new_key = p[0]
-                    add_list.append([new_key,list_to_str(parameters[p])])
+                    add_to_dict(parameters_temp,new_key,parameters[p])
                     del_list.append(p)
                 elif p[1:] not in query_lang:
-                    print p
-                    keywords += list_to_str(parameters[p])
+                    if not p[0]=="-":
+                        keywords += list_to_str(parameters[p])
                     del_list.append(p)
+        parameters = parameters_temp
         for p in del_list:
             if p in parameters:
                 del parameters[p]
         for p in add_list:
             parameters[self._translate(p[0])] = p[1]
-        return keywords     
+        print "parameters ========== "
+        print parameters
+        return keywords , parameters    
 
     def _translate_words(self, parameters):
         """ breaks the params and sends them to _translate"""
@@ -126,6 +132,9 @@ class Query_Language:
                     print modifier
                     translated_word = word[len(mod):]
             translated_word = modifier+"_"+self._translate(translated_word) if modifier else self._translate(translated_word) 
+            if self.searcher_identity == "nga":
+                if modifier:
+                    translated_word = modifier
             print "translated_word ======="+translated_word
             translated_dictionary[translated_word] = parameters[word]
         return translated_dictionary

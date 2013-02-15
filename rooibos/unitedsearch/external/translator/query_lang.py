@@ -12,6 +12,7 @@ query_lang=[
         'accession number',
         'medium',
         'access',
+        'publisher',
         'start year',
         'placename',
         'end year',

@@ -41,26 +41,29 @@ BLOCKED_CONTENT_PARTNERS="&without[content_partner][]=The%20University%20of%20Au
 # TODO get a University API key instead of a personal one
 
 def search(query, params, offset, per_page=20):
-    """performs the search and returns a results page and the used parameters"""
-    # build the URL 
-    if (not query or query in "keywords=, params={}") and (not params or params=={}):
-        return unitedsearch.Result(0, offset), get_empty_params()
-    offset = _modulate_offset(int(offset), per_page)
-    next_offset = offset+per_page
-    page = offset/per_page +1 
-    url ,arg = _build_URL(query, params, per_page, page)
-    result_object = _load_url(url) 
-    hits = _count(url)
-    print url
-    result = unitedsearch.Result(hits, next_offset) 
-    # add images
-    for iobject in result_object["search"]["results"]:
-        thumbnail_url = iobject["thumbnail_url"] or iobject["large_thumbnail_url"] or iobject["object_url"] or None 
-        # should only be done after fixing getImage()
-        provider = iobject["content_partner"][0] or iobject["display_content_partner"][0]
-        image = unitedsearch.ResultImage(iobject["source_url"], thumbnail_url, iobject["title"], iobject["id"], content_provider=provider)
-        result.addImage(image)
-    return result, arg 
+    try:
+        """performs the search and returns a results page and the used parameters"""
+        # build the URL 
+        if (not query or query in "keywords=, params={}") and (not params or params=={}):
+            return unitedsearch.Result(0, offset), get_empty_params()
+        offset = _modulate_offset(int(offset), per_page)
+        next_offset = offset+per_page
+        page = offset/per_page +1 
+        url ,arg = _build_URL(query, params, per_page, page)
+        result_object = _load_url(url) 
+        hits = _count(url)
+        print url
+        result = unitedsearch.Result(hits, next_offset) 
+        # add images
+        for iobject in result_object["search"]["results"]:
+            thumbnail_url = iobject["thumbnail_url"] or iobject["large_thumbnail_url"] or iobject["object_url"] or None 
+            # should only be done after fixing getImage()
+            provider = iobject["content_partner"][0] or iobject["display_content_partner"][0]
+            image = unitedsearch.ResultImage(iobject["source_url"], thumbnail_url, iobject["title"], iobject["id"], content_provider=provider)
+            result.addImage(image)
+        return result, arg 
+    except:
+        return Result(0, off), get_empty_params
 
 def previousOffset(offset, per_page):
     """ the image offset for the previous page """

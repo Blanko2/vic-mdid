@@ -55,64 +55,67 @@ def get_search_result_parser(base_url, page_idx) :
     return search_results_parser
 
 def search(query, params, off, num_wanted) :
-    """ Do the search, return the results and the parameters dictionary used (must have
-    all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
-    per_page = __items_per_page(num_wanted)
-    off = (int)(off)
-    if off<0:
-        off=0
-    page_idx = 1 + (off/per_page)
-    
-    images = []
-    url, arg = build_URL(query, params) 
-    if not url:
-        return Result(0, off), arg
-    first_round = True      # optimisation to say we don't need to replace the first search_results_parser
-    search_results_parser = get_search_result_parser(url, page_idx)
-    if not search_results_parser:
-        print "GALLICA.ERROR: Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
-        return Result(0, off), arg
-    num_results = __count(search_results_parser)
-    num_pages = num_results/per_page + 1
-    num_unwanted = off%per_page
-    if page_idx>num_pages :
-        page_idx = num_pages
-        num_unwanted = 0
-        off = (num_pages-1)*per_page
+    try:
+        """ Do the search, return the results and the parameters dictionary used (must have
+        all parameter types included, even if their value is merely [] - to show up in ui sidebar"""
+        per_page = __items_per_page(num_wanted)
+        off = (int)(off)
+        if off<0:
+            off=0
+        page_idx = 1 + (off/per_page)
+        
+        images = []
+        url, arg = build_URL(query, params) 
+        if not url:
+            return Result(0, off), arg
+        first_round = True      # optimisation to say we don't need to replace the first search_results_parser
         search_results_parser = get_search_result_parser(url, page_idx)
-    if __count(search_results_parser) is 0:
-        return Result(0, off), arg
-    num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
-    if num_wanted <0 :
-        num_wanted =0
-    while len(images) < num_wanted:
-        if not first_round :
-            if page_idx>=num_pages:
-                break
-            page_idx = page_idx+1
+        if not search_results_parser:
+            print "GALLICA.ERROR: Something went horribly wrong, Gallica failed to respond properly, gallica.py ln 46ish in search method"
+            return Result(0, off), arg
+        num_results = __count(search_results_parser)
+        num_pages = num_results/per_page + 1
+        num_unwanted = off%per_page
+        if page_idx>num_pages :
+            page_idx = num_pages
+            num_unwanted = 0
+            off = (num_pages-1)*per_page
             search_results_parser = get_search_result_parser(url, page_idx)
-        else :
-            first_round = False
-        # find start points for image data
-        image_id_divs = search_results_parser.findAll('div', 'resultat_id')
-        while num_unwanted>0:
-            num_unwanted = num_unwanted-1
-            del image_id_divs[0]
-        # build images
-        for div in image_id_divs :
-            images.append(__create_image(search_results_parser, div))
-        # discard any excess
-    if len(images) > num_wanted :
-            while len(images) > num_wanted :
-                images.pop()
-    # wrap in Result object and return
-    result = Result(num_results, off+len(images))
-    for image in images :
-        result.addImage(image)
-    # and make sure params contains all param types
+        if __count(search_results_parser) is 0:
+            return Result(0, off), arg
+        num_wanted = min(num_wanted, num_results-off)    # how many were asked for mitigated by how many actually existing
+        if num_wanted <0 :
+            num_wanted =0
+        while len(images) < num_wanted:
+            if not first_round :
+                if page_idx>=num_pages:
+                    break
+                page_idx = page_idx+1
+                search_results_parser = get_search_result_parser(url, page_idx)
+            else :
+                first_round = False
+            # find start points for image data
+            image_id_divs = search_results_parser.findAll('div', 'resultat_id')
+            while num_unwanted>0:
+                num_unwanted = num_unwanted-1
+                del image_id_divs[0]
+            # build images
+            for div in image_id_divs :
+                images.append(__create_image(search_results_parser, div))
+            # discard any excess
+        if len(images) > num_wanted :
+                while len(images) > num_wanted :
+                    images.pop()
+        # wrap in Result object and return
+        result = Result(num_results, off+len(images))
+        for image in images :
+            result.addImage(image)
+        # and make sure params contains all param types
 
-    return result, arg
-  
+        return result, arg
+
+    except:
+        return Result(0, off), get_empty_params()
 """
 =======================
 URL BUILDERS

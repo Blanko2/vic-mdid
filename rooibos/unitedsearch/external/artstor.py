@@ -83,15 +83,16 @@ def search(query, params, off, num_results_wanted):
     url = _get_url(query_terms, pagesize, off)
     print "url ========"
     print url
-    html_page = _get_html_page(url)
+    #html_page = _get_html_page(url)
     try:
-	results = ElementTree(file=html_page)
-	print "artstor 61 \n\tfile %s\n\tresults %s\n" %(html_page, results)
-	num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
+        html_page = _get_html_page(url)
+        results = ElementTree(file=html_page)
+        print "artstor 61 \n\tfile %s\n\tresults %s\n" %(html_page, results)
+        num_results = int(results.findtext('{http://www.loc.gov/zing/srw/}numberOfRecords')) or 0
     except:		# XML parsing error
-	num_results = 0
-    if not num_results:		# other type of error or no results found
-	return Result(0, off), _build_returnable_parameters(query_terms)
+        num_results = 0
+        if not num_results:		# other type of error or no results found
+            return Result(0, off), _build_returnable_parameters(query_terms)
 
     #pages = int(math.ceil(float(total) / pagesize))
 
@@ -108,9 +109,11 @@ def search(query, params, off, num_results_wanted):
 
     
 def count(query):
-    results = search(query, {}, "0", 1)[0]
-    return results.total or 0
-
+    try:
+        results = search(query, {}, "0", 1)[0]
+        return results.total
+    except:
+        return 0
 
 
 def getImage(image_identifier):
