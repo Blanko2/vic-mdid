@@ -1,0 +1,4 @@
+{{ obj.id }}<br />
+{% for value in obj.fieldvalue_set.all %}
+{{ value.resolve_label }}: {{ value.value }}<br />
+{% endfor %}

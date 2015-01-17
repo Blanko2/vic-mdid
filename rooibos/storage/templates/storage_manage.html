@@ -1,0 +1,63 @@
+{% extends "master.html" %}
+{% load pagination_tags %}
+
+{% block stylesheets %}
+{{ block.super }}
+<style type="text/css">
+td.limitwidth {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+td.limitwidth + td.limitwidth {
+    padding-left: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% autopaginate storages 50 %}
+
+<h1>Storage Management</h1>
+
+{% if user.is_superuser %}
+<a href="{% url storage-create-storage %}">Create new storage area</a>
+{% endif %}
+
+{% if storages %}
+
+{% paginate %}
+
+<table class="list" summary="Storages">
+    <tr>
+        <th>Title</th>
+        <th>System</th>
+        <th>Base</th>
+        <th>URL Base</th>
+        <th>Delivery Base</th>
+        <th></th>
+    </tr>
+
+{% for storage in storages %}
+<tr class="{% cycle "" "altrow" %}">
+    <td><a href="{% url storage-manage-storage storage.id, storage.name %}">{{ storage.title }}</a></td>
+    <td>{{ storage.system }}</td>
+    <td class="limitwidth" title="{{ storage.base|default:"" }}">{{ storage.base|default:"" }}</td>
+    <td class="limitwidth" title="{{ storage.urlbase|default:"" }}">{{ storage.urlbase|default:"" }}</td>
+    <td class="limitwidth" title="{{ storage.deliverybase|default:"" }}">{{ storage.deliverybase|default:"" }}</td>
+    <td>{% if storage.analysis_available %}<a href="{% url storage-analyze storage.id, storage.name %}">Analyze</a>{% endif %}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% paginate %}
+
+{% else %}
+
+<div>You do not have permission to manage any storage.</div>
+
+{% endif %}
+
+{% endblock %}

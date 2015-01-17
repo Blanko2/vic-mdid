@@ -1,0 +1,50 @@
+{% extends "master.html" %}
+{% load pagination_tags %}
+{% load humanize %}
+
+{% block content %}
+
+{% autopaginate collections 50 %}
+
+<h1>Collection Management</h1>
+
+<a href="{% url data-collection-new %}">Create new Collection</a>
+
+
+{% if collections %}
+
+{% paginate %}
+
+<table class="list" summary="Collections">
+    <tr>
+        <th>Title</th>
+        <th>Owner</th>
+        <th>Hidden</th>
+        <th>Records</th>
+        <th>Children</th>
+    </tr>
+
+{% for collection in collections %}
+<tr class="{% cycle "" "altrow" %}"{% if master %} style="color: gray;"{% endif %}>
+    <td><a href="{% url data-collection-manage collection.id, collection.name %}">{{ collection.title }}</a></td>
+    <td style="text-align: center;">{{ collection.owner.get_full_name|default:"-" }}</td>
+    <td style="text-align: center;">{{ collection.hidden|yesno:"hidden," }}</td>
+    <td style="text-align: right;">{{ collection.records.count|intcomma }}</td>
+    <td>{% for child in collection.children.all %}
+            <a href="{% url data-collection-manage child.id, child.name %}">{{ child.title }}</a><br />
+        {% endfor %}
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% paginate %}
+
+{% else %}
+
+<div>You do not have permission to manage any collections.</div>
+
+{% endif %}
+
+{% endblock %}

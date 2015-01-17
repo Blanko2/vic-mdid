@@ -1,0 +1,68 @@
+{% extends "master.html" %}
+{% load help %}
+{% load access_control %}
+{% load ui %}
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+
+    $("input[name=ac]").click(function() {
+        if (this.checked) {
+            var read = $(this).next('span');
+            var write = read.next('span');
+            var manage = write.next('span');
+            var restrictions = manage.next('span');
+            $("#id_read").attr('selectedIndex', read.hasClass('a') * 1  + read.hasClass('d') * 2)
+            $("#id_write").attr('selectedIndex', write.hasClass('a') * 1  + write.hasClass('d') * 2)
+            $("#id_manage").attr('selectedIndex', manage.hasClass('a') * 1  + manage.hasClass('d') * 2)
+            $("#id_restrictions").val(restrictions.data('title') || "");
+        }
+    });
+
+</script>
+{% endblock %}
+
+{% block sidebar %}
+{% var as related_pages %}
+{"pages": [
+{% include "ui_related_pages_for_object.html" %}
+]}
+{% endvar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+
+<h1>Modify permissions for {{ object.title }}</h1>
+
+<form method="POST" action=".">{% csrf_token %}
+{% with "true" as ac_selectable %}
+{% include "access_permissions_display.html" %}
+{% endwith %}
+<br />
+
+Set selected and new access controls to:
+<table>
+{{ ac_form }}
+<tr>
+    <td>Add user:</td>
+    <td><input type="text" class="autocomplete-user" name="adduser" /></td>
+</tr>
+<tr>
+    <td>Add group:</td>
+    <td><input type="text" class="autocomplete-group" name="addgroup" /></td>
+</tr>
+</table>
+
+
+<input type="submit" value="Submit changes" />
+
+<br /><br />
+
+<input type="submit" value="Remove selected access controls" name="delete" />
+
+
+</form>
+
+{% endblock %}

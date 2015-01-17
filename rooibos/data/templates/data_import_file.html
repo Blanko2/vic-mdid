@@ -1,0 +1,80 @@
+{% extends "master.html" %}
+{% load ui %}
+
+{% block content %}
+
+<h1>Import Data</h1>
+
+<h2>Settings</h2>
+
+<form method="post" action=".">{% csrf_token %}
+    <table>
+        <tr><th>{{ form.collections.label }}:</th>
+            <td>{{ form.collections.errors }}
+            <div class="multi-checkbox-list">
+                {{ form.collections }}
+            </div>{% if writable_collections %}* You may add regular records to this collection{% endif %}</td>
+        </tr>
+        <tr><th>{{ form.fieldset.label }}: {{ form.fieldset.errors }}</th><td>{{ form.fieldset }}</td></tr>
+        <tr><th>{{ form.separator.label }}: {{ form.separator.errors }}</th><td>{{ form.separator }}</td></tr>
+        <tr><th>{{ form.update.label }}: {{ form.update.errors }}</th><td>{{ form.update }}</td></tr>
+        <tr><th>{{ form.add.label }}: {{ form.add.errors }}</th><td>{{ form.add }}</td></tr>
+        <tr><th>{{ form.test.label }}: {{ form.test.errors }}</th><td>{{ form.test }}</td></tr>
+        <tr><th>{{ form.personal.label }}: {{ form.personal.errors }}</th><td>{{ form.personal }}</td></tr>
+    </table>
+    {{ mapping_formset.management_form }}
+    {{ mapping_formset.non_form_errors }}
+    <table>
+        <thead>
+        <tr>
+            <th>Source field</th>
+            <th>Map to</th>
+            <th>Separate</th>
+            <th>Label</th>
+            <th>Hidden</th>
+            <th>Order</th>
+        </tr>
+        </thead>
+        <tbody>
+    {% for mapping_form in mapping_formset.forms %}
+        <tr>
+            <td>{{ mapping_form.fieldname }}</td>
+            <td>{{ mapping_form.mapping }}</td>
+            <td style="text-align: center;">{{ mapping_form.separate }}</td>
+            <td>{{ mapping_form.label }}</td>
+            <td style="text-align: center;">{{ mapping_form.hidden }}</td>
+            <td class="orderinput">{{ mapping_form.ORDER }}
+            {{ mapping_form.fieldname.errors }}
+            {{ mapping_form.mapping.errors }}
+            {{ mapping_form.separate.errors }}
+            {{ mapping_form.label.errors }}
+            {{ mapping_form.hidden.errors }}
+            {{ mapping_form.ORDER.errors }}
+            </td>
+        </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+
+    <input type="submit" name="import_button" value="Import File" />
+    <input type="submit" name="preview_button" value="Update Preview" />
+</form>
+
+
+{% if preview_rows %}
+<br />
+<h2>Preview</h2>
+
+{% for row in preview_rows %}
+<ul>
+{% for key,values in row.iteritems %}
+{% for value in values %}
+<li>{{ key }}: {{ value }}</li>
+{% endfor %}
+{% endfor %}
+</ul>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

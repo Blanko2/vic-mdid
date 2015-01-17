@@ -1,0 +1,127 @@
+{% extends "master.html" %}
+{% load humanize %}
+{% load access_control %}
+{% load ui %}
+
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#delete-collection").click(function(event) {
+            if (!confirm("Are you sure you want to delete this collection?"))
+                event.preventDefault();
+        });
+
+	// suggest saving before user leaves page
+	var unsaved_changes = false;
+	$('#edit-form').keypress(function() {
+	    unsaved_changes = true;
+	    $('#submit_button').css("font-weight", "bolder");
+	});
+	$('#edit-form').submit(function() {
+	    unsaved_changes = false;
+	});
+	$(window).bind('beforeunload', function() {
+	    if (unsaved_changes) {
+		var r = confirm("You have unsaved changes. Press ok to save them, cancel to discard.");
+		if (r==true) {
+		    $('#edit-form').submit();
+		}
+	    }
+	});
+    });
+</script>
+{% endblock %}
+
+
+{% block sidebar %}
+{% var as related_pages %}
+{"pages": [
+    {"url": "{% url ui-management %}", "title": "Management"},
+    {"url": "{% url data-collections-manage %}", "title": "Collection Management"}
+    {% if collection.id %},
+    {"url": "{% url storage-match-up-files %}?collection={{ collection.id }}", "title": "Match Up Media"},
+    {"url": "{% url storage-find-records-without-media %}?collection={{ collection.id }}", "title": "Find Empty Records"}
+    {% endif %}
+]}
+{% endvar %}
+
+{{ block.super }}
+
+{% if collection.id %}
+  <div class="facet active-facet" id="collection_sidebar_statistics">
+    <div class="facet-header">Statistics</div>
+    <div class="facet-body">
+        {% with collection.records.count as c %}
+        {{ c|intcomma }} record{{ c|pluralize }}
+        {% endwith %}
+    </div>
+  </div>
+
+{% if collection.children.count %}
+  <div class="facet active-facet" id="collection_sidebar_children">
+    <div class="facet-header">Child Collections</div>
+    <div class="facet-body">
+        {% for child in collection.children.all %}
+        <a href="{% url data-collection-manage child.id, child.name %}">{{ child.title }}</a><br />
+        {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+  <div class="facet active-facet" id="collection_sidebar_permissions">
+    <div class="facet-header">Permissions <a href="{% permissions_modify_url collection %}"><img src="{% url static 'images/edit.png' %}" class="facet-button" /></a></div>
+    <div class="facet-body">
+        {% permissions_display collection %}
+    </div>
+  </div>
+
+  <div class="facet active-facet" id="collection_sidebar_effective_permissions">
+    <div class="facet-header">Effective Permissions</div>
+    <div class="facet-body">
+        {% effective_permissions_form collection %}
+    </div>
+  </div>
+
+{% if can_delete %}
+  <div class="facet active-facet" id="collection_sidebar_delete">
+    <div class="facet-header">Delete Collection</div>
+    <div class="facet-body">
+        <form action="." method="POST">{% csrf_token %}
+        <input type="submit" value="Delete" name="delete-collection" id="delete-collection" />
+        </form>
+    </div>
+  </div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>Edit Collection</h1>
+
+<h2>{{ collection.title }}</h2>
+
+<form action="." method="POST" class="vertical" id="edit-form">{% csrf_token %}
+
+
+{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}
+{{ form.hidden.label_tag }}{{ form.hidden }}{{ form.hidden.errors }}
+{% if not form.owner.is_hidden %}{{ form.owner.label_tag }}{% endif %}{{ form.owner }}{{ form.owner.errors }}
+{{ form.description.label_tag }}{{ form.description }}{{ form.description.errors }}
+{{ form.agreement.label_tag }}{{ form.agreement }}{{ form.agreement.errors }}
+{{ form.children.label_tag }}<div class="multi-checkbox-list" style="float: left;">{{ form.children }}</div>{{ form.children.errors }}
+
+<div class="row">
+    <br />
+    <input type="submit" value="{% if collection.id %}Update{% else %}Create{% endif %}" id="submit_button"/>
+    <a href="{% url data-collections-manage %}">Cancel</a>
+</div>
+
+</form>
+
+{% endblock %}

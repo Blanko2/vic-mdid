@@ -1,0 +1,18 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+<h1>Groups</h1>
+
+{% if groups %}
+<ul>
+  {% for collection in groups %}
+  <li><a href="{{ collection.get_absolute_url }}">{{ collection.title }}</a>
+    <a href="{% url solr-search-collection id=collection.id, name=collection.name %}">Explore</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+No groups are available.
+{% endif %}
+
+{% endblock %}

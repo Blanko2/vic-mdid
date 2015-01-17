@@ -1,0 +1,12 @@
+{% if related_pages.pages %}
+<div class="facet active-facet" id="sidebar_related_pages">
+  <div class="facet-header">Related pages</div>
+  <div class="facet-body">
+    <ul>
+      {% for page in related_pages.pages %}
+        <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}

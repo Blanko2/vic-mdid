@@ -1,0 +1,147 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+{% load solr %}
+
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+
+    function remoteRecordSelection(ids, checked) {
+        var method = ids == 0 ? 'GET' : 'POST';
+        if (ids.constructor != Array) ids = [ids];
+        ajaxManager.add({
+            type: method,
+            url: '{{ select_url }}',
+            data: {'id': JSON.stringify(ids), 'checked': checked},
+            dataType: 'json',
+            success: function(r) {
+                $("#basket-thumbs").html(r.basket);
+                $("#basket-tab").html(r.header);
+                basket_scroll_arrows();
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        $("#submit_record_selections").hide();
+        $(".remote-record-select").click(function() { remoteRecordSelection($(this).attr('value'), $(this).attr('checked')); });
+        $(".param-opt-a").click(function(){
+        	if($(this).attr("checked"))
+        		$(this).data("subpart").appendTo($(this).parent()).hide().slideDown();
+        	else
+        		$(this).data("subpart").show().slideUp(function(){ $(this).detach(); });
+       	});
+        $(".param-opt-a").each(function(){
+        	$(this).data("subpart", $(this).next(".param-opt"));
+        	if(!$(this).attr("checked"))
+	        	$(this).data("subpart").detach();
+        });
+    });
+
+</script>
+{% endblock %}
+
+
+{% block sidebar %}
+
+{% var as related_pages %}
+{% if browse %}
+    {"pages": [
+	{"url": "{% url solr-browse %}", "title": "Back to Browse"}
+    ]}
+{% else %}
+    {"pages": [
+	{"url": "{% url solr-search %}?kw={{ query|urlencode }}", "title": "Back to Explore"}
+    ]}
+{% endif %}
+{% endvar %}
+
+{{ block.super }}
+
+  <div class="facet active-facet" id="results_sidebar_keywords">
+    <div class="facet-header">Keywords </div>
+    <div class="facet-body">
+        <form method="GET" action=".">
+        <input type="text" id="keywords" name="q" value="{{ query }}"/><input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="keywords-go" />
+        </form>
+    </div>
+  </div>
+  {% if html_parameters %}
+  <div class="facet active-facet" id="results_sidebar_parameters">
+    <div class="facet-header">Advanced Search</div>
+    <form method="GET" action=".">
+      {{ html_parameters|safe }}
+      <input type="image" class="image" src="{% url static 'images/med_go_button.png' %}" value="Go" id="parameters-go" />
+    </form>
+  </div>
+  {% endif %}
+      
+
+
+{% endblock %}
+
+
+{% block content-top %}
+<h1>{{ searcher_name }}</h1>
+<a href="{{ searcher_url }}"><img src="{{ searcher_logo }}"></a>
+{% endblock %}
+
+
+{% block content %}
+<form method="POST" action=".">{% csrf_token %}
+<input type="hidden" name="q" value="{{ query }}" />
+<div>
+    Your query found {{ hits|intcomma }} hit{{ hits|pluralize }}.
+    <input id="submit_record_selections" type="submit" name="action" value="Select" />
+</div>
+
+
+
+{% if first_page or next_page or previous_page %}
+<div style="text-align: center;">
+  {% if first_page %}
+    <a href="{{ first_page }}">First</a>
+  {% endif %}
+  {% if previous_page %}
+    <a href="{{ previous_page }}">Previous</a>
+  {% endif %}
+  {% if next_page %}
+    <a href="{{ next_page }}">Next</a>
+  {% endif %}
+  {% if last_page %}
+    <a href="{{ last_page }}">Last</a>
+  {% endif %}
+</div>
+
+
+{% endif %}
+
+{% if results %}
+<div id="resultlist" class="resultlist-thumb">
+{% for r in results %}
+
+<div class="record">
+    <a href="{{ r.record_url }}"><img class="thumbnail{% if r.is_record %} record-anchor{% endif %}" src="{{ r.thumb_url }}" alt="{{ r.title }}" /></a>
+    <div class="record-title"><a href="{{ r.record_url }}">{{ r.title }}</a></div>
+    <div class="record-title">{{ r.content_provider }}</div>
+    {% if request.user.is_authenticated and r.identifier != None %}
+      <input type="checkbox" class="{% if r.is_record %}record-select{% else %}remote-record-select{% endif %}" name="r" value="{{ r.identifier }}"{% if r.selected %} checked="checked"{% endif %} />
+    {% endif %}
+</div>
+
+
+{% endfor %}
+
+
+
+</div>
+{% endif %}
+
+
+
+</form>
+
+{% endblock %}

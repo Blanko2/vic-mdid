@@ -1,0 +1,12 @@
+{% extends "master.html" %}
+
+
+{% block content %}
+
+<h1>Showcases</h1>
+
+{% for app in applications %}
+{% include app %}
+{% endfor %}
+
+{% endblock %}

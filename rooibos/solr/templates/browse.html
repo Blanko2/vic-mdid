@@ -1,0 +1,83 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+{% load pagination_tags %}
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#browse-forms select").change(function () { this.form.submit(); });
+    $("#browse-forms :submit").remove();
+});
+</script>
+{% endblock %}
+
+{% block content %}
+
+<h1>Browse collections</h1>
+<p>Browse items previously loaded into presentations</p>
+
+{% if collections %}
+
+<table id="browse-forms">
+<tr>
+    <td><label for="c">Collection:</label></td>
+    <td>
+        <form method="GET" action=".">
+            <select name="c">
+{% for collection in collections %}
+<option value="{{ collection.name }}"{% ifequal selected_collection.id collection.id %} selected="selected"{% endifequal %}>{{ collection.title }}</option>
+{% endfor %}
+            </select>
+            <input type="submit" value="Browse" />
+        </form>
+    </td>
+</tr>
+<tr>
+    <td><label for="f">Fields:</label></td>
+    <td>
+        <form method="GET" action=".">
+            <select name="f">
+{% for field in fields %}
+<option value="{{ field.id }}"{% ifequal selected_field.id field.id %} selected="selected"{% endifequal %}>{{ field.label }}</option>
+{% endfor %}
+            </select>
+            <input type="submit" value="Browse" />
+        </form>
+    </td>
+</tr>
+</table>
+
+Jump to:
+{% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+<a href="{% url solr-browse-collection selected_collection.id, selected_collection.name %}?f={{ selected_field.id }}&amp;s={{ letter }}">{{ letter }}</a>
+{% endfor %}
+
+{% autopaginate values 50 %}
+{% paginate %}
+
+<div class="browsecolumn">
+{% for v in values %}
+{% ifchanged %}<div style="font-size: x-large; font-weight: bolder;">{{ v.value|capfirst|slice:":1" }}</div>{% endifchanged %}
+    <div><a class="related-images" href="{% url db-search selected_collection.id, selected_field.id, v.value|urlencode %}">{{ v.value }}</a> ({{ v.freq }})</div>
+    {% ifequal forloop.counter 25 %}
+    </div>
+    <div class="browsecolumn">
+    {% endifequal %}
+{% endfor %}
+</div>
+
+<div style="clear: both;"></div>
+
+{% paginate %}
+
+{% else %}
+
+    <div>No collections are available for browsing.</div>
+
+{% endif %}
+
+
+{% endblock %}
