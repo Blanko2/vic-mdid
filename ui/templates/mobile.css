@@ -1,0 +1,522 @@
+{% load ui %}
+{% var as colors %}
+{
+    "background":                   "rgb(229, 225, 214)",
+    "background_top":               "rgb( 83,  82,  78)",
+    "background_top_gradient":      "rgb(127, 127, 127)",
+    "content_background":           "white",
+    "content_border_gradient1":     "rgb(201, 198, 188)",
+    "content_border_gradient2":     "rgb(174, 171, 163)",
+    "content_text":                 "black",
+    "header_background":            "{{ PRIMARY_COLOR }}",
+    "headings":                     "{{ PRIMARY_COLOR }}",
+    "topmenu_text":                 "white",
+    "dropdownmenu_background":      "rgb(241, 241, 241)",
+    "dropdownmenu_text":            "{{ SECONDARY_COLOR }}",
+    "dropdownmenu_separator":       "rgb(230, 230, 230)",
+    "menu_text":                    "white",
+    "messages":                     "rgb(255, 221,  63)",
+    "messages_text":                "black",
+    "basket_background":            "rgb(247, 247, 247)",
+    "basket_text":                  "{{ PRIMARY_COLOR }}",
+    "facet":                        "lightgrey",
+    "facet_text":                   "black",
+    "facet_active":                 "{{ PRIMARY_COLOR }}",
+    "facet_active_text":            "white",
+    "borders":                      "lightgrey",
+    "shaded_background":            "rgb(247, 247, 247)",
+    "tag":                          "{{ PRIMARY_COLOR }}",
+    "tag_text":                     "white",
+    "tag_secondary":                "lightgrey",
+    "tag_secondary_text":           "black",
+    "links":                        "{{ SECONDARY_COLOR }}",
+    "user_icons":                   "{{ PRIMARY_COLOR }}",
+    "other_user_icons":             "white",
+
+    "js_warning_text":              "white",
+    "js_warning_background":        "red",
+    "permissions_allowed":          "green",
+    "permissions_denied":           "red",
+    "permissions_unset":            "lightgrey",
+    "success":                      "green",
+    "fail":                         "red",
+    "drop_shadow":                  "grey"
+}
+{% endvar %}
+<style type='text/css'>
+
+/*****************************************************************************/
+/* Mobile master                                                             */
+/*****************************************************************************/
+
+body.master {
+    background-color: {{ colors.background }};
+    /*min-width: 970px;*/
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    padding-bottom: 80px;
+    line-height: normal;
+}
+
+#content {
+    font-size: 133.3%;
+}
+
+#content {
+    padding: 100px 10px 15px 10px; /* dean changed this to 100 */
+    border: solid 1px {{ colors.content_border_gradient2 }};
+    border-top: none;
+    clear: both;
+    color: {{ colors.content_color }};
+}
+
+html.js-enabled #content {
+    padding-top: 83px;
+}
+
+#content-wrapper {
+    margin: 0 10px; /* changed from 20px*/
+    border: solid 1px {{ colors.content_border_gradient1 }};
+    border-top: none;
+    background-color: {{ colors.content_background }};
+}
+
+#javascriptwarning {
+    color: {{ colors.js_warning_text }};
+    background-color: {{ colors.js_warning_background }};
+    border: 1px solid {{ colors.js_warning_text }};
+    padding: 0 4px;
+    margin-left: 2px;
+}
+
+html.js-enabled #javascriptwarning {
+    display: none;
+}
+
+/* displays logout, options, management */ 
+
+#topmenu {
+    margin: 0;
+    background-color: {{ colors.background_top }};
+    height: 22px;
+    color: {{ colors.topmenu_text }};
+    font-size: 8pt;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+#topmenu ul {
+    padding: 3px 20px;
+    float: right;
+    margin: 0;
+}
+
+#topmenu ul li {
+    float: left;
+    list-style: none;
+    padding: 0 5px;
+    border-left: solid {{ colors.topmenu_text }} 1px;
+}
+
+#topmenu ul li a {
+    color: {{ colors.topmenu_text }};
+    text-decoration: none;
+}
+
+#topmenu ul li:first-child {
+    border-left: none;
+}
+
+/* header bar - just contains the MDID logo on the mobile site */
+
+#logo {
+    background: url({% url static 'images/mdid_logo.png' %}) no-repeat bottom left;
+    width: 150px;
+    height: 50px;
+    display: block;
+    float: left;
+    margin-left: 10px;
+}
+
+#header-bar {
+    position: absolute;
+    top: 22px;
+    width: 100%;
+    /*min-width: 970px;*/
+}
+
+html.js-enabled #header-bar {
+    background-color: {{ colors.background_top }};
+}
+
+#header-bar div.spacer {
+    background-color: {{ colors.content_background }};
+    margin: 0 11px; /* changed from 21px*/
+    padding: 10px 10px 0 10px;
+    border: solid 1px {{ colors.background_top_gradient }};
+    border-bottom: none;
+}
+
+#header {
+    background-color: {{ colors.header_background }};
+    color: {{ colors.menu_text }};
+    font-size: 18pt;
+    height: 50px;
+}
+
+/* end of header bar */
+
+#footer {
+    padding-top: 8px;
+    clear: both;
+    font-size: 0.7em;	/*was smaller*/
+}
+
+{% if debug %}
+#stats { background-color: #ddd; font-size: 65%; padding: 5px;
+        z-index: 1000; position: absolute; left: 0px; top: 0px;
+        -moz-opacity: .7; opacity: .7;}
+{% endif %}
+
+/*****************************************************************************/
+/* Main                                                                      */
+/*****************************************************************************/
+
+.center {
+	margin-left:auto;
+	margin-right:auto;
+	width:95%;
+}
+
+#background {
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Text input box */
+#quicksearch {
+	width: 80%;
+    height: 30px;
+    margin:0px;
+    padding:0px;
+    vertical-align: top;
+    font-size: 1.2em;
+}
+
+/* Search go image button */
+#search-go {
+	width: 35px;
+    height: 35px;
+}
+
+#search-check-boxes {
+	font-size: 1.3em;
+}
+
+/* Presentation browse button */
+#button {
+    height: 40px;
+    text-align: center;
+	line-height: 40px;		/* center the text in the div */
+	font-size: 150%;
+    color: white;
+    background-color: rgb(152,189,198);
+    padding: 10px;
+    border-radius: 10px;  
+}
+
+a:link {
+	text-decoration:none;
+}
+
+/*****************************************************************************/
+/* m_results                                                                 */
+/*****************************************************************************/
+
+/* div to create a border around the image*/ 
+.record {
+    float: left;
+    border: 1px {{ colors.borders }} solid;
+    width: 30%;
+   	height: 100px;
+    margin: 2px;
+    background-color: {{ colors.shaded_background }};
+}
+
+/* The actual image */
+.record img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100px;
+    display: block;
+    margin: auto;
+}
+
+/* Names of databases results found in */
+#database-names {
+	font-size: 1em;
+	font-weight: bold;
+	color: {{ PRIMARY_COLOR }};
+}
+
+/* Number of search results */
+#hit-text {
+	font-size: 0.7em;
+	margin: 5px 0px;
+}
+
+/* Table for the previous and next buttons */
+.button-table {
+	margin: auto;
+	clear: both;
+}
+
+/* Buttons for next and previous page of results */
+.result-buttons {
+	text-align: center;
+	clear: both;
+	color: white;
+	background: {{ PRIMARY_COLOR }};
+	border-radius: 6px;
+	padding: 2px;
+	width:90px;
+	height:30px;
+	line-height:30px;
+	font-size: 1.2em;
+	margin: 10px auto;
+}
+
+.result-buttons a {
+	color: white;
+}
+
+/* Image information panel */
+.image-info-panel {
+	display: none;
+	width: 250px;
+	height: 350px;
+	position:absolute;
+	left:20px;
+	top:50px;
+	background: white;
+	z-index: 999;
+	padding: 10px;
+	box-shadow: 8px 8px 5px #888;			/* Most browsers */ 
+	-moz-box-shadow: 8px 8px 5px #888;		/* Mozilla */
+	-webkit-box-shadow: 8px 8px 5px #888;	/* Safari */
+	border:1px solid black;
+	border-radius: 6px;
+}
+
+.info-panel-image-box {
+	border: 1px {{ colors.borders }} solid;
+    /*width: 150px;
+   	height: 150px;*/
+   	width: 240px;
+   	height: 240px;
+	margin: auto;
+    background-color: {{ colors.shaded_background }};
+}
+
+.info-panel-image-box img {
+	width: auto;
+	height: auto;
+	max-width: 240px;
+    max-height: 240px;
+    margin: auto;
+    display: block;	/* Prevents extra padding being inserted */
+}
+
+.image-info-panel #info-text {
+	width: 250px;
+	height: 50px;
+	max-height: 50px;
+	font-size: 0.8em;
+	overflow: hidden;
+	margin: 10px 0px;
+	display: block;
+}
+
+/*****************************************************************************/
+/* Mobile Presentation Browse                                                */
+/*****************************************************************************/
+
+tr.itemactions-row td{
+/*    border-collapse: collapse;*/
+  border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+  vertical-align:middle;
+}
+
+td.item-actions-menu img {
+  display: none;
+}
+
+tr.actionrow-selected td.item-actions-menu img, tr.actionrow-open td.item-actions-menu img {
+  display: inline;
+}
+
+
+tr.actionrow-selected td, tr.actionrow-open td {
+  border-top: solid 1px  {{ PRIMARY_COLOR }} !important;
+  border-bottom: solid 1px  {{ PRIMARY_COLOR }} !important;
+  background: white url({% url static 'images/actionbar-gradient.png' %}) bottom repeat-x;
+}
+
+td.item-actions-menu div {
+  display: none;
+  position: absolute;
+  border: solid 1px {{ PRIMARY_COLOR }};
+  border-top-color: #f2f2f2;
+  border-right: none;
+  background-color: #f2f2f2;
+}
+
+td.item-actions-menu div ul {
+  list-style-type: disc;
+  margin-bottom: 0.5em;
+  color: {{ PRIMARY_COLOR }};
+}
+
+td.item-actions-menu div ul li a {
+  text-decoration: none;
+}
+
+td.item-actions-menu div ul li input, td.item-actions input {
+    /*border: none;*/
+    background: none;
+    padding: 0;
+    margin-left: 0px;
+    margin-left: -3px;
+    cursor: pointer;
+    font-family: "Segoe UI", Calibri, "Myriad Pro", Tahoma, Helvetica, Arial, sans-serif;
+    font-size: 100%;
+    color: {{ colors.links }};
+}
+
+tr.actionrow-open td.item-actions-menu div {
+  display: block;
+}
+
+tr.actionrow-selected td.item-actions, tr.actionrow-open td.item-actions {
+    visibility: visible;
+}
+
+#view-button{
+    background: {{ PRIMARY_COLOR }};
+    border-radius: 8px;
+    width: 40px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+}
+#view-button a {
+	color: white;
+}
+
+#databaseSearchLinks{
+    width:100%;
+    height20pt;
+}
+
+.mobileDBBut{
+    float:left;
+    height:20pt;
+    width:25%;
+    background-color:#2288BB;
+    text-align:center;
+}
+
+.mobileDBBut:hover{
+    background-color:#44BBFF;
+    cursor:normal;
+
+}
+
+.mobileDBButSel{
+    float:left;
+    height:20pt;
+    width:25%;
+    background-color:#44BBFF;
+    text-align:center;
+}
+
+/*****************************************************************************/
+/*  Some general CSS stuff?                                                  */
+/*****************************************************************************/
+
+img {width: 200px;
+    height: 300px;
+    margin: 0;
+}
+
+a, a:link, a:visited {
+    color: {{ colors.links }};
+}
+
+a:hover {
+    color: {{ colors.links }};
+}
+
+a:active {
+    color: {{ colors.links }};
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+h3 {
+    font-size: 1.2em;
+}
+
+h1, h2, h3, h4, h5, h6, h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+    color: {{ colors.headings }};
+    text-decoration: none;
+}
+
+th {
+    vertical-align: top;
+    font-weight: bolder;
+}
+
+table.wide-table, table.wide-table input {
+    font-size: smaller;
+}
+
+.dragging {
+    background-color: {{ colors.messages }};
+}
+
+.hovering {
+    background-color: {{ PRIMARY_COLOR }};
+}
+
+.highlight-row {
+    background-color: {{ colors.messages }};
+    color: {{ colors.messages_text }};
+}
+
+#image-preview {
+    width: 800px;
+    margin: 40px auto 40px auto;
+}
+
+#loginform label {
+    position: absolute;
+}
+
+#loginform input {
+    margin-left: 7em;
+}
+
+</style>

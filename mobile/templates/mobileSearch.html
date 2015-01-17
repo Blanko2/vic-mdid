@@ -1,0 +1,64 @@
+{% extends "mobileMain.html" %}
+
+
+
+
+{% block content %}
+
+	<div data-role="content">	
+
+		<p>{{searchDatabase}}</p>
+
+		<form action="/mobile/search/results" method="get"> 
+			
+			<input data-inline="true" type="search" id="searchImages" name="q" value="{{searchTerm}}">
+			</input>
+			<input type="text" style="display:none" name="offset" value="{{offset}}">
+			</input>
+			<input type="text" style="display:none" name="from" value="{{0}}">
+			</input>
+
+			<div class="ui-grid-b">
+				{% for i in databases %}
+				<div class="{{i.class}}"> 
+				    <button type="submit" name="database" value="{{i.item}}" data-ajax="false">{{i.item}}</button>
+				</div>
+				{% endfor %}
+			</div>
+
+		</form>
+
+		<form id="{{searchDatabase}}-imageForm" action="{% url mobile-image-view database=searchDatabase %}" method="POST"> 
+		    <input type="hidden" id="{{searchDatabase}}-imageUrlDataSender" name="identifier" value="" />
+
+		    <div class="ui-grid-b">
+			{% for i in results %}
+				<a id="{{searchDatabase}}-image-prev-{{forloop.counter}}" value="{{i.item.identifier}}" onclick="setFormJson('{{searchDatabase}}', '{{searchDatabase}}-image-prev-{{forloop.counter}}');">
+				<!--<a href="/mobile/search/image/{{searchDatabase}}">-->
+				  <image class="{{i.class}}" src="{{i.item.thumb_url}}"/>
+				</a>
+			{% endfor %}
+		    </div>
+		</form>
+
+
+		<div class="ui-grid-b">
+			
+
+			<div class="ui-block-a">
+				<a href="/mobile/search/{{searchDatabase}}/results?q={{searchTerm}}&from={{lastPage}}" data-role="button" data-icon="arrow-l">previous</a>
+			</div>
+
+			<div class="ui-block-b">
+			</div>
+
+			<div class="ui-block-c">
+				<a href="/mobile/search/{{searchDatabase}}/results?q={{searchTerm}}&from={{nextPage}}" data-role="button" data-icon="arrow-r" data-iconpos="right">next</a>
+			</div>
+
+			
+		</div>
+
+	</div><!-- /content -->
+
+{% endblock content %}

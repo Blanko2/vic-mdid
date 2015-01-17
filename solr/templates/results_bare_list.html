@@ -1,0 +1,5 @@
+{% load ui %}
+
+{% for r in records %}
+    {% record_list r selectable request.session.selected_records %}
+{% endfor %}

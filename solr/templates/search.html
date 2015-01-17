@@ -1,0 +1,50 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+
+{% block javascript %}
+{{ block.super }}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#criteria :text").each(function() {
+            var f = $('#' + this.id.substring(0, this.id.length - 8) + "field");
+            $(this).autocomplete('{% url api-solr-autocomplete %}', {
+                extraParams: {
+                    field: function() { return f.val(); },
+                    collections: function() {
+                        return Array.join($("#collections :checked").map(function(a,b){return $(b).val()}))
+                        },
+                },
+                formatItem: function(row, pos, num, query) { return decodeURIComponent(row); },
+                formatResult: function(row, pos, num) { return decodeURIComponent(row); },
+                });
+            });
+});
+</script>
+{% endblock %}
+
+
+{% block content %}
+
+<h1>United Search</h1>
+
+<form method="POST" action=".">{% csrf_token %}
+{{ formset.management_form }}
+
+
+
+<div id="criteria" style="clear: left; padding: 20px 0;">
+{% for form in formset.forms %}
+    <div>
+    Criteria: {{ form.criteria }} {{ form.type }} {{ form.field }}
+    </div>
+{% endfor %}
+</div>
+
+    <input type="submit" value="Search" />
+</form>
+
+
+{% endblock %}

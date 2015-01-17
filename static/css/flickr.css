@@ -1,0 +1,40 @@
+.flickr ul { 
+	display:block;
+	float: left;
+	list-style-type: none; 
+}
+.flickr li {
+	display: block;
+	float: left;
+	margin: 5px;
+	width: 450px;
+}
+.flickr fieldset { width: 500px; }
+.flickr legend { width: 500px; }
+.flickr label {
+	display: block;
+	position: relative;
+	vertical-align: middle;
+	float: left;
+	width: 75px;
+	overflow: visible;
+}
+
+.flickr .check-box {
+	width: 25px;
+}
+
+.flickr input {
+	float: left;
+	width: 350px; 
+}
+
+.flickr textarea {
+	float: left;
+	width: 350px; 
+}
+
+.flickr-search ul {
+	list-style-type: none; 
+	width: 500px;
+}

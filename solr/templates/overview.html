@@ -1,0 +1,30 @@
+{% extends "master.html" %}
+{% load ui %}
+{% load help %}
+{% load humanize %}
+
+{% block content %}
+
+<h1>Collection Overview</h1>
+
+{% for collection in collections %}
+<div id="collection-overview">
+    <h2>{{ collection.title }}</h2>
+    <div>{{ collection.description }}</div>
+    {% if collection.agreement %}
+        <div class="usage-agreement">{{ collection.agreement }}</div>
+    {% endif %}    
+    <div>
+        {% if collection.num_records %}
+        <a class="related-images" href="{% url solr-search %}?c=allcollections:{{ collection.id }}">Explore {{ collection.num_records|intcomma }}
+        record{{ collection.num_records|pluralize }}</a>
+        <a href="{% url solr-browse-collection collection.id collection.name %}">Browse</a>
+        {% else %}
+        This collection contains no records.
+        {% endif %}
+    </div>
+    
+</div>
+{% endfor %}
+
+{% endblock %}
