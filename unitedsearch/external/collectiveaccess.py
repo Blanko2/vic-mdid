@@ -47,7 +47,7 @@ def search(query, params, offset, per_page=20):
         return Result(0,1),{}
 
     offset, page = modulate_offset(int(offset), per_page)    
-    retrieved_response, args = _url_builder(query, params)
+    retrieved_response, args = _perform_request(query, params)
     hits =  _count(retrieved_response)
     next_offset = offset + per_page
     page = offset/per_page +1
@@ -70,11 +70,11 @@ def search(query, params, offset, per_page=20):
     return result, args
 
 
-def _url_builder(query, params):
+def _perform_request(query, params):
     """
-    builds the url to be used in the search, separate from the "search" method because it allows
+    performs the request to be used in the search, separate from the "search" method because it allows
     it to be used in the count method. Search needs to return an image list, whereas count can just
-    iterate through the search_request josn and count the number of entries
+    iterate through the search_request json and count the number of entries
     
     offsets and per_page only matter when returning the actual image, so not needed for this
     """
@@ -91,10 +91,9 @@ def _url_builder(query, params):
     # and then to a proper user later on - not sure how that's gonna work, though
 
     search_url, arguments = _build_search(query, params)
-    if DEBUG: 
-        print "got past _build_search() " +BASE_URL+ search_url
     search_request = requests.get(BASE_URL + search_url, auth=('administrator', 'c2da32'),
         data = image_bundles )
+
     if DEBUG:
         print 'PASSED REQUEST'
     if DEBUG and ADVANCED_DEBUG:
@@ -103,7 +102,7 @@ def _url_builder(query, params):
             print str(search_request.text)
         else:   
             print "search request object is null?"
-        
+
     return search_request, arguments
     
 
@@ -158,24 +157,16 @@ TOOLS
 =========
 """
 def _translate_query(query):
-    if DEBUG:
-        print "translating query " + str(query)
     translator = Query_Language(identifier)
-    if DEBUG:
-        print 'translator is ' + str(translator)    
     query_terms = translator.searcher_translator(query)
-    if DEBUG: 
-        print 'query terms are ' + str(query_terms)
     return query_terms
     
 def count(query, parameters={}):
     """external count method, needed for searcher to show
         number of hits to the general search mechanism"""
-    if DEBUG:
-        print "HIT COUNT ON CA"
     if not query or query in "keywords=, params={}":
         return 0
-    search_object, args = _url_builder(query, parameters)
+    search_object, args = _perform_request(query, parameters)
     search_object = search_object.json()
     return len(search_object["results"])
 
