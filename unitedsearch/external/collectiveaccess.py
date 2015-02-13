@@ -7,7 +7,6 @@ Documentation for the CA API can be found at
     http://docs.collectiveaccess.org/wiki/Web_Service_API
 """
 import json
-import urllib2
 import requests
 import re
 import rooibos.unitedsearch as unitedsearch
@@ -60,11 +59,6 @@ def search(query, params, offset, per_page=20):
         original_url = iobject[ORIGINAL_MEDIA]
         title = iobject[TITLE]
         objID = iobject[ID]
-        #TODO sort out the source URL
-
-        if DEBUG:
-            print "got to images - thumbnail is: " + thumbnail_url
-
         image = ResultImage(original_url, thumbnail_url, title, objID)
         result.addImage(image)
     return result, args
@@ -93,16 +87,6 @@ def _perform_request(query, params):
     search_url, arguments = _build_search(query, params)
     search_request = requests.get(BASE_URL + search_url, auth=('administrator', 'c2da32'),
         data = image_bundles )
-
-    if DEBUG:
-        print 'PASSED REQUEST'
-    if DEBUG and ADVANCED_DEBUG:
-        print "Status code for ca search is: " + str(search_request.status_code)
-        if search_request:
-            print str(search_request.text)
-        else:   
-            print "search request object is null?"
-
     return search_request, arguments
     
 
@@ -115,8 +99,6 @@ URL HELPERS
 
 def _build_search(query, params):
     """return a search query with the given keywords and parameters"""
-    if DEBUG:
-        print "building search for CA"+ str(params) +"--"+ str(query)
     #PLACEHOLDER -- only searches the objects table and does the simplest
     #search possible for now
     query_terms = params.copy() if( params and params != {} ) else _translate_query(query)
@@ -134,8 +116,6 @@ def _build_search(query, params):
     # TODO: need to do all the query string processing here  
     #   but, for now just a simple search assumption will work by default
 
-    if DEBUG: 
-        print "query string for CA is now :" + query_string
     if query_string != "":
         keywords += query_string
     
@@ -167,6 +147,8 @@ def count(query, parameters={}):
     if not query or query in "keywords=, params={}":
         return 0
     search_object, args = _perform_request(query, parameters)
+    if DEBUG: 
+        print "COLLECTIVE ACCESS = "+ search_object.text
     search_object = search_object.json()
     return len(search_object["results"])
 

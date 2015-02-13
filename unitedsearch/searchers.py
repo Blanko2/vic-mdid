@@ -4,10 +4,10 @@ from external import digitalnz, nga, flickr, gallica, collectiveaccess, artstor,
 all = [
 	nga,
 	digitalnz,
-	#flickr, TODO: maybe implement later
+	flickr,
 	gallica,
     collectiveaccess,
-    artstor,
+    #artstor,
 	#trove
 ]
 """

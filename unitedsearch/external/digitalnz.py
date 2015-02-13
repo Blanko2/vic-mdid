@@ -123,9 +123,6 @@ def _build_simple_URL(query_terms, per_page, page):
     facet_arg = []
     query_string = ""
     sidebar = True
-    if DEBUG:
-        print "DNZ SEARCH - QUERY TERMS" 
-        print str(query_terms)
     if 'query_string' in query_terms:
         query_string=query_terms['query_string']   
         arg.update({"query_string":query_string})
@@ -175,13 +172,10 @@ def _build_simple_URL(query_terms, per_page, page):
         while query_string.endswith(","):
             query_string.pop()
         arg['query_string'] = query_string
-    if DEBUG:
-        print keywords
-        print str(arg)
     url =( BASE_SEARCH_API_URL+"&text="+keywords+BLOCKED_CONTENT_PARTNERS+facets+
         CATEGORY_VALUE+"&per_page="+str(per_page)+"&page="+str(page))
     if DEBUG:
-        print url
+        print "DIGITAL NZ URL = "+ url
     while len(facet_arg)<5:
         facet_arg.append([])
     arg.update({"field":facet_arg})
