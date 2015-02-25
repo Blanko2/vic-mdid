@@ -20,6 +20,7 @@ LOGO_URL = "http://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Flickr_word
 HOMEPAGE_URL="http://flickr.com"
 
 SEARCH_HEAD= "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key="+FLICKR_KEY
+SEARCH_LICENSES = "&license=1%2C2%2C3%2C4%2C5%2C6"
 SEARCH_TAIL = "&format=json&nojsoncallback=1"
 
 IMAGE_HEAD= "https://farm"
@@ -133,7 +134,7 @@ def _build_url(query, params, page, per_page):
     #   but not going to do that currently so TODO implement more search than just 
     #   at the text level
     pages_value = "&per_page="+str(per_page)+"&page="+str(page)
-    url = SEARCH_HEAD +"&text="+ keywords + pages_value + SEARCH_TAIL
+    url = SEARCH_HEAD +"&text="+ keywords + pages_value + SEARCH_LICENSES + SEARCH_TAIL
     #need to add in 'extra= originalformat'
     if DEBUG:
         print 'url for FLICKR = ' + url
